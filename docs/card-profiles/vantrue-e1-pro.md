@@ -10,7 +10,7 @@
 
 **Highest-confidence evidence observed on this card:**
 - `GPS/E1PRO_Settings.ini` exists. This filename is model-specific and was present on the sampled card.
-- Folder structure matches Vantrue Element/Nexus style: `Normal/`, `Parking/`, `Photo/`, `GPS/`.
+- Folder structure matches Vantrue Element/Nexus style: `Normal/`, `Parking/`, `Event/`, `Photo/`, `GPS/`.
 - Filename pattern matches Vantrue sequence format: `YYYYMMDD_HHMMSS_SEQ_MODE_CH.EXT`.
 
 **Supporting evidence:**
@@ -29,11 +29,11 @@
 |---|---|---|
 | `Normal/` | normal | Driving loop recordings and possible time-lapse clips depending on mode token. |
 | `Parking/` | parking/event | Parking monitoring clips. Observed motion-detection parking clips and parking emergency clips on this card. |
+| `Event/` | event | Event folder exists on the sampled card, but was empty. Do not require event files here. |
 | `Photo/` | photo | Photo snapshots. Observed parking and event snapshots on this card. |
 | `GPS/` | settings | Contains `E1PRO_Settings.ini`; may support app/GPS workflow. Do not publish real GPS trail data. |
 
-Not observed on this card:
-- A separate `Event/` folder. Event-mode clips were observed in `Parking/` on this card, and the manual presents Event Video as a file-browsing category rather than proving a physical folder.
+Event-mode clips were observed in `Parking/` on this card, and event snapshots were observed in `Photo/`. The empty `Event/` folder may be used only for some event workflows or firmware/settings combinations.
 
 ## Filename Pattern
 
@@ -103,11 +103,10 @@ Use dummy GPS values only if an example is needed.
 
 ## Open Questions
 
-- Whether a separate physical `Event/` folder appears on other E1 Pro cards.
+- Whether the empty physical `Event/` folder is used only for some event workflows or firmware/settings combinations.
 - Whether `T` time-lapse files are stored under `Normal/` as shown in the manual examples, or under another folder depending on firmware/settings.
 - Whether E1 Pro firmware files use a stable model-coded filename on official download pages.
 
 ## References
 
 - Vantrue E1 Pro Japanese/multilingual user manual: https://vantrue-app.vantruecam.com/files/manuals/Vantrue-E1Pro-User-Manual-Japanese.pdf
-

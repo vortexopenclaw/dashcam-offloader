@@ -30,7 +30,7 @@ detection:
           - Parking
           - Photo
           - GPS
-        note: "Observed card contained Normal, Parking, Photo, and GPS folders."
+        note: "Observed card contained Normal, Parking, Event, Photo, and GPS folders. Event is not required because sampled event clips were stored under Parking/Photo instead."
   medium_confidence:
     - filename_pattern:
         regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
@@ -52,6 +52,12 @@ folders:
     mode: parking
     prefixes: [P, E]
     validation: real_card_sampled
+    note: "Sampled card stored parking motion clips and parking emergency clips here."
+  - path: Event
+    mode: event
+    prefixes: [E]
+    validation: real_card_sampled_empty
+    note: "Folder existed on sampled card but was empty. Do not require event files here."
   - path: Photo
     mode: photo
     prefixes: [P, E]
