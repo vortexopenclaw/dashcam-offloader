@@ -1,0 +1,108 @@
+id: vantrue-e1-pro
+manufacturer: Vantrue
+model: E1 Pro
+status: seed
+confidence: high
+confidence_note: "Real card contained model-specific GPS/E1PRO_Settings.ini plus Vantrue folder and filename structure."
+
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: real_card_sampled
+
+sampled_variant:
+  channels: 1
+  roles:
+    - front
+
+detection:
+  high_confidence:
+    - path: GPS/E1PRO_Settings.ini
+      exists: true
+      note: "Model-specific settings filename observed on the sampled E1 Pro card."
+    - filename_pattern:
+        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        note: "Vantrue sequence filename with single front channel A."
+    - folders:
+        required_all:
+          - Normal
+          - Parking
+          - Photo
+          - GPS
+        note: "Observed card contained Normal, Parking, Photo, and GPS folders."
+  medium_confidence:
+    - filename_pattern:
+        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        note: "Without E1PRO_Settings.ini, this is a Vantrue single-channel family match and should require user confirmation."
+  not_reliable:
+    - volume_label:
+        note: "Sample volume label was Untitled and is user-renamable."
+    - resolution:
+        note: "Resolution and bitrate are user-configurable settings."
+    - gps_coordinates:
+        note: "Private GPS data must never be used or stored for public model detection."
+
+folders:
+  - path: Normal
+    mode: normal
+    prefixes: [N, T]
+    validation: real_card_sampled_for_N_manual_confirmed_for_T
+  - path: Parking
+    mode: parking
+    prefixes: [P, E]
+    validation: real_card_sampled
+  - path: Photo
+    mode: photo
+    prefixes: [P, E]
+    validation: real_card_sampled
+  - path: GPS
+    mode: settings
+    validation: real_card_sampled
+    note: "Contains E1PRO_Settings.ini on sampled card; do not publish real GPS trail data."
+
+filename_patterns:
+  - pattern: '^(\\d{8})_(\\d{6})_(\\d{5})_([NPET])_([A])\\.(MP4|JPG)$'
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    seq_group: 3
+    mode_group: 4
+    channel_group: 5
+    modes:
+      N: normal
+      P: parking
+      E: event
+      T: timelapse
+    channels:
+      A: front
+
+channels:
+  A:
+    position: front
+    validation: real_card_sampled
+
+sampled_recording_settings:
+  video:
+    codec: h264
+    resolution: 3840x2160
+    fps: 30
+    note: "Observed setting only; do not use for model identification."
+  normal_segment_duration_seconds: 60
+  parking_segment_duration_seconds: 45
+
+exclude:
+  - '^\\._'
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - '*.bin'
+  - 'unique_device_ids'
+  - 'real_gps_coordinates'
+  - 'real_gps_trails'
+
+manual_reference:
+  url: https://vantrue-app.vantruecam.com/files/manuals/Vantrue-E1Pro-User-Manual-Japanese.pdf
+  notes:
+    - "Manual names the product as Element 1 Pro / E1 Pro."
+    - "Manual shows normal, parking, event, and time-lapse filename examples using the same Vantrue filename structure."

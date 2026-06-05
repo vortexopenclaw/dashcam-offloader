@@ -121,7 +121,8 @@ The current Vueroid dashcam page lists these selector candidates.
 | E360 / E360 ACE | 1CH rotating | 5.2K or 4K class | 2025 current | 360-degree rotating lens concept, Element/360 series. |
 | Element 3 / E3 | 3CH | 1944p front plus 1080p class | 2022 to current | Voice control, GPS, Wi-Fi, wireless remote. |
 | Element 2 / E2 | 2CH | 1944p front and rear | 2022 to current | Front/rear Element model, GPS, Wi-Fi, voice. |
-| Element 1 Pro / E1 Pro | 1CH | 4K class | 2024 current | Compact 4K Element model. |
+| E1 Pro | 1CH | 4K class | 2024 current | Tracked profile exists; compact 4K Element model with model-specific `E1PRO_Settings.ini` observed on a real card. |
+| Element 1 Pro | 1CH | 4K class | 2024 current | Manual/full-name selector alias for E1 Pro. |
 | Element 1 / E1 | 1CH | 1944p | 2022 to current | Compact Wi-Fi, voice control, GPS. |
 | E1 Lite | 1CH | FHD/2K class | Current | Budget Element model. |
 | S1 Pro | 2CH | 2.7K or 4K single-channel class | 2023 to current | Front/rear low-profile, GPS, Wi-Fi. |
