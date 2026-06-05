@@ -21,7 +21,7 @@ struct CopyPlanner {
         let items = selected.map { clip in
             CopyPlanItem(
                 clip: clip,
-                destinationURL: destinationURL(for: clip, destinationRoot: destinationRoot, profile: profile),
+                destinationURL: destinationURL(for: clip, destinationRoot: destinationRoot, profile: profile, filters: filters),
                 status: .planned,
                 message: nil
             )
@@ -36,16 +36,16 @@ struct CopyPlanner {
         )
     }
 
-    private func destinationURL(for clip: ClipItem, destinationRoot: URL, profile: DashcamProfile) -> URL {
+    private func destinationURL(for clip: ClipItem, destinationRoot: URL, profile: DashcamProfile, filters: FilterState) -> URL {
         let day = clip.timestamp.map(Self.dayFormatter.string(from:)) ?? "undated"
         let modelFolder = safePathComponent(profile.displayName)
-        let modeFolder = safePathComponent(clip.mode)
+        let categoryFolder = safePathComponent(filters.separateCategoryFolders ? clip.outputCategory : clip.mode)
         let channelFolder = safePathComponent(clip.channel)
 
         return destinationRoot
             .appendingPathComponent(modelFolder, isDirectory: true)
+            .appendingPathComponent(categoryFolder, isDirectory: true)
             .appendingPathComponent(day, isDirectory: true)
-            .appendingPathComponent(modeFolder, isDirectory: true)
             .appendingPathComponent(channelFolder, isDirectory: true)
             .appendingPathComponent(clip.filename)
     }
@@ -64,4 +64,3 @@ struct CopyPlanner {
         return formatter
     }()
 }
-

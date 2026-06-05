@@ -46,9 +46,14 @@ enum ProfileParser {
         let text = try String(contentsOf: url, encoding: .utf8)
         let lines = text.components(separatedBy: .newlines)
 
-        let id = scalar("id", in: lines) ?? url.deletingPathExtension().lastPathComponent
-        let manufacturer = scalar("manufacturer", in: lines) ?? "Unknown"
-        let model = scalar("model", in: lines) ?? id
+        let id = scalar("id", in: lines) ?? scalar("slug", in: lines) ?? url.deletingPathExtension().lastPathComponent
+        let manufacturer = scalar("manufacturer", in: lines) ??
+            scalar("make", in: lines) ??
+            nestedScalar("camera", key: "brand", in: lines) ??
+            "Unknown"
+        let model = scalar("model", in: lines) ??
+            nestedScalar("camera", key: "model", in: lines) ??
+            id
         let status = scalar("status", in: lines) ?? "seed"
         let confidence = scalar("confidence", in: lines) ?? "medium"
         let folders = parseFolders(lines)
@@ -75,6 +80,16 @@ enum ProfileParser {
         let prefix = "\(key):"
         guard let line = lines.first(where: { $0.hasPrefix(prefix) }) else { return nil }
         return cleanValue(String(line.dropFirst(prefix.count)))
+    }
+
+    private static func nestedScalar(_ blockName: String, key: String, in lines: [String]) -> String? {
+        guard let range = topLevelBlock(named: blockName, in: lines) else { return nil }
+        let prefix = "\(key):"
+        guard let line = lines[range].first(where: { $0.trimmingCharacters(in: .whitespaces).hasPrefix(prefix) }) else {
+            return nil
+        }
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return cleanValue(String(trimmed.dropFirst(prefix.count)))
     }
 
     private static func parseFolders(_ lines: [String]) -> [ProfileFolder] {

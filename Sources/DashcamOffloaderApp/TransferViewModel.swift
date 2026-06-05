@@ -13,6 +13,7 @@ final class TransferViewModel: ObservableObject {
     @Published var filters = FilterState()
     @Published var copyPlan: CopyPlan?
     @Published var copyProgress = CopyProgress()
+    @Published var scanSummary = ScanSummary()
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
     @Published var copyResults: [CopyPlanItem] = []
@@ -63,6 +64,7 @@ final class TransferViewModel: ObservableObject {
         panel.title = "Choose dashcam card or folder"
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
+        panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
@@ -70,7 +72,21 @@ final class TransferViewModel: ObservableObject {
             if !mountedSources.contains(source) {
                 mountedSources.insert(source, at: 0)
             }
-            selectedSource = source
+            selectSource(source, scanImmediately: true)
+        }
+    }
+
+    func selectSource(_ source: MountedSource, scanImmediately: Bool = false) {
+        selectedSource = source
+        detectionCandidates = []
+        selectedProfile = nil
+        clips = []
+        copyPlan = nil
+        copyResults = []
+        scanSummary = ScanSummary(sourcePath: source.url.path)
+        statusMessage = "Selected \(source.name)"
+
+        if scanImmediately {
             scanSelectedSource()
         }
     }
@@ -99,6 +115,7 @@ final class TransferViewModel: ObservableObject {
         statusMessage = "Scanning \(selectedSource.name)..."
         copyPlan = nil
         copyResults = []
+        scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
 
         Task { [weak self, profiles, selectedSource] in
             guard let self else { return }
@@ -110,7 +127,14 @@ final class TransferViewModel: ObservableObject {
                 self.selectedProfile = scanResult.selectedProfile
                 self.clips = scanResult.clips
                 self.resetFiltersForCurrentClips()
-                self.statusMessage = "Found \(self.eligibleClips.count) copyable items"
+                self.scanSummary = ScanSummary(
+                    sourcePath: selectedSource.url.path,
+                    scannedFiles: scanResult.allFiles.count,
+                    copyableItems: self.eligibleClips.count,
+                    excludedItems: scanResult.clips.filter { $0.excludedReason != nil }.count,
+                    samplePaths: Array(scanResult.clips.prefix(8).map(\.relativePath))
+                )
+                self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) copyable items"
                 self.rebuildPlan()
             } catch {
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
@@ -132,6 +156,7 @@ final class TransferViewModel: ObservableObject {
         filters.selectedChannels = Set(eligibleClips.filter { !$0.isGPS && !$0.isPhoto }.map(\.channel))
         filters.includePhotos = false
         filters.includeGPS = false
+        filters.separateCategoryFolders = true
     }
 
     func rebuildPlan() {

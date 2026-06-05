@@ -85,6 +85,33 @@ struct ClipItem: Identifiable, Hashable, Sendable {
     var isGPS: Bool {
         ["dat", "gpx", "nmea"].contains(extensionLowercased) || mode == "gps"
     }
+
+    var outputCategory: String {
+        if isGPS { return "GPS Logs" }
+        if isPhoto { return "Photos" }
+
+        let normalized = mode.lowercased()
+        if normalized.contains("event") ||
+            normalized.contains("locked") ||
+            normalized.contains("protected") ||
+            normalized.contains("emergency") ||
+            normalized == "e" {
+            return "Protected"
+        }
+        if normalized.contains("parking") ||
+            normalized.contains("motion") ||
+            normalized.contains("lapse") ||
+            normalized == "p" ||
+            normalized == "t" {
+            return "Parking"
+        }
+        if normalized.contains("normal") ||
+            normalized.contains("driving") ||
+            normalized == "n" {
+            return "Driving"
+        }
+        return "Other"
+    }
 }
 
 struct CopyPlan: Hashable, Sendable {
@@ -142,6 +169,19 @@ struct FilterState: Hashable, Sendable {
     var endDate: Date = Date()
     var includePhotos: Bool = false
     var includeGPS: Bool = false
+    var separateCategoryFolders: Bool = true
+}
+
+struct ScanSummary: Hashable, Sendable {
+    var sourcePath: String = ""
+    var scannedFiles: Int = 0
+    var copyableItems: Int = 0
+    var excludedItems: Int = 0
+    var samplePaths: [String] = []
+
+    var hasScan: Bool {
+        !sourcePath.isEmpty
+    }
 }
 
 extension Int64 {

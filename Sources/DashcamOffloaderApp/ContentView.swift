@@ -17,11 +17,6 @@ struct ContentView: View {
                 Label("Refresh", systemImage: "arrow.clockwise")
             }
             Button {
-                viewModel.chooseSourceFolder()
-            } label: {
-                Label("Source", systemImage: "externaldrive")
-            }
-            Button {
                 viewModel.chooseDestinationFolder()
             } label: {
                 Label("Destination", systemImage: "folder")
@@ -36,17 +31,28 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top)
 
-            List(selection: $viewModel.selectedSource) {
-                ForEach(viewModel.mountedSources) { source in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(source.name)
-                            .font(.headline)
-                        Text(source.displayPath)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+            Button {
+                viewModel.chooseSourceFolder()
+            } label: {
+                Label("Choose MicroSD Card...", systemImage: "externaldrive")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
+
+            if viewModel.mountedSources.isEmpty {
+                Text("No mounted sources found. Choose a card or folder manually.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(viewModel.mountedSources) { source in
+                            sourceRow(source)
+                        }
                     }
-                    .tag(Optional(source))
+                    .padding(.horizontal)
                 }
             }
 
@@ -62,11 +68,41 @@ struct ContentView: View {
         }
     }
 
+    private func sourceRow(_ source: MountedSource) -> some View {
+        let isSelected = viewModel.selectedSource == source
+        let iconName = isSelected ? "checkmark.circle.fill" : "externaldrive"
+        let iconColor = isSelected ? Color.accentColor : Color.secondary
+        let backgroundColor = isSelected ? Color.accentColor.opacity(0.12) : Color.clear
+
+        return Button {
+            viewModel.selectSource(source)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: iconName)
+                    .foregroundStyle(iconColor)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(source.name)
+                        .font(.headline)
+                    Text(source.displayPath)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+                Spacer()
+            }
+            .padding(10)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var mainPanel: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
+                    sourceSection
                     detectionSection
                     destinationSection
                     filtersSection
@@ -77,6 +113,53 @@ struct ContentView: View {
             }
 
             footer
+        }
+    }
+
+    private var sourceSection: some View {
+        GroupBox("Source Scan") {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewModel.selectedSource?.displayPath ?? "No source selected")
+                            .font(.subheadline)
+                            .textSelection(.enabled)
+                            .lineLimit(2)
+                        Text("Choose a microSD card or mounted folder, then scan it before copying.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button {
+                        viewModel.chooseSourceFolder()
+                    } label: {
+                        Label("Choose", systemImage: "externaldrive")
+                    }
+                }
+
+                if viewModel.scanSummary.hasScan {
+                    Divider()
+                    HStack(spacing: 16) {
+                        Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
+                        Label("\(viewModel.scanSummary.copyableItems) copyable", systemImage: "checkmark.circle")
+                        Label("\(viewModel.scanSummary.excludedItems) excluded", systemImage: "nosign")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                    if !viewModel.scanSummary.samplePaths.isEmpty {
+                        Text("Sample files from this source")
+                            .font(.caption.bold())
+                        ForEach(viewModel.scanSummary.samplePaths, id: \.self) { path in
+                            Text(path)
+                                .font(.caption.monospaced())
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+            }
+            .padding(8)
         }
     }
 
@@ -210,6 +293,10 @@ struct ContentView: View {
                     get: { viewModel.filters.includeGPS },
                     set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
                 ))
+                Toggle("Separate output folders for driving, parking, protected, photos, and GPS", isOn: Binding(
+                    get: { viewModel.filters.separateCategoryFolders },
+                    set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
+                ))
             }
             .padding(8)
             .onChange(of: viewModel.filters.selectedModes) { _, _ in viewModel.rebuildPlan() }
@@ -265,11 +352,24 @@ struct ContentView: View {
                         Text(item.clip.filename)
                             .lineLimit(1)
                     }
+                    TableColumn("Source") { item in
+                        Text(item.clip.relativePath)
+                            .font(.caption)
+                            .lineLimit(1)
+                    }
                     TableColumn("Mode") { item in
                         Text(item.clip.mode)
                     }
+                    TableColumn("Folder") { item in
+                        Text(item.clip.outputCategory)
+                    }
                     TableColumn("Channel") { item in
                         Text(item.clip.channel)
+                    }
+                    TableColumn("Destination") { item in
+                        Text(item.destinationURL.deletingLastPathComponent().path)
+                            .font(.caption)
+                            .lineLimit(1)
                     }
                     TableColumn("Size") { item in
                         Text(item.clip.size.formattedBytes)
@@ -335,4 +435,3 @@ struct ContentView: View {
         }
     }
 }
-

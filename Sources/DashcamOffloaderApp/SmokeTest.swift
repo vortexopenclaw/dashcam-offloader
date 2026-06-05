@@ -13,6 +13,17 @@ enum SmokeTest {
                 print("SMOKE FAIL: missing Vantrue E1 Pro profile")
                 return false
             }
+            let requiredDisplayNames = [
+                "70mai M310",
+                "Cansonic UltraDash Z3+ Standard Edition",
+                "Vantrue N4 Pro S"
+            ]
+            for displayName in requiredDisplayNames {
+                guard profiles.contains(where: { $0.displayName == displayName }) else {
+                    print("SMOKE FAIL: missing display name \(displayName)")
+                    return false
+                }
+            }
 
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-smoke-\(UUID().uuidString)", isDirectory: true)
@@ -59,6 +70,14 @@ enum SmokeTest {
 
             guard plan.items.count == 2, plan.selectedBytes == 3072 else {
                 print("SMOKE FAIL: unexpected plan \(plan.items.count) files \(plan.selectedBytes) bytes")
+                return false
+            }
+            guard plan.items.contains(where: { $0.destinationURL.path.contains("/Driving/") }) else {
+                print("SMOKE FAIL: driving output folder missing")
+                return false
+            }
+            guard plan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") }) else {
+                print("SMOKE FAIL: parking output folder missing")
                 return false
             }
 
