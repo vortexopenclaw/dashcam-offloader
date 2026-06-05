@@ -30,11 +30,11 @@ This project is in the research and profile-building phase. The first work is do
 
 - Thinkware U3000 Pro
 - Vueroid S1 4K Infinite
+- VIOFO A329S 3CH
+- BlackVue Elite 9 2CH
 
 Planned intake targets:
 
-- BlackVue Elite 9 2CH
-- Viofo A329S 3CH
 - Vueroid S1 4K 3CH
 - Vantrue N4 Pro S
 - Viofo A229 Pro
