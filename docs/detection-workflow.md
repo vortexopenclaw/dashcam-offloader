@@ -5,12 +5,13 @@
 ## Detection Strategy: Progressive Refinement
 
 ### Phase 1: Fast Pattern Match (< 1 second)
-**No OCR, no firmware analysis, no config file reading**
+**No OCR, no firmware downloads, no unzipping, no binary analysis, no deep config reading**
 
 **Checks:**
 1. Folder structure (e.g., `Normal/Event/Parking` = Vantrue N4 series)
 2. Filename patterns (regex match on first 10-20 files)
 3. Channel suffixes present (A/B/C, F/R, etc.)
+4. Optional root filename check for already-present firmware update files (bonus evidence only)
 
 **Output:** Ranked list of candidate models with confidence levels
 
@@ -60,7 +61,7 @@ UI shows:
 
 ### MEDIUM Confidence
 - Folder + filename pattern match to specific model family
-- Weak supporting evidence (volume label, firmware filenames)
+- Weak supporting evidence (volume label, already-present firmware filenames)
 - **Action:** Present top 2-3 candidates, user selects one
 
 ### LOW Confidence
@@ -113,7 +114,8 @@ UI shows:
 ### Caching/Optimization
 - Cache folder structure scan (don't re-scan if same card)
 - Cache first 20 filenames for pattern matching
-- Skip firmware/config file analysis unless explicitly requested
+- Allow only a fast root filename check for known firmware names already on the card
+- Skip firmware downloads, archive extraction, binary inspection, OCR, and deeper config analysis unless explicitly requested
 - Pre-load candidate profiles for fast presentation
 
 ### Error Handling
