@@ -3,16 +3,16 @@
 ## Seeded
 
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
+- Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
 - Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
+- Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear).
 
 ## Intake Queue
 
-- Vantrue N4 Pro S
-- Thinkware U3000
 - BlackVue DR970X Plus
 
 ## Support Definitions
