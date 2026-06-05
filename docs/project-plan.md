@@ -32,6 +32,7 @@
 
 ## Phase 4 - Mac App
 
+- Use `docs/prototype-build-brief.md` as the first Mac prototype handoff before implementation starts.
 - Show mounted removable volumes.
 - Allow manual source selection.
 - Allow user-selected destination folders.
