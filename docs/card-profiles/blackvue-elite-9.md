@@ -4,6 +4,8 @@
 
 Seed profile, based on one real 2CH sample card read-only scanned at `/Volumes/BLACKVUE` and official BlackVue Elite 9 manual/firmware references.
 
+Use `BlackVue Elite 9` as the public app model name. Treat channel count as variant metadata behind the scenes.
+
 ## Source References
 
 - Official manual: <https://manual.blackvue.com/docs/elite-9-series/>
@@ -71,6 +73,10 @@ Observed groups:
 - 253 complete `PF/PR` pairs.
 - 85 complete `IF/IR` pairs.
 - No incomplete front/rear pairs were observed on this sample card.
+
+## Channel Variants
+
+- 2CH - front and rear. Validated from the sampled card.
 
 ## Model Detection
 

@@ -1,10 +1,23 @@
-id: viofo-a329s-3ch
+id: viofo-a329s
 manufacturer: VIOFO
-model: A329S 3CH
+model: A329S
 status: seed
+channel_variants:
+  - channels: 3
+    roles:
+      - front
+      - interior
+      - rear
+    validation: real_card_sampled
+sampled_variant:
+  channels: 3
+  roles:
+    - front
+    - interior
+    - rear
 source_notes:
-  - docs/card-profiles/viofo-a329s-3ch.md
-  - docs/research/viofo-a329s-3ch.md
+  - docs/card-profiles/viofo-a329s.md
+  - docs/research/viofo-a329s.md
 detection:
   high_confidence:
     - path: DCIM/FWA329S.bin

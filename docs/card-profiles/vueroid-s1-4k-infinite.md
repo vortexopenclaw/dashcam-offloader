@@ -4,6 +4,8 @@
 
 Seed profile, based on official Vueroid S1 4K Infinite manual research and one real 3CH sample card read-only scanned at `/Volumes/S1-4K`.
 
+Use `Vueroid S1 4K Infinite` as the public app model name. Treat 1CH, 2CH, and 3CH as channel variants behind the scenes.
+
 ## Recording Folders
 
 Real-card observed:
@@ -48,7 +50,7 @@ Observed exceptions:
 - `INF` had 193 complete `F/I/R` groups and 5 `F`-only groups near the end of the sample.
 - `PARK`, `PEVENT`, and `USER` groups were complete `F/I/R` triplets on this sample.
 
-## Variants
+## Channel Variants
 
 The S1 4K family can be configured as:
 

@@ -11,6 +11,17 @@ id: thinkware-u3000-pro
 manufacturer: Thinkware
 model: U3000 Pro
 status: seed
+channel_variants:
+  - channels: 2
+    roles:
+      - front
+      - rear
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles:
+    - front
+    - rear
 detection:
   high_confidence:
     - path: SETTING/lang/ver.dat
@@ -34,6 +45,12 @@ exclude:
 - `validated` - confirmed with multiple cards or complete file-mode samples.
 - `experimental` - partial support, expected to need manual override.
 
+## Model Names and Channel Variants
+
+Use the base product model for the public profile name and YAML `model` field. Do not create separate public profiles just because a camera is sold in 1CH, 2CH, or 3CH configurations.
+
+Put channel-count differences in `channel_variants` and record the actually inspected setup in `sampled_variant`. A variant should only be marked `real_card_sampled` after a real card for that channel count has been inspected.
+
 ## Detection Evidence
 
 Detection evidence should be separated by strength:
@@ -45,4 +62,3 @@ Detection evidence should be separated by strength:
 ## Privacy
 
 Profiles must not include serial numbers, unique device IDs, license plates, GPS trails, or private video filenames that reveal personal locations.
-

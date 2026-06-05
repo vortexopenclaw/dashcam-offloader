@@ -2,6 +2,28 @@ id: vueroid-s1-4k-infinite
 manufacturer: Vueroid
 model: S1 4K Infinite
 status: seed
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: manual_confirmed
+  - channels: 2
+    roles:
+      - front
+      - rear
+    validation: manual_confirmed
+  - channels: 3
+    roles:
+      - front
+      - interior
+      - rear
+    validation: real_card_sampled
+sampled_variant:
+  channels: 3
+  roles:
+    - front
+    - interior
+    - rear
 source_notes:
   - docs/card-profiles/vueroid-s1-4k-infinite.md
 detection:

@@ -2,6 +2,17 @@ id: blackvue-elite-9
 manufacturer: BlackVue
 model: Elite 9
 status: seed
+channel_variants:
+  - channels: 2
+    roles:
+      - front
+      - rear
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles:
+    - front
+    - rear
 source_notes:
   - docs/card-profiles/blackvue-elite-9.md
   - docs/research/blackvue-elite-9.md
