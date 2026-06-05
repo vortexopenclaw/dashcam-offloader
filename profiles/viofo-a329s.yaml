@@ -35,8 +35,15 @@ source_notes:
   - docs/research/viofo-a329s.md
 detection:
   high_confidence:
-    - path: DCIM/FWA329S.bin
-      exists: true
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      threshold_method: half_max_brightness
+      matches: "VIOFO A329S"
+      notes: >
+        Camera burns "VIOFO A329S" into the bottom-center of every frame. Extract
+        bottom 8% of any front-channel (F) MP4, apply brightness threshold at 50% of
+        max pixel value, scale 4x, OCR with tesseract --psm 6. Confirmed on real card.
   supporting:
     - folder: DCIM/Movie
     - folder: DCIM/Movie/Parking
@@ -44,6 +51,11 @@ detection:
     - folder: DCIM/Photo
     - volume_label: A329S
       strength: weak
+  notes: >
+    No reliable model-identifying file on card. DCIM/FWA329S.bin only appears if the
+    user manually places a firmware file for an update; it is removed on next format.
+    Folder structure and filename pattern are identical to VIOFO A229 models. OSD OCR
+    on front-channel video is the recommended detection method.
 folders:
   - path: DCIM/Movie
     mode: continuous

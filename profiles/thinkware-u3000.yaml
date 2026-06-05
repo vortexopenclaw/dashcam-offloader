@@ -13,20 +13,26 @@ detection:
   high_confidence:
     - path: SETTING/lang/ver.dat
       contains: "Device Name:U3000"
-    - path: u3000_0_*/U3000_boot.bin
-      exists: true
-    - path: u3000_0_*/U3000_pkg.bin
-      exists: true
   supporting:
     - path: SETTING/setup.cfg
       contains: "U3000"
     - volume_label: U3000
       strength: weak
+  firmware_optional:
+    - path: u3000_0_*/U3000_boot.bin
+      exists: true
+      note: "Only present after firmware update, not reliable for detection"
+    - path: u3000_0_*/U3000_pkg.bin
+      exists: true
+      note: "Only present after firmware update, not reliable for detection"
   distinguishes_from_pro:
     - path: incabin_rec
       must_not_exist: true
     - path: SETTING/lang/ver.dat
       must_not_contain: "U3000PRO"
+  channel_variants:
+    - "1CH: F channel files only"
+    - "2CH: F and R channel files present"
   privacy:
     do_not_read:
       - device.uid
@@ -76,6 +82,17 @@ firmware:
   files:
     - U3000_boot.bin
     - U3000_pkg.bin
+  note: "Only present after firmware update; absence is normal"
+
+variants:
+  channel_configurations:
+    - id: 1CH
+      description: "Front only"
+      channels: [F]
+    - id: 2CH
+      description: "Front and Rear"
+      channels: [F, R]
+  evidence: "Sample card was 2CH variant"
 
 exclude:
   - SETTING/**
@@ -88,7 +105,9 @@ exclude:
   - "._*"
 
 notes:
-  - "U3000 is 2-channel only (F/R), no interior cabin camera support"
-  - "Distinguished from U3000 Pro by: no incabin_rec folder, ver.dat says 'U3000' not 'U3000PRO', firmware in u3000_0_<ver>/ folder"
-  - "Front channel has ~2.4x higher bitrate than rear channel"
+  - "U3000 available as 1CH (F only) or 2CH (F/R), no interior cabin camera support"
+  - "Distinguished from U3000 Pro by: no incabin_rec folder, ver.dat says 'U3000' not 'U3000PRO'"
+  - "U3000 Pro supports 3CH variant with interior IR camera; U3000 does not"
+  - "Firmware folder (u3000_0_<ver>/) only present after firmware update, not reliable for detection"
+  - "Front channel has ~2.4x higher bitrate than rear channel (2CH variant)"
   - "Manual and SOS folders exist but were empty on sample card"

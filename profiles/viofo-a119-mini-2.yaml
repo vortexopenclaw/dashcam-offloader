@@ -1,0 +1,99 @@
+id: viofo-a119-mini-2
+manufacturer: VIOFO
+model: A119 Mini 2
+status: seed
+source_notes:
+  - docs/card-profiles/viofo-a119-mini-2.md
+  - docs/research/viofo-a119-mini-2.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      threshold_method: adaptive
+      matches: "VIOFO A119 Mini 2"
+      case_sensitive: false
+      notes: >
+        Camera burns "VIOFO A119 Mini 2" into the bottom-center of every frame (when
+        Camera Model Stamp setting is enabled). OSD text is light gray — it may appear
+        on both dark and bright backgrounds depending on scene. The half-max-brightness
+        threshold used for A229/A329 models fails on bright scenes where OSD text is
+        darker than the background; use adaptive thresholding instead. OCR may read
+        "119" as "1TA" or similar — fuzzy/pattern matching recommended:
+        r'VIOFO\s+A1(?:19|[0-9T][A-Z0-9]*)\s+Mini\s+2'. Camera Model Stamp is a
+        user-configurable setting; detection may fail if disabled.
+  notes: >
+    No model-identifying file on card. Filename pattern is identical to VIOFO A119M Pro
+    (YYYYMMDDHHMMSS_SEQUENCE). OSD OCR is the recommended detection method but requires
+    adaptive thresholding due to gray OSD on variable-brightness backgrounds.
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: real_card_sampled
+    notes: Loop recording files. Confirmed on real card.
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: official_reference
+    notes: Locked/emergency recordings. Confirmed by official manual V25.12.18.
+  - path: DCIM/Parking
+    mode: parking
+    validation: official_reference
+    notes: >
+      Parking recordings (auto event detection, time-lapse, low bitrate). Confirmed by
+      official manual V25.12.18. Note: top-level DCIM/Parking, NOT DCIM/Movie/Parking
+      as used by the A229/A329 lineup.
+  - path: DCIM/Parking/RO
+    mode: parking_protected
+    validation: official_reference
+    notes: Locked parking recordings. Confirmed by official manual V25.12.18.
+  - path: DCIM/Photo
+    mode: still_image
+    validation: official_reference
+    notes: Snapshots. Confirmed by official manual V25.12.18.
+filename_patterns:
+  - pattern: "^(\\d{4})(\\d{2})(\\d{2})(\\d{6})_(\\d+)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+      - DCIM/Movie/RO
+      - DCIM/Parking
+      - DCIM/Parking/RO
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_group: 2
+      day_group: 3
+      time_group: 4
+      format: YYYYMMDDHHMMSS
+    sequence_group: 5
+    notes: >
+      Format: YYYYMMDDHHMMSS_SEQUENCE.MP4 — identical to VIOFO A119M Pro. No underscore
+      separators within the date/time component. No channel letter (single-channel
+      camera). Sequence number is a global monotonic counter. Observed starting at 1
+      on a freshly formatted card (000001, 000002, 000003).
+  - pattern: "^(\\d{4})(\\d{2})(\\d{2})(\\d{6})_(\\d+)\\.JPG$"
+    applies_to:
+      - DCIM/Photo
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_group: 2
+      day_group: 3
+      time_group: 4
+      format: YYYYMMDDHHMMSS
+    sequence_group: 5
+channels:
+  F: front
+resolutions:
+  F: 2560x1440
+  validation: real_card_sampled
+  notes: >
+    Default per manual and confirmed on real card. Additional options per manual:
+    2592x1944, 2560x1600, 2560x1440 (default), 2560x1440@60fps, 2560x1080@60fps,
+    2560x1080, 2304x1296, 1920x1080@60fps, 1920x1080. Users can change resolution.
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb

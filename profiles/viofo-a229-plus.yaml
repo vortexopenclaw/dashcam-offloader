@@ -1,0 +1,115 @@
+id: viofo-a229-plus
+manufacturer: VIOFO
+model: A229 Plus
+status: seed
+source_notes:
+  - docs/card-profiles/viofo-a229-plus.md
+  - docs/research/viofo-a229-plus.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      threshold_method: half_max_brightness
+      matches: "VIOFO A229 Plus"
+      notes: >
+        Camera burns "VIOFO A229 Plus" into the bottom-center of every frame. Extract
+        bottom 8% of any front-channel (F) MP4, apply brightness threshold at 50% of
+        max pixel value, scale 4x, OCR with tesseract --psm 6. Confirmed working on dark
+        footage (fresh card, indoor, no GPS sync) and via direct visual frame inspection.
+  supporting:
+    - folder: DCIM/Movie
+    - folder: DCIM/Movie/Parking
+    - folder: DCIM/Movie/RO
+    - folder: DCIM/Photo
+  notes: >
+    No model-identifying file on card. Folder structure and filename pattern are identical
+    to VIOFO A229 Pro and A329S. OSD OCR on front-channel video is the recommended
+    detection method.
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: real_card_sampled
+    notes: >
+      3 F/I/R triplets observed on real-card sample (fresh format). Parking, RO, and Photo
+      subfolders not present on fresh card; created on first use.
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: inferred
+    notes: >
+      Not observed on fresh-card sample. Present on A229 Pro and A329S real-card samples;
+      expected to follow identical structure.
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: inferred
+    notes: >
+      Not observed on fresh-card sample. Present on A229 Pro and A329S real-card samples;
+      expected to follow identical structure.
+  - path: DCIM/Photo
+    mode: still_image
+    validation: inferred
+    notes: >
+      Not observed on fresh-card sample. Present on A229 Pro and A329S real-card samples;
+      expected to follow identical structure.
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+      - DCIM/Movie/RO
+      - DCIM/Movie/Parking
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+    notes: >
+      Sequence number is a global monotonic counter across all channels and modes.
+      Observed as 6 digits (000001-000009) on real-card sample. Treat as variable-length.
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.JPG$"
+    applies_to:
+      - DCIM/Photo
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+channels:
+  F: front
+  I: interior
+  R: rear
+  PF: parking_front
+  PI: parking_interior
+  PR: parking_rear
+grouping:
+  keys:
+    - year
+    - month_day
+    - time
+  expected_sets:
+    normal:
+      - F
+      - I
+      - R
+    parking:
+      - PF
+      - PI
+      - PR
+resolutions:
+  F: 2560x1440
+  I: 1920x1080
+  R: 2560x1440
+  validation: real_card_sampled
+  notes: Default factory settings from real-card sample. Users can adjust resolution in camera settings.
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb

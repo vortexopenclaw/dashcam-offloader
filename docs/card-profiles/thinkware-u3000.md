@@ -1,16 +1,18 @@
 # Thinkware U3000 Card Profile
 
 **Camera Model:** Thinkware U3000 (non-Pro)  
-**Channels:** 2 (Front, Rear)  
+**Channel Variants:** 1CH (front only) or 2CH (front/rear)  
 **Profile Date:** 2026-06-05  
-**Evidence Source:** Real SD card at `/Volumes/U3000`  
+**Evidence Source:** Real SD card at `/Volumes/U3000` (2CH variant)  
 
 ## Model Detection
 
 **Highest-confidence evidence:**
 - `SETTING/lang/ver.dat` contains `Device Name:U3000`
 - `SETTING/setup.cfg` references `U3000` and `SETTING\U3000_Setting.exe`
-- Firmware folder: `u3000_0_1.02.03/` containing `U3000_boot.bin` and `U3000_pkg.bin`
+
+**Supporting evidence (if present):**
+- Firmware folder: `u3000_0_<ver>/` containing `U3000_boot.bin` and `U3000_pkg.bin`
 
 **Weak evidence:**
 - Volume label was `U3000`, but volume labels are user-renamable
@@ -18,6 +20,7 @@
 **Do not use:**
 - `device.uid` for model identification (unique device identifier)
 - `DCIM/FWA329S.bin` - firmware update file, not reliable for model detection
+- Firmware folder alone - not present by default, only appears after firmware update
 
 ## Folder Structure
 
@@ -63,7 +66,11 @@
 | F | Front | Higher | ~258 MB per clip |
 | R | Rear | Lower | ~107 MB per clip |
 
-**Note:** Both channels record simultaneously for each timestamp. Front channel has significantly higher bitrate than rear.
+**Channel detection:**
+- 1CH variant: Only `F` (front) channel files present
+- 2CH variant: Both `F` (front) and `R` (rear) channel files present
+
+**Note:** Both channels record simultaneously for each timestamp on 2CH models. Front channel has significantly higher bitrate than rear.
 
 ## Configuration Files
 
@@ -78,14 +85,23 @@
 
 ## Firmware Files
 
-**Location:** `u3000_0_1.02.03/` (firmware version folder)
+**Location:** `u3000_0_<ver>/` (firmware version folder, e.g., `u3000_0_1.02.03/`)
 
 | File | Purpose |
 |------|---------|
 | `U3000_boot.bin` | Bootloader firmware |
 | `U3000_pkg.bin` | Main firmware package |
 
-**Note:** The firmware folder name includes the version number (e.g., `u3000_0_1.02.03`). This can be used as secondary model detection.
+**Important:** This folder is **not present by default**. It only appears after a firmware update file has been placed on the card. Do not use the presence or absence of this folder for model detection.
+
+## Model Variants
+
+The Thinkware U3000 is available in two channel configurations:
+
+- **1CH (Front only):** Records single channel, filenames use `F` suffix
+- **2CH (Front/Rear):** Records two channels simultaneously, filenames use `F` and `R` suffixes
+
+The sample card inspected for this profile was a 2CH variant.
 
 ## System Files (Exclude from Offload)
 
@@ -102,18 +118,21 @@
 
 | Feature | U3000 | U3000 Pro |
 |---------|-------|-----------|
-| Channels | 2 (F/R) | 3 (F/R + Interior) |
-| In-cabin folder | No | Yes (`incabin_rec/`) |
-| Firmware path | `u3000_0_<ver>/` | `U3000PRO_Setting.exe` in `SETTING/` |
+| Channel variants | 1CH (F) or 2CH (F/R) | 1CH (F), 2CH (F/R), or 3CH (F/R/Interior) |
+| In-cabin folder | No | Yes (`incabin_rec/`) on 3CH variant |
+| Firmware folder | `u3000_0_<ver>/` (only after update) | `U3000PRO_Setting.exe` in `SETTING/` |
 | ver.dat device name | `U3000` | `U3000PRO` |
+
+**Key distinction:** The U3000 Pro is the only model that supports a 3-channel setup with the optional interior IR camera (`incabin_rec` folder). Both U3000 and U3000 Pro offer 1CH and 2CH variants.
 
 ## Detection Rules
 
 **Model Detection:**
 - Folder structure matches Thinkware pattern
 - `SETTING/lang/ver.dat` contains `Device Name:U3000` (not `U3000PRO`)
-- No `incabin_rec` folder present
-- Firmware in `u3000_0_<ver>/` format
+- No `incabin_rec` folder present (distinguishes from U3000 Pro 3CH)
+- Channel files present: `F` only (1CH) or `F` + `R` (2CH)
+- Firmware folder `u3000_0_<ver>/` may exist if firmware was updated, but absence is normal
 
 **Exclusions:**
 - macOS resource forks: `._*`
