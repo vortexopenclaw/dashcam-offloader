@@ -45,6 +45,7 @@ Planned intake targets:
 - `docs/project-plan.md` - phased build plan
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
 - `docs/profile-schema.md` - camera profile format
+- `docs/research/` - manual/source-link notes and research artifacts
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles

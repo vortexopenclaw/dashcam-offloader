@@ -5,6 +5,7 @@
 - Capture real SD-card folder trees.
 - Capture representative filenames from every recording folder.
 - Record official manual evidence for folder meanings.
+- Store manual/source-link notes under `docs/research/`.
 - Build one human-readable profile note per camera.
 - Build one machine-readable YAML profile per camera.
 - Document open questions per camera.

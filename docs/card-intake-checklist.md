@@ -86,7 +86,7 @@ The default intake package should exclude:
 
 ## Manual Research
 
-- Save official manuals locally.
+- Save manual/source-link notes under `docs/research/`.
 - Extract relevant text.
 - Record exact folder names and manufacturer terminology.
 - Mark unsupported or unobserved modes as manual-confirmed but sample-unvalidated.
