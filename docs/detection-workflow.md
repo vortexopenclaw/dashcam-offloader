@@ -101,8 +101,28 @@ UI shows:
 **Folder pattern:** `DCIM/Movie/`, `DCIM/Parking/`, `DCIM/Normal/`
 **Filename pattern:** Varies by model (e.g., `YYYYMMDDHHMMSS_SEQ`)
 **Candidates:** A229 Pro, A229 Plus, A229 Ultra, A139 Pro, A119 series
-**Distinguisher:** Model-specific filename patterns, config files
+**Distinguisher:** Model-specific filename patterns, config files, or optional front-camera OSD OCR during explicit review
 **Confidence without model file:** Depends on pattern uniqueness
+
+### Optional VIOFO OSD OCR Review
+VIOFO OCR is an explicit review or learning-mode tool, not part of the default fast scan. Use it when VIOFO folder and filename patterns leave several plausible models and the user wants deeper analysis.
+
+Current documented OCR method:
+
+- Select a front-channel video (`F`, `PF`, `_F`, or a single-channel A119 clip).
+- Extract one or more frames.
+- Crop the bottom 8 percent of the frame where the camera model stamp appears.
+- Scale the crop 4x.
+- Run `tesseract --psm 6`.
+- Match known model stamps such as `VIOFO A329S`, `VIOFO A229 Pro`, `VIOFO A229 Plus`, `VIOFO A229 Ultra`, `VIOFO A139 PRO`, `VIOFO A119M Pro`, or `VIOFO A119 Mini 2`.
+
+Preprocessing notes:
+
+- A229, A329, A139, and A119M Pro profiles use a half-max brightness threshold.
+- A119 Mini 2 needs adaptive thresholding and fuzzy matching because the light-gray OSD can be low contrast on bright scenes.
+- If the user disabled Camera Model Stamp, OCR cannot identify the model.
+
+See `docs/research/viofo-osd-ocr.md` for the detailed workflow.
 
 ## Implementation Notes
 
@@ -116,6 +136,7 @@ UI shows:
 - Cache first 20 filenames for pattern matching
 - Allow only a fast root filename check for known firmware names already on the card
 - Skip firmware downloads, archive extraction, binary inspection, OCR, and deeper config analysis unless explicitly requested
+- Allow optional VIOFO front-camera OSD OCR in learning mode or explicit review mode only
 - Pre-load candidate profiles for fast presentation
 
 ### Error Handling
