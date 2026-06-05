@@ -4,7 +4,7 @@
 **Model:** UltraDash Z3+ Standard Edition  
 **Channels:** 2 built-in (L + R); 3 with optional R1 rear camera (B)  
 **Resolution:** 2K QHD (2560×1440) per channel  
-**Source:** NAS-archived footage + official product page
+**Source:** Official product page + NAS-archived footage samples
 
 ---
 
@@ -16,17 +16,17 @@ YYYYMMDD_HHMMSS_CHANNEL.MP4
 
 | Field | Description | Example |
 |---|---|---|
-| `YYYYMMDD` | Recording date (8 digits, no separator) | `20230414` |
+| `YYYYMMDD` | Recording date (8 digits, no separator) | `20240101` |
 | `_` | Separator | |
-| `HHMMSS` | Recording time (24h) | `124508` |
+| `HHMMSS` | Recording time (24h) | `120000` |
 | `_` | Separator | |
 | `CHANNEL` | Single letter: `L`, `R`, or `B` | `L` |
 | `.MP4` | Uppercase extension | |
 
 **Examples:**
-- `20230414_124508_L.MP4` — wide-angle front
-- `20230414_124508_R.MP4` — telephoto front (same timestamp, synchronized)
-- `20230905_170614_B.MP4` — rear camera (R1 installed)
+- `20240101_120000_L.MP4` — wide-angle front
+- `20240101_120000_R.MP4` — telephoto front (same timestamp, synchronized)
+- `20240101_120000_B.MP4` — rear camera (R1 installed)
 
 **No sequence number.** Synchronized channel files always share the same timestamp.
 
