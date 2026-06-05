@@ -1,0 +1,99 @@
+id: viofo-a329s-3ch
+manufacturer: VIOFO
+model: A329S 3CH
+status: seed
+source_notes:
+  - docs/card-profiles/viofo-a329s-3ch.md
+  - docs/research/viofo-a329s-3ch.md
+detection:
+  high_confidence:
+    - path: DCIM/FWA329S.bin
+      exists: true
+  supporting:
+    - folder: DCIM/Movie
+    - folder: DCIM/Movie/Parking
+    - folder: DCIM/Movie/RO
+    - folder: DCIM/Photo
+    - volume_label: A329S
+      strength: weak
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: real_card_sampled
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: real_card_sampled
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: real_card_sampled
+    notes: Contains both normal and parking channel suffixes on the sampled card.
+  - path: DCIM/Photo
+    mode: still_image
+    validation: real_card_sampled
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+      - DCIM/Movie/RO
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(PF|PI|PR)\\.MP4$"
+    applies_to:
+      - DCIM/Movie/Parking
+      - DCIM/Movie/RO
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.JPG$"
+    applies_to:
+      - DCIM/Photo
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+channels:
+  F: front
+  I: interior
+  R: rear
+  PF: parking_front
+  PI: parking_interior
+  PR: parking_rear
+grouping:
+  keys:
+    - year
+    - month_day
+    - time
+  expected_sets:
+    normal:
+      - F
+      - I
+      - R
+    parking:
+      - PF
+      - PI
+      - PR
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb
+  - DCIM/FWA329S.bin
+  - DCIM/._FWA329S.bin
+  - DCIM/Movie/.dashcamexport/**

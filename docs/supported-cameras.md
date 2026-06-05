@@ -3,12 +3,12 @@
 ## Seeded
 
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
-- Vueroid S1 4K Infinite - profile drafted from official documentation, real card filename validation pending.
+- Vueroid S1 4K Infinite - profile drafted from official documentation and one real 3CH sample card.
+- VIOFO A329S 3CH - profile drafted from one real 3CH sample card and official VIOFO product/support references.
 
 ## Intake Queue
 
 - BlackVue Elite 9 2CH
-- Viofo A329S 3CH
 - Vueroid S1 4K 3CH
 - Vantrue N4 Pro S
 - Viofo A229 Pro

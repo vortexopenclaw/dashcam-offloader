@@ -14,30 +14,58 @@ detection:
 folders:
   - path: INF
     mode: continuous
-    validation: manual_confirmed
+    prefix: INF
+    validation: real_card_sampled
   - path: EVENT
     mode: driving_event
     validation: manual_confirmed
+    notes: No visible MP4 files on the sampled card.
   - path: PARK
     mode: parking_motion_or_timelapse
-    validation: manual_confirmed
+    prefix: PRK
+    validation: real_card_sampled
   - path: PEVENT
     mode: parking_event
-    validation: manual_confirmed
+    prefix: PVT
+    validation: real_card_sampled
   - path: USER
     mode: manual
-    validation: manual_confirmed
+    prefix: USR
+    validation: real_card_sampled
   - path: BOOKMARK
     mode: bookmark_image
     validation: manual_confirmed
-filename_patterns: []
+    notes: No visible files on the sampled card.
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([A-Z]+)_([FIR])_([A-Z])\\.mp4$"
+    case_sensitive: false
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    prefix_group: 3
+    channel_group: 4
+    flag_group: 5
 channels:
-  front: pending_real_card_validation
-  rear: pending_real_card_validation
-  interior: pending_real_card_validation
+  F: front
+  I: interior
+  R: rear
+observed_flags:
+  N: unknown_observed_on_visible_samples
+grouping:
+  keys:
+    - date
+    - time
+    - prefix
+  expected_channels:
+    - F
+    - I
+    - R
 exclude:
   - CONFIG/**
+  - .TFF_REC_RESERVE*
+  - "*.SYS"
+  - "*.NFF"
   - .Spotlight-V100/**
   - .fseventsd/**
   - "._*"
-
