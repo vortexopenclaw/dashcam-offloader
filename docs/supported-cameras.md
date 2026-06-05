@@ -7,11 +7,11 @@
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
+- VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
 
 ## Intake Queue
 
 - Vantrue N4 Pro S
-- Viofo A229 Pro
 - Thinkware U3000
 - BlackVue DR970X Plus
 
