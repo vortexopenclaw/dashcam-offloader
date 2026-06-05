@@ -1,0 +1,85 @@
+# BlackVue DR970X Plus Profile
+# Generated: 2026-06-05
+# Evidence: Real SD card inspection at /Volumes/BLACKVUE
+
+id: blackvue-dr970x-plus
+manufacturer: BlackVue
+model: DR970X Plus
+status: seeded
+source_notes:
+  - docs/card-profiles/blackvue-dr970x-plus.md
+
+detection:
+  high_confidence:
+    - path: BlackVue/Config/version.bin
+      contains: "model = DR970X Plus"
+    - path: BlackVue/Config/micom_version.bin
+      contains: "model = DR970X Plus"
+  folder_structure:
+    required:
+      - BlackVue/Record
+      - BlackVue/Config
+  privacy:
+    do_not_read:
+      - BlackVue/Config/config.ini
+      - BlackVue/Config/bt_ssid.bin
+    do_not_log:
+      - WiFi SSIDs
+      - WiFi passwords
+      - Cloud credentials
+      - Bluetooth identifiers
+
+folders:
+  - path: BlackVue/Record
+    mode: all_recordings
+    description: All video files (normal, event, parking in single folder)
+
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([NEIP])([FR])\\.mp4$"
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+    modes:
+      N: normal
+      E: event
+      I: event_impact
+      P: parking
+    channels:
+      F: front
+      R: rear
+
+channels:
+  F:
+    position: front
+    bitrate: highest
+    observed_file_size_bytes: 464800000
+  R:
+    position: rear
+    bitrate: lower
+    observed_file_size_bytes: 83400000
+    bitrate_ratio_to_front: 5.6
+
+firmware:
+  observed_version: "2.008"
+  observed_revision: 1568
+  micom_version: "2.01"
+  config_path: BlackVue/Config/version.bin
+
+exclude:
+  - BlackVue/Config/**
+  - BlackVue/System/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"
+
+notes:
+  - "Single Record/ folder for all modes (vs separate folders per mode)"
+  - "Mode codes: N=normal, E=event, I=event/impact, P=parking"
+  - "E vs I prefix distinction unclear (manual vs G-sensor?)"
+  - "Front channel bitrate ~5.6× higher than rear"
+  - "Config files contain privacy-sensitive WiFi/cloud credentials - exclude from analysis"
+  - "AP SSID in config is user-configurable WiFi hotspot name, not model identifier"
+  - "Sample card was 2CH (F+R) variant"
