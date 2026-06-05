@@ -13,7 +13,18 @@ Scope notes:
 
 ## Vueroid
 
-No additional Vueroid models were found beyond the already tracked S1 4K Infinite during this pass.
+The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite base model with 1CH, 2CH, and 3CH variants. The current Vueroid dashcam page also lists these additional selector candidates.
+
+| Model | Channels | Max resolution | Era | Distinctive features |
+|---|---:|---|---|---|
+| S1 QHD Infinite | 2/3CH | QHD front class | 2026 current | S1 family, Sony STARVIS 2, 5 GHz Wi-Fi, GPS, front/rear and front/rear/interior bundles. |
+| D40-Q2 | 2CH | QHD class | 2026 current listing | D40 series model listed in Vueroid dashcam page/category navigation. |
+| D21 4K | 2CH | 4K front class | 2025 to current | Screenless D21 series, AV Out, current Vueroid product page. |
+| D21 LTE FHD | 2CH class | FHD class | 2025 legacy/current page, out of stock | LTE D21 variant, screenless, AV Out, listed out of stock in product metadata. |
+| D20-Q2 Plus | 2CH | QHD class | 2025 legacy/current page, out of stock | D20 series QHD 2-channel model, screenless, AV Out. |
+| D20-F2/F2E | 2CH | FHD class | 2025 legacy/current page, out of stock | Compact bar-shaped D20 series FHD 2-channel model. |
+| ZERO | 2CH | FHD class | 2025 legacy/current page, out of stock | FHD 2-channel model using Vueroid ISP tuning. |
+| D10-F2W | 2CH | FHD class | 2025 legacy/current page, out of stock | D10 series FHD 2-channel model, screenless, AV Out. |
 
 ## Thinkware
 
@@ -167,8 +178,10 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
-| UltraDash Z4 | 3CH | 4K + 4K + 2K | 2025 current | Dual-lens front unit plus rear, 3-channel high-resolution system. |
-| UltraDash Z3+ | 2CH front unit, optional 3CH with R1 | 2K + 2K, optional 2K rear | 2024 current | Dual rotating lenses, optional IP67 rear camera, magnetic mount. |
+| UltraDash Z4 Standard | 3CH | 4K + 4K + 2K | 2025 current | Standard Z4 SKU `UD_Z4`, dual-lens front unit plus rear, front/far/cabin recording, IP67 rear camera. |
+| UltraDash Z4 Commercial | 3CH | 4K + 4K + 2K | 2025 current | Commercial Z4 SKU `UD_Z4C`, same 3-channel platform, commercial/fleet-oriented variant. |
+| UltraDash Z3+ Standard | 2CH front unit, optional 3CH with R1 | 2K + 2K, optional 2K rear | 2024 current | Standard Z3+ SKU `UD_Z3+`, dual rotating lenses, optional R1 rear camera, magnetic mount. |
+| UltraDash Z3+ Commercial | 2CH front unit, optional 3CH with R1 | 2K + 2K, optional 2K rear | 2024 current | Commercial Z3+ SKU `UD_Z3+C`, rideshare/taxi/truck-oriented variant with optional R1 rear bundle. |
 | UltraDash Z3 | 2CH front unit | 1080p/2K class | Legacy | Earlier dual-lens model. |
 | UltraDash Z1 | 1CH | FHD/2K class | Legacy | Download page support listing. |
 | UltraDash S3 | 2CH front unit | 2K class | Legacy | Time-lapse firmware note shared with Z3+. |
@@ -374,6 +387,7 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 
 ## Sources
 
+- Vueroid dashcam lineup and product pages: https://vueroid.com/dashcam/, https://vueroid.com/product/bundle-s1-qhd-infinite-2-channel/, https://vueroid.com/product/bundle-s1-qhd-infinite-3-channel/, https://vueroid.com/product/vueroid-d21-4k-2ch/, https://vueroid.com/product/d21-lte-fhd/, https://vueroid.com/product/vueroid-d20-q2-plus-2ch/, https://vueroid.com/product/vueroid-d20-f2-f2e-2ch/, https://vueroid.com/product/vueroid-zero-2ch/, https://vueroid.com/product/d10-f2w-2ch/
 - Vueroid S1 4K Infinite support and manual: https://vueroid.com/vueroid-s/s1-4k-infinite-1ch/support/ and https://vueroid.com/wp-content/uploads/2025/02/VUEROID_S1-4K-Infinite_MANUAL_V1.1.pdf
 - Thinkware global Q200 support: https://thinkware.com/global/support/download/q200
 - Thinkware Japan support model list: https://thinkware.co.jp/support/dash-cam/
@@ -391,7 +405,7 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 - Redtiger official homepage and F7N/F17 page: https://redtigercam.com/ and https://eu.redtigercam.com/products/f7n-series
 - Rove product pages: https://www.rovedashcam.com/products/rove-r2-4k-dual-pro-dash-cam, https://www.rovedashcam.com/products/rove-r2-4k-car-dashcam, https://www.rovedashcam.com/products/new-rove-r2-4k-pro-dash-cam-4k-ultra-hd-2160p-dash-board-camera-built-in-wifi-gps
 - Wolfbox support FAQ and accessory compatibility evidence: https://community.wolfbox.com/support/post/dash-cam-model-specific-faq-3ZKqLexjFB3Hipy and https://ezdashcam.com/wolfbox-oem-mirror-bracket-for-g900-g900-tripro-g850-g840s-g840h-dash-cam/
-- Cansonic UltraDash pages: https://cansonic.com/collections/product, https://cansonic.com/pages/download, https://cansonic.com/products/ultradash-z3-standard-dash-cam, https://cansonic.com/products/ultradash-z4-4k-dash-cam-standard
+- Cansonic UltraDash pages: https://cansonic.com/collections/product, https://cansonic.com/pages/download, https://cansonic.com/products/ultradash-z3-standard-dash-cam, https://cansonic.com/products/ultradash-z3-commercial-dash-cam, https://cansonic.com/products/ultradash-z4-4k-dash-cam-standard, https://cansonic.com/products/ultradash-z4-4k-dash-cam-commercial
 - FineVu global and UK pages: https://finevu.com/en/sub3/sub1.html, https://finevu.co.uk/products/gx4k-dashcam/, https://finevu.co.uk/finevu-dashcam-faq/
 - Nextbase support and comparison pages: https://support.nextbase.com/hc/en-us, https://nextbase.com/compare/, https://nextbase.com/dash-cams/
 - Garmin product/support pages: https://www.garmin.com/en-US/p/1391409/pn/010-02860-00/, https://support.garmin.com/en-IN/?faq=K5Kkj7NNG59OMjVi1NwIl5&searchType=noProduct, https://support.garmin.com/en-SG/?faq=zt5jApK3IM5nt1VNYjTEa5
