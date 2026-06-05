@@ -1,0 +1,104 @@
+# Vantrue N4 Pro S Profile
+# Generated: 2026-06-05
+# Evidence: Real SD card inspection at /Volumes/N4 Pro S
+
+camera:
+  brand: Vantrue
+  model: N4 Pro S
+  channels: 3
+  channel_labels:
+    A: Front
+    B: Interior
+    C: Rear
+
+folders:
+  - path: Normal
+    mode: normal
+    description: Continuous driving recording
+    extensions: [.MP4]
+  - path: Event
+    mode: event
+    description: Impact or emergency event recording
+    extensions: [.MP4]
+  - path: Parking
+    mode: parking
+    description: Parking mode (motion or time-lapse)
+    extensions: [.MP4]
+  - path: Photo
+    mode: photo
+    description: Photo snapshots
+    extensions: [.JPG]
+  - path: GPS
+    mode: gps
+    description: GPS trajectory logs (CSV format)
+    extensions: [.dat]
+
+filename_pattern:
+  regex: '^(?P<date>\d{8})_(?P<time>\d{6})_(?P<seq>\d{5})_(?P<mode>[NEP])_(?P<channel>[ABC])\.(?P<ext>MP4|JPG)$'
+  components:
+    - name: date
+      format: YYYYMMDD
+      example: "20251211"
+    - name: time
+      format: HHMMSS
+      example: "184930"
+    - name: seq
+      format: DDDDD
+      description: 5-digit sequence number
+      example: "01110"
+    - name: mode
+      values:
+        N: normal
+        E: event
+        P: parking
+      example: "N"
+    - name: channel
+      values:
+        A: Front (highest bitrate)
+        B: Interior (medium bitrate)
+        C: Rear (medium bitrate)
+      example: "A"
+
+gps_format:
+  location: GPS/YYYYMMDD.dat
+  format: csv
+  line_ending: CRLF
+  header: "#"
+  fields:
+    - name: timestamp
+      format: YYYYMMDDHHMMSS
+    - name: latitude
+    - name: lat_hemisphere
+      values: [N, S]
+    - name: longitude
+    - name: lon_hemisphere
+      values: [E, W]
+    - name: altitude
+      unit: meters
+    - name: speed
+
+exclusions:
+  - pattern: '^\\._'
+    reason: macOS resource fork files
+  - pattern: '^\\.Spotlight-V100$'
+    reason: macOS Spotlight index
+  - pattern: '^\\.fseventsd$'
+    reason: macOS file system events
+
+detection:
+  folder_structure:
+    required:
+      - Normal
+      - Event
+      - Parking
+    optional:
+      - Photo
+      - GPS
+  filename_sample_size: 10
+  min_match_confidence: 0.9
+
+notes:
+  - All three channels (A, B, C) record simultaneously for each timestamp
+  - Channel A (Front) has highest bitrate, B and C are medium bitrate
+  - GPS logs are daily CSV files with trajectory data
+  - Parking mode clips may have incomplete channel coverage depending on motion trigger
