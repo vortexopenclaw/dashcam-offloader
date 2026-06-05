@@ -3,6 +3,21 @@ manufacturer: VIOFO
 model: A329S
 status: seed
 channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: official_reference
+  - channels: 2
+    roles:
+      - front
+      - rear
+    validation: official_reference
+  - channels: 2
+    variant: IR
+    roles:
+      - front
+      - interior
+    validation: official_reference
   - channels: 3
     roles:
       - front

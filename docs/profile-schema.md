@@ -51,6 +51,14 @@ Use the base product model for the public profile name and YAML `model` field. D
 
 Put channel-count differences in `channel_variants` and record the actually inspected setup in `sampled_variant`. A variant should only be marked `real_card_sampled` after a real card for that channel count has been inspected.
 
+Useful `validation` values:
+
+- `real_card_sampled` - verified from a real card.
+- `official_reference` - confirmed by official manufacturer docs or product pages, but not yet card-sampled.
+- `manual_confirmed` - confirmed by an official manual, but not necessarily observed on a card.
+- `user_provided_example` - based on a user-provided representative filename or screenshot.
+- `inferred_from_related_profile` - copied from a related profile as a hypothesis and still needs card validation.
+
 ## Detection Evidence
 
 Detection evidence should be separated by strength:

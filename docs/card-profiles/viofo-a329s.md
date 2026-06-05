@@ -14,6 +14,8 @@ Use `VIOFO A329S` as the public app model name. Treat channel count as variant m
 
 The official product page confirms the sampled A329S 3CH configuration and describes it as a 4K front, 2K cabin, and 2K rear three-channel dash cam with SSD storage support. The official support/manual pages were checked, but a clean A329S PDF manual link was not exposed during this pass.
 
+The official VIOFO collection page also lists A329S 1CH, A329S 2CH, A329S 2CH IR, and A329S 3CH configurations.
+
 ## Card Layout
 
 Real-card observed:
@@ -65,8 +67,10 @@ Observed groups:
 
 ## Channel Variants
 
+- 1CH - front. Official reference, not card-sampled yet.
+- 2CH - front and rear. Official reference, not card-sampled yet.
+- 2CH IR - front and interior. Official reference, not card-sampled yet.
 - 3CH - front, interior, and rear. Validated from the sampled card.
-- 1CH and 2CH - keep as possible app variants only if future real-card evidence or official references confirm them.
 
 ## Exclude By Default
 
@@ -84,4 +88,4 @@ Observed groups:
 
 - Confirm whether `RO` only contains locked events or can also include manual saves.
 - Confirm whether `PF/PI/PR` always means parking channel across all A329S firmware versions.
-- Confirm whether 1CH and 2CH A329S variants exist and whether they use the same layout.
+- Confirm whether 1CH, 2CH, and 2CH IR A329S variants use the same folder and suffix layout.

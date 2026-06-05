@@ -1,0 +1,69 @@
+id: viofo-a329t
+manufacturer: VIOFO
+model: A329T
+status: experimental
+related_profiles:
+  - viofo-a329s
+channel_variants:
+  - channels: 2
+    roles:
+      - front
+      - telephoto
+    validation: official_reference
+  - channels: 3
+    roles:
+      - front
+      - rear
+      - telephoto
+    validation: official_reference
+sampled_variant: null
+source_notes:
+  - docs/card-profiles/viofo-a329t.md
+  - docs/research/viofo-a329t.md
+detection:
+  supporting:
+    - folder: DCIM/Movie
+      validation: inferred_from_related_profile
+    - volume_label: A329T
+      strength: weak
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|R|T)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+      - DCIM/Movie/RO
+    case_sensitive: true
+    validation: user_provided_example
+    notes: User-provided evidence confirms T as telephoto. F/R are expected from A329-series similarity and official channel roles.
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+channels:
+  F: front
+  R: rear
+  T: telephoto
+grouping:
+  keys:
+    - year
+    - month_day
+    - time
+  expected_sets:
+    two_channel:
+      - F
+      - T
+    three_channel:
+      - F
+      - R
+      - T
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb
+  - DCIM/*.bin
+  - DCIM/Movie/.dashcamexport/**
