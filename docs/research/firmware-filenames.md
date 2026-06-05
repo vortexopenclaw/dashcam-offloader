@@ -4,6 +4,8 @@
 
 **Core rule:** Firmware files are manually downloaded and copied to the SD card for updates. They are usually absent from normal recording cards, and they can be stale, wrong, or left over from another camera. Treat them as a tie-breaker after folder and filename pattern detection, not as primary model identification.
 
+**App boundary:** The Mac app must not download firmware packages. This research note exists because maintainers can inspect public firmware downloads ahead of time and record their filename patterns. At runtime, the app may only compare filenames already present on the user's card against this prebuilt reference.
+
 ## Detection Usage
 
 During the fast card scan, it is acceptable to list root-level filenames and compare them against known firmware names already present on the card. Do not download firmware, unzip archives, OCR video, inspect binary contents, or wait on deep analysis during model identification.

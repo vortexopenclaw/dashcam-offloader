@@ -7,6 +7,8 @@
 ### Phase 1: Fast Pattern Match (< 1 second)
 **No OCR, no firmware downloads, no unzipping, no binary analysis, no deep config reading**
 
+The Mac app must never download firmware files as part of model detection. Firmware package research is a maintainer-only workflow used to learn public filename patterns ahead of time.
+
 **Checks:**
 1. Folder structure (e.g., `Normal/Event/Parking` = Vantrue N4 series)
 2. Filename patterns (regex match on first 10-20 files)
@@ -135,7 +137,8 @@ See `docs/research/viofo-osd-ocr.md` for the detailed workflow.
 - Cache folder structure scan (don't re-scan if same card)
 - Cache first 20 filenames for pattern matching
 - Allow only a fast root filename check for known firmware names already on the card
-- Skip firmware downloads, archive extraction, binary inspection, OCR, and deeper config analysis unless explicitly requested
+- Never download firmware files from the Mac app
+- Skip archive extraction, binary inspection, OCR, and deeper config analysis unless explicitly requested
 - Allow optional VIOFO front-camera OSD OCR in learning mode or explicit review mode only
 - Pre-load candidate profiles for fast presentation
 
