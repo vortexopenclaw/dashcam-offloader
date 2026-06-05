@@ -1,0 +1,94 @@
+# Thinkware U3000 Profile
+# Generated: 2026-06-05
+# Evidence: Real SD card inspection at /Volumes/U3000
+
+id: thinkware-u3000
+manufacturer: Thinkware
+model: U3000
+status: seed
+source_notes:
+  - docs/card-profiles/thinkware-u3000.md
+
+detection:
+  high_confidence:
+    - path: SETTING/lang/ver.dat
+      contains: "Device Name:U3000"
+    - path: u3000_0_*/U3000_boot.bin
+      exists: true
+    - path: u3000_0_*/U3000_pkg.bin
+      exists: true
+  supporting:
+    - path: SETTING/setup.cfg
+      contains: "U3000"
+    - volume_label: U3000
+      strength: weak
+  distinguishes_from_pro:
+    - path: incabin_rec
+      must_not_exist: true
+    - path: SETTING/lang/ver.dat
+      must_not_contain: "U3000PRO"
+  privacy:
+    do_not_read:
+      - device.uid
+
+folders:
+  - path: cont_rec
+    mode: continuous
+    prefix: REC
+  - path: evt_rec
+    mode: driving_event
+    prefix: EVT
+  - path: motion_timelapse_rec
+    mode: parking_motion_or_timelapse
+    prefix: MOT
+  - path: parking_rec
+    mode: parking_event
+    prefix: PAK
+  - path: manual_rec
+    mode: manual
+    prefix: unknown
+    validation: folder_exists_sample_missing
+  - path: sos_rec
+    mode: sos
+    prefix: unknown
+    validation: folder_exists_sample_missing
+
+filename_patterns:
+  - pattern: "^(REC|EVT|MOT|PAK)_(\\d{8})_(\\d{6})_([FR])\\.MP4$"
+    timestamp:
+      date_group: 2
+      time_group: 3
+      format: YYYYMMDD_HHMMSS
+    channel_group: 4
+
+channels:
+  F:
+    position: front
+    bitrate: higher
+    observed_file_size_bytes: 257949696
+  R:
+    position: rear
+    bitrate: lower
+    observed_file_size_bytes: 106954752
+
+firmware:
+  path_pattern: "u3000_0_*/"
+  files:
+    - U3000_boot.bin
+    - U3000_pkg.bin
+
+exclude:
+  - SETTING/**
+  - THUMBNAIL/**
+  - driveinfo/**
+  - device.uid
+  - .TWSYS/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"
+
+notes:
+  - "U3000 is 2-channel only (F/R), no interior cabin camera support"
+  - "Distinguished from U3000 Pro by: no incabin_rec folder, ver.dat says 'U3000' not 'U3000PRO', firmware in u3000_0_<ver>/ folder"
+  - "Front channel has ~2.4x higher bitrate than rear channel"
+  - "Manual and SOS folders exist but were empty on sample card"
