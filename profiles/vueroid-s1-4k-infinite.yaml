@@ -1,0 +1,43 @@
+id: vueroid-s1-4k-infinite
+manufacturer: Vueroid
+model: S1 4K Infinite
+status: seed
+source_notes:
+  - docs/card-profiles/vueroid-s1-4k-infinite.md
+detection:
+  supporting:
+    - folder: INF
+    - folder: EVENT
+    - folder: PARK
+    - folder: PEVENT
+    - folder: USER
+folders:
+  - path: INF
+    mode: continuous
+    validation: manual_confirmed
+  - path: EVENT
+    mode: driving_event
+    validation: manual_confirmed
+  - path: PARK
+    mode: parking_motion_or_timelapse
+    validation: manual_confirmed
+  - path: PEVENT
+    mode: parking_event
+    validation: manual_confirmed
+  - path: USER
+    mode: manual
+    validation: manual_confirmed
+  - path: BOOKMARK
+    mode: bookmark_image
+    validation: manual_confirmed
+filename_patterns: []
+channels:
+  front: pending_real_card_validation
+  rear: pending_real_card_validation
+  interior: pending_real_card_validation
+exclude:
+  - CONFIG/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"
+

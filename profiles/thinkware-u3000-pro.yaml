@@ -1,0 +1,73 @@
+id: thinkware-u3000-pro
+manufacturer: Thinkware
+model: U3000 Pro
+status: seed
+source_notes:
+  - docs/card-profiles/thinkware-u3000-pro.md
+detection:
+  high_confidence:
+    - path: SETTING/lang/ver.dat
+      contains: "Device Name:U3000PRO"
+    - path: SETTING/U3000PRO_Setting.exe
+      exists: true
+  supporting:
+    - path: SETTING/setup.cfg
+      contains: "U3000PRO"
+    - path: SETTING/default.cfg
+      contains: "U3000PRO"
+    - volume_label: U3000PRO
+      strength: weak
+  privacy:
+    do_not_read:
+      - device.uid
+folders:
+  - path: cont_rec
+    mode: continuous
+    prefix: REC
+  - path: evt_rec
+    mode: driving_event
+    prefix: EVT
+  - path: motion_timelapse_rec
+    mode: parking_motion_or_timelapse
+    prefix: MOT
+  - path: parking_rec
+    mode: parking_event
+    prefix: PAK
+  - path: .parking_rec_sec
+    mode: parking_event_secondary
+    prefix: PAS
+  - path: manual_rec
+    mode: manual
+    prefix: unknown
+    validation: manual_confirmed_sample_missing
+  - path: sos_rec
+    mode: sos
+    prefix: unknown
+    validation: manual_confirmed_sample_missing
+  - path: incabin_rec
+    mode: cabin
+    prefix: unknown
+    validation: manual_confirmed_sample_missing
+filename_patterns:
+  - pattern: "^(REC|EVT|MOT|PAK|PAS)_(\\d{8})_(\\d{6})_([A-Z]+(?:_[A-Z]+)?)\\.MP4$"
+    timestamp:
+      date_group: 2
+      time_group: 3
+      format: YYYYMMDD_HHMMSS
+    channel_group: 4
+channels:
+  F: front
+  R: rear
+unknown_channel_variants:
+  - F_SS
+  - R_SS
+exclude:
+  - SETTING/**
+  - THUMBNAIL/**
+  - driveinfo/**
+  - device.uid
+  - .TWSYS/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"
+
