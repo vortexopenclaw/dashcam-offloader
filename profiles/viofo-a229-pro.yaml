@@ -6,7 +6,16 @@ source_notes:
   - docs/card-profiles/viofo-a229-pro.md
   - docs/research/viofo-a229-pro.md
 detection:
-  high_confidence: []
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      threshold_method: half_max_brightness
+      matches: "VIOFO A229 Pro"
+      notes: >
+        Camera burns "VIOFO A229 Pro" into the bottom-center of every frame. Extract
+        bottom 8% of any front-channel (F) MP4, apply brightness threshold at 50% of
+        max pixel value, scale 4x, OCR with tesseract --psm 6. Confirmed on real card.
   supporting:
     - folder: DCIM/Movie
     - folder: DCIM/Movie/Parking
@@ -21,8 +30,8 @@ detection:
   notes: >
     No model-identifying file found on real-card sample. Firmware file (FWA229P.bin) is
     placed at card root only during firmware updates and should be removed by reformatting.
-    Folder structure and filename pattern are identical to VIOFO A329S 3CH. Detection
-    confidence is low without an additional model signal.
+    Folder structure and filename pattern are identical to VIOFO A329S 3CH. OSD OCR on
+    front-channel video is the recommended detection method.
 folders:
   - path: DCIM/Movie
     mode: continuous
