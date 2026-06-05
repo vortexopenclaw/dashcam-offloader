@@ -3,6 +3,8 @@
 tmp/
 dist/
 build/
+.build/
+backups/
 node_modules/
 .env
 .env.*

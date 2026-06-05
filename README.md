@@ -8,7 +8,30 @@ Learning new dashcams supports that main offload workflow. A user should be able
 
 ## Current Status
 
-This project is in the research and profile-building phase. The first work is documenting real SD-card layouts and official manual references so the eventual app can be driven by camera profiles instead of hard-coded assumptions.
+This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date, preview selected files and size, copy to a chosen destination, show progress, skip matching duplicates, and write a local manifest.
+
+The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
+
+## Run The Prototype
+
+From the repo root:
+
+```bash
+swift run DashcamOffloader
+```
+
+Build a launchable app bundle:
+
+```bash
+scripts/build-macos-app.sh
+open "build/Dashcam Offloader.app"
+```
+
+Run the built-in scanner/planner smoke test:
+
+```bash
+swift run DashcamOffloader --smoke-test
+```
 
 ## Initial Scope
 
@@ -43,6 +66,9 @@ Planned intake targets:
 
 ## Repository Layout
 
+- `Package.swift` - Swift Package definition for the macOS prototype
+- `Sources/DashcamOffloaderApp/` - SwiftUI app, scanner, detector, planner, copy engine, and manifest writer
+- `scripts/build-macos-app.sh` - builds `build/Dashcam Offloader.app`
 - `DESIGN.md` - product and technical design baseline
 - `docs/project-plan.md` - phased build plan
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
