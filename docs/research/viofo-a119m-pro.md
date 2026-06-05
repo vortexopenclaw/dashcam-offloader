@@ -19,7 +19,7 @@ This is the most compact filename format in the VIOFO lineup. The datetime forma
 
 A119M Pro OSD with GPS lock:
 ```
-0MPH N00.0000 E000.000000  DUMMY VIOFO A119M Pro 01/01/2025 00:00:00
+00MPH N00.000000 W000.000000  DUMMYCAM VIOFO A119M Pro 01/01/2000 00:00:00
 ```
 
 Fields: GPS speed · GPS coordinates · optional user-set camera name · model name · date/time

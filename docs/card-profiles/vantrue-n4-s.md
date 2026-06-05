@@ -105,7 +105,7 @@ The N4 S supports user selection of recording modes via camera settings:
 **Example:**
 ```
 #
-20250101000000,0.000000,N,0.000000,E,0.000,0.000
+20000101000000,0.000000,N,0.000000,E,0.000,0.000
 ```
 
 ## Detection Rules (Reliable Only)

@@ -26,7 +26,7 @@ The HEVC interior channel is unusual and not seen on A229/A329 models. Any offlo
 The A139 Pro OSD displays the model name in all caps:
 
 ```
-034MPH VORTEXRADAR VIOFO A139 PRO HDR+ON 01/04/2023 17:21:25
+000MPH DUMMYCAM VIOFO A139 PRO HDR+ON 01/01/2000 00:00:00
 ```
 
 Fields: GPS speed · optional user-set camera name · model ("VIOFO A139 PRO") · HDR status · date/time

@@ -41,7 +41,7 @@ Container brand: `mp42`. No `creation_time` tag present. NOVATEK-specific tags n
 
 OSD line from front-channel footage (GPS locked, hardwired or battery):
 ```
-0MPH N00.0000 E000.000000  DUMMY VIOFO A119M Pro 01/01/2025 00:00:00
+00MPH N00.000000 W000.000000  DUMMYCAM VIOFO A119M Pro 01/01/2000 00:00:00
 ```
 
 Fields: GPS speed · GPS coordinates (lat/lon) · user-configurable camera name · model name · date/time
