@@ -6,17 +6,19 @@ Purpose: seed the dashcam offloader model selector with known model names, chann
 
 Scope notes:
 
-- Already tracked models were not repeated as catalog rows: Thinkware U3000 Pro, Thinkware U3000, BlackVue Elite 9, BlackVue DR970X Plus, Vantrue N4 Pro S, Vantrue N4 S, Vueroid S1 4K Infinite, and the listed VIOFO models.
+- Known/profiled models are included as catalog rows so the model selector can show every selectable model. A catalog row is still not proof of validated SD-card support.
+- Model aliases and close variants are split into separate rows when separate selector choices may matter for future SD-card/profile evidence.
 - Channel counts are product configuration counts, not proof of SD-card layout.
 - Era is approximate where a precise release year was not found in first-pass research.
 - "Current" means found in current manufacturer navigation, support, or store pages during this pass. "Legacy" means support/manual/archive evidence or older public sources.
 
 ## Vueroid
 
-The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite base model with 1CH, 2CH, and 3CH variants. The current Vueroid dashcam page also lists these additional selector candidates.
+The current Vueroid dashcam page lists these selector candidates.
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
+| S1 4K Infinite | 1/2/3CH | 4K front class | 2025 to current | Tracked profile exists; S1 family with rear/interior variants, Wi-Fi, GPS, and parking modes. |
 | S1 QHD Infinite | 2/3CH | QHD front class | 2026 current | S1 family, Sony STARVIS 2, 5 GHz Wi-Fi, GPS, front/rear and front/rear/interior bundles. |
 | D40-Q2 | 2CH | QHD class | 2026 current listing | D40 series model listed in Vueroid dashcam page/category navigation. |
 | D21 4K | 2CH | 4K front class | 2025 to current | Screenless D21 series, AV Out, current Vueroid product page. |
@@ -26,10 +28,25 @@ The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite bas
 | ZERO | 2CH | FHD class | 2025 legacy/current page, out of stock | FHD 2-channel model using Vueroid ISP tuning. |
 | D10-F2W | 2CH | FHD class | 2025 legacy/current page, out of stock | D10 series FHD 2-channel model, screenless, AV Out. |
 
+## VIOFO
+
+| Model | Channels | Max resolution | Era | Distinctive features |
+|---|---:|---|---|---|
+| A329S | 1/2/3CH | 4K front, 2K rear/cabin class | 2025 to current | Tracked profile exists; SSD support, multiplex video support, channel variants behind one base model. |
+| A329T | 2/3CH | 4K front, telephoto channel class | 2025 to current | Tracked profile exists from official references and user-provided filename evidence; telephoto channel uses `T` token. |
+| A229 Pro | 1/2/3CH | 4K front, 2K rear, FHD cabin | 2023 to current | Tracked profile exists; STARVIS 2 front/rear, 3-channel option, current VIOFO product family. |
+| A229 Plus | 1/2/3CH | 2K front, 2K rear, FHD cabin | 2023 to current | Tracked profile exists; dual 2K main channels and optional interior channel. |
+| A229 Ultra | 2/3CH | 4K front, 4K rear, FHD cabin | 2025 to current | Tracked profile exists from archived footage; higher-resolution A229 variant. |
+| A139 Pro | 1/2/3CH | 4K front class | 2022 to current | Tracked profile exists from archived footage; no sequence number in observed filenames. |
+| A119M Pro | 1CH | 4K front class | 2025 to current | Tracked profile exists from archived footage; single-channel front-only model. |
+| A119 Mini 2 | 1CH | 2K front | 2023 to current | Tracked profile exists from real card; compact single-channel, parking folder differs from A119M Pro. |
+
 ## Thinkware
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
+| U3000 Pro | 2CH | 4K front, 2K rear | 2025 to current | Tracked profile exists; STARVIS 2 front/rear, OBD-II bundle, radar parking, Thinkware Connected. |
+| U3000 | 1/2CH | 4K front, 2K rear | 2023 to current | Tracked profile exists; STARVIS 2 front, optional rear, radar parking, Wi-Fi/Bluetooth/GPS. |
 | U1000 Plus | 1/2CH, multiplexer capable | 4K front, FHD rear | 2025 to current | Thinkware Connected, optional radar module, multiplexer support, Wi-Fi, Bluetooth, GPS. |
 | U1000 | 1/2CH, multiplexer capable | 4K front, 2K rear | 2019 to 2024 | Cloud/Connected capable, optional radar module, ADAS, Wi-Fi, GPS. |
 | Q1000 | 1/2CH | 2K front, 2K rear | 2022 to current | Thinkware Connected, Wi-Fi, Bluetooth, GPS, Super Night Vision 3.0. |
@@ -61,10 +78,12 @@ The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite bas
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
 | Elite 10 | 1/2CH | 4K class | 2026 current | BlackVue Cloud, Elite series, current manual listing. |
+| Elite 9 | 1/2CH | 4K class | 2026 current | Tracked profile exists; Elite series, Cloud, current BlackVue catalog. |
 | Elite 8 | 1/2CH | QHD class | 2026 current | BlackVue Cloud, Elite series, QHD variant. |
 | K970X Plus | 1/2CH | 4K class | 2026 current/regional | Current manual listing, K-series. |
 | K770X | 1/2CH | FHD class | 2026 current/regional | Current manual listing, K-series. |
 | DR970X Plus II | 1/2CH | 4K front | 2026 current | Cloud, updated Plus II hardware, optional LTE module. |
+| DR970X Plus | 1/2CH | 4K front | 2024 to current | Tracked profile exists; Cloud, Plus generation before Plus II. |
 | DR970X LTE Plus / LTE Plus II | 2CH | 4K front | 2024 to 2026 | Built-in LTE, Cloud, Plus and Plus II revisions. |
 | DR970X Box Plus | 2CH | 4K front | 2024 to 2026 | Separate recording box, tamper-resistant architecture. |
 | DR970X / DR970X LTE | 1/2CH | 4K front | 2023 to 2025 | Cloud, optional LTE module or built-in LTE variants. |
@@ -92,7 +111,9 @@ The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite bas
 |---|---:|---|---|---|
 | Nexus 5 / N5 | 4CH | 2K front plus FHD sides/rear class | 2023 to current | Four-channel 360 coverage, GPS, voice, buffered parking. |
 | Nexus 5S / N5S | 4CH | 4K front class | 2025 current | Updated N5 family, PlatePix, GPS, 5 GHz Wi-Fi. |
+| N4 Pro S | 3CH | 4K front, FHD interior, 2.5K rear class | 2025 current | Tracked profile exists; N4 series pattern, user confirmation required when card evidence is only family-level. |
 | Nexus 4 Pro / N4 Pro | 3CH | 4K front, FHD interior/rear | 2023 to current | 3-channel flagship, STARVIS 2, GPS, voice, Wi-Fi. |
+| N4 S | 3CH | 2.5K all-channel class | 2025 current | Tracked profile exists; N4 series pattern, user confirmation required when card evidence is only family-level. |
 | OnDash N4 | 3CH | 1440p/1080p class or 4K single-channel mode | 2019 to current | Long-running front/interior/rear model. |
 | Nexus 2X / N2X | 2CH | 2K class | 2025 current | Dual front/cabin or front/rear family, GPS mount support. |
 | N2 Pro | 2CH | FHD front and cabin | Legacy/current refresh | Rideshare front/cabin classic, 2023 refresh noted. |
@@ -112,26 +133,30 @@ The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite bas
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
-| Dash Cam 4K T800 | 3CH | 4K front, 4K rear, FHD interior | 2025 current | Triple-channel, dual STARVIS 2 IMX678, 4G compatible. |
-| Dash Cam 4K Omni / X800 | 1/2CH | 4K 60 fps front, optional rear | 2025 current | 360-degree rotating front camera, AI motion, 4G compatibility. |
-| Dash Cam Omni / X200 | 1CH | 1080p/1944p class | 2022 to current | Rotating 360-degree front/cabin view, AI parking. |
-| Dash Cam 4K A810S | 1/2CH | 4K front | 2025 current | STARVIS 2, ROI license plate enhancement, dual-channel options. |
-| Dash Cam 4K A810 | 1/2CH | 4K front | 2023 to current | HDR, Night Owl Vision, optional rear, ADAS. |
-| Dash Cam 4K A810 Lite | 1/2CH | 4K front | 2026 current | Compact 4K, 4G compatibility, supercapacitor. |
-| Dash Cam 4K A800SE | 1/2CH | 4K front | 2025 current | Hardware HDR, supercapacitor, buffered emergency recording. |
-| Dash Cam 4K A800S | 1/2CH | 4K front | 2021 to current | A800 successor, optional rear RC11. |
-| Dash Cam A510 | 1/2CH | 2.7K front | 2024 to current | Sony STARVIS 2, optional rear, 4G kit support. |
-| Dash Cam Pro Plus+ / A500S | 1/2CH | 1944p front | 2021 to current | GPS, ADAS, optional RC06/RC11 rear. |
-| Dash Cam Pro / A500 | 1CH | 1944p | Legacy | Earlier Pro generation with ADAS/GPS. |
-| Dash Cam A410 | 1/2CH | 2K class | 2024 to current | Optional rear, app support. |
-| Dash Cam A400 | 1/2CH | 1440p front | 2021 to current | Optional rear RC09/RC11, budget screen model. |
-| Dash Cam A200 | 1/2CH | 1080p front | 2023 to current | Entry front/rear support. |
-| Dash Cam M310 Plus 4K | 1CH | 4K | 2026 current | Screen-free compact 4K. |
-| Dash Cam M310 | 1CH | 1296p | 2024 to current | 3 MP sensor, screen-free compact. |
-| Dash Cam M500 | 1CH | 1944p | 2021 to current | Built-in eMMC storage, GPS/ADAS, no removable microSD. |
-| Dash Cam M300 | 1CH | 1296p | Legacy/current | Compact screen-free entry model. |
-| Dash Cam Lite / D08 | 1CH | 1080p | Legacy | Early screen model. |
-| Mi Dash Cam 1S / Midrive D01 | 1CH | 1080p | Legacy | Xiaomi/70mai early single-channel model. |
+| T800 | 3CH | 4K front, 4K rear, FHD interior | 2025 current | Triple-channel, dual STARVIS 2 IMX678, 4G compatible. |
+| X800 | 1/2CH | 4K 60 fps front, optional rear | 2025 current | 4K Omni model, rotating front camera, AI motion, 4G compatibility. |
+| X200 | 1CH | 1080p/1944p class | 2022 to current | Omni model, rotating 360-degree front/cabin view, AI parking. |
+| A810S | 1/2CH | 4K front | 2025 current | STARVIS 2, ROI license plate enhancement, dual-channel options. |
+| A810 | 1/2CH | 4K front | 2023 to current | HDR, Night Owl Vision, optional rear, ADAS. |
+| A810 Lite | 1/2CH | 4K front | 2026 current | Compact 4K, 4G compatibility, supercapacitor. |
+| A800SE | 1/2CH | 4K front | 2025 current | Hardware HDR, supercapacitor, buffered emergency recording. |
+| A800S | 1/2CH | 4K front | 2021 to current | A800 successor, optional rear RC11. |
+| A510 | 1/2CH | 2.7K front | 2024 to current | Sony STARVIS 2, optional rear, 4G kit support. |
+| Pro Plus+ | 1/2CH | 1944p front | 2021 to current | Marketing name for A500S family, GPS, ADAS, optional rear. |
+| A500S | 1/2CH | 1944p front | 2021 to current | Model-code selector row for Pro Plus+, optional RC06/RC11 rear. |
+| Pro | 1CH | 1944p | Legacy | Marketing name for A500 family, earlier Pro generation with ADAS/GPS. |
+| A500 | 1CH | 1944p | Legacy | Model-code selector row for Pro. |
+| A410 | 1/2CH | 2K class | 2024 to current | Optional rear, app support. |
+| A400 | 1/2CH | 1440p front | 2021 to current | Optional rear RC09/RC11, budget screen model. |
+| A200 | 1/2CH | 1080p front | 2023 to current | Entry front/rear support. |
+| M310 Plus 4K | 1CH | 4K | 2026 current | Screen-free compact 4K. |
+| M310 | 1CH | 1296p | 2024 to current | Tracked profile exists; 3 MP sensor, screen-free compact. |
+| M500 | 1CH | 1944p | 2021 to current | Built-in eMMC storage, GPS/ADAS, no removable microSD. |
+| M300 | 1CH | 1296p | Legacy/current | Compact screen-free entry model. |
+| Lite | 1CH | 1080p | Legacy | Early screen model marketing name. |
+| D08 | 1CH | 1080p | Legacy | Model-code selector row for Lite. |
+| Mi Dash Cam 1S | 1CH | 1080p | Legacy | Xiaomi/70mai early single-channel model. |
+| Midrive D01 | 1CH | 1080p | Legacy | Model-code selector row for Mi Dash Cam 1S. |
 
 ## Redtiger
 
@@ -162,15 +187,20 @@ The already tracked Vueroid S1 4K Infinite profile covers the S1 4K Infinite bas
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
 | G900 Pro | 2CH mirror | 4K front, 2.5K rear class | 2024 to current | STARVIS 2 IMX678, mirror display, GPS module. |
-| G900 / G900 Tripro | 2/3CH mirror | 4K front class | 2022 to current | 12-inch mirror, rear camera, Tripro 3-channel variant. |
-| G850 / G850 Pro | 2CH mirror | 4K front class | 2023 to current | Mirror dashcam, upgraded rear camera variants. |
-| G840S / G840H | 2CH mirror | 4K front, 1080p rear class | 2021 to current | Popular mirror family, support FAQ group. |
+| G900 | 2CH mirror | 4K front class | 2022 to current | 12-inch mirror, rear camera, GPS module support. |
+| G900 Tripro | 3CH mirror | 4K front class | 2024 to current | 3-channel G900-family mirror variant. |
+| G850 | 2CH mirror | 4K front class | 2023 to current | Mirror dashcam, rear camera. |
+| G850 Pro | 2CH mirror | 4K front class | 2023 to current | Upgraded G850-family mirror variant. |
+| G840S | 2CH mirror | 4K front, 1080p rear class | 2021 to current | Popular mirror family; split from G840H for selector-level card evidence. |
+| G840H | 2CH mirror | 4K front, 1080p rear class | 2021 to current | Popular mirror family; split from G840S for selector-level card evidence. |
 | G840H Mini | 2CH mirror | 2.5K/1080p class | Current | Smaller mirror variant. |
 | G930 | 2CH mirror | 4K front class | 2023 to current | Mirror family, rear camera, parking features. |
 | G880 | 2CH mirror | 2.5K/1080p class | Current | Mirror family, separate accessory compatibility. |
 | G890 | 2CH mirror | 4K class | Current | Mirror family. |
 | T10 | 2CH mirror | 1080p/2.5K class | Legacy/current | Older mirror model. |
-| X5 / i07 / G700 | 1/2CH | 1080p to 4K class | Legacy | Older or lower-cost Wolfbox dashcam families. |
+| X5 | 1/2CH | 1080p to 4K class | Legacy | Older or lower-cost Wolfbox dashcam family. |
+| i07 | 1/2CH | 1080p to 4K class | Legacy | Older or lower-cost Wolfbox dashcam family. |
+| G700 | 1/2CH | 1080p to 4K class | Legacy | Older or lower-cost Wolfbox dashcam family. |
 
 ## Cansonic
 
@@ -389,6 +419,7 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 
 - Vueroid dashcam lineup and product pages: https://vueroid.com/dashcam/, https://vueroid.com/product/bundle-s1-qhd-infinite-2-channel/, https://vueroid.com/product/bundle-s1-qhd-infinite-3-channel/, https://vueroid.com/product/vueroid-d21-4k-2ch/, https://vueroid.com/product/d21-lte-fhd/, https://vueroid.com/product/vueroid-d20-q2-plus-2ch/, https://vueroid.com/product/vueroid-d20-f2-f2e-2ch/, https://vueroid.com/product/vueroid-zero-2ch/, https://vueroid.com/product/d10-f2w-2ch/
 - Vueroid S1 4K Infinite support and manual: https://vueroid.com/vueroid-s/s1-4k-infinite-1ch/support/ and https://vueroid.com/wp-content/uploads/2025/02/VUEROID_S1-4K-Infinite_MANUAL_V1.1.pdf
+- VIOFO product and model references: https://www.viofo.com/collections/all, https://www.viofo.com/collections/1-channel-front-only, https://www.viofo.com/collections/2-channel-front-rear, https://www.viofo.com/
 - Thinkware global Q200 support: https://thinkware.com/global/support/download/q200
 - Thinkware Japan support model list: https://thinkware.co.jp/support/dash-cam/
 - Thinkware mobile app compatibility: https://thinkware.com/global/thinkware-mobile-apps/
@@ -400,6 +431,7 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 - Vantrue current home and all dashcam pages: https://www.vantrue.com/ and https://www.vantrue.com/collections/all-dash-cam
 - Vantrue legacy/manual support evidence: https://vantrue.net/Support/detail/id/35.html
 - 70mai dashcam lineup: https://www.70mai.com/us/dashcams/
+- 70mai A810S, A810, and A810 Lite pages: https://www.70mai.com/us/a810s/, https://www.70mai.com/us/a810, https://www.70mai.com/us/a810lite/
 - 70mai installation model list: https://70mai3965.zendesk.com/hc/en-001/articles/53640184252313-Dash-cam-Installation-Guide
 - 70mai A510 and Omni manuals: https://www.70mai.com/instructions/70maiDashCam_A510_UserManual.pdf and https://www.70mai.com/instructions/70mai-Dash-Cam-Omni-User-Manual.pdf
 - Redtiger official homepage and F7N/F17 page: https://redtigercam.com/ and https://eu.redtigercam.com/products/f7n-series
