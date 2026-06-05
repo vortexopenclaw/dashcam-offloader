@@ -4,6 +4,8 @@ Documentation-first planning repo for an open-source dashcam SD-card offloader.
 
 The goal is to make it easy to plug in one or more dashcam memory cards, detect the camera model, classify footage by recording mode and camera channel, filter clips by date/type, and copy them safely into an organized destination without modifying the source card.
 
+The longer-term goal is for the Mac app to help learn new dashcams. A user should be able to choose a known model, choose a known but not-yet-supported model, or choose `Other`, describe their camera/channel setup, scan the card, and generate a sanitized intake package that can be used to add that dashcam to the profile library.
+
 ## Current Status
 
 This project is in the research and profile-building phase. The first work is documenting real SD-card layouts and official manual references so the eventual app can be driven by camera profiles instead of hard-coded assumptions.
@@ -13,12 +15,14 @@ This project is in the research and profile-building phase. The first work is do
 - macOS first
 - Read-only SD-card inspection
 - Multi-card offload workflow
+- Guided intake for new or unsupported dashcam models
 - Camera model detection from card metadata and file structure
 - Recording mode classification
 - Channel classification, such as front, rear, interior, telephoto
 - Date/time parsing from filenames and metadata
 - Event/protected/manual/emergency clip handling
 - Copy manifest with source path, destination path, detected mode, detected channel, timestamp, size, and checksum status
+- Sanitized profile-submission bundle for unsupported models, excluding private identifiers and video content by default
 
 ## Seed Profiles
 
@@ -44,4 +48,3 @@ Planned intake targets:
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles
-

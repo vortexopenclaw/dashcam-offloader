@@ -21,4 +21,5 @@
 - **Sampled:** at least one real card has been inspected.
 - **Classified:** filename timestamp, mode, and channel rules are known.
 - **Validated:** rules have been checked against enough files or cards to trust automation.
-
+- **Known unsupported:** model is listed in the app but needs a submitted card intake package before automation support.
+- **Other:** user-entered model outside the prebuilt dropdown.

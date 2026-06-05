@@ -2,6 +2,15 @@
 
 Use this checklist when a new dashcam SD card is mounted.
 
+## User-Provided Setup
+
+- Selected model from supported/known/unsupported list, or `Other`.
+- User-entered brand and model when `Other` is selected.
+- Number of camera channels in use.
+- Channel roles, such as front, rear, interior, telephoto, left, or right.
+- Whether the card may contain GPS/audio/private location data.
+- Whether the user is willing to share sample video files separately. Default is no.
+
 ## Mount
 
 - Record volume path.
@@ -27,6 +36,8 @@ For each recording folder:
 - Capture oldest and newest file modified times.
 - Note whether matching front/rear/interior files share timestamps.
 
+Default public intake should capture filenames and structural metadata only, not video content.
+
 ## Classification
 
 For each folder and filename pattern:
@@ -51,10 +62,31 @@ Do not use:
 - User-renamable volume label as primary proof.
 - Unique device IDs unless explicitly approved.
 
+## Submission Package
+
+The default intake package should include:
+
+- Redacted folder tree.
+- Representative filenames by folder.
+- Counts by extension and folder.
+- File size ranges by folder.
+- Oldest/newest modified times by folder.
+- Non-unique model strings when available.
+- User-provided model and channel mapping.
+- Scanner version and profile-schema version.
+
+The default intake package should exclude:
+
+- Video files.
+- Unique device IDs.
+- GPS traces and route data.
+- Full settings dumps.
+- Thumbnails.
+- Hidden OS metadata and macOS sidecars.
+
 ## Manual Research
 
 - Save official manuals locally.
 - Extract relevant text.
 - Record exact folder names and manufacturer terminology.
 - Mark unsupported or unobserved modes as manual-confirmed but sample-unvalidated.
-

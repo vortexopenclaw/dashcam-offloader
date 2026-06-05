@@ -35,10 +35,18 @@
 - Provide filters for camera channel, recording mode, date range, and protected/event clips.
 - Run multiple card copy jobs at once.
 
-## Phase 5 - Public Profile Library
+## Phase 5 - Guided New-Camera Intake
+
+- Offer a model picker with supported, known not-yet-supported, and `Other` options.
+- Let users specify camera count and channel roles.
+- Scan the card for folder structure, representative filenames, extensions, sizes, and date ranges.
+- Redact private identifiers and exclude video content by default.
+- Export a local sanitized intake bundle suitable for review.
+- Support a later submission path such as GitHub issue, private upload, or manual file handoff.
+
+## Phase 6 - Public Profile Library
 
 - Accept community-submitted profiles.
 - Add sample tree fixtures with private data redacted.
 - Add validation tests for every profile.
 - Document how to add a new dashcam model.
-

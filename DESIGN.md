@@ -4,6 +4,8 @@
 
 Build a Mac-first open-source tool that safely offloads dashcam footage from one or more memory cards into a predictable destination folder. The app should understand each dashcam's folder structure and filename conventions well enough to classify clips by camera model, recording mode, channel, and date/time.
 
+The app should also make it practical to learn unsupported dashcams. Users should be able to select a known model, select a known but not-yet-supported model, or select `Other`, then describe their camera/channel setup and generate a sanitized card profile submission.
+
 ## Design Principles
 
 - Never modify the source card.
@@ -12,6 +14,7 @@ Build a Mac-first open-source tool that safely offloads dashcam footage from one
 - Treat real card samples as the highest-value evidence.
 - Preserve enough metadata to audit every copy later.
 - Start with a CLI/profile engine, then add a Mac GUI.
+- Make new-camera intake a first-class workflow, not a private developer-only process.
 - Keep Windows possible later, but do not optimize for it now.
 
 ## Architecture Sketch
@@ -45,11 +48,18 @@ The eventual implementation should split into these layers:
    - Shows mounted cards, detected profiles, selected filters, job progress, and completed manifests.
    - Allows multiple cards/jobs at once.
 
+7. **Profile intake assistant**
+   - Lets users choose from supported, known unsupported, and `Other` camera models.
+   - Captures user-provided model name, firmware if visible, camera count, and channel labels.
+   - Scans card structure without uploading videos by default.
+   - Builds a redacted submission bundle for review and test-fixture creation.
+
 ## Safety Rules
 
 - Source cards are read-only from the app's perspective.
 - Do not read, store, or publish unique device IDs unless explicitly needed and approved.
 - Do not copy dashcam system/config folders by default.
+- Do not upload video files, GPS traces, device identifiers, or full settings dumps as part of the default public intake flow.
 - Do not rely on volume label alone for model detection.
 - Always support dry run before copy.
 
@@ -67,4 +77,3 @@ The first profile database entries are:
 
 - Thinkware U3000 Pro, based on `/Volumes/U3000PRO` and Thinkware documentation.
 - Vueroid S1 4K Infinite, based on official manual research and pending real-card validation.
-
