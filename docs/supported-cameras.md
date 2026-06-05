@@ -17,6 +17,7 @@
 - VIOFO A119 Mini 2 - profile drafted from one real card and official manual V25.12.18. Single-channel front only. Same filename pattern as A119M Pro. Distinct folder structure: parking recordings in DCIM/Parking/ (not DCIM/Movie/Parking/).
 - Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear), 4K/1080P/2.5K resolutions.
 - Vantrue N4 S - profile drafted from one real card. 3-channel (A/B/C), uniform 2.5K across all channels (balanced bitrates).
+- 70mai M310 - profile drafted from NAS-archived footage (no direct card scan) and official manual. Single-channel front only. Distinct filename pattern: MODE_PREFIX + YYYYMMDD-HHMMSS-SEQUENCE + lowercase .mp4. OSD shows date/time only (no model name). NO = normal, LA = time-lapse parking.
 
 ## Intake Queue
 
