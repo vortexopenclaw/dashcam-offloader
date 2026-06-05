@@ -4,7 +4,7 @@
 **Model:** UltraDash Z3+ Standard Edition  
 **Channels:** 2 built-in (L + R); 3 with optional R1 rear camera (B)  
 **Resolution:** 2K QHD (2560×1440) per channel  
-**Source:** Official product page + NAS-archived footage samples
+**Source:** Official product page + private archive sample
 
 ---
 

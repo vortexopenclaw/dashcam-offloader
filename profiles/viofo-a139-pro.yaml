@@ -19,7 +19,7 @@ detection:
         of max pixel value, scale 4x, OCR with tesseract --psm 6. OSD match must be
         case-insensitive — the A139 Pro renders the model suffix in all caps ("PRO")
         unlike the A229/A329 lineup which uses title case ("Pro"). Confirmed on multiple
-        day and night clips from real footage.
+        day and night clips from a private archive sample.
   supporting:
     - folder: DCIM/Movie
   notes: >
@@ -47,7 +47,7 @@ filename_patterns:
     notes: >
       No sequence number in filename — pattern is YYYY_MMDD_HHMMSS_CHANNEL.MP4.
       This differs from the A229/A329 lineup (YYYY_MMDD_HHMMSS_SEQCHANNEL.MP4).
-      Confirmed from real NAS footage. Channel letter is underscore-separated.
+      Confirmed from a private archive sample. Channel letter is underscore-separated.
 channels:
   F: front
   I: interior
@@ -59,7 +59,7 @@ resolutions:
   validation: footage_sampled
   notes: >
     F channel uses H.264; I channel uses HEVC (H.265); R channel uses H.264.
-    The mixed codec on interior is unusual and confirmed from real footage.
+    The mixed codec on interior is unusual and confirmed from a private archive sample.
     Users can adjust resolution in camera settings.
 grouping:
   keys:
@@ -69,7 +69,7 @@ grouping:
   notes: >
     No sequence number available for grouping. Timestamp (year + month_day + time)
     is the only grouping key. Same-second collisions across channels are theoretically
-    possible but not observed in the NAS sample.
+    possible and should be handled defensively.
 exclude:
   - .Trashes/**
   - .fseventsd/**

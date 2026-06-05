@@ -199,4 +199,4 @@ validation:
     Real card scan performed. Folder structure fully confirmed: Normal/, Parking/,
     Lapse/, Event/, Photo/ all present. .formated root marker and .sstar.format
     per-folder markers confirmed. Filename pattern and resolution confirmed from
-    NAS footage (ffprobe). Event clip prefix not confirmed — no event clips in samples.
+    private archive sample (ffprobe). Event clip prefix not confirmed.

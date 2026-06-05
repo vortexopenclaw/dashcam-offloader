@@ -16,7 +16,7 @@ detection:
         Camera burns "VIOFO A229 Ultra" into the bottom-center of every frame. Extract
         bottom 8% of any front-channel (F) MP4, apply brightness threshold at 50% of
         max pixel value, scale 4x, OCR with tesseract --psm 6. Confirmed on multiple
-        day and night clips from real footage.
+        day and night clips from a private archive sample.
   supporting:
     - folder: DCIM/Movie
     - folder: DCIM/Movie/Parking
@@ -56,8 +56,9 @@ filename_patterns:
     sequence_group: 4
     channel_group: 5
     notes: >
-      Confirmed from real footage. Sequence number is a global monotonic counter across
-      all channels; observed up to ~1632 in NAS sample. Treat as variable-length.
+      Confirmed from a private archive sample. Sequence number is a global monotonic
+      counter across all channels. Treat as variable-length. Do not publish observed
+      sequence ranges from private archives.
   - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.JPG$"
     applies_to:
       - DCIM/Photo
@@ -96,7 +97,7 @@ resolutions:
   R: 3840x2160
   validation: footage_sampled
   notes: >
-    Confirmed from NAS footage (not a direct card sample). Both front and rear are 4K UHD,
+    Confirmed from a private archive sample (not a direct card sample). Both front and rear are 4K UHD,
     distinguishing the Ultra from A229 Pro (4K front, 2K rear) and A229 Plus (2K front, 2K rear).
     Users can adjust resolution in camera settings.
 exclude:

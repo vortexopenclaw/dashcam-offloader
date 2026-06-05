@@ -34,12 +34,12 @@ The "M" in A119M refers to a mini form factor. The A119M Pro is a compact single
 
 ## Source Validation
 
-This profile was built from NAS-archived footage files, not a direct microSD card scan. Card structure is fully inferred. A real card scan would confirm:
+This profile was built from a private archive sample, not a direct microSD card scan. Card structure is fully inferred. A real card scan would confirm:
 - Full DCIM folder structure and parking/RO handling
 - Whether `format.txt` appears at root
 - NOVATEK `©fmt`/`©inf` metadata on real files
 
 ## Sources
 
-- NAS footage archive: 33 clips (VIOFO A119M Pro, 2025-10-17, 2025-11-29, 2025-12-02)
+- Private archive sample; counts and recording dates intentionally omitted
 - VIOFO product page: https://www.viofo.com/collections/dash-cam

@@ -135,7 +135,7 @@ validation:
   footage_sampled: true
   osd_confirmed: false
   notes: >
-    Profile built from NAS-archived footage and official Cansonic product page.
+    Profile built from a private archive sample and official Cansonic product page.
     Footage includes both 2-channel (L+R) and 3-channel (L+R+B) samples, confirming
     B channel requires the optional R1 rear camera. No direct card scan; folder
     structure inferred. ffprobe/OCR not yet performed.

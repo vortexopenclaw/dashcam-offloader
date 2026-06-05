@@ -1,24 +1,24 @@
 # VIOFO A229 Ultra — Card Profile
 
 **Date learned:** 2026-06-05
-**Source:** NAS-archived footage (27 clips, 2025-08-14 through 2025-08-18) — no direct card scan
+**Source:** Private archive sample, no direct card scan
 **Validation note:** Folder structure is inferred from VIOFO platform conventions. Filename pattern and resolution data verified from real footage files.
 
 ## Filename Pattern
 
 `YYYY_MMDD_HHMMSS_SEQUENCECHANNEL.EXT` — identical to all other VIOFO models.
 
-Native card filenames (user added descriptive labels to NAS copies after the channel letter):
+Dummy native card filename examples:
 ```
-2025_0814_172541_000172F.MP4
-2025_0814_172541_000173I.MP4
-2025_0814_172541_000174R.MP4
-2025_0818_094331_001198F.MP4
-2025_0818_094331_001199I.MP4
-2025_0818_094331_001200R.MP4
+2030_0101_120000_000001F.MP4
+2030_0101_120000_000002I.MP4
+2030_0101_120000_000003R.MP4
+2030_0101_120100_000004F.MP4
+2030_0101_120100_000005I.MP4
+2030_0101_120100_000006R.MP4
 ```
 
-Sequence numbers are global monotonic across F/I/R channels, confirmed across multiple sessions. Highest sequence observed in sample: ~1632, indicating a well-used card.
+Sequence numbers are global monotonic across F/I/R channels. Do not publish observed sequence ranges from private archives.
 
 Channels observed: F (front), I (interior), R (rear).
 
@@ -38,13 +38,13 @@ Both front and rear are 4K — distinguishing the A229 Ultra from A229 Pro (4K f
 
 ## MP4 Metadata
 
-Container brand: `mp42`. The NOVATEK-specific `©fmt=NOVATEK` and `©inf=DEMO1` tags were not observed in these NAS files — likely stripped during archiving. Cannot be confirmed without a direct card scan.
+Container brand: `mp42`. The NOVATEK-specific `©fmt=NOVATEK` and `©inf=DEMO1` tags were not observed in the private archive sample. Cannot be confirmed without a direct card scan.
 
 ## OSD Detection
 
 OSD line observed in front-channel footage (GPS locked, hardwired power):
 ```
-033MPH 13.15V 1.0.250804 VIOFO A229 Ultra 08/14/2025 05:25:45 PM
+000MPH 00.00V 0.0.000000 VIOFO A229 Ultra 01/01/2030 12:00:00 PM
 ```
 
 Fields: GPS speed · vehicle voltage · firmware version · model name · date/time

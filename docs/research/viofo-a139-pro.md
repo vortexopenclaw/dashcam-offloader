@@ -35,12 +35,12 @@ The all-caps model suffix ("PRO") differs from newer VIOFO models like the A229 
 
 ## Source Validation
 
-This profile was built from NAS-archived footage files, not a direct microSD card scan. Card folder structure, parking modes, and exclusion patterns are inferred. A real card scan would confirm:
+This profile was built from a private archive sample, not a direct microSD card scan. Card folder structure, parking modes, and exclusion patterns are inferred. A real card scan would confirm:
 - Whether Parking, RO, and Photo subfolders exist and what naming they use
 - Whether `format.txt` appears at root
 - NOVATEK `©fmt`/`©inf` metadata on real files
 
 ## Sources
 
-- NAS footage archive: 89 clips (VIOFO A139 Pro, 2022-10-27 through 2023-06-14)
+- Private archive sample; counts and recording dates intentionally omitted
 - VIOFO product page: https://www.viofo.com/collections/dash-cam

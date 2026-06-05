@@ -17,7 +17,7 @@ detection:
         Camera burns "VIOFO A119M Pro" into the bottom-center of every frame. Extract
         bottom 8% of the front-channel MP4, apply brightness threshold at 50% of max
         pixel value, scale 4x, OCR with tesseract --psm 6. Confirmed on multiple day
-        and night clips from real footage. Some high-contrast bright scenes (direct sun,
+        and night clips from a private archive sample. Some high-contrast bright scenes (direct sun,
         reflective surfaces) may produce garbled OCR — retry with additional frames.
   notes: >
     Single-channel camera (front only). No model-identifying file confirmed on card
@@ -45,8 +45,8 @@ filename_patterns:
       Format: YYYYMMDDHHMMSS_SEQUENCE.MP4. No underscore separators within the
       date/time component — the entire datetime is a 14-digit concatenated number.
       No channel letter — this is a single-channel (front-only) camera. Sequence
-      number is a global monotonic counter; observed up to ~468 in NAS sample across
-      multiple recording dates, confirming persistence across sessions.
+      number is a global monotonic counter, confirming persistence across sessions.
+      Do not publish observed sequence ranges or recording dates from private archives.
 channels:
   F: front
 resolutions:

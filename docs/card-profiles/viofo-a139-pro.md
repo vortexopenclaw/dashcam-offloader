@@ -1,7 +1,7 @@
 # VIOFO A139 Pro — Card Profile
 
 **Date learned:** 2026-06-05
-**Source:** NAS-archived footage (89 clips, 2022-10-27 through 2023-06-14) — no direct card scan
+**Source:** Private archive sample, no direct card scan
 **Validation note:** Folder structure is inferred. Filename pattern and resolution data verified from real footage files.
 
 ## Filename Pattern
@@ -12,13 +12,12 @@ This is distinct from the A229/A329 lineup (`YYYY_MMDD_HHMMSS_SEQCHANNEL.MP4`). 
 
 Example filenames (native, before user-added labels):
 ```
-2022_1027_084120_F.MP4
-2022_1027_084420_F.MP4
-2022_1205_165601_I.MP4
-2023_0614_164759_R.MP4
+2030_0101_120000_F.MP4
+2030_0101_120000_I.MP4
+2030_0101_120000_R.MP4
 ```
 
-Because there is no sequence number, grouping must rely on timestamp alone. Same-second recording starts across channels are theoretically possible but not observed in the NAS sample.
+Because there is no sequence number, grouping must rely on timestamp alone. Same-second recording starts across channels are theoretically possible and should be handled defensively.
 
 ## Channels and Resolutions
 
@@ -30,7 +29,7 @@ Because there is no sequence number, grouping must rely on timestamp alone. Same
 
 The interior channel uses HEVC while front and rear use H.264 — a mixed-codec configuration not seen on the A229/A329 lineup.
 
-Channel distribution in NAS sample: 60 F, 12 I, 17 R files (not a balanced set — user archived selectively).
+Do not publish private archive channel counts or distribution.
 
 ## Clip Duration
 
@@ -38,7 +37,7 @@ Channel distribution in NAS sample: 60 F, 12 I, 17 R files (not a balanced set �
 
 ## MP4 Metadata
 
-Container brand: `mp42`. No `creation_time` tag was always present — varies by file. The NOVATEK-specific `©fmt`/`©inf` tags were not observed (likely stripped during NAS archiving).
+Container brand: `mp42`. No `creation_time` tag was always present. The NOVATEK-specific `©fmt`/`©inf` tags were not observed in the private archive sample.
 
 ## OSD Detection
 

@@ -1,7 +1,7 @@
 # VIOFO A119M Pro — Card Profile
 
 **Date learned:** 2026-06-05
-**Source:** NAS-archived footage (33 clips, 2025-10-17, 2025-11-29, 2025-12-02) — no direct card scan
+**Source:** Private archive sample, no direct card scan
 **Validation note:** Folder structure is inferred. Filename pattern and resolution data verified from real footage files.
 
 ## Filename Pattern
@@ -11,15 +11,14 @@
 This is the most distinct pattern in the VIOFO lineup. The entire datetime is a single 14-digit number:
 
 ```
-20251017133816_000043.MP4   →  2025-10-17 13:38:16, seq 43
-20251017143416_000099.MP4   →  2025-10-17 14:34:16, seq 99
-20251129121050_000261.MP4   →  2025-11-29 12:10:50, seq 261
-20251202165843_000468.MP4   →  2025-12-02 16:58:43, seq 468
+20300101120000_000001.MP4   ->  2030-01-01 12:00:00, seq 1
+20300101120100_000002.MP4   ->  2030-01-01 12:01:00, seq 2
+20300101120200_000003.MP4   ->  2030-01-01 12:02:00, seq 3
 ```
 
 No channel letter because this is a single-channel (front-only) camera.
 
-The sequence number is a global monotonic counter persisting across recording sessions. Observed range: 43–468 across the NAS sample spanning three recording dates, confirming it does not reset on each session.
+The sequence number is a global monotonic counter persisting across recording sessions. Do not publish observed sequence ranges or recording dates from private archives.
 
 ## Channels and Resolutions
 
@@ -35,7 +34,7 @@ Single-channel camera. No channel letter appears in filenames.
 
 ## MP4 Metadata
 
-Container brand: `mp42`. No `creation_time` tag present. NOVATEK-specific tags not observed (likely stripped during NAS archiving or absent on this platform).
+Container brand: `mp42`. No `creation_time` tag present. NOVATEK-specific tags not observed in the private archive sample.
 
 ## OSD Detection
 
@@ -48,7 +47,7 @@ Fields: GPS speed · GPS coordinates (lat/lon) · user-configurable camera name 
 
 Additional OSD variant (HDR active):
 ```
-AMPH VIOFO A119M Pro HDR 12/02/2025 16:58:47
+AMPH VIOFO A119M Pro HDR 01/01/2030 12:00:00
 ```
 
 "VIOFO A119M Pro" confirmed via OCR on multiple day, night, and overcast clips. Some high-contrast frames (direct sun, bright reflections) produce garbled OCR — retry with additional frames when first attempt fails.

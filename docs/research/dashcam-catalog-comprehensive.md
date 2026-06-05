@@ -36,9 +36,9 @@ The current Vueroid dashcam page lists these selector candidates.
 | A329T | 2/3CH | 4K front, telephoto channel class | 2025 to current | Tracked profile exists from official references and user-provided filename evidence; telephoto channel uses `T` token. |
 | A229 Pro | 1/2/3CH | 4K front, 2K rear, FHD cabin | 2023 to current | Tracked profile exists; STARVIS 2 front/rear, 3-channel option, current VIOFO product family. |
 | A229 Plus | 1/2/3CH | 2K front, 2K rear, FHD cabin | 2023 to current | Tracked profile exists; dual 2K main channels and optional interior channel. |
-| A229 Ultra | 2/3CH | 4K front, 4K rear, FHD cabin | 2025 to current | Tracked profile exists from archived footage; higher-resolution A229 variant. |
-| A139 Pro | 1/2/3CH | 4K front class | 2022 to current | Tracked profile exists from archived footage; no sequence number in observed filenames. |
-| A119M Pro | 1CH | 4K front class | 2025 to current | Tracked profile exists from archived footage; single-channel front-only model. |
+| A229 Ultra | 2/3CH | 4K front, 4K rear, FHD cabin | 2025 to current | Tracked profile exists from a private archive sample; higher-resolution A229 variant. |
+| A139 Pro | 1/2/3CH | 4K front class | 2022 to current | Tracked profile exists from a private archive sample; no sequence number in observed filenames. |
+| A119M Pro | 1CH | 4K front class | 2025 to current | Tracked profile exists from a private archive sample; single-channel front-only model. |
 | A119 Mini 2 | 1CH | 2K front | 2023 to current | Tracked profile exists from real card; compact single-channel, parking folder differs from A119M Pro. |
 
 ## Thinkware

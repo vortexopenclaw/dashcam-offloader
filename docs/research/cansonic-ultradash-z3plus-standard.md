@@ -3,7 +3,7 @@
 ## Sources
 
 - Official product page: [cansonic.com/products/ultradash-z3-standard-dash-cam](https://cansonic.com/products/ultradash-z3-standard-dash-cam)
-- NAS-archived footage (2-channel and 3-channel samples)
+- Private archive sample
 - No direct microSD card scan
 
 ## Manufacturer

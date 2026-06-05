@@ -27,7 +27,7 @@ Confirmed identical to other VIOFO models:
 A229 Ultra OSD when on hardwire power with GPS lock:
 
 ```
-033MPH 13.15V 1.0.250804 VIOFO A229 Ultra 08/14/2025 05:25:45 PM
+000MPH 00.00V 0.0.000000 VIOFO A229 Ultra 01/01/2030 12:00:00 PM
 ```
 
 Fields: GPS speed · vehicle voltage · firmware version · model name · date/time
@@ -38,13 +38,13 @@ OCR extraction confirmed on multiple day clips and one rainy-night clip using br
 
 ## Source Validation
 
-This profile was built from NAS-archived footage files, not a direct microSD card scan. Folder structure, parking modes, and file exclusion patterns are inferred. A real card scan would confirm:
+This profile was built from a private archive sample, not a direct microSD card scan. Folder structure, parking modes, and file exclusion patterns are inferred. A real card scan would confirm:
 - Whether `format.txt` is present at root
 - Parking, RO, and Photo subfolder structure
 - Whether a distinct volume label is assigned
-- NOVATEK `©fmt`/`©inf` metadata (may have been stripped from NAS copies)
+- NOVATEK `©fmt`/`©inf` metadata
 
 ## Sources
 
-- NAS footage archive: 27 clips (VIOFO A229 Ultra, 2025-08-14 through 2025-08-18)
+- Private archive sample; counts and recording dates intentionally omitted
 - VIOFO product page: https://www.viofo.com/collections/dash-cam
