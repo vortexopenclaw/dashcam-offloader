@@ -1,0 +1,79 @@
+id: viofo-a139-pro
+manufacturer: VIOFO
+model: A139 Pro
+status: seed
+source_notes:
+  - docs/card-profiles/viofo-a139-pro.md
+  - docs/research/viofo-a139-pro.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      threshold_method: half_max_brightness
+      matches: "VIOFO A139 PRO"
+      case_sensitive: false
+      notes: >
+        Camera burns "VIOFO A139 PRO" (all caps) into the bottom-center of every frame.
+        Extract bottom 8% of any front-channel (F) MP4, apply brightness threshold at 50%
+        of max pixel value, scale 4x, OCR with tesseract --psm 6. OSD match must be
+        case-insensitive — the A139 Pro renders the model suffix in all caps ("PRO")
+        unlike the A229/A329 lineup which uses title case ("Pro"). Confirmed on multiple
+        day and night clips from real footage.
+  supporting:
+    - folder: DCIM/Movie
+  notes: >
+    No model-identifying file confirmed on card (no direct card scan available). Filename
+    pattern is distinct from the A229/A329 lineup — no sequence number. OSD OCR on
+    front-channel video is the recommended detection method.
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: inferred
+    notes: >
+      Inferred from VIOFO platform conventions. Card structure not directly scanned;
+      parking and photo subfolder presence is unknown.
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(F|I|R|T)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    channel_group: 4
+    notes: >
+      No sequence number in filename — pattern is YYYY_MMDD_HHMMSS_CHANNEL.MP4.
+      This differs from the A229/A329 lineup (YYYY_MMDD_HHMMSS_SEQCHANNEL.MP4).
+      Confirmed from real NAS footage. Channel letter is underscore-separated.
+channels:
+  F: front
+  I: interior
+  R: rear
+resolutions:
+  F: 3840x2160
+  I: 1920x1080
+  R: 1920x1080
+  validation: footage_sampled
+  notes: >
+    F channel uses H.264; I channel uses HEVC (H.265); R channel uses H.264.
+    The mixed codec on interior is unusual and confirmed from real footage.
+    Users can adjust resolution in camera settings.
+grouping:
+  keys:
+    - year
+    - month_day
+    - time
+  notes: >
+    No sequence number available for grouping. Timestamp (year + month_day + time)
+    is the only grouping key. Same-second collisions across channels are theoretically
+    possible but not observed in the NAS sample.
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb
