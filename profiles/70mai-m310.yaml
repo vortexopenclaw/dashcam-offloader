@@ -1,0 +1,144 @@
+make: 70mai
+model: M310
+slug: 70mai-m310
+channels: 1
+
+detection:
+  high_confidence:
+    - method: filename_pattern
+      pattern: '^(NO|LA|EM)\d{8}-\d{6}-\d+\.mp4$'
+      flags: [case_sensitive]
+      notes: >
+        70mai M310 uses a two-letter uppercase mode prefix (NO = normal recording,
+        LA = time-lapse parking) followed by YYYYMMDD-HHMMSS-SEQUENCE and a lowercase
+        .mp4 extension. This scheme is distinctive from VIOFO, Thinkware, BlackVue, and
+        Vantrue patterns. Global monotonic sequence counter observed across all modes;
+        range 62–1732 confirmed in NAS sample across driving and parking directories.
+
+  supporting:
+    - method: file_extension
+      value: '.mp4'
+      case: lowercase
+      notes: >
+        VIOFO cameras use uppercase .MP4; 70mai M310 uses lowercase .mp4. Useful
+        negative signal: presence of uppercase .MP4 rules out 70mai.
+    - method: resolution
+      value: '2304x1296'
+      notes: >
+        M310 records at 2304x1296 HEVC 30fps on the single front channel. Not uniquely
+        identifying on its own, but combined with filename pattern is strong supporting
+        evidence.
+    - method: osd_content
+      strip: bottom_10pct
+      notes: >
+        OSD displays date/time in MM-DD-YYYY HH:MM:SS format followed by a pipe
+        separator. Does NOT embed model name — different from VIOFO cameras. Cannot
+        positively identify M310 model via OCR, but absence of "VIOFO" or similar
+        brand text rules out that entire family.
+
+folders:
+  - path: 'Normal'
+    type: loop_recording
+    description: Continuous loop recording during normal driving
+    modes: [normal]
+    validation: inferred
+    notes: >
+      Folder name inferred from 70mai product conventions. NAS footage was
+      pre-organized by user into separate driving/parking directories; actual
+      on-card folder names not directly confirmed from a card scan.
+  - path: 'Parking'
+    type: parking_recording
+    description: Parking mode recordings (time-lapse and normal)
+    modes: [parking_timelapse, parking_normal]
+    validation: inferred
+  - path: 'Emergency'
+    type: locked_clips
+    description: Emergency/locked clips triggered by impact or "Lock the video" voice command
+    modes: [emergency]
+    validation: inferred
+    notes: >
+      Manual confirms "Lock the video" voice command saves to an emergency directory.
+      Exact folder name and any dedicated filename prefix (e.g. EM) not confirmed
+      from available footage.
+
+filename_patterns:
+  normal:
+    prefix: 'NO'
+    regex: '^NO(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
+    example: 'NO20260206-141441-000062.mp4'
+    description: Normal/loop recording during driving
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      hour: 4
+      minute: 5
+      second: 6
+      sequence: 7
+
+  parking_timelapse:
+    prefix: 'LA'
+    regex: '^LA(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
+    example: 'LA20260209-170336-000826.mp4'
+    description: Time-lapse parking mode recording
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      hour: 4
+      minute: 5
+      second: 6
+      sequence: 7
+
+  generic:
+    regex: '^([A-Z]{2})(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
+    description: Matches any two-letter mode prefix variant
+
+channels:
+  front:
+    id: front
+    description: Single front-facing camera (no rear or interior channel)
+    resolution: 2304x1296
+    codec: hevc
+    fps: 30
+    segment_duration: 60
+
+resolutions:
+  front: '2304x1296'
+
+video:
+  segment_duration_seconds: 60
+  codec: hevc
+  fps: 30
+  extension: '.mp4'
+  extension_case: lowercase
+
+sequence:
+  scope: global
+  padding: 6
+  notes: >
+    Sequence number is a global monotonic counter shared across all recording modes
+    (NO and LA confirmed). Zero-padded to 6 digits. Range 62–1732 observed in
+    NAS sample spanning driving and parking clips.
+
+osd:
+  location: bottom
+  format: 'MM-DD-YYYY HH:MM:SS | [additional data]'
+  contains_model_name: false
+  notes: >
+    The 70mai M310 burns date/time and additional data (possibly GPS speed) into
+    the bottom of every frame. It does NOT embed the model name. The OSD format
+    MM-DD-YYYY distinguishes it from cameras using DD-MM-YYYY or YYYY-MM-DD, but
+    cannot be used alone to identify this specific model.
+
+validation:
+  card_sampled: false
+  footage_sampled: true
+  osd_model_confirmed: false
+  notes: >
+    Model identity established from: (1) Wi-Fi SSID pattern 70mai_M310_XXXX
+    documented in official manual; (2) resolution 2304x1296 matching manual spec;
+    (3) filename pattern unique to 70mai cameras. Footage sourced from NAS archive
+    (two directories: driving clips and parking clips). Folder structure on actual
+    microSD card not directly confirmed — all folder-related fields are inferred.
+    User confirmed LA prefix = time-lapse parking from file labels in NAS archive.
