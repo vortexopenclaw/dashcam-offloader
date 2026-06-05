@@ -10,6 +10,8 @@
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
+- VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
+- VIOFO A229 Ultra - profile drafted from NAS-archived footage (no direct card scan). 4K front and rear, 1080P interior. OSD OCR confirmed.
 - Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear).
 
 ## Intake Queue
