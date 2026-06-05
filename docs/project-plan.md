@@ -16,7 +16,8 @@
 - Detect the camera profile.
 - Classify clips.
 - Print a summary by mode, channel, and date range.
-- Produce a copy manifest.
+- Accept a user-selected destination path.
+- Produce a copy manifest from source card to destination.
 - Support dry-run copy planning.
 
 ## Phase 3 - Safe Copy Engine
@@ -26,12 +27,14 @@
 - Skip duplicates.
 - Resume interrupted jobs.
 - Verify file size and optional checksum.
+- Track copy progress and results per card.
 - Export manifest as JSON and CSV.
 
 ## Phase 4 - Mac App
 
 - Show mounted removable volumes.
 - Allow manual source selection.
+- Allow user-selected destination folders.
 - Display detected camera and confidence evidence.
 - Provide filters for camera channel, recording mode, date range, and protected/event clips.
 - Run multiple card copy jobs at once.

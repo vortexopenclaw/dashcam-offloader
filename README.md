@@ -1,10 +1,10 @@
 # Dashcam Offloader
 
-Documentation-first planning repo for an open-source dashcam SD-card offloader.
+Documentation-first planning repo for an open-source dashcam microSD-card offloader.
 
-The goal is to make it easy to plug in one or more dashcam memory cards, detect the camera model, classify footage by recording mode and camera channel, filter clips by date/type, and copy them safely into an organized destination without modifying the source card.
+The purpose of this app is to automate and simplify moving dashcam footage from one or more microSD cards to the location the user chooses. The app should detect the camera model, classify footage by recording mode and camera channel, filter clips by date/type/channel, and copy them safely into an organized destination without modifying the source card.
 
-The longer-term goal is for the Mac app to help learn new dashcams. A user should be able to choose a known model, choose a known but not-yet-supported model, or choose `Other`, describe their camera/channel setup, scan the card, and generate a sanitized intake package that can be used to add that dashcam to the profile library.
+Learning new dashcams supports that main offload workflow. A user should be able to choose a known model, choose a known but not-yet-supported model, or choose `Other`, describe their camera/channel setup, scan the card, and generate a sanitized intake package that can be used to add that dashcam to the profile library.
 
 ## Current Status
 
@@ -14,7 +14,8 @@ This project is in the research and profile-building phase. The first work is do
 
 - macOS first
 - Read-only SD-card inspection
-- Multi-card offload workflow
+- User-selected local or external destination
+- Multiple dashcam cards mounted and offloaded in one workflow
 - Guided intake for new or unsupported dashcam models
 - Camera model detection from card metadata and file structure
 - Recording mode classification
@@ -22,6 +23,7 @@ This project is in the research and profile-building phase. The first work is do
 - Date/time parsing from filenames and metadata
 - Event/protected/manual/emergency clip handling
 - Copy manifest with source path, destination path, detected mode, detected channel, timestamp, size, and checksum status
+- Clear progress and verification per card/job
 - Sanitized profile-submission bundle for unsupported models, excluding private identifiers and video content by default
 
 ## Seed Profiles

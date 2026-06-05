@@ -2,13 +2,15 @@
 
 ## Product Goal
 
-Build a Mac-first open-source tool that safely offloads dashcam footage from one or more memory cards into a predictable destination folder. The app should understand each dashcam's folder structure and filename conventions well enough to classify clips by camera model, recording mode, channel, and date/time.
+Build a Mac-first open-source tool that automates and simplifies offloading dashcam footage from one or more microSD cards into a user-selected destination. The app should understand each dashcam's folder structure and filename conventions well enough to classify clips by camera model, recording mode, channel, and date/time before planning and verifying the copy.
 
-The app should also make it practical to learn unsupported dashcams. Users should be able to select a known model, select a known but not-yet-supported model, or select `Other`, then describe their camera/channel setup and generate a sanitized card profile submission.
+The main workflow is offload first: insert card or cards, choose the destination, review what will be copied, then run a verified transfer. The app should also make it practical to learn unsupported dashcams. Users should be able to select a known model, select a known but not-yet-supported model, or select `Other`, then describe their camera/channel setup and generate a sanitized card profile submission.
 
 ## Design Principles
 
 - Never modify the source card.
+- Let the user choose the destination for every offload job.
+- Treat multiple mounted dashcam cards as a normal workflow, not an edge case.
 - Prefer deterministic profile rules over guessing.
 - Treat official manuals as useful but incomplete.
 - Treat real card samples as the highest-value evidence.
@@ -36,17 +38,17 @@ The eventual implementation should split into these layers:
 
 4. **Copy planner**
    - Applies user filters such as date range, recording mode, and channel.
-   - Computes destination paths.
+   - Computes destination paths under the user-selected location.
    - Produces a dry-run manifest before copying.
 
 5. **Copy executor**
    - Copies files without deleting or changing source files.
    - Verifies size and, where enabled, checksum.
-   - Supports resume and duplicate detection.
+   - Supports resume, duplicate detection, and per-card job progress.
 
 6. **Mac UI**
-   - Shows mounted cards, detected profiles, selected filters, job progress, and completed manifests.
-   - Allows multiple cards/jobs at once.
+   - Shows mounted cards, selected destination, detected profiles, selected filters, job progress, and completed manifests.
+   - Allows multiple cards and copy jobs at once.
 
 7. **Profile intake assistant**
    - Lets users choose from supported, known unsupported, and `Other` camera models.
