@@ -48,7 +48,7 @@ folders:
 filename_patterns:
   normal:
     regex: '^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_([LRB])\.MP4$'
-    example: '20230414_124508_L.MP4'
+    example: 'YYYYMMDD_HHMMSS_L.MP4'
     description: All recording modes share the same filename pattern
     groups:
       year: 1
@@ -118,7 +118,7 @@ osd:
   notes: >
     "Information Stamp" is listed as supported in official specs. OSD content
     (date/time format, model name presence) not confirmed — ffprobe and OCR
-    not available for this footage due to NAS-only access with no bash capability.
+    not yet performed.
 
 parking_mode:
   supported: true
@@ -135,8 +135,7 @@ validation:
   footage_sampled: true
   osd_confirmed: false
   notes: >
-    Profile built from NAS-archived footage (Driving Footage Day directory, 57 files
-    across April and September–October 2023) and official Cansonic product page.
-    April 2023 clips: L+R only (rear camera not installed). September 2023+ clips:
-    L+R+B (R1 rear camera added). No direct card scan; folder structure inferred.
-    ffprobe/OCR not available — resolution and OSD not confirmed from actual files.
+    Profile built from NAS-archived footage and official Cansonic product page.
+    Footage includes both 2-channel (L+R) and 3-channel (L+R+B) samples, confirming
+    B channel requires the optional R1 rear camera. No direct card scan; folder
+    structure inferred. ffprobe/OCR not yet performed.
