@@ -4,6 +4,11 @@
 
 Seed profile, based on one mounted sample card at `/Volumes/U3000PRO` and Thinkware documentation.
 
+## Source References
+
+- Official support/download page: <https://thinkware.com/global/support/download/u3000-pro>
+- Official English manual PDF: <https://download2.inavi.com/dashcam/U3000PRO/manual/u3000pro_manual_english_20250924.pdf>
+
 ## Model Detection
 
 Highest-confidence evidence:
@@ -30,7 +35,7 @@ Do not use:
 - `.parking_rec_sec` - secondary parking recording bucket listed by manual.
 - `manual_rec` - manual recording, manual-confirmed but empty on the sample card.
 - `sos_rec` - SOS recording, manual-confirmed but empty on the sample card.
-- `incabin_rec` - cabin recording, manual-confirmed but empty on the sample card.
+- `incabin_rec` - in-cabin recording, manual-confirmed but empty on the sample card.
 
 ## Filename Patterns
 
@@ -54,10 +59,22 @@ Observed special variants:
 
 The meaning of `SS` still needs validation.
 
+## Manual-Confirmed In-Cabin Behavior
+
+The official U3000 Pro manual confirms the in-cabin feature requires the Interior IR camera and stores in-cabin video in the `incabin_rec` folder. It also says in-cabin videos are recorded during continuous recording mode.
+
+The manual's filename examples only show:
+
+- `REC_YYYYMMDD_HHMMSS_F.MP4`
+- `REC_YYYYMMDD_HHMMSS_R.MP4`
+
+It does not provide a separate in-cabin filename example or a confirmed interior channel token. Do not infer `_I`, `_C`, or any other suffix from the manual alone.
+
 ## Channels
 
 - `F` - front
 - `R` - rear
+- Interior/in-cabin token - unknown. Folder is confirmed as `incabin_rec`, but filename suffix needs a real cabin sample.
 
 ## Exclude By Default
 
@@ -75,6 +92,5 @@ The meaning of `SS` still needs validation.
 - Meaning of `F_SS` and `R_SS`.
 - Filename pattern for manual recordings.
 - Filename pattern for SOS recordings.
-- Filename pattern for cabin recordings.
+- Filename token for cabin recordings. The `incabin_rec` folder is manual-confirmed, but sample files are still needed to confirm the suffix.
 - Whether any protected status is represented by filesystem flags.
-

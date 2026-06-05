@@ -4,6 +4,7 @@ model: U3000 Pro
 status: seed
 source_notes:
   - docs/card-profiles/thinkware-u3000-pro.md
+  - docs/research/thinkware-u3000-pro.md
 detection:
   high_confidence:
     - path: SETTING/lang/ver.dat
@@ -45,9 +46,10 @@ folders:
     prefix: unknown
     validation: manual_confirmed_sample_missing
   - path: incabin_rec
-    mode: cabin
+    mode: in_cabin
     prefix: unknown
     validation: manual_confirmed_sample_missing
+    notes: Manual confirms this folder and the Interior IR camera requirement, but not the in-cabin filename suffix.
 filename_patterns:
   - pattern: "^(REC|EVT|MOT|PAK|PAS)_(\\d{8})_(\\d{6})_([A-Z]+(?:_[A-Z]+)?)\\.MP4$"
     timestamp:
@@ -58,6 +60,11 @@ filename_patterns:
 channels:
   F: front
   R: rear
+unconfirmed_channels:
+  in_cabin:
+    folder: incabin_rec
+    filename_suffix: unknown
+    evidence: manual_confirms_folder_only
 unknown_channel_variants:
   - F_SS
   - R_SS
@@ -70,4 +77,3 @@ exclude:
   - .Spotlight-V100/**
   - .fseventsd/**
   - "._*"
-
