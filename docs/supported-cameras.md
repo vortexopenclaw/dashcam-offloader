@@ -12,6 +12,8 @@
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
 - VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
 - VIOFO A229 Ultra - profile drafted from NAS-archived footage (no direct card scan). 4K front and rear, 1080P interior. OSD OCR confirmed.
+- VIOFO A139 Pro - profile drafted from NAS-archived footage (no direct card scan). 3-channel. Distinct filename pattern: no sequence number (YYYY_MMDD_HHMMSS_CHANNEL). Mixed codec: HEVC interior.
+- VIOFO A119M Pro - profile drafted from NAS-archived footage (no direct card scan). Single-channel front only. Distinct filename pattern: YYYYMMDDHHMMSS_SEQUENCE (no underscore separators in date/time).
 - Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear).
 
 ## Intake Queue
