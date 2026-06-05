@@ -6,14 +6,27 @@ channels: 1
 detection:
   high_confidence:
     - method: filename_pattern
-      pattern: '^(NO|LA|EM)\d{8}-\d{6}-\d+\.mp4$'
+      pattern: '^(NO|LA|EV)\d{8}-\d{6}-\d+\.mp4$'
       flags: [case_sensitive]
       notes: >
         70mai M310 uses a two-letter uppercase mode prefix (NO = normal recording,
-        LA = time-lapse parking) followed by YYYYMMDD-HHMMSS-SEQUENCE and a lowercase
-        .mp4 extension. This scheme is distinctive from VIOFO, Thinkware, BlackVue, and
-        Vantrue patterns. Global monotonic sequence counter observed across all modes;
-        range 62–1732 confirmed in NAS sample across driving and parking directories.
+        LA = time-lapse parking, EV = event/locked) followed by YYYYMMDD-HHMMSS-SEQUENCE
+        and a lowercase .mp4 extension. This scheme is distinctive from VIOFO, Thinkware,
+        BlackVue, and Vantrue patterns. Global monotonic sequence counter observed across
+        all modes; range 62–1732 confirmed in NAS sample across driving and parking.
+    - method: card_marker_file
+      path: '.formated'
+      location: root
+      notes: >
+        70mai creates a hidden file named exactly ".formated" (note: not ".formatted")
+        in the root of the card when the card is formatted in-camera. Confirmed present
+        on real card scan. Provides a strong 70mai-family signal.
+    - method: folder_set
+      folders: [Normal, Event, Parking, Photo, Lapse]
+      notes: >
+        All five folders confirmed present on a real M310 microSD card. Each folder
+        also contains a hidden ".sstar.format" file. This folder set is distinct from
+        VIOFO (uses DCIM/), Thinkware, and BlackVue layouts.
 
   supporting:
     - method: file_extension
@@ -41,29 +54,62 @@ folders:
     type: loop_recording
     description: Continuous loop recording during normal driving
     modes: [normal]
-    validation: inferred
+    validation: confirmed
     notes: >
-      Folder name inferred from 70mai product conventions. NAS footage was
-      pre-organized by user into separate driving/parking directories; actual
-      on-card folder names not directly confirmed from a card scan.
+      Confirmed on real card scan. Contains NO-prefix files at 60-second segments.
+      Hidden .sstar.format file also present in this folder.
   - path: 'Parking'
     type: parking_recording
-    description: Parking mode recordings (time-lapse and normal)
-    modes: [parking_timelapse, parking_normal]
-    validation: inferred
-  - path: 'Emergency'
+    description: Normal-sensitivity parking mode recordings
+    modes: [parking_normal]
+    validation: confirmed
+    notes: >
+      Confirmed folder exists on card (empty on scanned card). Stores NO-prefix
+      files recorded during normal parking mode (not time-lapse). Distinct from
+      the Lapse/ folder. Hidden .sstar.format file present.
+  - path: 'Lapse'
+    type: parking_timelapse
+    description: Time-lapse parking mode recordings
+    modes: [parking_timelapse]
+    validation: confirmed
+    notes: >
+      Confirmed folder exists on card (empty on scanned card). Stores LA-prefix
+      files from time-lapse parking mode. LA = Lapse. Hidden .sstar.format file present.
+  - path: 'Event'
     type: locked_clips
     description: Emergency/locked clips triggered by impact or "Lock the video" voice command
-    modes: [emergency]
-    validation: inferred
+    modes: [event]
+    validation: confirmed
     notes: >
-      Manual confirms "Lock the video" voice command saves to an emergency directory.
-      Exact folder name and any dedicated filename prefix (e.g. EM) not confirmed
-      from available footage.
+      Confirmed folder exists on card (empty on scanned card). Manual confirms "Lock
+      the video" voice command saves to the emergency/event directory. Exact filename
+      prefix for event clips (EV? EM?) not confirmed from footage — no event clips
+      available in sample. Hidden .sstar.format file present.
+  - path: 'Photo'
+    type: photos
+    description: Photo snapshots
+    modes: [photo]
+    validation: confirmed
+    notes: >
+      Confirmed folder exists on card (empty on scanned card). Manual confirms
+      "Take photo" voice command saves a photo. Hidden .sstar.format file present.
+
+card_markers:
+  - path: '.formated'
+    location: root
+    description: >
+      Created by the camera when the card is formatted in-camera. Note unusual
+      spelling ("formated" not "formatted"). Confirms this is a 70mai-formatted card.
+  - path: '.sstar.format'
+    location: per_folder
+    description: >
+      Present in each of the five recording folders. Purpose unclear — likely a
+      folder initialization marker written by the camera firmware.
 
 filename_patterns:
   normal:
     prefix: 'NO'
+    folder: 'Normal'
     regex: '^NO(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
     example: 'NO20260206-141441-000062.mp4'
     description: Normal/loop recording during driving
@@ -76,8 +122,15 @@ filename_patterns:
       second: 6
       sequence: 7
 
+  parking_normal:
+    prefix: 'NO'
+    folder: 'Parking'
+    regex: '^NO(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
+    description: Normal-sensitivity parking mode (same prefix as normal recording, different folder)
+
   parking_timelapse:
     prefix: 'LA'
+    folder: 'Lapse'
     regex: '^LA(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
     example: 'LA20260209-170336-000826.mp4'
     description: Time-lapse parking mode recording
@@ -89,6 +142,13 @@ filename_patterns:
       minute: 5
       second: 6
       sequence: 7
+
+  event:
+    prefix: 'EV'
+    folder: 'Event'
+    regex: '^EV(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
+    description: Event/locked clip (prefix EV inferred; not confirmed from footage)
+    validation: inferred
 
   generic:
     regex: '^([A-Z]{2})(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
@@ -118,8 +178,9 @@ sequence:
   padding: 6
   notes: >
     Sequence number is a global monotonic counter shared across all recording modes
-    (NO and LA confirmed). Zero-padded to 6 digits. Range 62–1732 observed in
-    NAS sample spanning driving and parking clips.
+    and folders (NO normal, NO parking, LA time-lapse all increment the same counter).
+    Zero-padded to 6 digits. Range 62–1732 observed in NAS sample; 489–583+ on card
+    scan (2026-02-14 session).
 
 osd:
   location: bottom
@@ -132,13 +193,12 @@ osd:
     cannot be used alone to identify this specific model.
 
 validation:
-  card_sampled: false
+  card_sampled: true
   footage_sampled: true
   osd_model_confirmed: false
   notes: >
-    Model identity established from: (1) Wi-Fi SSID pattern 70mai_M310_XXXX
-    documented in official manual; (2) resolution 2304x1296 matching manual spec;
-    (3) filename pattern unique to 70mai cameras. Footage sourced from NAS archive
-    (two directories: driving clips and parking clips). Folder structure on actual
-    microSD card not directly confirmed — all folder-related fields are inferred.
-    User confirmed LA prefix = time-lapse parking from file labels in NAS archive.
+    Real card scan performed (2026-02-14 session, sequences 489+). Folder structure
+    fully confirmed: Normal/, Parking/, Lapse/, Event/, Photo/ all present. .formated
+    root marker and .sstar.format per-folder markers confirmed. Filename pattern and
+    resolution confirmed from NAS footage (ffprobe). Event clip prefix not confirmed
+    — no event clips available in samples.
