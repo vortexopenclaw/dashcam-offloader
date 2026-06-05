@@ -1,0 +1,149 @@
+# Vantrue N4 S Profile
+# Generated: 2026-06-05
+# Evidence: Real SD card inspection at /Volumes/N4 S
+# Confidence: MEDIUM - folder/filename pattern match; no explicit model metadata file
+
+id: vantrue-n4-s
+manufacturer: Vantrue
+model: N4 S
+status: seeded
+confidence: medium
+confidence_note: "Identified by folder/filename pattern matching to N4 series; no explicit model metadata file present. Labeled based on user-provided volume label."
+
+detection:
+  high_confidence:
+    note: "No explicit model metadata file found (e.g., version.dat, model.bin)"
+  medium_confidence:
+    - path: Normal
+      exists: true
+      note: "Folder structure matches Vantrue N4 series"
+    - path: Event
+      exists: true
+    - path: Parking
+      exists: true
+    - path: Photo
+      exists: true
+    - path: GPS
+      exists: true
+    - filename_pattern:
+        regex: '^\\d{8}_\\d{6}_\\d{5}_[NEP]_[ABC]\\.(MP4|JPG)$'
+        note: "Sequence number (5 digits) is key N4 series signature"
+  low_confidence:
+    - volume_label: "N4 S"
+      strength: weak
+      note: "User-renamable, not reliable"
+    - balanced_bitrates:
+        note: "All channels ~109-111 MB/min suggests uniform resolution setting, but this is user-configurable"
+  not_reliable:
+    - firmware_files:
+        - VT-N4S.bin
+        - VT-RC09.bin
+        - VT-RC18.bin
+        note: "Manually added for firmware update; not present by default"
+    - channel_count:
+        note: "User-configurable (1CH/2CH/3CH modes)"
+    - file_sizes:
+        note: "Depend on user-configurable resolution/bitrate settings"
+
+folders:
+  - path: Normal
+    mode: normal
+    prefix: N
+  - path: Event
+    mode: event
+    prefix: E
+  - path: Parking
+    mode: parking
+    prefix: P
+  - path: Photo
+    mode: photo
+    prefix: "N or P"
+  - path: GPS
+    mode: gps
+    format: csv
+
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_(\\d{5})_([NEP])_([ABC])\\.(MP4|JPG)$"
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    seq_group: 3
+    seq_note: "5-digit sequence number is key N4 series signature"
+    mode_group: 4
+    channel_group: 5
+    modes:
+      N: normal
+      E: event
+      P: parking
+    channels:
+      A: front
+      B: interior
+      C: rear
+
+channels:
+  note: "User-configurable 1CH/2CH/3CH modes; front (A) always active"
+  A:
+    position: front
+    observed_file_size_bytes: 109051904
+    note: "File size reflects user's resolution setting, not hardware capability"
+  B:
+    position: interior
+    observed_file_size_bytes: 109051904
+    note: "File size reflects user's resolution setting, not hardware capability"
+  C:
+    position: rear
+    observed_file_size_bytes: 111149056
+    note: "File size reflects user's resolution setting, not hardware capability"
+
+gps_format:
+  location: GPS/YYYYMMDD.dat
+  format: csv
+  line_ending: CRLF
+  header: "#"
+  fields:
+    - name: timestamp
+      format: YYYYMMDDHHMMSS
+    - name: latitude
+    - name: lat_hemisphere
+      values: [N, S]
+    - name: longitude
+    - name: lon_hemisphere
+      values: [E, W]
+    - name: altitude
+      unit: meters
+    - name: speed
+
+exclude:
+  - "^\\._"
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "*.bin"
+  - Firmware files note: "*.bin files in root are manually-added firmware updates, not present by default"
+
+notes:
+  - "N4 S identified by folder/filename pattern matching to N4 series"
+  - "No explicit model metadata file found on sample card"
+  - "User-configurable 1CH/2CH/3CH modes; front channel (A) always active"
+  - "Balanced file sizes (~109-111 MB/min) suggest uniform resolution setting"
+  - "Cannot definitively distinguish from N4 Pro S without explicit model metadata"
+  - "Firmware files (VT-N4S.bin, VT-RC09.bin, VT-RC18.bin) manually added for update"
+  - "Same folder structure and filename pattern as N4 Pro S, N4, N4 Pro"
+
+comparison:
+  vs_n4_pro_s:
+    folder_structure: "Identical"
+    filename_pattern: "Identical"
+    gps_format: "Identical"
+    hardware_max_resolution:
+      n4_s: "2.5K (all channels)"
+      n4_pro_s: "4K front, 1080P interior, 2.5K rear"
+    user_configurable: "Both support 1CH/2CH/3CH modes"
+    detection_note: "Cannot distinguish without explicit model metadata file"
+
+limitations:
+  - "Bitrates and resolutions are user-configurable, not reliable for identification"
+  - "Channel count is user-configurable (1CH/2CH/3CH modes)"
+  - "Firmware files not present by default"
+  - "Volume labels are user-renamable"
+  - "Requires explicit model metadata file or user confirmation for definitive ID"
