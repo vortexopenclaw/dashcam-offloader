@@ -3,7 +3,7 @@
 ## Sources
 
 - Official product page: [cansonic.com/products/ultradash-z3-standard-dash-cam](https://cansonic.com/products/ultradash-z3-standard-dash-cam)
-- NAS footage: 57 files across April 2023 (L+R only) and September–October 2023 (L+R+B)
+- NAS-archived footage (2-channel and 3-channel samples)
 - No direct microSD card scan
 
 ## Manufacturer
@@ -19,9 +19,9 @@ The Z3+ has **two physically rotatable front lenses** mounted on the same unit:
 - **Left (L)**: Wide-angle, 140° FOV — captures the full road scene
 - **Right (R)**: Telephoto, up to 164ft/50m — captures distant plates, signs, objects
 
-Both lenses rotate 180°, so either can be aimed forward or backward. This is why the
-NAS sample includes files labeled "Telephoto lens aimed backwards" (R channel files
-from October 2023).
+Both lenses rotate 180°, so either can be aimed forward or backward. The R telephoto
+can be physically aimed rearward to record behind the vehicle without a separate
+rear camera.
 
 The **B channel** is an optional add-on rear camera (**UltraDash R1**), connected via
 cable. It is not part of the main Z3+ unit. The R1 is a separate IP67 waterproof camera
@@ -43,14 +43,12 @@ Pattern: `YYYYMMDD_HHMMSS_CHANNEL.MP4`
 
 | Field | Format | Example |
 |---|---|---|
-| Date | `YYYYMMDD` | `20230414` |
+| Date | `YYYYMMDD` | `YYYYMMDD` |
 | Separator | `_` | |
-| Time | `HHMMSS` | `124508` |
+| Time | `HHMMSS` | `HHMMSS` |
 | Separator | `_` | |
 | Channel | Single letter: `L`, `R`, or `B` | `L` |
 | Extension | `.MP4` (uppercase) | |
-
-Full example: `20230414_124508_L.MP4`
 
 **No sequence number.** L, R, and B files with identical timestamps are synchronized
 clips recorded simultaneously.
@@ -75,17 +73,12 @@ The A139 Pro also has no sequence number but uses a split date format:
 The 8-digit vs split date is the key differentiator, along with L/R/B channel letters
 vs VIOFO's F/I/R.
 
-## Footage Timeline from NAS Sample
+## Channel Configuration
 
-| Date range | Channels present | Notes |
-|---|---|---|
-| April 14, 2023 | L + R | Rear camera not yet installed |
-| September 5–9, 2023 | L + R + B | R1 rear camera added |
-| September 23, 2023 | L + R + B | |
-| October 6, 2023 | R only | "Telephoto lens aimed backwards" — testing rear aim |
+Footage samples include clips with L+R only and clips with L+R+B, confirming:
 
-The transition from 2CH to 3CH between April and September confirms the B channel
-requires the optional R1 accessory.
+- L and R are always present (built into the main unit)
+- B requires the optional R1 rear camera — its absence does not disqualify the model
 
 ## Resolution and Codec
 
@@ -95,13 +88,13 @@ requires the optional R1 accessory.
 | R (telephoto) | 2560×1440 | unknown | Official spec |
 | B (rear R1) | 2560×1440 | unknown | Official spec |
 
-Codec not confirmed — ffprobe not available for NAS footage. Official spec lists
-"MP4" format without specifying H.264 vs H.265.
+Codec not confirmed — ffprobe not yet performed. Official spec lists "MP4" format
+without specifying H.264 vs H.265.
 
 ## OSD
 
 "Information Stamp: Support" per official specs. The actual OSD content (date/time
-format, whether model name is included) is not confirmed — OCR not performed.
+format, whether model name is included) is not confirmed — OCR not yet performed.
 
 ## Detection Strategy
 
