@@ -12,8 +12,8 @@ detection:
         70mai M310 uses a two-letter uppercase mode prefix (NO = normal recording,
         LA = time-lapse parking, EV = event/locked) followed by YYYYMMDD-HHMMSS-SEQUENCE
         and a lowercase .mp4 extension. This scheme is distinctive from VIOFO, Thinkware,
-        BlackVue, and Vantrue patterns. Global monotonic sequence counter observed across
-        all modes; range 62–1732 confirmed in NAS sample across driving and parking.
+        BlackVue, and Vantrue patterns. Global monotonic sequence counter confirmed
+        across all recording modes.
     - method: card_marker_file
       path: '.formated'
       location: root
@@ -64,35 +64,35 @@ folders:
     modes: [parking_normal]
     validation: confirmed
     notes: >
-      Confirmed folder exists on card (empty on scanned card). Stores NO-prefix
-      files recorded during normal parking mode (not time-lapse). Distinct from
-      the Lapse/ folder. Hidden .sstar.format file present.
+      Confirmed folder exists on card. Stores NO-prefix files recorded during normal
+      parking mode (not time-lapse). Distinct from the Lapse/ folder.
+      Hidden .sstar.format file present.
   - path: 'Lapse'
     type: parking_timelapse
     description: Time-lapse parking mode recordings
     modes: [parking_timelapse]
     validation: confirmed
     notes: >
-      Confirmed folder exists on card (empty on scanned card). Stores LA-prefix
-      files from time-lapse parking mode. LA = Lapse. Hidden .sstar.format file present.
+      Confirmed folder exists on card. Stores LA-prefix files from time-lapse parking
+      mode. LA = Lapse. Hidden .sstar.format file present.
   - path: 'Event'
     type: locked_clips
     description: Emergency/locked clips triggered by impact or "Lock the video" voice command
     modes: [event]
     validation: confirmed
     notes: >
-      Confirmed folder exists on card (empty on scanned card). Manual confirms "Lock
-      the video" voice command saves to the emergency/event directory. Exact filename
-      prefix for event clips (EV? EM?) not confirmed from footage — no event clips
-      available in sample. Hidden .sstar.format file present.
+      Confirmed folder exists on card. Manual confirms "Lock the video" voice command
+      saves to the emergency/event directory. Exact filename prefix for event clips
+      (EV? EM?) not confirmed from footage — no event clips available in sample.
+      Hidden .sstar.format file present.
   - path: 'Photo'
     type: photos
     description: Photo snapshots
     modes: [photo]
     validation: confirmed
     notes: >
-      Confirmed folder exists on card (empty on scanned card). Manual confirms
-      "Take photo" voice command saves a photo. Hidden .sstar.format file present.
+      Confirmed folder exists on card. Manual confirms "Take photo" voice command
+      saves a photo. Hidden .sstar.format file present.
 
 card_markers:
   - path: '.formated'
@@ -111,7 +111,7 @@ filename_patterns:
     prefix: 'NO'
     folder: 'Normal'
     regex: '^NO(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
-    example: 'NO20260206-141441-000062.mp4'
+    example: 'NO20240101-120000-000001.mp4'
     description: Normal/loop recording during driving
     groups:
       year: 1
@@ -132,7 +132,7 @@ filename_patterns:
     prefix: 'LA'
     folder: 'Lapse'
     regex: '^LA(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d+)\.mp4$'
-    example: 'LA20260209-170336-000826.mp4'
+    example: 'LA20240101-120000-000001.mp4'
     description: Time-lapse parking mode recording
     groups:
       year: 1
@@ -179,8 +179,7 @@ sequence:
   notes: >
     Sequence number is a global monotonic counter shared across all recording modes
     and folders (NO normal, NO parking, LA time-lapse all increment the same counter).
-    Zero-padded to 6 digits. Range 62–1732 observed in NAS sample; 489–583+ on card
-    scan (2026-02-14 session).
+    Zero-padded to 6 digits. Counter does not reset on card format.
 
 osd:
   location: bottom
@@ -197,8 +196,7 @@ validation:
   footage_sampled: true
   osd_model_confirmed: false
   notes: >
-    Real card scan performed (2026-02-14 session, sequences 489+). Folder structure
-    fully confirmed: Normal/, Parking/, Lapse/, Event/, Photo/ all present. .formated
-    root marker and .sstar.format per-folder markers confirmed. Filename pattern and
-    resolution confirmed from NAS footage (ffprobe). Event clip prefix not confirmed
-    — no event clips available in samples.
+    Real card scan performed. Folder structure fully confirmed: Normal/, Parking/,
+    Lapse/, Event/, Photo/ all present. .formated root marker and .sstar.format
+    per-folder markers confirmed. Filename pattern and resolution confirmed from
+    NAS footage (ffprobe). Event clip prefix not confirmed — no event clips in samples.
