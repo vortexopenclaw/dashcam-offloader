@@ -16,6 +16,8 @@ The official product page confirms the sampled A329S 3CH configuration and descr
 
 The official VIOFO collection page also lists A329S 1CH, A329S 2CH, A329S 2CH IR, and A329S 3CH configurations.
 
+VIOFO also documents Multiplex Video for the A329S family. Treat this as an optional combined-output mode, not as a separate camera model.
+
 ## Card Layout
 
 Real-card observed:
@@ -72,6 +74,28 @@ Observed groups:
 - 2CH IR - front and interior. Official reference, not card-sampled yet.
 - 3CH - front, interior, and rear. Validated from the sampled card.
 
+## Multiplexed Video
+
+Official VIOFO pages describe A329S Multiplex Video as a way to combine multiple camera views into a single split-screen video file for sharing or review. The sampled card did not include confirmed multiplexed primary recording samples, and the observed `.dashcamexport` folder is treated as an app/export cache.
+
+Supported combinations to recognize once real filenames are validated:
+
+- Off/default - separate camera files, as observed on the sampled card.
+- 2CH side-by-side - front plus rear on A329S 2CH or A329S 3CH.
+- 2CH side-by-side - front plus interior on A329S 2CH IR or A329S 3CH.
+- 3CH stacked layout - front plus interior plus rear on A329S 3CH.
+
+Reported layout details from Vortex Radar's A329S/T multiplexing review:
+
+- 2CH multiplex uses side-by-side video, described as 7680x2160.
+- 3CH multiplex uses the front view above two secondary views, described as 3840x3240.
+- If a third camera is not part of a selected 2CH multiplex combination, it may remain as a separate file.
+
+Importer behavior:
+
+- Keep `DCIM/Movie/.dashcamexport/**` excluded by default as generated exports/cache.
+- If multiplexed files are later observed in `DCIM/Movie`, `DCIM/Movie/Parking`, or `DCIM/Movie/RO`, treat them as footage only after the filename pattern is validated from a real card.
+
 ## Exclude By Default
 
 - `.Trashes/**`
@@ -89,3 +113,4 @@ Observed groups:
 - Confirm whether `RO` only contains locked events or can also include manual saves.
 - Confirm whether `PF/PI/PR` always means parking channel across all A329S firmware versions.
 - Confirm whether 1CH, 2CH, and 2CH IR A329S variants use the same folder and suffix layout.
+- Capture a real A329S multiplexed file to validate path, filename suffix, and whether it appears in the primary recording folders or only via `.dashcamexport`.

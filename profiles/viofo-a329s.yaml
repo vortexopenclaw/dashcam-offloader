@@ -115,6 +115,46 @@ grouping:
       - PF
       - PI
       - PR
+multiplexed_video:
+  support: supported
+  validation: official_reference
+  default_behavior: separate_files
+  filename_validation: pending_real_card_sample
+  notes: Official VIOFO sources describe A329S Multiplex Video as multiple views in one video. Vortex Radar review evidence describes selectable 2CH and 3CH layouts, but no real multiplexed file from an A329S card has been sampled yet.
+  layouts:
+    - id: two_channel_front_rear_side_by_side
+      roles:
+        - front
+        - rear
+      applies_to_variants:
+        - 2CH
+        - 3CH
+      output_resolution: 7680x2160
+      validation: review_walkthrough
+    - id: two_channel_front_interior_side_by_side
+      roles:
+        - front
+        - interior
+      applies_to_variants:
+        - 2CH IR
+        - 3CH
+      output_resolution: 7680x2160
+      validation: review_walkthrough
+    - id: three_channel_front_interior_rear_stacked
+      roles:
+        - front
+        - interior
+        - rear
+      applies_to_variants:
+        - 3CH
+      output_resolution: 3840x3240
+      validation: review_walkthrough
+  path_candidates:
+    - DCIM/Movie
+    - DCIM/Movie/Parking
+    - DCIM/Movie/RO
+  excluded_export_paths:
+    - DCIM/Movie/.dashcamexport/**
 exclude:
   - .Trashes/**
   - .fseventsd/**

@@ -58,6 +58,7 @@ Useful `validation` values:
 - `manual_confirmed` - confirmed by an official manual, but not necessarily observed on a card.
 - `user_provided_example` - based on a user-provided representative filename or screenshot.
 - `inferred_from_related_profile` - copied from a related profile as a hypothesis and still needs card validation.
+- `review_walkthrough` - confirmed by a detailed review walkthrough, but still needs real-card validation for importer behavior.
 
 ## Detection Evidence
 
@@ -66,6 +67,32 @@ Detection evidence should be separated by strength:
 - `high_confidence` - explicit model strings or model-specific files.
 - `supporting` - folder/filename structures, manuals, volume label.
 - `negative` - signals that should reject this profile.
+
+## Multiplexed Video
+
+Some cameras can combine multiple camera feeds into one split-screen video. Record this under `multiplexed_video` instead of creating a fake camera channel.
+
+Use this shape while the project is still in research mode:
+
+```yaml
+multiplexed_video:
+  support: supported
+  validation: official_reference
+  default_behavior: separate_files
+  filename_validation: pending_real_card_sample
+  layouts:
+    - id: two_channel_side_by_side
+      roles:
+        - front
+        - rear
+      output_resolution: 7680x2160
+  path_candidates:
+    - DCIM/Movie
+  excluded_export_paths:
+    - DCIM/Movie/.dashcamexport/**
+```
+
+If multiplexed files appear in normal recording folders, import them as footage after profile-specific filename validation. App/export cache folders should stay excluded by default unless the user explicitly chooses generated exports.
 
 ## Privacy
 

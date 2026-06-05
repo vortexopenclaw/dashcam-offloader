@@ -58,6 +58,45 @@ grouping:
       - F
       - R
       - T
+multiplexed_video:
+  support: supported
+  validation: official_reference
+  default_behavior: separate_files
+  filename_validation: pending_real_card_sample
+  notes: Official VIOFO A329T sources confirm Multiplex Video with telephoto support. Vortex Radar review evidence describes selectable 2CH and 3CH layouts, but no real multiplexed file from an A329T card has been sampled yet.
+  layouts:
+    - id: two_channel_front_telephoto_side_by_side
+      roles:
+        - front
+        - telephoto
+      applies_to_variants:
+        - 2CH
+        - 3CH
+      output_resolution: 7680x2160
+      validation: official_reference
+    - id: two_channel_front_rear_side_by_side
+      roles:
+        - front
+        - rear
+      applies_to_variants:
+        - 3CH
+      output_resolution: 7680x2160
+      validation: review_walkthrough
+    - id: three_channel_front_telephoto_rear_stacked
+      roles:
+        - front
+        - telephoto
+        - rear
+      applies_to_variants:
+        - 3CH
+      output_resolution: 3840x3240
+      validation: official_reference
+  path_candidates:
+    - DCIM/Movie
+    - DCIM/Movie/Parking
+    - DCIM/Movie/RO
+  excluded_export_paths:
+    - DCIM/Movie/.dashcamexport/**
 exclude:
   - .Trashes/**
   - .fseventsd/**
