@@ -1,0 +1,142 @@
+make: Cansonic
+model: UltraDash Z3+ Standard Edition
+slug: cansonic-ultradash-z3plus-standard
+channels: 2  # built-in; 3 with optional R1 rear camera
+
+detection:
+  high_confidence:
+    - method: filename_pattern
+      pattern: '^(\d{8})_(\d{6})_([LRB])\.MP4$'
+      flags: [case_sensitive]
+      notes: >
+        Cansonic UltraDash Z3+ uses YYYYMMDD_HHMMSS_CHANNEL.MP4 with channel letters
+        L (wide angle), R (telephoto), and B (optional rear camera). The 8-digit
+        contiguous date distinguishes this from VIOFO A139 Pro (which splits the date
+        as YYYY_MMDD) and VIOFO A229/A329 (which appends a sequence number). No
+        sequence number in the filename.
+    - method: channel_pair
+      required: [L, R]
+      optional: [B]
+      notes: >
+        Standard configuration always produces synchronized L+R file pairs with
+        identical timestamps. B (rear) appears only when the optional R1 rear camera
+        is installed. Absence of B does not disqualify the model.
+
+  supporting:
+    - method: resolution
+      value: '2560x1440'
+      notes: >
+        Both L and R channels record at 2K QHD (2560x1440). B rear channel (R1) also
+        records at 2560x1440. Not uniquely identifying on its own, but combined with
+        the L/R/B channel scheme is strong supporting evidence.
+    - method: file_extension
+      value: '.MP4'
+      case: uppercase
+      notes: Uppercase .MP4, same as VIOFO. Not a distinguishing signal on its own.
+
+folders:
+  - path: 'DCIM'
+    type: root
+    description: Root recording folder — all clips stored here, no subdirectories
+    validation: inferred
+    notes: >
+      Folder structure not confirmed from a direct card scan. Based on Cansonic
+      product documentation and typical dashcam conventions. All modes likely
+      stored flat in DCIM or similar root. Locked/event files may be stored in a
+      separate subfolder or distinguished by filename prefix — not yet confirmed.
+
+filename_patterns:
+  normal:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_([LRB])\.MP4$'
+    example: '20230414_124508_L.MP4'
+    description: All recording modes share the same filename pattern
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      hour: 4
+      minute: 5
+      second: 6
+      channel: 7
+    notes: >
+      No mode prefix and no sequence number. All clips — normal, event/locked,
+      and parking — use the same pattern. Clips are distinguished by folder
+      placement or filename prefix if applicable (not confirmed from footage).
+
+channels:
+  L:
+    id: L
+    role: front_wide
+    description: Wide-angle front lens, 140° field of view
+    resolution: 2560x1440
+    fps: 30
+    lens: wide_angle
+    fov_degrees: 140
+
+  R:
+    id: R
+    role: front_telephoto
+    description: >
+      Telephoto front lens, capable of reading objects up to 164ft (50m).
+      Both front lenses are 180° physically rotatable — the R lens can be
+      aimed rearward for a rear-facing telephoto view without a separate
+      rear camera.
+    resolution: 2560x1440
+    fps: 30
+    lens: telephoto
+    range_feet: 164
+
+  B:
+    id: B
+    role: rear
+    description: >
+      Optional rear camera (UltraDash R1). IP67 waterproof, 160° ultra-wide,
+      Sony Starvis sensor. Sold separately. Only present if R1 is installed.
+    resolution: 2560x1440
+    fps: 30
+    optional: true
+    model: UltraDash R1
+
+resolutions:
+  L: '2560x1440'
+  R: '2560x1440'
+  B: '2560x1440'
+
+video:
+  extension: '.MP4'
+  extension_case: uppercase
+  codec: unknown  # not confirmed from ffprobe; likely H.264 based on file format spec
+
+sequence:
+  present: false
+  notes: >
+    No sequence number in filenames. L, R, and B files with the same timestamp
+    are synchronized clips from the same recording interval.
+
+osd:
+  contains_model_name: unknown
+  notes: >
+    "Information Stamp" is listed as supported in official specs. OSD content
+    (date/time format, model name presence) not confirmed — ffprobe and OCR
+    not available for this footage due to NAS-only access with no bash capability.
+
+parking_mode:
+  supported: true
+  requires_hardwire: true
+  modes:
+    - vibration_detection
+    - time_lapse
+  notes: >
+    Parking mode requires Hardwire Kit or Advanced Hardwire Kit HW1 (sold separately).
+    Time-lapse parking requires firmware update to latest S3/Z3+ firmware.
+
+validation:
+  card_sampled: false
+  footage_sampled: true
+  osd_confirmed: false
+  notes: >
+    Profile built from NAS-archived footage (Driving Footage Day directory, 57 files
+    across April and September–October 2023) and official Cansonic product page.
+    April 2023 clips: L+R only (rear camera not installed). September 2023+ clips:
+    L+R+B (R1 rear camera added). No direct card scan; folder structure inferred.
+    ffprobe/OCR not available — resolution and OSD not confirmed from actual files.
