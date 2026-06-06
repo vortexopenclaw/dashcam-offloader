@@ -16,6 +16,7 @@ final class TransferViewModel: ObservableObject {
     @Published var scanSummary = ScanSummary()
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
+    @Published var showAllVolumes = false
     @Published var copyResults: [CopyPlanItem] = []
     @Published var lastOutputDirectory: URL?
 
@@ -53,10 +54,18 @@ final class TransferViewModel: ObservableObject {
     }
 
     func refreshSources() {
-        mountedSources = scanner.discoverMountedSources()
-        if selectedSource == nil {
+        let previousSource = selectedSource
+        mountedSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
+        if let previousSource, mountedSources.contains(previousSource) {
+            selectedSource = previousSource
+        } else {
             selectedSource = mountedSources.first
         }
+    }
+
+    func setShowAllVolumes(_ value: Bool) {
+        showAllVolumes = value
+        refreshSources()
     }
 
     func loadProfiles() {

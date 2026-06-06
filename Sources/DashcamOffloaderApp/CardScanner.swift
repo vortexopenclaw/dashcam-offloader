@@ -3,7 +3,7 @@ import Foundation
 struct CardScanner {
     private let fileManager = FileManager.default
 
-    func discoverMountedSources() -> [MountedSource] {
+    func discoverMountedSources(showAllVolumes: Bool = false) -> [MountedSource] {
         let volumesURL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
         guard let urls = try? fileManager.contentsOfDirectory(
             at: volumesURL,
@@ -15,12 +15,19 @@ struct CardScanner {
 
         return urls
             .filter { url in
-                guard url.lastPathComponent != "Macintosh HD" else { return false }
                 let values = try? url.resourceValues(forKeys: Set<URLResourceKey>([.isDirectoryKey]))
-                return values?.isDirectory == true
+                guard values?.isDirectory == true else { return false }
+                return shouldShowMountedSource(url, showAllVolumes: showAllVolumes)
             }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
             .map { MountedSource(url: $0, name: $0.lastPathComponent) }
+    }
+
+    func shouldShowMountedSource(_ url: URL, showAllVolumes: Bool) -> Bool {
+        if isSystemVolume(url) { return false }
+        if showAllVolumes { return true }
+        if isObviousNonDashcamVolume(url) { return false }
+        return hasDashcamLikeEvidence(url)
     }
 
     func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
@@ -144,6 +151,119 @@ struct CardScanner {
             }
         }
         return files
+    }
+
+    private func isSystemVolume(_ url: URL) -> Bool {
+        let name = normalizedName(url.lastPathComponent)
+        return name == "macintosh hd" ||
+            name == "system" ||
+            name == "data" ||
+            name.hasPrefix("com.apple.")
+    }
+
+    private func isObviousNonDashcamVolume(_ url: URL) -> Bool {
+        let name = normalizedName(url.lastPathComponent)
+        let blockedNameFragments = [
+            "time machine",
+            "timemachine",
+            "backup",
+            "backups",
+            "carbon copy",
+            "superduper",
+            "clone",
+            "start9",
+            "bitcoin"
+        ]
+        if blockedNameFragments.contains(where: { name.contains($0) }) {
+            return true
+        }
+
+        let blockedRootItems = [
+            "Backups.backupdb",
+            ".HFS+ Private Directory Data",
+            ".com.apple.timemachine.donotpresent"
+        ]
+        return blockedRootItems.contains { item in
+            fileManager.fileExists(atPath: url.appendingPathComponent(item).path)
+        }
+    }
+
+    private func hasDashcamLikeEvidence(_ url: URL) -> Bool {
+        let rootIndicators: Set<String> = [
+            "blackvue",
+            "bookmark",
+            "config",
+            "cont_rec",
+            "dcim",
+            "event",
+            "evt_rec",
+            "gps",
+            "incabin_rec",
+            "inf",
+            "manual_rec",
+            "motion_timelapse_rec",
+            "movie",
+            "normal",
+            "parking",
+            "parking_rec",
+            "park",
+            "pevent",
+            "photo",
+            "record",
+            "rec",
+            "setting",
+            "settings",
+            "sos_rec",
+            "user"
+        ]
+
+        if let rootItems = try? fileManager.contentsOfDirectory(atPath: url.path) {
+            for item in rootItems {
+                let normalized = normalizedName(item)
+                if rootIndicators.contains(normalized) {
+                    return true
+                }
+            }
+        }
+
+        return hasShallowMediaFile(in: url, depth: 0, maxDepth: 2, remainingBudget: 400)
+    }
+
+    private func hasShallowMediaFile(in url: URL, depth: Int, maxDepth: Int, remainingBudget: Int) -> Bool {
+        guard depth <= maxDepth, remainingBudget > 0 else { return false }
+        guard let items = try? fileManager.contentsOfDirectory(
+            at: url,
+            includingPropertiesForKeys: [.isDirectoryKey, .isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return false
+        }
+
+        var budget = remainingBudget
+        for item in items {
+            guard budget > 0 else { return false }
+            budget -= 1
+
+            let relativeName = item.lastPathComponent
+            if shouldSkipTraversal(relativePath: relativeName) { continue }
+
+            let values = try? item.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey])
+            if values?.isRegularFile == true, isCandidateExtension(item.pathExtension.lowercased()) {
+                return true
+            }
+            if values?.isDirectory == true, hasShallowMediaFile(in: item, depth: depth + 1, maxDepth: maxDepth, remainingBudget: budget) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func normalizedName(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
     }
 
     private func detectProfiles(sourceURL: URL, allFiles: [URL], profiles: [DashcamProfile]) -> [DetectionCandidate] {

@@ -40,8 +40,20 @@ struct ContentView: View {
             .buttonStyle(.bordered)
             .padding(.horizontal)
 
+            Toggle("Show all volumes", isOn: Binding(
+                get: { viewModel.showAllVolumes },
+                set: { viewModel.setShowAllVolumes($0) }
+            ))
+            .font(.caption)
+            .padding(.horizontal)
+
+            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Hiding Time Machine, backups, system volumes, and folders without dashcam-like media.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal)
+
             if viewModel.mountedSources.isEmpty {
-                Text("No mounted sources found. Choose a card or folder manually.")
+                Text(viewModel.showAllVolumes ? "No mounted sources found. Choose a card or folder manually." : "No dashcam-like sources found. Use Show all volumes or choose a card manually.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)

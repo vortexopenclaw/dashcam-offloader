@@ -41,7 +41,30 @@ enum SmokeTest {
             try Data(repeating: 1, count: 2048).write(to: source.appendingPathComponent("Normal/20260101_120000_00001_N_A.MP4"))
             try Data(repeating: 2, count: 1024).write(to: source.appendingPathComponent("Parking/20260101_121000_00002_P_A.MP4"))
 
-            let scan = try CardScanner().scan(sourceURL: source, profiles: profiles)
+            let backupSource = temp.appendingPathComponent("Time Machine Backups", isDirectory: true)
+            let emptySource = temp.appendingPathComponent("Generic Storage", isDirectory: true)
+            try FileManager.default.createDirectory(at: backupSource.appendingPathComponent("Backups.backupdb", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
+
+            let scanner = CardScanner()
+            guard scanner.shouldShowMountedSource(source, showAllVolumes: false) else {
+                print("SMOKE FAIL: dashcam-like source was filtered")
+                return false
+            }
+            guard !scanner.shouldShowMountedSource(backupSource, showAllVolumes: false) else {
+                print("SMOKE FAIL: backup source was not filtered")
+                return false
+            }
+            guard !scanner.shouldShowMountedSource(emptySource, showAllVolumes: false) else {
+                print("SMOKE FAIL: empty storage source was not filtered")
+                return false
+            }
+            guard scanner.shouldShowMountedSource(backupSource, showAllVolumes: true) else {
+                print("SMOKE FAIL: show all did not reveal backup source")
+                return false
+            }
+
+            let scan = try scanner.scan(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
                 print("SMOKE FAIL: E1 Pro was not top candidate")
                 return false
