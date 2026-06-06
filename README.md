@@ -53,16 +53,16 @@ swift run DashcamOffloader --smoke-test
 
 - Thinkware U3000 Pro
 - Vueroid S1 4K Infinite
-- VIOFO A329S
-- VIOFO A329T
-- BlackVue Elite 9
+- Viofo A329S
+- Viofo A329T
+- Blackvue Elite 9
 
 Planned intake targets:
 
 - Vantrue N4 Pro S
 - Viofo A229 Pro
 - Thinkware U3000
-- BlackVue DR970X Plus
+- Blackvue DR970X Plus
 
 ## Repository Layout
 

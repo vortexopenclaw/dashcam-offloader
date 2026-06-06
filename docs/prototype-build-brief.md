@@ -17,9 +17,9 @@ This brief is planning scope only. Do not start implementation until the project
 
 - Show mounted dashcam cards, especially removable volumes under `/Volumes/`.
 - Let the user manually choose a source folder if automatic volume discovery misses a card.
-- Detect the camera model from existing seeded profiles.
-- Show confidence and evidence for the detected model.
-- Let the user override the detected model from the catalog/profile list.
+- Detect the camera model from existing seeded profiles after the user selects a source.
+- Do not expose internal detection candidate scoring in the main transfer UI.
+- Let the user override the detected model from a brand-grouped catalog/profile list.
 - Let the user choose an output directory.
 - Let the user choose recording types to copy.
 - Let the user choose channels to copy.
@@ -64,8 +64,8 @@ Recommended layout:
 
 Core controls:
 
-- Source selector: mounted cards plus manual folder picker.
-- Camera selector: detected profile with confidence, override dropdown.
+- Source selector: mounted cards plus manual folder picker. Selecting a source should scan it automatically.
+- Camera selector: detected profile with brand submenus for profile override.
 - Destination selector: native folder picker.
 - Recording type checkboxes: normal, event, parking, manual, photo, GPS if profile supports it.
 - Channel checkboxes: front, rear, interior, telephoto, or profile-specific labels. Default all detected channels checked.
@@ -83,15 +83,17 @@ Use the existing documented model identification algorithm:
 3. Check safe model metadata files where profiles define them.
 4. Check root firmware filenames only as bonus/tie-breaker evidence.
 5. Rank profile candidates by confidence.
-6. Present user confirmation when confidence is medium or low.
-7. Lock selected profile for the copy plan.
+6. Preselect the best match and keep the internal ranking available for diagnostics.
+7. Lock selected profile for the copy plan, while letting the user override it from the profile menu.
 
 Confidence behavior:
 
 - High confidence: preselect the detected profile and allow override.
-- Medium confidence: show top 2 to 3 likely candidates.
-- Low confidence: show broader model picker plus `Other`.
+- Medium confidence: preselect the best family/model match and allow override.
+- Low confidence: require the user to select from the grouped profile picker.
 - None: require manual selection or unsupported-model path.
+
+The prototype should not show detection candidate internals in the normal transfer screen.
 
 Never use bitrate, resolution, file size, or channel count as model identity proof. Those can be user-configurable.
 
@@ -109,7 +111,13 @@ After a profile is selected, classify candidate files by:
 - Copy eligibility.
 - Skip reason, if excluded.
 
-The prototype should support current seeded profile patterns, including VIOFO, Vantrue, BlackVue, Thinkware, Vueroid, 70mai, and Cansonic examples already represented in `profiles/`.
+GPS handling:
+
+- If a camera writes separate GPS sidecar files or folders, expose them as optional `GPS Logs` copy items.
+- If GPS data is embedded inside the video file, copying the video preserves that GPS metadata with the clip.
+- The prototype does not extract embedded GPS data or publish private GPS content.
+
+The prototype should support current seeded profile patterns, including Viofo, Vantrue, Blackvue, Thinkware, Vueroid, 70mai, and Cansonic examples already represented in `profiles/`.
 
 ## Filtering Requirements
 

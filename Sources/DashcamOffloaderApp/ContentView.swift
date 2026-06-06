@@ -59,7 +59,7 @@ struct ContentView: View {
             Button {
                 viewModel.scanSelectedSource()
             } label: {
-                Label(viewModel.isScanning ? "Scanning" : "Scan Source", systemImage: "waveform.path.ecg")
+                Label(viewModel.isScanning ? "Scanning" : "Rescan Source", systemImage: "waveform.path.ecg")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -125,7 +125,7 @@ struct ContentView: View {
                             .font(.subheadline)
                             .textSelection(.enabled)
                             .lineLimit(2)
-                        Text("Choose a microSD card or mounted folder, then scan it before copying.")
+                        Text("Choosing a source scans it automatically.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -147,15 +147,12 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                    if !viewModel.scanSummary.samplePaths.isEmpty {
-                        Text("Sample files from this source")
-                            .font(.caption.bold())
-                        ForEach(viewModel.scanSummary.samplePaths, id: \.self) { path in
-                            Text(path)
-                                .font(.caption.monospaced())
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
+                    if !viewModel.scanSummary.sortedCategoryCounts.isEmpty {
+                        countChips(title: "Output Groups", counts: viewModel.scanSummary.sortedCategoryCounts)
+                    }
+
+                    if !viewModel.scanSummary.sortedModeCounts.isEmpty {
+                        countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
                     }
                 }
             }
@@ -180,51 +177,36 @@ struct ContentView: View {
     }
 
     private var detectionSection: some View {
-        GroupBox("Camera") {
+        GroupBox("Camera Profile") {
             VStack(alignment: .leading, spacing: 12) {
                 if viewModel.profiles.isEmpty {
                     Text("No profiles loaded")
                         .foregroundStyle(.secondary)
                 } else {
-                    Picker("Selected profile", selection: Binding(
-                        get: { viewModel.selectedProfile },
-                        set: { profile in
-                            if let profile {
-                                viewModel.selectProfile(profile)
-                            }
-                        }
-                    )) {
-                        ForEach(viewModel.profiles) { profile in
-                            Text(profile.displayName).tag(Optional(profile))
-                        }
-                    }
-                    .pickerStyle(.menu)
-                }
-
-                if !viewModel.detectionCandidates.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Detection candidates")
+                    HStack {
+                        Text("Selected Profile")
                             .font(.headline)
-                        ForEach(viewModel.detectionCandidates.prefix(4)) { candidate in
-                            HStack(alignment: .top) {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(candidate.profile.displayName)
-                                        .font(.subheadline.bold())
-                                    Text(candidate.evidence.joined(separator: ", "))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
+                        Spacer()
+                        Menu {
+                            ForEach(viewModel.profilesByBrand, id: \.brand) { group in
+                                Menu(group.brand) {
+                                    ForEach(group.profiles) { profile in
+                                        Button(profile.model) {
+                                            viewModel.selectProfile(profile)
+                                        }
+                                    }
                                 }
-                                Spacer()
-                                Text(candidate.confidence.rawValue)
-                                    .font(.caption.bold())
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(confidenceColor(candidate.confidence).opacity(0.16))
-                                    .foregroundStyle(confidenceColor(candidate.confidence))
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
                             }
+                        } label: {
+                            HStack {
+                                Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
+                                    .lineLimit(1)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.caption)
+                            }
+                            .frame(minWidth: 220, alignment: .trailing)
                         }
+                        .menuStyle(.borderlessButton)
                     }
                 }
             }
@@ -243,10 +225,19 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button {
-                    viewModel.chooseDestinationFolder()
-                } label: {
-                    Label("Choose", systemImage: "folder")
+                HStack {
+                    Button {
+                        viewModel.openOutputDirectory()
+                    } label: {
+                        Label("Open Directory", systemImage: "folder.fill")
+                    }
+                    .disabled(viewModel.destinationURL == nil)
+
+                    Button {
+                        viewModel.chooseDestinationFolder()
+                    } label: {
+                        Label("Choose", systemImage: "folder")
+                    }
                 }
             }
             .padding(8)
@@ -280,8 +271,12 @@ struct ContentView: View {
 
                 Divider()
 
-                checkboxGrid(title: "Recording Types", values: viewModel.availableModes, selected: $viewModel.filters.selectedModes)
-                checkboxGrid(title: "Channels", values: viewModel.availableChannels, selected: $viewModel.filters.selectedChannels)
+                checkboxGrid(title: "Recording Types", values: viewModel.availableModes, selected: $viewModel.filters.selectedModes) {
+                    ClipItem.displayLabel(for: $0)
+                }
+                checkboxGrid(title: "Channels", values: viewModel.availableChannels, selected: $viewModel.filters.selectedChannels) {
+                    ClipItem.displayLabel(for: $0)
+                }
 
                 Divider()
 
@@ -293,6 +288,9 @@ struct ContentView: View {
                     get: { viewModel.filters.includeGPS },
                     set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
                 ))
+                Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Toggle("Separate output folders for driving, parking, protected, photos, and GPS", isOn: Binding(
                     get: { viewModel.filters.separateCategoryFolders },
                     set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
@@ -304,7 +302,7 @@ struct ContentView: View {
         }
     }
 
-    private func checkboxGrid(title: String, values: [String], selected: Binding<Set<String>>) -> some View {
+    private func checkboxGrid(title: String, values: [String], selected: Binding<Set<String>>, display: @escaping (String) -> String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
@@ -315,7 +313,7 @@ struct ContentView: View {
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], alignment: .leading) {
                     ForEach(values, id: \.self) { value in
-                        Toggle(value, isOn: Binding(
+                        Toggle(display(value), isOn: Binding(
                             get: { selected.wrappedValue.contains(value) },
                             set: { isOn in
                                 if isOn {
@@ -358,13 +356,13 @@ struct ContentView: View {
                             .lineLimit(1)
                     }
                     TableColumn("Mode") { item in
-                        Text(item.clip.mode)
+                        Text(item.clip.displayMode)
                     }
                     TableColumn("Folder") { item in
                         Text(item.clip.outputCategory)
                     }
                     TableColumn("Channel") { item in
-                        Text(item.clip.channel)
+                        Text(item.clip.displayChannel)
                     }
                     TableColumn("Destination") { item in
                         Text(item.destinationURL.deletingLastPathComponent().path)
@@ -405,13 +403,25 @@ struct ContentView: View {
         VStack(spacing: 10) {
             ProgressView(value: viewModel.copyProgress.fraction)
                 .progressViewStyle(.linear)
+                .transaction { transaction in
+                    transaction.animation = nil
+                }
             HStack {
                 Text(viewModel.copyProgress.percentText)
                     .font(.headline.monospacedDigit())
+                Text(viewModel.copyProgress.filesText)
+                    .foregroundStyle(.secondary)
                 Text(viewModel.copyProgress.currentFile)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Spacer()
+                Button {
+                    viewModel.openOutputDirectory()
+                } label: {
+                    Label("Open Directory", systemImage: "folder.fill")
+                }
+                .disabled(viewModel.destinationURL == nil)
+
                 Button {
                     viewModel.startCopy()
                 } label: {
@@ -426,12 +436,73 @@ struct ContentView: View {
         .background(.bar)
     }
 
+    private func countChips(title: String, counts: [(String, Int)]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.caption.bold())
+            FlowLayout(spacing: 8) {
+                ForEach(counts, id: \.0) { name, count in
+                    Text("\(name) \(count)")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.secondary.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+            }
+        }
+    }
+
     private func confidenceColor(_ confidence: DetectionConfidence) -> Color {
         switch confidence {
         case .high: return .green
         case .medium: return .orange
         case .low: return .yellow
         case .none: return .secondary
+        }
+    }
+}
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? 0
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+        var totalWidth: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if maxWidth > 0, currentX > 0, currentX + size.width > maxWidth {
+                currentY += lineHeight + spacing
+                currentX = 0
+                lineHeight = 0
+            }
+            totalWidth = max(totalWidth, currentX + size.width)
+            currentX += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+
+        return CGSize(width: maxWidth > 0 ? maxWidth : totalWidth, height: currentY + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX = bounds.minX
+        var currentY = bounds.minY
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX > bounds.minX, currentX + size.width > bounds.maxX {
+                currentY += lineHeight + spacing
+                currentX = bounds.minX
+                lineHeight = 0
+            }
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: ProposedViewSize(size))
+            currentX += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
         }
     }
 }

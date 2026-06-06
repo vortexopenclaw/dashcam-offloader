@@ -12,7 +12,20 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var highConfidencePaths: [String]
 
     var displayName: String {
-        "\(manufacturer) \(model)"
+        "\(displayManufacturer) \(model)"
+    }
+
+    var displayManufacturer: String {
+        switch manufacturer.lowercased() {
+        case "viofo":
+            return "Viofo"
+        case "blackvue":
+            return "Blackvue"
+        case "70mai":
+            return "70mai"
+        default:
+            return manufacturer.capitalized
+        }
     }
 }
 
@@ -112,6 +125,33 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         }
         return "Other"
     }
+
+    var displayMode: String {
+        Self.displayLabel(for: mode)
+    }
+
+    var displayChannel: String {
+        Self.displayLabel(for: channel)
+    }
+
+    static func displayLabel(for value: String) -> String {
+        let normalized = value
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !normalized.isEmpty else { return value }
+        return normalized
+            .split(separator: " ")
+            .map { word in
+                let lower = word.lowercased()
+                if ["gps", "ir", "dms"].contains(lower) {
+                    return lower.uppercased()
+                }
+                return lower.prefix(1).uppercased() + lower.dropFirst()
+            }
+            .joined(separator: " ")
+    }
 }
 
 struct CopyPlan: Hashable, Sendable {
@@ -156,7 +196,16 @@ struct CopyProgress: Hashable, Sendable {
     }
 
     var percentText: String {
-        "\(Int((fraction * 100).rounded()))%"
+        var percent = Int((fraction * 100).rounded())
+        if isRunning && totalFiles > 0 && completedFiles < totalFiles {
+            percent = min(percent, 99)
+        }
+        return "\(percent)%"
+    }
+
+    var filesText: String {
+        guard totalFiles > 0 else { return "" }
+        return "\(completedFiles) of \(totalFiles) files"
     }
 }
 
@@ -178,9 +227,28 @@ struct ScanSummary: Hashable, Sendable {
     var copyableItems: Int = 0
     var excludedItems: Int = 0
     var samplePaths: [String] = []
+    var categoryCounts: [String: Int] = [:]
+    var modeCounts: [String: Int] = [:]
 
     var hasScan: Bool {
         !sourcePath.isEmpty
+    }
+
+    var sortedCategoryCounts: [(String, Int)] {
+        let preferredOrder = ["Driving", "Parking", "Protected", "Photos", "GPS Logs", "Other"]
+        return categoryCounts.sorted { lhs, rhs in
+            let lhsIndex = preferredOrder.firstIndex(of: lhs.0) ?? preferredOrder.count
+            let rhsIndex = preferredOrder.firstIndex(of: rhs.0) ?? preferredOrder.count
+            if lhsIndex != rhsIndex { return lhsIndex < rhsIndex }
+            return lhs.0.localizedStandardCompare(rhs.0) == .orderedAscending
+        }
+    }
+
+    var sortedModeCounts: [(String, Int)] {
+        modeCounts.sorted { lhs, rhs in
+            if lhs.0 == rhs.0 { return lhs.1 > rhs.1 }
+            return lhs.0.localizedStandardCompare(rhs.0) == .orderedAscending
+        }
     }
 }
 

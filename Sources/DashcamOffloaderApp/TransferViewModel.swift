@@ -17,6 +17,7 @@ final class TransferViewModel: ObservableObject {
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
     @Published var copyResults: [CopyPlanItem] = []
+    @Published var lastOutputDirectory: URL?
 
     private let scanner = CardScanner()
     private let planner = CopyPlanner()
@@ -36,6 +37,19 @@ final class TransferViewModel: ObservableObject {
 
     var eligibleClips: [ClipItem] {
         clips.filter { $0.excludedReason == nil }
+    }
+
+    var profilesByBrand: [(brand: String, profiles: [DashcamProfile])] {
+        let grouped = Dictionary(grouping: profiles, by: \.displayManufacturer)
+        return grouped.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .map { brand in
+                (
+                    brand,
+                    grouped[brand, default: []].sorted {
+                        $0.model.localizedStandardCompare($1.model) == .orderedAscending
+                    }
+                )
+            }
     }
 
     func refreshSources() {
@@ -76,7 +90,7 @@ final class TransferViewModel: ObservableObject {
         }
     }
 
-    func selectSource(_ source: MountedSource, scanImmediately: Bool = false) {
+    func selectSource(_ source: MountedSource, scanImmediately: Bool = true) {
         selectedSource = source
         detectionCandidates = []
         selectedProfile = nil
@@ -132,7 +146,11 @@ final class TransferViewModel: ObservableObject {
                     scannedFiles: scanResult.allFiles.count,
                     copyableItems: self.eligibleClips.count,
                     excludedItems: scanResult.clips.filter { $0.excludedReason != nil }.count,
-                    samplePaths: Array(scanResult.clips.prefix(8).map(\.relativePath))
+                    samplePaths: [],
+                    categoryCounts: Dictionary(grouping: self.eligibleClips, by: \.outputCategory)
+                        .mapValues(\.count),
+                    modeCounts: Dictionary(grouping: self.eligibleClips, by: \.displayMode)
+                        .mapValues(\.count)
                 )
                 self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) copyable items"
                 self.rebuildPlan()
@@ -191,7 +209,16 @@ final class TransferViewModel: ObservableObject {
 
         Task {
             copyResults = await executor.copy(plan: copyPlan)
+            lastOutputDirectory = copyPlan.destinationRoot
             statusMessage = copyProgress.summary.isEmpty ? "Copy complete" : copyProgress.summary
+        }
+    }
+
+    func openOutputDirectory() {
+        if let lastOutputDirectory {
+            NSWorkspace.shared.open(lastOutputDirectory)
+        } else if let destinationURL {
+            NSWorkspace.shared.open(destinationURL)
         }
     }
 }
