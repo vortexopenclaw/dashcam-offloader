@@ -6,7 +6,11 @@ channel_variants:
   - channels: 1
     roles:
       - front
-    validation: manual_confirmed
+    validation: real_card_sampled
+    notes: >
+      Confirmed from a 2CH card that also contains 1CH driving clips (rear camera
+      unplugged for part of the session). F-only clips follow the same filename
+      pattern with no R counterpart — no separate 1CH profile needed.
   - channels: 2
     roles:
       - front
@@ -14,8 +18,8 @@ channel_variants:
     validation: real_card_sampled
     notes: >
       Confirmed from real 2CH card scan. All recording modes produce F+R pairs at
-      identical timestamps. Some clips may be F-only (rear camera disconnected or
-      not active for that interval) — this is normal and not a detection failure.
+      identical timestamps when both cameras are active. The same card also contains
+      1CH clips (F-only) from periods when the rear camera was unplugged.
   - channels: 3
     roles:
       - front
@@ -26,6 +30,9 @@ channel_variants:
       Confirmed from real 3CH card scan. All recording modes produce F+I+R triplets.
       A small number of F-only clips were observed in INF near the end of the sample.
 sampled_variants:
+  - channels: 1
+    roles:
+      - front
   - channels: 2
     roles:
       - front
@@ -94,18 +101,15 @@ grouping:
     3ch:
       channels: [F, I, R]
       validation: real_card_sampled
-      notes: >
-        Standard 3CH grouping. Small number of F-only clips observed in INF
-        near the end of the sampled card.
     2ch:
       channels: [F, R]
       validation: real_card_sampled
-      notes: >
-        Standard 2CH grouping. Some clips may be F-only when the rear camera
-        was not active for that interval.
     1ch:
       channels: [F]
-      validation: manual_confirmed
+      validation: real_card_sampled
+      notes: >
+        F-only groups are normal for 1CH operation. The same card may contain
+        a mix of 1CH and 2CH groups across different recording sessions.
 exclude:
   - CONFIG/**
   - .TFF_REC_RESERVE*
