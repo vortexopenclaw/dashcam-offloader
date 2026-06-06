@@ -20,6 +20,7 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BIN_PATH" "$MACOS_DIR/$PRODUCT_NAME"
 cp -R "$ROOT_DIR/profiles" "$RESOURCES_DIR/Profiles"
+cp "$ROOT_DIR/assets/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -34,6 +35,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <string>com.vortexopenclaw.dashcam-offloader</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleName</key>
   <string>Dashcam Offloader</string>
   <key>CFBundlePackageType</key>
@@ -51,4 +54,5 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 PLIST
 
 chmod +x "$MACOS_DIR/$PRODUCT_NAME"
+codesign --force --deep --sign - "$APP_DIR"
 echo "$APP_DIR"
