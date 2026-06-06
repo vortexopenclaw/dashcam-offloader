@@ -144,7 +144,7 @@ final class TransferViewModel: ObservableObject {
             guard let self else { return }
             do {
                 let scanResult = try await Task.detached {
-                    try CardScanner().scan(sourceURL: selectedSource.url, profiles: profiles)
+                    try await CardScanner().scanWithOSD(sourceURL: selectedSource.url, profiles: profiles)
                 }.value
                 self.detectionCandidates = scanResult.candidates
                 self.selectedProfile = scanResult.selectedProfile
