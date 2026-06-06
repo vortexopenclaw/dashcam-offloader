@@ -11,19 +11,30 @@ channel_variants:
     roles:
       - front
       - rear
-    validation: manual_confirmed
+    validation: real_card_sampled
+    notes: >
+      Confirmed from real 2CH card scan. All recording modes produce F+R pairs at
+      identical timestamps. Some clips may be F-only (rear camera disconnected or
+      not active for that interval) — this is normal and not a detection failure.
   - channels: 3
     roles:
       - front
       - interior
       - rear
     validation: real_card_sampled
-sampled_variant:
-  channels: 3
-  roles:
-    - front
-    - interior
-    - rear
+    notes: >
+      Confirmed from real 3CH card scan. All recording modes produce F+I+R triplets.
+      A small number of F-only clips were observed in INF near the end of the sample.
+sampled_variants:
+  - channels: 2
+    roles:
+      - front
+      - rear
+  - channels: 3
+    roles:
+      - front
+      - interior
+      - rear
 source_notes:
   - docs/card-profiles/vueroid-s1-4k-infinite.md
 detection:
@@ -41,7 +52,7 @@ folders:
   - path: EVENT
     mode: driving_event
     validation: manual_confirmed
-    notes: No visible MP4 files on the sampled card.
+    notes: No visible MP4 files on either sampled card.
   - path: PARK
     mode: parking_motion_or_timelapse
     prefix: PRK
@@ -57,7 +68,7 @@ folders:
   - path: BOOKMARK
     mode: bookmark_image
     validation: manual_confirmed
-    notes: No visible files on the sampled card.
+    notes: No visible files on either sampled card.
 filename_patterns:
   - pattern: "^(\\d{8})_(\\d{6})_([A-Z]+)_([FIR])_([A-Z])\\.mp4$"
     case_sensitive: false
@@ -79,10 +90,22 @@ grouping:
     - date
     - time
     - prefix
-  expected_channels:
-    - F
-    - I
-    - R
+  channel_sets:
+    3ch:
+      channels: [F, I, R]
+      validation: real_card_sampled
+      notes: >
+        Standard 3CH grouping. Small number of F-only clips observed in INF
+        near the end of the sampled card.
+    2ch:
+      channels: [F, R]
+      validation: real_card_sampled
+      notes: >
+        Standard 2CH grouping. Some clips may be F-only when the rear camera
+        was not active for that interval.
+    1ch:
+      channels: [F]
+      validation: manual_confirmed
 exclude:
   - CONFIG/**
   - .TFF_REC_RESERVE*
