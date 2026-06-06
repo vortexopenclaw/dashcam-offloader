@@ -10,6 +10,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var filenamePatterns: [FilenamePattern]
     var channels: [String: String]
     var highConfidencePaths: [String]
+    var osdSpec: OSDSpec?
 
     var displayName: String {
         "\(displayManufacturer) \(model)"
@@ -27,6 +28,17 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
             return manufacturer.capitalized
         }
     }
+}
+
+/// Describes the burned-in on-screen-display (OSD) model-name signal for a
+/// profile. Some dashcams (notably VIOFO) stamp their model name into every
+/// frame, which lets us disambiguate sibling models that are otherwise
+/// identical by folder/filename structure.
+struct OSDSpec: Hashable, Sendable {
+    var containsModelName: Bool
+    var matchStrings: [String]   // e.g. ["VIOFO A229 Pro"]
+    var stripPercent: Double     // fraction of frame height from bottom, e.g. 0.08
+    var probeChannels: [String]  // channel letters to try, e.g. ["F"] — front channel clips only
 }
 
 struct ProfileFolder: Hashable, Sendable {
