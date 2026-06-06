@@ -2,7 +2,7 @@
 
 ## Status
 
-Seed profile, based on official Vueroid S1 4K Infinite manual research and real card scans of both a 3CH and a 2CH variant.
+Seed profile, based on official Vueroid S1 4K Infinite manual research and real card scans of both a 3CH and a 2CH variant. The 2CH card also contains 1CH driving clips (rear camera unplugged for part of the session), confirming all three channel configurations from real footage.
 
 Use `Vueroid S1 4K Infinite` as the public app model name. Treat 1CH, 2CH, and 3CH as channel variants behind the same profile.
 
@@ -43,25 +43,21 @@ The final flag token was always `N` on all visible MP4 samples across both cards
 
 | Variant | Channels | Validation |
 |---|---|---|
-| 1CH | F only | Manual confirmed |
+| 1CH | F only | Real card sampled |
 | 2CH | F + R | Real card sampled |
 | 3CH | F + I + R | Real card sampled |
 
-The 2CH card produced F+R synchronized pairs at identical timestamps across all recording modes (INF, PARK, PEVENT, USER). No `I` channel files were present.
-
-The 3CH card produced F+I+R triplets.
+All three variants confirmed from real card data. The 2CH card contains both 2CH clips (F+R pairs) and 1CH clips (F-only) from periods when the rear camera was unplugged. 1CH and 2CH clips coexist on the same card with no change to folder structure or filename format.
 
 ## Related-File Grouping
 
 Group related files by date, time, and prefix (the `YYYYMMDD_HHMMSS_PREFIX` portion of the filename).
 
-**2CH grouping** (confirmed from real card scan):
-- Standard group: F + R at the same timestamp
-- F-only clips observed in some folders when the rear camera was not active for that interval — normal behavior, not a data error
+**1CH** — F-only groups. Normal behavior when rear camera is not installed.
 
-**3CH grouping** (confirmed from real card scan):
-- Standard group: F + I + R at the same timestamp
-- A small number of F-only clips observed in INF near the end of the sampled card
+**2CH** — F+R pairs at the same timestamp across all recording modes (INF, PARK, PEVENT, USER). A single card may contain a mix of 1CH and 2CH groups from different recording sessions.
+
+**3CH** — F+I+R triplets across all recording modes. A small number of F-only groups observed in INF near the end of the sampled card.
 
 ## Exclude By Default
 
@@ -80,4 +76,3 @@ Group related files by date, time, and prefix (the `YYYYMMDD_HHMMSS_PREFIX` port
 - Whether parking time-lapse uses the same folder and prefix as motion clips.
 - Whether manual or event clips are also marked read-only by the filesystem.
 - Meaning of the final `N` filename flag.
-- Whether 1CH cards omit the `R` channel entirely or still produce the folder structure.
