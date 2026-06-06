@@ -12,6 +12,7 @@ This brief is planning scope only. Do not start implementation until the project
 - Native Mac behavior is preferred for file access, folder picking, progress display, and removable-volume handling.
 - Recommended prototype stack: SwiftUI plus Foundation file APIs.
 - Keep the profile data in repo-owned YAML files so detection and classification stay data-driven.
+- Distribution is internal/free for now. Do not assume a paid Apple Developer ID, Developer ID certificate, notarization, TestFlight, or App Store release path during prototype work.
 
 ## Prototype Goals
 
@@ -38,7 +39,7 @@ This brief is planning scope only. Do not start implementation until the project
 - No video OCR by default.
 - No private GPS, OSD, or unique-device data stored in public repo docs.
 - No Windows or Linux UI.
-- No fully polished packaging, notarization, or App Store distribution.
+- No fully polished packaging, notarization, TestFlight, or App Store distribution.
 
 ## Safety And Privacy Rules
 
@@ -50,6 +51,7 @@ This brief is planning scope only. Do not start implementation until the project
 - Public examples must use dummy filenames and dummy/null GPS data.
 - Firmware filenames are bonus evidence only when they already exist on the card.
 - The Mac app must not download firmware files.
+- Public firmware downloads, ZIP inspection, and firmware filename research are maintainer-only knowledge gathering outside the app.
 - OCR is an explicit learning/review workflow only, not part of the default fast copy path.
 
 ## Expected First Screen
@@ -96,6 +98,13 @@ Confidence behavior:
 The prototype should not show detection candidate internals in the normal transfer screen.
 
 Never use bitrate, resolution, file size, or channel count as model identity proof. Those can be user-configurable.
+
+Firmware handling boundary:
+
+- The app may read filenames that are already on the selected card.
+- The app may compare those filenames against a bundled reference list.
+- The app must not fetch firmware pages, download firmware files, unzip firmware archives, or show firmware-download UI.
+- Firmware filename matches are weak bonus evidence unless paired with stronger card metadata.
 
 ## Classification Requirements
 
@@ -172,6 +181,18 @@ Manifest fields:
 - Error message when present.
 
 Keep the manifest local to the user-selected destination. Do not commit manifests to the repo.
+
+## Internal Packaging
+
+For free/internal testing without a paid Apple Developer ID:
+
+- Build an Apple Silicon arm64 `.app`.
+- Ad-hoc sign the app so the bundle is internally consistent.
+- Package the app as a ZIP attachment for testers.
+- Expect macOS Gatekeeper to show a warning on downloaded builds because the app is not Developer ID signed or notarized.
+- Provide a short tester note for right-click Open or quarantine removal when needed.
+
+Avoid calling these public releases. Public distribution should wait for Developer ID signing and notarization, or another deliberate release channel.
 
 ## Minimum Viable Prototype
 

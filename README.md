@@ -12,6 +12,8 @@ This project now has a first native macOS SwiftUI prototype in addition to the r
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
+Firmware filename knowledge is maintainer research only: public firmware downloads may be inspected outside the app to learn filename patterns, but the Mac app only compares filenames already present on a card as weak bonus evidence.
+
 ## Run The Prototype
 
 From the repo root:
@@ -26,6 +28,15 @@ Build a launchable app bundle:
 scripts/build-macos-app.sh
 open "build/Dashcam Offloader.app"
 ```
+
+Internal test builds can be packaged without a paid Apple Developer ID. These builds should be treated as local/internal prototypes:
+
+- Build Apple Silicon arm64.
+- Ad-hoc sign the app to keep the bundle structurally valid.
+- Zip the `.app` for sharing.
+- On the receiving Mac, Gatekeeper may still require right-click Open or quarantine removal because the app is not Developer ID signed or notarized.
+
+For public distribution without security warnings, use Developer ID signing and Apple notarization later.
 
 Run the built-in scanner/planner smoke test:
 
