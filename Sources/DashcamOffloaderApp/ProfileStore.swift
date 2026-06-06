@@ -60,6 +60,7 @@ enum ProfileParser {
         let patterns = parseFilenamePatterns(lines)
         let channels = parseChannels(lines, patterns: patterns)
         let highConfidencePaths = parseDetectionPaths(lines)
+        let osdSpec = parseOSDSpec(lines)
 
         guard !folders.isEmpty || !patterns.isEmpty else { return nil }
 
@@ -72,7 +73,8 @@ enum ProfileParser {
             folders: folders,
             filenamePatterns: patterns,
             channels: channels,
-            highConfidencePaths: highConfidencePaths
+            highConfidencePaths: highConfidencePaths,
+            osdSpec: osdSpec
         )
     }
 
@@ -234,6 +236,81 @@ enum ProfileParser {
             }
         }
         return paths
+    }
+
+    /// Parses an `osd_ocr` detection entry from `detection.high_confidence`.
+    ///
+    /// Example YAML:
+    /// ```
+    /// detection:
+    ///   high_confidence:
+    ///     - method: osd_ocr
+    ///       source: front_channel_video
+    ///       strip: bottom_8pct
+    ///       threshold_method: half_max_brightness
+    ///       matches: "VIOFO A229 Pro"
+    /// ```
+    ///
+    /// Returns `nil` when no `osd_ocr` entry exists. The OSD lives on the
+    /// front channel for VIOFO, so `probeChannels` is always `["F"]`.
+    private static func parseOSDSpec(_ lines: [String]) -> OSDSpec? {
+        guard let detectionRange = topLevelBlock(named: "detection", in: lines) else { return nil }
+        let detectionLines = Array(lines[detectionRange])
+        guard let highStart = detectionLines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == "high_confidence:" }) else {
+            return nil
+        }
+
+        var foundOSD = false
+        var matches: String?
+        var stripPercent = 0.08
+
+        for line in detectionLines[(highStart + 1)...] {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+            // Stop at the next top-level (non-list, non-nested) key.
+            if trimmed.hasSuffix(":") && !trimmed.hasPrefix("-") {
+                let key = String(trimmed.dropLast())
+                if key == "medium_confidence" || key == "low_confidence" || key == "negative" {
+                    break
+                }
+            }
+
+            // A new list item starting a non-osd_ocr method ends the current
+            // entry; reset so we don't pick up a `matches:` from another item.
+            if trimmed.hasPrefix("- method:") {
+                let method = cleanValue(String(trimmed.dropFirst("- method:".count)))
+                foundOSD = (method == "osd_ocr")
+                continue
+            }
+
+            guard foundOSD else { continue }
+
+            if trimmed.hasPrefix("matches:") {
+                matches = cleanValue(String(trimmed.dropFirst("matches:".count)))
+            } else if trimmed.hasPrefix("strip:") {
+                let raw = cleanValue(String(trimmed.dropFirst("strip:".count))) ?? ""
+                stripPercent = parseStripPercent(raw)
+            }
+        }
+
+        guard let matched = matches, !matched.isEmpty else { return nil }
+
+        return OSDSpec(
+            containsModelName: true,
+            matchStrings: [matched],
+            stripPercent: stripPercent,
+            probeChannels: ["F"]
+        )
+    }
+
+    /// Parses "bottom_8pct" -> 0.08, "bottom_10pct" -> 0.10. Defaults to 0.08.
+    private static func parseStripPercent(_ value: String) -> Double {
+        let lowered = value.lowercased()
+        let digits = lowered.drop(while: { !$0.isNumber }).prefix(while: { $0.isNumber })
+        if let percent = Int(digits), percent > 0 {
+            return Double(percent) / 100.0
+        }
+        return 0.08
     }
 
     private static func topLevelBlock(named name: String, in lines: [String]) -> Range<Int>? {
