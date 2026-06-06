@@ -45,6 +45,95 @@ struct CardScanner {
         )
     }
 
+    /// Async scan that augments folder/filename detection with OSD OCR to
+    /// disambiguate sibling models (e.g. VIOFO A229 Pro vs Plus vs Ultra).
+    ///
+    /// OSD probing only runs when the result is genuinely ambiguous: the top
+    /// candidate is `.medium` confidence and at least one other candidate
+    /// scores within 15 points of it. A confirmed OSD match bumps that
+    /// profile's score by 80, re-sorts the candidates, and re-selects the
+    /// winner. OSD probing is best-effort — a failed probe leaves the
+    /// original result unchanged.
+    func scanWithOSD(sourceURL: URL, profiles: [DashcamProfile]) async throws -> ScanResult {
+        var result = try scan(sourceURL: sourceURL, profiles: profiles)
+
+        guard let top = result.candidates.first, top.confidence == .medium else {
+            return result
+        }
+
+        // Disambiguation only matters when another candidate is close behind.
+        let hasCompetition = result.candidates.dropFirst().contains { abs(top.score - $0.score) <= 15 }
+        guard hasCompetition else { return result }
+
+        let probe = OSDProbe()
+        var updatedCandidates = result.candidates
+
+        for index in updatedCandidates.indices {
+            guard let spec = updatedCandidates[index].profile.osdSpec, spec.containsModelName else { continue }
+
+            guard let sampleVideo = sampleVideo(
+                for: spec,
+                allFiles: result.allFiles
+            ) else { continue }
+
+            if let matched = await probe.probe(videoURL: sampleVideo, spec: spec) {
+                updatedCandidates[index].score += 80
+                var evidence = updatedCandidates[index].evidence
+                evidence.append("OSD OCR match \"\(matched)\"")
+                updatedCandidates[index].evidence = Array(evidence.prefix(6))
+                updatedCandidates[index].confidence = confidenceLevel(for: updatedCandidates[index].score)
+            }
+        }
+
+        updatedCandidates.sort { lhs, rhs in
+            if lhs.score != rhs.score { return lhs.score > rhs.score }
+            return lhs.profile.displayName < rhs.profile.displayName
+        }
+
+        result.candidates = updatedCandidates
+
+        // Re-select and re-classify if the winner changed.
+        if let newTop = updatedCandidates.first, newTop.profile.id != result.selectedProfile?.id {
+            result.selectedProfile = newTop.profile
+            result.clips = classify(files: result.allFiles, sourceURL: sourceURL, profile: newTop.profile)
+        } else if result.selectedProfile == nil {
+            result.selectedProfile = updatedCandidates.first?.profile
+        }
+
+        return result
+    }
+
+    /// Finds a front-channel sample video matching the OSD spec's channels.
+    /// VIOFO front clips end in a channel suffix (e.g. `..._F.MP4`). Falls
+    /// back to any video if no channel-suffixed clip is found.
+    private func sampleVideo(for spec: OSDSpec, allFiles: [URL]) -> URL? {
+        let videos = allFiles.filter { ["mp4", "mov"].contains($0.pathExtension.lowercased()) }
+        guard !videos.isEmpty else { return nil }
+
+        for channel in spec.probeChannels {
+            let suffix = channel.uppercased()
+            if let match = videos.first(where: { url in
+                let stem = url.deletingPathExtension().lastPathComponent.uppercased()
+                return stem.hasSuffix(suffix)
+            }) {
+                return match
+            }
+        }
+
+        // No channel-suffixed clip; the OSD is still likely on any front clip.
+        return videos.first
+    }
+
+    private func confidenceLevel(for score: Int) -> DetectionConfidence {
+        if score >= 70 {
+            return .high
+        } else if score >= 25 {
+            return .medium
+        } else {
+            return .low
+        }
+    }
+
     func classify(files: [URL], sourceURL: URL, profile: DashcamProfile) -> [ClipItem] {
         let folders = profile.folders.sorted { $0.path.count > $1.path.count }
         let compiledPatterns = profile.filenamePatterns.compactMap { pattern -> (FilenamePattern, NSRegularExpression)? in
@@ -302,14 +391,7 @@ struct CardScanner {
             }
 
             guard score > 0 else { return nil }
-            let confidence: DetectionConfidence
-            if score >= 70 {
-                confidence = .high
-            } else if score >= 25 {
-                confidence = .medium
-            } else {
-                confidence = .low
-            }
+            let confidence = confidenceLevel(for: score)
 
             return DetectionCandidate(profile: profile, score: score, confidence: confidence, evidence: Array(evidence.prefix(5)))
         }
