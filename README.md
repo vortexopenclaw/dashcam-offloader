@@ -62,18 +62,34 @@ swift run DashcamOffloader --smoke-test
 
 ## Seed Profiles
 
-- Thinkware U3000 Pro
-- Vueroid S1 4K Infinite
-- Viofo A329S
-- Viofo A329T
-- Blackvue Elite 9
+**BlackVue**
+- BlackVue DR970X Plus — 2CH, real card sampled
+- BlackVue Elite 9 — 2CH, real card sampled
 
-Planned intake targets:
+**Cansonic**
+- Cansonic UltraDash Z3+ Standard Edition — dual front lens (wide + telephoto) + optional rear (R1), footage sampled
 
-- Vantrue N4 Pro S
-- Viofo A229 Pro
-- Thinkware U3000
-- Blackvue DR970X Plus
+**Thinkware**
+- Thinkware U3000 — 2CH, real card sampled
+- Thinkware U3000 Pro — real card sampled
+
+**Vantrue**
+- Vantrue E1 Pro — 1CH, real card sampled
+- Vantrue N4 Pro S — 3CH, real card sampled
+- Vantrue N4 S — 3CH, real card sampled
+
+**VIOFO**
+- VIOFO A119 Mini 2 — 1CH, real card sampled
+- VIOFO A119M Pro — 1CH, footage sampled
+- VIOFO A139 Pro — 3CH, footage sampled
+- VIOFO A229 Plus — 3CH, real card sampled
+- VIOFO A229 Pro — 3CH, real card sampled
+- VIOFO A229 Ultra — 3CH, footage sampled, OSD OCR confirmed
+- VIOFO A329S — 3CH, real card sampled
+- VIOFO A329T — telephoto variant, official references only
+
+**Vueroid**
+- Vueroid S1 4K Infinite — 1CH/2CH/3CH variants, all confirmed from real card samples
 
 ## Repository Layout
 
