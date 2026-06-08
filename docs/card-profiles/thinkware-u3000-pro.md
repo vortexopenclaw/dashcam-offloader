@@ -87,6 +87,17 @@ It does not provide a separate in-cabin filename example or a confirmed interior
 - `.fseventsd`
 - `._*`
 
+## Media And Config Notes
+
+Mounted-card pass on 2026-06-08 measured the current `/Volumes/U3000Pro` card:
+
+- `cont_rec`: F is HEVC 3840x2160 30 fps at about 30 Mbps; R is HEVC 2560x1440 30 fps at about 10 Mbps.
+- `evt_rec`: F/R use the same 4K/2K 30 fps pattern.
+- `parking_rec`: parking incident samples measured 15 fps, with F at 3840x2160 about 11.9 Mbps and R at 2560x1440 about 5.0 Mbps.
+- `motion_timelapse_rec`: F/R measured 2560x1440 15 fps at about 5.0 Mbps.
+- `.parking_rec_sec` `PAS` files measured 1280x720 15 fps at about 0.6 Mbps and should be treated as secondary/internal parking evidence rather than normal user footage.
+- Safe config strings in `SETTING/default.cfg`, `SETTING/setup.cfg`, and `SETTING/lang/ver.dat` provide model, firmware/config version, language pack, and timezone evidence. Do not use `device.uid` for model detection.
+
 ## Open Questions
 
 - Meaning of `F_SS` and `R_SS`.

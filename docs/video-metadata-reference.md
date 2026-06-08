@@ -95,6 +95,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The sampled card contains REC, MOT, MAN, and PAK clips. Parking event clips are short and keep 4K resolution.
 
+**Mounted-card update 2026-06-08:** `/Volumes/U3000Pro` currently confirms continuous driving at 4K30 front and 2K30 rear. Parking/event samples on this card are 15 fps: `parking_rec` front measured 4K15 at ~11.9 Mbps, rear measured 2K15 at ~5.0 Mbps; `motion_timelapse_rec` measured 2K15 at ~5.0 Mbps on both channels. Hidden `.parking_rec_sec` `PAS` files measured 720p15 at ~0.6 Mbps and should be treated as secondary/internal parking evidence, not normal user footage.
+
 ## Thinkware U3000
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -157,6 +159,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet.
 
+**Mounted-card update 2026-06-08:** `/Volumes/Untitled` was rechecked and parsed as 6225 MP4 files: 208 driving triplets, 1866 parking triplets, and 1 locked F/I/R triplet. The root `format.txt` file is present but empty, so it is only an exclusion signal.
+
 ## VIOFO A229 Plus
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -190,6 +194,27 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | PR | parking | H.264 | 2560x1440 | 30 | ~23.8 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The mounted archive shows both driving and parking clips with the expected front/rear/interior split. Parking clips can still preserve full 4K on the front channel.
+
+**Mounted-card update 2026-06-08:** `/Volumes/A329S` currently measures 4K front plus 2K interior and 2K rear for the sampled 3CH configuration. Driving clips measured ~65.5 Mbps front and ~27.0 Mbps interior/rear. Parking clips measured 4K30 front at ~12.3 Mbps and 2K30 interior/rear at ~8.2 Mbps. Protected `RO` contains both normal `F/I/R` and parking `PF/PI/PR` families.
+
+## Vueroid S1 4K Infinite
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~48.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | manual | H.264 | 3840x2160 | 30 | ~48.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | manual | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | manual | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | parking | H.264 | 3840x2160 | 30 | ~47.2 Mbps | MP4 | `ffprobe` |
+| I (interior) | parking | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | parking event | H.264 | 3840x2160 | 30 | ~48.1 Mbps | MP4 | `ffprobe` |
+| I (interior) | parking event | H.264 | 1920x1080 | 30 | ~13.2 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking event | H.264 | 2560x1440 | 30 | ~22.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The mounted `/Volumes/S1-4K` 3CH card parsed 1082 MP4 files across `INF`, `PARK`, `USER`, and `PEVENT`. Safe strings in `CONFIG/config.bin` include `S1-4K V1.04.2`, build date `Mar  3 2026, 16:43:29`, and `S1-4K`. `CONFIG/config.bin` should remain excluded from footage copy by default but can be read in redacted form for model and firmware evidence.
 
 ## VIOFO A329T
 
@@ -451,6 +476,5 @@ No mounted media files were found for these models in this archive pass:
 - 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
 - DJI Mini 3 Pro
 - Sony Alpha A7 III
-- Vueroid S1 4K Infinite
 
 Those rows stay on manual/spec-driven data until we get real footage samples.
