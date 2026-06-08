@@ -200,17 +200,41 @@ enum ProfileParser {
             return channels
         }
 
+        // Two valid YAML shapes for channels:
+        //
+        // Flat:   F: front          → direct key:value pair
+        //         R: rear
+        //
+        // Nested: F:                → bare key sets pendingKey
+        //           position: front → first position: line under pendingKey wins
+        //           bitrate: higher → (other nested fields are ignored)
+        //
+        // The old code fired parseMapPair on "position: front" before the
+        // position: handler could run, storing channels["position"] = "front"
+        // and discarding the "F" / "R" keys entirely.
+        //
+        // Fix: only use parseMapPair when there is no active pendingKey
+        // (flat shape), and only accept a bare key-with-no-value (no spaces
+        // before the colon, nothing after) as a pendingKey setter.
+
         var pendingKey: String?
         for line in lines[range] {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if let pair = parseMapPair(trimmed), !pair.value.isEmpty {
-                channels[pair.key] = pair.value
-                pendingKey = nil
-            } else if trimmed.hasSuffix(":") {
+
+            // Bare key (e.g. "F:", "R:") — starts a nested channel entry.
+            // Must not contain a space (rules out "position: front" etc.).
+            if trimmed.hasSuffix(":") && !trimmed.contains(" ") {
                 pendingKey = String(trimmed.dropLast())
-            } else if trimmed.hasPrefix("position:"), let pendingKey {
-                channels[pendingKey] = cleanValue(String(trimmed.dropFirst("position:".count))) ?? pendingKey
+
+            // position: value under a pending channel key → assign the channel.
+            } else if trimmed.hasPrefix("position:"), let pk = pendingKey {
+                channels[pk] = cleanValue(String(trimmed.dropFirst("position:".count))) ?? pk
+
+            // Flat key: value pair (only when not inside a nested entry).
+            } else if pendingKey == nil, let pair = parseMapPair(trimmed), !pair.value.isEmpty {
+                channels[pair.key] = pair.value
             }
+            // All other nested fields (bitrate:, observed_file_size_bytes:, etc.) are skipped.
         }
 
         return channels

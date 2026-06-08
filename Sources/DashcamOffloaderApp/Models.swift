@@ -132,6 +132,7 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         }
         if normalized.contains("normal") ||
             normalized.contains("driving") ||
+            normalized.contains("continuous") ||
             normalized == "n" {
             return "Driving"
         }

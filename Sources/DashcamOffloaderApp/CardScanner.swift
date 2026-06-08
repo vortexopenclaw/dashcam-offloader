@@ -445,8 +445,16 @@ struct CardScanner {
     private func parseTimestamp(groups: [String], format: TimestampFormat) -> Date? {
         switch format {
         case .yyyymmddHhmmss:
+            // Some patterns have a mode-prefix group before the date
+            // (e.g. Thinkware: ["REC", "20230427", "154533", "F"]).
+            // Only use the explicit groups[0]+groups[1] path when groups[0]
+            // is already an 8-char date string; otherwise fall back to the
+            // heuristic which scans for the first 8-char/6-char pair.
             guard groups.count >= 2 else { return nil }
-            return parseDate(groups[0] + groups[1], format: "yyyyMMddHHmmss")
+            if groups[0].count == 8, groups[1].count == 6 {
+                return parseDate(groups[0] + groups[1], format: "yyyyMMddHHmmss")
+            }
+            return parseTimestampHeuristically(groups: groups)
         case .yyyyMmddHhmmss:
             guard groups.count >= 3 else { return nil }
             return parseDate(groups[0] + groups[1] + groups[2], format: "yyyyMMddHHmmss")
