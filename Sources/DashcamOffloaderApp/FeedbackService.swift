@@ -5,7 +5,7 @@ struct FeedbackService {
     var session: URLSession = .shared
 
     static let production = FeedbackService(
-        endpointURL: URL(string: "https://dashcam-offloader-feedback.vortexopenclaw.workers.dev/feedback")!
+        endpointURL: URL(string: "https://dashcam-offloader-feedback.vortexradar.workers.dev/feedback")!
     )
 
     func submit(_ submission: FeedbackSubmission) async throws -> String {
