@@ -48,6 +48,34 @@ Do not copy or publish raw config dumps. Read only small known files, extract sa
 - Safe signal: `format.txt` is an empty 0-byte file.
 - Use: exclusion signal only. Model detection should prefer folder/filename structure, OSD where available, and model-specific firmware file references such as `DCIM/FWA329S.bin` when present.
 
+### BlackVue Elite 9
+
+- Mounted card: `/Volumes/BLACKVUE`
+- Config-like files:
+  - `BlackVue/Config/version.bin`
+  - `BlackVue/Config/micom_version.bin`
+  - `BlackVue/Config/smart_gsensor_version.bin`
+- Safe strings observed:
+  - `version.bin`: firmware version, config version, revision, `model = ELITE 9`, language, front/rear ISP version
+  - `micom_version.bin`: micom version and `model = ELITE 9 v1.008(rev650)`
+  - `smart_gsensor_version.bin`: smart G-sensor version and `model = ELITE 9 v1.008(rev650)`
+- Use: high-confidence model and firmware evidence when safely string-scanned.
+- Do not copy `BlackVue/Config/config.ini`, Bluetooth/network files, full MP4 metadata blocks, GPS/private fields, or product serial fields into public docs or default submissions.
+
+### Escort MAXcam 360c
+
+- Mounted card: `/Volumes/NO NAME`
+- Config-like file: `MasterVersionInfo_SW_v1.13_HW_v1.01.bin`
+- Safe strings observed:
+  - `MasterVersion:1.13`
+  - `Main:R22`
+  - `Antenna:R07`
+  - `DSP:2.11`
+  - `BLE:R07`
+  - `HW_VERSION:1.01`
+- Use: safe firmware/hardware version evidence only. Strong model evidence still comes from `Normal/MAXcam360c` and `Event/MAXcam360c` folder names.
+- Do not read or publish `DATA/serial_num.txt`. Treat `DATA/gps_userdb.bin` as a private radar GPS lockout database, not a footage/config source.
+
 ## Extraction Pattern
 
 For profile research:

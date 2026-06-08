@@ -17,15 +17,17 @@
 - GPS sidecar: `YYYYMMDD_NNNN_VID_gps.bin` (begins after GPS lock)
 - G-sensor sidecar: `YYYYMMDD_NNNN_VID_gsensor.bin` (begins alongside _gps.bin)
 - Ancillary: `DATA/serial_num.txt`, `DATA/gps_userdb.bin`
+- Safe version evidence: `MasterVersionInfo_SW_v1.13_HW_v1.01.bin`
 - Placeholder: `Normal/MAXcam360c/.deleted.MOV`
 - Sequence: per-date; GPS sidecars began at a specific clip number mid-session (after GPS lock acquired)
 - `.fseventsd/` and `System Volume Information/` also present (macOS and Windows artifacts)
+- Current mounted-card pass parsed 65 normal driving clips and 1 locked/event clip.
+- Representative normal and event clips are H.264 2560x1440 30 fps at about 28.4-28.6 Mbps.
+- Safe version strings include `MasterVersion:1.13`, `Main:R22`, `Antenna:R07`, `DSP:2.11`, `BLE:R07`, and `HW_VERSION:1.01`.
 
 ### Not confirmed from card
 
-- Video codec (H.264 assumed)
-- Resolution (1080P assumed)
-- Frame rate (30 fps assumed)
+- Proprietary `_gps.bin` / `_gsensor.bin` sidecar formats
 
 ## Manual Notes
 

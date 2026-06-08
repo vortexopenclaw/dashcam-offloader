@@ -114,10 +114,11 @@ video:
   extension: '.MOV'
   extension_case: uppercase
   codec: h264
-  codec_confirmed: assumed
-  resolution_default: '1920x1080'
+  codec_confirmed: true
+  resolution_default: '2560x1440'
   fps_default: 30
-  notes: H.264 1080P 30fps assumed from 2021 hardware era. Not confirmed from ffprobe.
+  bitrate_observed: '~28.4-28.6 Mbps'
+  notes: H.264 2560x1440 30fps confirmed from mounted card ffprobe pass.
 gps:
   embedded: false
   sidecar_format: '_gps.bin'
@@ -139,9 +140,9 @@ hardware:
 validation:
   card_sampled: true
   footage_sampled: true
-  codec_confirmed: false
+  codec_confirmed: true
   notes: >
     Real card sampled. Folder structure, filename patterns, GPS/G-sensor sidecar
-    behavior, and ancillary DATA/ files all confirmed. Codec and resolution not
-    confirmed from ffprobe. GPS/G-sensor sidecars confirmed to begin mid-session
-    after GPS lock acquisition. .deleted.MOV placeholder observed.
+    behavior, ancillary DATA/ files, codec, resolution, frame rate, and bitrate
+    all confirmed. GPS/G-sensor sidecars confirmed to begin mid-session after
+    GPS lock acquisition. .deleted.MOV placeholder observed.

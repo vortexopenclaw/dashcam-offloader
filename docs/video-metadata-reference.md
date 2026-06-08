@@ -27,6 +27,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** Mounted sample set showed 61-second clips for the main driving and parking files. The front channel is 4K UHD and the rear is 1440p.
 
+**Mounted-card update 2026-06-08:** `/Volumes/BLACKVUE` parsed 3050 MP4 files: 1154 complete normal front/rear pairs, 281 complete parking front/rear pairs, and 90 complete impact/event front/rear pairs. Safe model/version strings in `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` confirm `ELITE 9` firmware/config evidence.
+
 ## BlackVue Elite 8
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -425,6 +427,15 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | F (front) | event | H.264 | 1920x1080 | 30 | ~8.2 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The archive contains both `CAM` and `PF` families. Parking clips can be 4K HEVC in this sample set.
+
+## Escort MAXcam 360c
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~28.6 Mbps | MOV | `ffprobe` |
+| F (front) | locked / event | H.264 | 2560x1440 | 30 | ~28.4 Mbps | MOV | `ffprobe` |
+
+**Notes:** Mounted `/Volumes/NO NAME` card parsed 65 normal `VID` clips and 1 event `SOS` clip under model-specific `MAXcam360c` folders. Safe version strings in `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` confirm firmware/hardware version evidence. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` should stay excluded from public/default handling.
 
 ## Cobra Road Scout
 

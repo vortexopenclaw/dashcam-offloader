@@ -78,6 +78,24 @@ DEFAULT_CARDS = [
         "viofo",
         ("format.txt",),
     ),
+    CardSpec(
+        "blackvue-elite-9",
+        "BlackVue Elite 9",
+        Path("/Volumes/BLACKVUE"),
+        "blackvue",
+        (
+            "BlackVue/Config/version.bin",
+            "BlackVue/Config/micom_version.bin",
+            "BlackVue/Config/smart_gsensor_version.bin",
+        ),
+    ),
+    CardSpec(
+        "escort-maxcam-360c",
+        "Escort MAXcam 360c",
+        Path("/Volumes/NO NAME"),
+        "escort_maxcam",
+        ("MasterVersionInfo_SW_v1.13_HW_v1.01.bin",),
+    ),
 ]
 
 
@@ -207,6 +225,36 @@ def parse_thinkware(root: Path, path: Path) -> ClipInfo | None:
     return ClipInfo(path, rel, mode_map.get(folder, match.group("prefix").lower()), match.group("channel"))
 
 
+def parse_blackvue(root: Path, path: Path) -> ClipInfo | None:
+    rel = path.relative_to(root).as_posix()
+    match = re.match(
+        r"\d{8}_\d{6}_(?P<mode>[NPI])(?P<channel>[FR])\.(?:mp4|MP4)$",
+        path.name,
+    )
+    if not match:
+        return None
+    mode_map = {
+        "N": "driving",
+        "P": "parking",
+        "I": "impact_event",
+    }
+    return ClipInfo(path, rel, mode_map[match.group("mode")], match.group("channel"))
+
+
+def parse_escort_maxcam(root: Path, path: Path) -> ClipInfo | None:
+    rel = path.relative_to(root).as_posix()
+    if path.name == ".deleted.MOV":
+        return None
+    match = re.match(r"\d{8}_\d{4}_(?P<token>VID|SOS)\.(?:MOV|mov)$", path.name)
+    if not match:
+        return None
+    mode_map = {
+        "VID": "driving",
+        "SOS": "locked",
+    }
+    return ClipInfo(path, rel, mode_map[match.group("token")], "front")
+
+
 def parse_clip(card: CardSpec, path: Path) -> ClipInfo | None:
     if path.suffix.lower() not in VIDEO_SUFFIXES:
         return None
@@ -216,6 +264,10 @@ def parse_clip(card: CardSpec, path: Path) -> ClipInfo | None:
         return parse_vueroid(card.path, path)
     if card.parser == "thinkware":
         return parse_thinkware(card.path, path)
+    if card.parser == "blackvue":
+        return parse_blackvue(card.path, path)
+    if card.parser == "escort_maxcam":
+        return parse_escort_maxcam(card.path, path)
     return None
 
 

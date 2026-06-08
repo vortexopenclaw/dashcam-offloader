@@ -81,17 +81,17 @@ grouping:
       - R
 observed_counts:
   files:
-    NF: 1187
-    NR: 1187
-    PF: 253
-    PR: 253
-    IF: 85
-    IR: 85
+    NF: 1154
+    NR: 1154
+    PF: 281
+    PR: 281
+    IF: 90
+    IR: 90
   groups:
     total: 1525
-    complete_normal_pairs: 1187
-    complete_parking_pairs: 253
-    complete_impact_event_pairs: 85
+    complete_normal_pairs: 1154
+    complete_parking_pairs: 281
+    complete_impact_event_pairs: 90
     incomplete_pairs: 0
 exclude:
   - .Trashes/**
