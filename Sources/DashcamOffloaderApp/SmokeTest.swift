@@ -108,22 +108,21 @@ enum SmokeTest {
                 print("SMOKE FAIL: update version comparison failed")
                 return false
             }
-            let releaseJSON = Data("""
+            let manifestJSON = Data("""
             {
-              "tag_name": "v0.2.0",
-              "name": "Dashcam Offloader 0.2.0",
-              "html_url": "https://github.com/vortexopenclaw/dashcam-offloader/releases/tag/v0.2.0",
-              "assets": [
-                {
-                  "name": "Dashcam-Offloader-0.2.0.zip",
-                  "browser_download_url": "https://github.com/vortexopenclaw/dashcam-offloader/releases/download/v0.2.0/Dashcam-Offloader-0.2.0.zip"
-                }
-              ]
+              "version": "0.2.0",
+              "releaseName": "Dashcam Offloader 0.2.0",
+              "releaseNotesURL": "https://github.com/vortexopenclaw/dashcam-offloader/releases/tag/latest",
+              "assetName": "Dashcam-Offloader-0.2.0.zip",
+              "downloadURL": "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest",
+              "sha256": "abc123",
+              "minimumMacOSVersion": "14.0",
+              "channel": "latest"
             }
             """.utf8)
-            let updateInfo = try UpdateService.info(from: releaseJSON, currentVersion: "0.1.0")
+            let updateInfo = try UpdateService.info(from: manifestJSON, currentVersion: "0.1.0")
             guard updateInfo.isNewer, updateInfo.assetName == "Dashcam-Offloader-0.2.0.zip" else {
-                print("SMOKE FAIL: update release parsing failed")
+                print("SMOKE FAIL: update manifest parsing failed")
                 return false
             }
 

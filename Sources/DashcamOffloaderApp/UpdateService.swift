@@ -30,38 +30,30 @@ enum UpdateServiceError: LocalizedError {
 }
 
 struct UpdateService: Sendable {
-    private struct GitHubRelease: Decodable, Sendable {
-        var tagName: String
-        var name: String?
-        var htmlURL: URL
-        var assets: [GitHubAsset]
+    private struct UpdateManifest: Decodable, Sendable {
+        var version: String
+        var releaseName: String?
+        var releaseNotesURL: URL?
+        var assetName: String?
+        var downloadURL: URL?
 
         enum CodingKeys: String, CodingKey {
-            case tagName = "tag_name"
-            case name
-            case htmlURL = "html_url"
-            case assets
+            case version
+            case releaseName
+            case releaseNotesURL
+            case assetName
+            case downloadURL
         }
     }
 
-    private struct GitHubAsset: Decodable, Sendable {
-        var name: String
-        var browserDownloadURL: URL
-
-        enum CodingKeys: String, CodingKey {
-            case name
-            case browserDownloadURL = "browser_download_url"
-        }
-    }
-
-    var latestReleaseURL = URL(string: "https://api.github.com/repos/vortexopenclaw/dashcam-offloader/releases/latest")!
+    var latestManifestURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/latest.json")!
 
     static var currentVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"
     }
 
     func checkForUpdates(currentVersion: String = Self.currentVersion) async throws -> AppUpdateInfo {
-        var request = URLRequest(url: latestReleaseURL)
+        var request = URLRequest(url: latestManifestURL)
         request.setValue("DashcamOffloader", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -69,12 +61,12 @@ struct UpdateService: Sendable {
             throw NSError(
                 domain: "DashcamOffloader.UpdateService",
                 code: 404,
-                userInfo: [NSLocalizedDescriptionKey: "No GitHub release has been published yet."]
+                userInfo: [NSLocalizedDescriptionKey: "No public update manifest has been published yet."]
             )
         }
 
-        let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-        return Self.info(from: release, currentVersion: currentVersion)
+        let manifest = try JSONDecoder().decode(UpdateManifest.self, from: data)
+        return Self.info(from: manifest, currentVersion: currentVersion)
     }
 
     func downloadReleaseAsset(_ update: AppUpdateInfo) async throws -> URL {
@@ -96,27 +88,27 @@ struct UpdateService: Sendable {
         return destinationURL
     }
 
-    static func info(from releaseJSON: Data, currentVersion: String) throws -> AppUpdateInfo {
-        let release = try JSONDecoder().decode(GitHubRelease.self, from: releaseJSON)
-        return info(from: release, currentVersion: currentVersion)
+    static func info(from manifestJSON: Data, currentVersion: String) throws -> AppUpdateInfo {
+        let manifest = try JSONDecoder().decode(UpdateManifest.self, from: manifestJSON)
+        return info(from: manifest, currentVersion: currentVersion)
     }
 
-    private static func info(from release: GitHubRelease, currentVersion: String) -> AppUpdateInfo {
-        let latestVersion = normalizedVersion(release.tagName)
-        let preferredAsset = release.assets.first { asset in
-            let lower = asset.name.lowercased()
-            return lower.hasSuffix(".dmg") || lower.hasSuffix(".zip")
-        } ?? release.assets.first
+    private static func info(from manifest: UpdateManifest, currentVersion: String) -> AppUpdateInfo {
+        let latestVersion = normalizedVersion(manifest.version)
 
         return AppUpdateInfo(
             currentVersion: currentVersion,
             latestVersion: latestVersion,
-            releaseName: release.name ?? release.tagName,
-            releasePageURL: release.htmlURL,
-            assetName: preferredAsset?.name,
-            assetDownloadURL: preferredAsset?.browserDownloadURL,
+            releaseName: manifest.releaseName ?? "Dashcam Offloader \(latestVersion)",
+            releasePageURL: manifest.releaseNotesURL ?? latestManifestURLFallback,
+            assetName: manifest.assetName,
+            assetDownloadURL: manifest.downloadURL,
             isNewer: compareVersions(latestVersion, currentVersion) == .orderedDescending
         )
+    }
+
+    private static var latestManifestURLFallback: URL {
+        URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/latest.json")!
     }
 
     static func compareVersions(_ lhs: String, _ rhs: String) -> ComparisonResult {
@@ -155,7 +147,7 @@ final class UpdateViewModel: ObservableObject {
 
     func checkForUpdates() {
         isChecking = true
-        statusMessage = "Checking GitHub Releases..."
+        statusMessage = "Checking public update server..."
 
         Task {
             do {

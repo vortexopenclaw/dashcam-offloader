@@ -489,7 +489,7 @@ struct ContentView: View {
                 }
                 .font(.subheadline)
             } else {
-                Text("Check GitHub Releases for the newest Dashcam Offloader build.")
+                Text("Check the public update server for the newest Dashcam Offloader build.")
                     .foregroundStyle(.secondary)
             }
 

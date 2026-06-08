@@ -12,7 +12,7 @@ This project now has a first native macOS SwiftUI prototype in addition to the r
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
-The toolbar includes an `Updates` control for manual app update checks. It checks the public GitHub Releases feed, compares the latest release tag against the current app bundle version, and can download/open the release asset for installation. Current unsigned prototype builds still require the user to replace the app bundle when macOS opens the downloaded archive or installer.
+The toolbar includes an `Updates` control for manual app update checks. It checks the public Cloudflare update manifest, compares the latest version against the current app bundle version, and can download/open the release asset for installation. Current unsigned prototype builds still require the user to replace the app bundle when macOS opens the downloaded archive or installer.
 
 Firmware filename knowledge is maintainer research only: public firmware downloads may be inspected outside the app to learn filename patterns, but the Mac app only compares filenames already present on a card as weak bonus evidence.
 
