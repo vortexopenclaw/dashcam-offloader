@@ -1,0 +1,40 @@
+id: vantrue-n4
+manufacturer: Vantrue
+model: N4
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "YYYY_MM_DD_HHMMSS_(N|E|P)_(A|B|C).MP4"
+folders:
+  - path: Normal
+    mode: normal
+  - path: Event
+    mode: event
+  - path: Parking
+    mode: parking
+  - path: Photo
+    mode: photo
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{2})_(\\d{2})_(\\d{6})_([NEP])_([ABC])\\.(MP4|JPG)$"
+    modes:
+      N: normal
+      E: event
+      P: parking
+    channels:
+      A: front
+      B: interior
+      C: rear
+channels:
+  A: front
+  B: interior
+  C: rear
+exclude:
+  - GPS/**
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

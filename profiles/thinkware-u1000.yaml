@@ -1,0 +1,50 @@
+id: thinkware-u1000
+manufacturer: Thinkware
+model: U1000
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "REC_YYYY_MM_DD_HH_MM_SS_F.MP4"
+folders:
+  - path: cont_rec
+    mode: continuous
+    prefix: REC
+  - path: evt_rec
+    mode: driving_event
+    prefix: EVT
+  - path: motion_timelapse_rec
+    mode: parking_motion_or_timelapse
+    prefix: MOT
+  - path: parking_rec
+    mode: parking_event
+    prefix: PAK
+  - path: manual_rec
+    mode: manual
+    prefix: MAN
+filename_patterns:
+  - pattern: "^(REC|EVT|MOT|PAK|MAN)_(\\d{4})_(\\d{2})_(\\d{2})_(\\d{2})_(\\d{2})_(\\d{2})_([FR])\\.MP4$"
+    modes:
+      REC: continuous
+      EVT: driving_event
+      MOT: parking_motion_or_timelapse
+      PAK: parking_event
+      MAN: manual
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - SETTING/**
+  - THUMBNAIL/**
+  - driveinfo/**
+  - .TWSYS/**
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

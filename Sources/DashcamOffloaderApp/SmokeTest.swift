@@ -9,13 +9,64 @@ enum SmokeTest {
             }
 
             let profiles = try ProfileStore(profilesDirectory: profilesURL).loadProfiles()
-            guard profiles.contains(where: { $0.id == "vantrue-e1-pro" }) else {
-                print("SMOKE FAIL: missing Vantrue E1 Pro profile")
+            let expectedProfileIDs = [
+                "70mai-4k-omni",
+                "70mai-m310",
+                "blackvue-dr970x-plus",
+                "blackvue-elite-8",
+                "blackvue-elite-9",
+                "cansonic-ultradash-z3plus-standard",
+                "cobra-road-scout",
+                "dji-rc",
+                "dji-mini-3-pro",
+                "escort-m1",
+                "escort-m2",
+                "escort-maxcam-360c",
+                "nextbase-622gw",
+                "sony-a7-iii",
+                "thinkware-u1000",
+                "thinkware-u1000-plus",
+                "thinkware-u3000",
+                "thinkware-u3000-pro",
+                "vantrue-e1-pro",
+                "vantrue-e360",
+                "vantrue-n4",
+                "vantrue-n4-pro-s",
+                "vantrue-n4-s",
+                "vantrue-n5",
+                "viofo-a119-mini-2",
+                "viofo-a119m-pro",
+                "viofo-a129-duo",
+                "viofo-a129-plus-duo",
+                "viofo-a129-pro",
+                "viofo-a139-pro",
+                "viofo-a229-plus",
+                "viofo-a229-pro",
+                "viofo-a229-ultra",
+                "viofo-a329s",
+                "viofo-a329t",
+                "viofo-t130",
+                "viofo-vs1",
+                "viofo-wm1",
+                "vueroid-s1-4k-infinite"
+            ]
+            let loadedProfileIDs = Set(profiles.map(\.id))
+            guard loadedProfileIDs.count >= expectedProfileIDs.count else {
+                print("SMOKE FAIL: expected at least \(expectedProfileIDs.count) profiles, loaded \(loadedProfileIDs.count)")
                 return false
+            }
+            for profileID in expectedProfileIDs {
+                guard loadedProfileIDs.contains(profileID) else {
+                    print("SMOKE FAIL: missing profile \(profileID)")
+                    return false
+                }
             }
             let requiredDisplayNames = [
                 "70mai M310",
+                "BlackVue Elite 8",
                 "Cansonic UltraDash Z3+ Standard Edition",
+                "Escort M1",
+                "Escort M2",
                 "Vantrue N4 Pro S"
             ]
             for displayName in requiredDisplayNames {

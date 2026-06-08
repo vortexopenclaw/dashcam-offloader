@@ -25,13 +25,28 @@
 - Escort M2 - profile drafted from one real card and official user manual. Single-channel front only. Footage in Normal/, events in Event/, photos in Photo/. Filename pattern YYYYMMDD_NNNN_CAM.MP4 with per-date 4-digit sequence. GPS sidecar (.map) paired with every clip.
 - Escort MAXcam 360c - profile drafted from one real card. Single-channel front only. Combined radar detector + dashcam. Footage in Normal/MAXcam360c/. Filename pattern YYYYMMDD_NNNN_VID.MOV. GPS and g-sensor sidecars (_gps.bin, _gsensor.bin) appear after GPS lock.
 - DJI Mini 3 Pro - profile drafted from one real card. Single-channel drone. DCIM/100MEDIA/ layout. Filename pattern DJI_####.MP4 with shared global sequence across video and photo. SRT telemetry sidecar paired with every clip.
+- DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
 - Sony Alpha A7 III (ILCE-7M3) - profile drafted from two real cards (one video+photo, one video-only). Mirrorless camera using Sony M4ROOT/XAVC S format. Model detected via PRIVATE/M4ROOT/MEDIAPRO.XML systemKind field. Video codec confirmed H.264 (AVC_3840_2160_HP@L51). Photos are ARW raw files. DCIM/ absent on video-only cards.
 - BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via config.ini ap_ssid field (BlackVueElite8-). Filename pattern matches Elite 9 family.
-- DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
+- VIOFO WM1 - private archive sample with OSD OCR confirmed. Single-channel pattern: YYYYMMDDHHMMSS_SEQUENCE, with P suffix observed for parking.
+- VIOFO VS1 - private archive sample with OSD OCR confirmed. Single-channel pattern: YYYYMMDDHHMMSS_SEQUENCE, with P suffix observed for parking.
+- VIOFO T130 - private archive sample with OSD OCR confirmed. 3-channel F/I/R pattern: YYYY_MMDD_HHMMSS_CHANNEL.
+- VIOFO A129 Duo - filename-only seed from private archive samples. Dual-channel F/R pattern: YYYY_MMDD_HHMMSS_SEQUENCE_CHANNEL.
+- VIOFO A129 Plus Duo - filename-only seed from private archive samples. Dual-channel F/R and parking PF/PR patterns observed across older/newer filename generations.
+- VIOFO A129 Pro - filename-only seed from private archive samples. Dual-channel F/R plus PF/PR parking patterns observed.
+- Nextbase 622GW - filename-only seed from private archive samples. Front/rear pattern: YYMMDD_HHMMSS_SEQUENCE_FH/RH.
+- Thinkware U1000 - filename-only seed from private archive samples. Older underscore-separated Thinkware pattern: REC_YYYY_MM_DD_HH_MM_SS_F/R.
+- Thinkware U1000 Plus - filename-only seed from private archive samples. Compact Thinkware pattern: REC_YYYYMMDD_HHMMSS_F/R, plus MAN/MOT/PAK variants.
+- Vantrue N4 - filename-only seed from private archive samples. Older Vantrue pattern: YYYY_MM_DD_HHMMSS_MODE_CHANNEL.
+- Vantrue N5 - filename-only seed from private archive samples. 4-channel A/B/C/D pattern: YYYYMMDD_HHMMSS_SEQUENCE_MODE_CHANNEL.
+- Vantrue E360 - filename-only seed from private archive samples. Panoramic A channel plus C channel observed.
+- 70mai 4K Omni - filename-only seed from private archive samples. NO/PA/EV mode prefix with F/R channel suffix observed.
 
 ## Intake Queue
 
-(none)
+- Nextbase iQ - private archive folder did not include enough raw camera filenames for a profile.
+- Vantrue N4 Pro - private archive folder only showed edited/b-roll filenames, not raw camera filenames.
+- 70mai T800 - private archive folder only showed edited/b-roll filenames, not raw camera filenames.
 
 ## Support Definitions
 
