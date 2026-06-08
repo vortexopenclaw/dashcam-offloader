@@ -23,11 +23,13 @@ detection:
     do_not_read:
       - BlackVue/Config/config.ini
       - BlackVue/Config/bt_ssid.bin
+      - BlackVue/Config/modem_revision.bin
     do_not_log:
       - WiFi SSIDs
       - WiFi passwords
       - Cloud credentials
       - Bluetooth identifiers
+      - Modem identifiers
 
 folders:
   - path: BlackVue/Record
@@ -97,4 +99,5 @@ notes:
   - "Front channel bitrate ~5.6× higher than rear"
   - "Config files contain privacy-sensitive WiFi/cloud credentials - exclude from analysis"
   - "AP SSID in config is user-configurable WiFi hotspot name, not model identifier"
+  - "Detection keys on the exact model string rather than firmware version so firmware 1.x and 2.x cards remain supported."
   - "Sample card was 2CH (F+R) variant"
