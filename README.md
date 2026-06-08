@@ -75,6 +75,7 @@ swift run DashcamOffloader --smoke-test
 
 **DJI**
 - DJI Mini 3 Pro — 1CH drone, real card sampled
+- DJI RC (RM330) — companion device (remote controller), real card sampled. Controller microSD only; full-res drone footage is on the drone's own card.
 
 **Escort**
 - Escort M1 — 1CH, real card sampled

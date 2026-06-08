@@ -27,6 +27,7 @@
 - DJI Mini 3 Pro - profile drafted from one real card. Single-channel drone. DCIM/100MEDIA/ layout. Filename pattern DJI_####.MP4 with shared global sequence across video and photo. SRT telemetry sidecar paired with every clip.
 - Sony Alpha A7 III (ILCE-7M3) - profile drafted from two real cards (one video+photo, one video-only). Mirrorless camera using Sony M4ROOT/XAVC S format. Model detected via PRIVATE/M4ROOT/MEDIAPRO.XML systemKind field. Video codec confirmed H.264 (AVC_3840_2160_HP@L51). Photos are ARW raw files. DCIM/ absent on video-only cards.
 - BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via config.ini ap_ssid field (BlackVueElite8-). Filename pattern matches Elite 9 family.
+- DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
 
 ## Intake Queue
 
