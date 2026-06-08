@@ -71,6 +71,7 @@ Group related files by date, time, and mode letter. The channel letter should no
 **Additional supporting signal:**
 
 - MP4 `cprt` metadata contains model and firmware fields. Extract only safe fields; do not store private fields such as product serial, temperature, or GPS-related state.
+- `BlackVue/Config/config.ini` can document settings such as recording and parking configuration, but Wi-Fi SSID fields are user-changeable and must not be used for model identification.
 
 **Weak signal:**
 

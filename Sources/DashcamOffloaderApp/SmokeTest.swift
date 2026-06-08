@@ -348,7 +348,32 @@ enum SmokeTest {
                 return false
             }
 
-            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files; Vueroid parking split OK; U3000 filters OK; BlackVue unsupported guard OK")
+            let thinkwareSupportedSource = temp.appendingPathComponent("thinkware-u3000-pro", isDirectory: true)
+            try FileManager.default.createDirectory(at: thinkwareSupportedSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareSupportedSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try Data("Device Name:U3000PRO".utf8).write(to: thinkwareSupportedSource.appendingPathComponent("SETTING/lang/ver.dat"))
+            try Data(repeating: 12, count: 1024).write(to: thinkwareSupportedSource.appendingPathComponent("cont_rec/REC_20260608_122000_F.MP4"))
+            let thinkwareSupportedScan = try scanner.scanWithOSD(sourceURL: thinkwareSupportedSource, profiles: profiles)
+            guard thinkwareSupportedScan.identifiedCamera?.displayName == "Thinkware U3000 Pro",
+                  thinkwareSupportedScan.selectedProfile?.id == "thinkware-u3000-pro" else {
+                print("SMOKE FAIL: Thinkware supported metadata did not select U3000 Pro")
+                return false
+            }
+
+            let thinkwareUnsupportedSource = temp.appendingPathComponent("thinkware-unsupported", isDirectory: true)
+            try FileManager.default.createDirectory(at: thinkwareUnsupportedSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareUnsupportedSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try Data("Device Name:U4000".utf8).write(to: thinkwareUnsupportedSource.appendingPathComponent("SETTING/lang/ver.dat"))
+            try Data(repeating: 13, count: 1024).write(to: thinkwareUnsupportedSource.appendingPathComponent("cont_rec/REC_20260608_123000_F.MP4"))
+            let thinkwareUnsupportedScan = try scanner.scanWithOSD(sourceURL: thinkwareUnsupportedSource, profiles: profiles)
+            guard thinkwareUnsupportedScan.identifiedCamera?.displayName == "Thinkware U4000",
+                  thinkwareUnsupportedScan.identifiedCamera?.isSupported == false,
+                  thinkwareUnsupportedScan.selectedProfile == nil else {
+                print("SMOKE FAIL: unsupported Thinkware metadata should not select nearby profile")
+                return false
+            }
+
+            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files; Vueroid parking split OK; U3000 filters OK; generic unsupported guard OK")
             return true
         } catch {
             print("SMOKE FAIL: \(error.localizedDescription)")

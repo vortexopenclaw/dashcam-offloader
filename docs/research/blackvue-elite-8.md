@@ -28,7 +28,7 @@
 The real Elite 8 sample at `/Volumes/BlackVue` confirmed:
 
 - Main video folder: `BlackVue/Record`.
-- Filename pattern: `YYYYMMDD_HHMMSS_MODECHANNEL.mp4` — matches Elite 9 exactly.
+- Filename pattern: `YYYYMMDD_HHMMSS_MODECHANNEL.mp4` - matches Elite 9 exactly.
 - Observed mode letter on this card: `N` (normal) only.
 - Observed channel letters: `F` and `R`.
 - Complete front/rear pairing for all observed clips.
@@ -39,14 +39,15 @@ The real Elite 8 sample at `/Volumes/BlackVue` confirmed:
 
 ## Detection Decision
 
-The Elite 9 uses `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` as high-confidence signals because they contain a plaintext model string that can be matched by binary substring read.
+The Elite-family detector should use `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` as high-confidence signals because they contain a BlackVue model string that can be matched by binary substring read.
 
 For the Elite 8, those same files are present on the card and should be matched by exact model strings. `config.ini` can help document recording settings, but Wi-Fi SSID/AP fields inside it are user-changeable and must not be used for model identification.
 
 The binary version files are the primary BlackVue model signals. If they identify an unsupported model, the app should show it as a New Dashcam instead of choosing the closest supported BlackVue profile.
+Do not use `ap_ssid`, Bluetooth SSID, volume label, or any other user-changeable label as model evidence. Those fields are weak context at best and should never override the version metadata.
 
 ## Privacy Notes
 
-- Do not ingest or export `BlackVue/Config/config.ini` by default — it contains private settings, hashed WiFi credentials, and network-related values.
+- Do not ingest or export `BlackVue/Config/config.ini` by default - it contains private settings, hashed WiFi credentials, and network-related values.
 - Do not ingest or export `BlackVue/Config/bt_ssid.bin` by default.
 - Do not store product serial or GPS/private fields from MP4 `cprt` metadata.

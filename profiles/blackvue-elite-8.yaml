@@ -28,6 +28,8 @@ detection:
       contains:
         - "model = ELITE 8"
   supporting:
+    - path: BlackVue/Config/config.ini
+      note: "Use for safe settings only; Wi-Fi SSID fields are user-changeable and not model evidence."
     - folder: BlackVue/Record
     - volume_label: BLACKVUE
       strength: weak
