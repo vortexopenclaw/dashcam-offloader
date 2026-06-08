@@ -62,6 +62,30 @@ Do not copy or publish raw config dumps. Read only small known files, extract sa
 - Use: high-confidence model and firmware evidence when safely string-scanned.
 - Do not copy `BlackVue/Config/config.ini`, Bluetooth/network files, full MP4 metadata blocks, GPS/private fields, or product serial fields into public docs or default submissions.
 
+### BlackVue DR970X LTE Plus
+
+- Mounted card: `/Volumes/BLACKVUE`
+- Firmware/settings sample: BlackVue firmware 2.007 / rev1584 after the 1.x to 2.x update.
+- Config-like files:
+  - `BlackVue/Config/version.bin`
+  - `BlackVue/Config/micom_version.bin`
+  - `BlackVue/Config/config.ini`
+  - `BlackVue/Config/bt_ssid.bin`
+  - `BlackVue/Config/modem_revision.bin`
+- Safe strings observed:
+  - `version.bin`: firmware version, config version, revision, `model = DR970X LTE Plus`
+  - `micom_version.bin`: MICOM version and `model = DR970X LTE Plus v2.007(rev1584)`
+- Safe `config.ini` setting keys useful for documentation:
+  - `VideoQuality=0`
+  - `VCodecType=0`
+  - `NormalRecord=1`
+  - `AutoParking=1`
+  - `RearParkingMode=1`
+  - `RecordTime=1`
+  - `NORMALSENSOR*`, `PARKINGSENSOR*`, `MOTIONSENSOR`
+- Use: model detection should come from exact model strings in `version.bin` and `micom_version.bin`, not Wi-Fi/AP names or firmware version. `config.ini` can help document recording/parking/quality settings after sensitive fields are filtered.
+- Do not copy `config.ini` wholesale. Do not publish `bt_ssid.bin`, Wi-Fi/AP SSID fields, cloud/network credentials, or `modem_revision.bin`; LTE modem files can expose modem identifiers.
+
 ### Escort MAXcam 360c
 
 - Mounted card: `/Volumes/NO NAME`

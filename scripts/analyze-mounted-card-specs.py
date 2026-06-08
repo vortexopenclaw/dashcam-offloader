@@ -22,7 +22,7 @@ SKIP_PARTS = {
 }
 SENSITIVE_RE = re.compile(
     r"pass|password|pwd|ssid|wifi|mac|serial|uid|token|key|account|email|gps|"
-    r"coord|lat|lon|license|plate",
+    r"coord|lat|lon|license|plate|imei|imsi|modem",
     re.IGNORECASE,
 )
 
@@ -79,14 +79,13 @@ DEFAULT_CARDS = [
         ("format.txt",),
     ),
     CardSpec(
-        "blackvue-elite-9",
-        "BlackVue Elite 9",
+        "blackvue-dr970x-lte-plus",
+        "BlackVue DR970X LTE Plus",
         Path("/Volumes/BLACKVUE"),
         "blackvue",
         (
             "BlackVue/Config/version.bin",
             "BlackVue/Config/micom_version.bin",
-            "BlackVue/Config/smart_gsensor_version.bin",
         ),
     ),
     CardSpec(

@@ -52,8 +52,20 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
 | MF (main/front) | driving | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~11.0 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The mounted archive includes real driving clips plus a lot of b-roll. Only the camera-looking `YYYYMMDD_HHMMSS_MODECHANNEL` files were used for this row.
+
+## BlackVue DR970X LTE Plus
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| NF (front) | driving | HEVC | 3840x2160 | 30 | ~60.9-61.0 Mbps | MP4 | `ffprobe` |
+| NR (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9-11.0 Mbps | MP4 | `ffprobe` |
+| PF (front) | parking | HEVC | 3840x2160 | 30 | ~60.9-62.1 Mbps | MP4 | `ffprobe` |
+| PR (rear) | parking | HEVC | 1920x1080 | 30 | ~11.0-11.6 Mbps | MP4 | `ffprobe` |
+
+**Mounted-card update 2026-06-08:** Firmware 2.007 / rev1584 sample at `/Volumes/BLACKVUE` kept the same single `BlackVue/Record` folder structure and `YYYYMMDD_HHMMSS_MODECHANNEL.mp4` names. `version.bin` and `micom_version.bin` identify `DR970X LTE Plus`; detection should match that model string rather than the firmware version so 1.x and 2.x firmware cards both work. `ffprobe` reports HEVC Main, 8-bit `yuv420p`, and no HDR color-transfer/primaries tags, so the firmware HDR change appears to be in-camera processing rather than HDR10-style file metadata in these samples.
 
 ## BlackVue DR750X-2CH Plus
 
