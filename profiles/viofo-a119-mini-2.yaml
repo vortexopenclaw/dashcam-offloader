@@ -85,9 +85,15 @@ channels:
   F: front
 resolutions:
   F: 2560x1440
+  fps_default: 30
+  fps_available:
+    - 30
+    - 60
   validation: real_card_sampled
   notes: >
-    Default per manual and confirmed on real card. Additional options per manual:
+    2560x1440 default per manual and confirmed on real card. Prefer 30 fps as
+    the normal/default profile baseline while preserving 60 fps as an available
+    user-selectable mode. Additional options per manual:
     2592x1944, 2560x1600, 2560x1440 (default), 2560x1440@60fps, 2560x1080@60fps,
     2560x1080, 2304x1296, 1920x1080@60fps, 1920x1080. Users can change resolution.
 exclude:

@@ -73,6 +73,16 @@ modes:
 channels:
   F: front
   R: rear
+resolutions:
+  F: 2560x1440
+  R: 2560x1440
+  fps_default: 30
+  codec: H.264
+  validation: official_reference
+  notes: >
+    Official Elite 8 specs list both front and rear channels as 2K QHD
+    2560x1440 at 30 fps. The sampled 2CH card confirmed front/rear pairing,
+    but bitrate still needs a measured ffprobe pass.
 grouping:
   keys:
     - date
