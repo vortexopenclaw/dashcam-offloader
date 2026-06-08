@@ -65,15 +65,9 @@ Do not copy or publish raw config dumps. Read only small known files, extract sa
 ### Escort MAXcam 360c
 
 - Mounted card: `/Volumes/NO NAME`
-- Config-like file: `MasterVersionInfo_SW_v1.13_HW_v1.01.bin`
-- Safe strings observed:
-  - `MasterVersion:1.13`
-  - `Main:R22`
-  - `Antenna:R07`
-  - `DSP:2.11`
-  - `BLE:R07`
-  - `HW_VERSION:1.01`
-- Use: safe firmware/hardware version evidence only. Strong model evidence still comes from `Normal/MAXcam360c` and `Event/MAXcam360c` folder names.
+- No default config/settings file has been confirmed for safe model or firmware extraction.
+- `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file. It is not expected on a normal MAXcam card and must not be used for make/model detection.
+- Use: strong model evidence comes from `Normal/MAXcam360c` and `Event/MAXcam360c` folder names plus `YYYYMMDD_NNNN_VID.MOV` / `YYYYMMDD_NNNN_SOS.MOV` clip patterns.
 - Do not read or publish `DATA/serial_num.txt`. Treat `DATA/gps_userdb.bin` as a private radar GPS lockout database, not a footage/config source.
 
 ## Extraction Pattern

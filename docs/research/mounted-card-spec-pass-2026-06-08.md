@@ -18,7 +18,7 @@ The measurement pass used `scripts/analyze-mounted-card-specs.py`, which samples
 - Thinkware U3000 Pro current card: 2237 parsed MP4 files. Driving clips are 4K30 front and 2K30 rear. Parking/event clips on this card are 15 fps. `SETTING` files expose safe model/version strings and timezone.
 - A329S current card: 2927 parsed MP4 files. 3CH footage is 4K front plus 2K interior and 2K rear. Parking clips keep those resolutions but use lower bitrates. `RO` contains both normal and parking suffix families.
 - BlackVue Elite 9 current card: 3050 parsed MP4 files. 2CH footage is HEVC 4K30 front and 2K30 rear across driving, parking, and impact/event modes. Safe model/firmware strings appear in `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin`.
-- Escort MAXcam 360c current card: 66 parsed MOV files. Single-channel driving and locked/event clips are H.264 2560x1440 30 fps at about 28.5 Mbps. `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` exposes safe firmware/hardware strings.
+- Escort MAXcam 360c current card: 66 parsed MOV files. Single-channel driving and locked/event clips are H.264 2560x1440 30 fps at about 28.5 Mbps. `Normal/MAXcam360c` and `Event/MAXcam360c` are the reliable structural model signals.
 
 ## Config Handling
 
@@ -29,7 +29,7 @@ Keep using config files for safe model/settings evidence, not as footage:
 - Thinkware `SETTING/default.cfg`, `SETTING/setup.cfg`, and `SETTING/lang/ver.dat` can be string-scanned for model, firmware/config version, language pack, and timezone.
 - Thinkware `device.uid` must remain excluded from model detection and documentation.
 - BlackVue Elite 9 `BlackVue/Config/version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` can be string-scanned for safe model and firmware evidence. Keep `config.ini`, Bluetooth/network files, product serials, and MP4 GPS/private fields excluded or field-redacted.
-- Escort MAXcam 360c `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` can be string-scanned for safe version evidence. Do not read or publish `DATA/serial_num.txt`; `DATA/gps_userdb.bin` is a radar GPS lockout database and should stay excluded from normal footage handling.
+- Escort MAXcam 360c has no confirmed default config/settings file for safe model extraction. `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file, is not expected by default, and must not be used for make/model detection. Do not read or publish `DATA/serial_num.txt`; `DATA/gps_userdb.bin` is a radar GPS lockout database and should stay excluded from normal footage handling.
 
 ## Repeat Command
 

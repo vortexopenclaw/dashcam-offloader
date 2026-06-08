@@ -435,7 +435,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | F (front) | driving | H.264 | 2560x1440 | 30 | ~28.6 Mbps | MOV | `ffprobe` |
 | F (front) | locked / event | H.264 | 2560x1440 | 30 | ~28.4 Mbps | MOV | `ffprobe` |
 
-**Notes:** Mounted `/Volumes/NO NAME` card parsed 65 normal `VID` clips and 1 event `SOS` clip under model-specific `MAXcam360c` folders. Safe version strings in `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` confirm firmware/hardware version evidence. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` should stay excluded from public/default handling.
+**Notes:** Mounted `/Volumes/NO NAME` card parsed 65 normal `VID` clips and 1 event `SOS` clip under model-specific `MAXcam360c` folders. Those folders and clip suffixes are the reliable model signals. `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file and is not expected by default. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` should stay excluded from public/default handling.
 
 ## Cobra Road Scout
 

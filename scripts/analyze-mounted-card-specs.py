@@ -94,7 +94,7 @@ DEFAULT_CARDS = [
         "Escort MAXcam 360c",
         Path("/Volumes/NO NAME"),
         "escort_maxcam",
-        ("MasterVersionInfo_SW_v1.13_HW_v1.01.bin",),
+        (),
     ),
 ]
 

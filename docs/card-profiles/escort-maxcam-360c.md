@@ -80,9 +80,9 @@ Mounted `/Volumes/NO NAME` pass on 2026-06-08 measured:
 - Event clip `Event/MAXcam360c/20250127_0012_SOS.MOV`: H.264 2560x1440 30 fps, about 28.4 Mbps, 60.1 seconds.
 - Parsed files: 65 normal driving clips and 1 locked/event clip.
 
-Safe version file:
+Firmware update file note:
 
-- `MasterVersionInfo_SW_v1.13_HW_v1.01.bin`: `MasterVersion:1.13`, `Main:R22`, `Antenna:R07`, `DSP:2.11`, `BLE:R07`, `HW_VERSION:1.01`.
+- `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file. It is not expected on a normal MAXcam card and must not be used for make/model detection.
 
 ---
 
@@ -97,4 +97,4 @@ Safe version file:
 
 ## Detection Notes
 
-Primary signal: `Normal/MAXcam360c/` folder. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic — do not use. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` provide supporting evidence.
+Primary signal: `Normal/MAXcam360c/` folder, with `Event/MAXcam360c/` as supporting structural evidence when present. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic — do not use. `DATA/serial_num.txt` is private and must not be used for detection or public docs. `DATA/gps_userdb.bin` is a radar GPS lockout database and should be excluded from normal footage handling.
