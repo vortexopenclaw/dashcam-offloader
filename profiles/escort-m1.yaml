@@ -1,0 +1,114 @@
+id: escort-m1
+manufacturer: Escort
+model: M1
+slug: escort-m1
+channels: 1
+source_notes:
+  - docs/card-profiles/escort-m1.md
+  - docs/research/escort-m1.md
+detection:
+  high_confidence:
+    - method: folder
+      path: Escort_M1
+      notes: >
+        The camera stores all footage under a root subdirectory named exactly
+        "Escort_M1". This name is specific enough to serve as a strong identifier
+        on its own. No other profiled camera uses this structure.
+    - method: volume_label
+      value: 'ESCORT M1'
+      notes: >
+        Volume label set by the camera on format. Strong secondary signal when
+        combined with the Escort_M1 subfolder.
+  supporting:
+    - folder: Escort_M1/MOVIE
+    - folder: Escort_M1/LockedVideo
+    - method: filename_pattern
+      pattern: '^(\d{4})_(\d{4})_(\d{6})_(\d+)\.MOV$'
+      notes: >
+        Same YYYY_MMDD_HHMMSS_SEQ date/time structure as VIOFO cameras, but
+        .MOV container (not .MP4), no channel suffix (1CH), and a shorter
+        zero-padded sequence number (3 digits observed). Combination of .MOV
+        extension and no channel letter distinguishes from all VIOFO profiles.
+  negative:
+    - pattern: '_(F|I|R|T|PF|PI|PR)\.(MP4|MOV)$'
+      notes: >
+        Presence of a channel suffix (F, I, R, T etc.) rules out Escort M1 —
+        it is a single-channel camera with no channel token in filenames.
+folders:
+  - path: Escort_M1/MOVIE
+    mode: continuous
+    validation: real_card_sampled
+    notes: Normal loop-recorded driving clips.
+  - path: Escort_M1/LockedVideo
+    mode: locked
+    validation: real_card_sampled
+    notes: >
+      G-sensor triggered and manually locked clips (Power/Emergency button).
+      Adjacent clips are also locked if the impact occurs within 30 seconds of
+      a file boundary. Clips here are not overwritten by loop recording.
+filename_patterns:
+  normal:
+    regex: '^(\d{4})_(\d{4})_(\d{6})_(\d+)\.MOV$'
+    example: 'YYYY_MMDD_HHMMSS_SEQ.MOV'
+    applies_to:
+      - Escort_M1/MOVIE
+      - Escort_M1/LockedVideo
+    case_sensitive: false
+    groups:
+      year: 1
+      month_day: 2
+      time: 3
+      sequence: 4
+    timestamp_format: YYYY_MMDD_HHMMSS
+    notes: >
+      Both normal and locked clips use the same filename pattern. Mode is
+      determined solely by folder. Sequence number is a global monotonic
+      counter confirmed to span both MOVIE and LockedVideo folders.
+channels:
+  front: front
+video:
+  extension: '.MOV'
+  extension_case: uppercase
+  codec: h264
+  resolution_default: '1920x1080'
+  fps_default: 30
+  resolutions_available:
+    - '1920x1080@30fps'
+    - '1280x720@60fps'
+    - '1280x720@30fps'
+  clip_duration_minutes_options: [1, 3, 5]
+  notes: >
+    Resolution and clip length are configurable via the Escort M1 App.
+    Default is 1080P 30fps. Codec not confirmed from ffprobe — H.264 assumed
+    based on hardware platform (Novatek 96658) and era.
+sequence:
+  scope: global
+  padding: 3
+  notes: >
+    Global monotonic counter shared across MOVIE and LockedVideo. Observed
+    as zero-padded 3 digits (e.g. 007, 022). May grow beyond 3 digits
+    at high sequence numbers — treat as variable-length.
+osd:
+  contains_model_name: unknown
+  notes: >
+    Manual mentions a "Video Stamp" setting (date/time overlay, on by default).
+    Three date formats available: YYYY/MM/DD, MM/DD/YYYY, DD/MM/YYYY.
+    Whether model name is also burned in is not confirmed.
+parking_mode:
+  supported: false
+  notes: No parking mode. Camera records only when powered by vehicle ignition.
+firmware_update:
+  filename: FW96658A.bin
+  location: root
+  notes: >
+    Firmware update file placed at the card root. Deleted automatically after
+    update completes. Presence at root is a supporting (not definitive) signal
+    if observed during a scan.
+validation:
+  card_sampled: true
+  footage_sampled: true
+  osd_confirmed: false
+  notes: >
+    Real card sampled. Folder structure, filename pattern, and sequence behavior
+    confirmed. Codec and resolution not confirmed from ffprobe (bash unavailable
+    during scan). OSD content not confirmed.
