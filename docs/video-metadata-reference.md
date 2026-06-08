@@ -1,335 +1,456 @@
 # Video Metadata Reference
 
-Running log of codec, resolution, frame rate, and bitrate data across all profiled cameras. Useful for estimating storage requirements, planning transcoding pipelines, and reasoning about file size expectations.
+Running log of codec, resolution, frame rate, and bitrate data across the profiled cameras we have actual sample footage for. Measurements below come from `ffprobe` runs on mounted archive clips under `/Volumes/Dashcams/` unless noted otherwise.
+
+Bitrates vary with scene complexity, firmware version, HDR mode, and camera settings. Values here are representative baselines from the sampled clips.
+
+Validation rule: use files copied straight from the dashcam whenever possible, such as `Driving Clips`, `Parking Clips`, `Sample clips`, or raw card folders. Exclude produced YouTube exports, review videos, b-roll of the camera, app screen recordings, IR camera clips, website screenshots, thumbnails, and phone/camera footage.
 
 ## Source Key
 
 | Source | Meaning |
-|--------|---------|
+|---|---|
 | `ffprobe` | Measured directly from real footage |
-| `file_size_est` | Estimated from observed file sizes (±20%) |
 | `mfr_spec` | From manufacturer product page or manual |
-| `sidecar_xml` | Parsed from a per-clip or per-card XML sidecar file |
-| `assumed` | Inferred from hardware platform or era; not verified |
-
-Bitrates vary with scene complexity, firmware version, HDR mode, and camera settings. Values here are baselines for default settings unless noted.
-
----
-
-## VIOFO A229 Pro
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 2592×1944 | 30 | — | MP4 | `mfr_spec` |
-| R (rear) | driving | H.265 | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| I (interior) | driving | H.265 | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-| PF/PR/PI | parking | H.265 | varies | — | — | MP4 | `assumed` |
-
-**Notes:** Resolutions from VIOFO product page. Bitrates not measured. HDR mode available on front channel — bitrate likely higher when enabled. Parking mode clips have three sub-modes (event detection, time-lapse, low bitrate) with different bitrate profiles; none measured.
-
----
-
-## VIOFO A229 Plus
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| R (rear) | driving | H.265 | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| I (interior) | driving | H.265 | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-
-**Notes:** Bitrates not measured. Card was freshly formatted — no long-session data available for size estimation.
-
----
-
-## VIOFO A229 Ultra
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 3840×2160 | 30 | — | MP4 | `ffprobe` (footage) |
-| R (rear) | driving | H.265 | 3840×2160 | 30 | — | MP4 | `ffprobe` (footage) |
-| I (interior) | driving | H.265 | 1920×1080 | 30 | — | MP4 | `ffprobe` (footage) |
-
-**Notes:** Resolutions confirmed from private archive sample (ffprobe). Bitrates not logged. Front and rear are both 4K UHD — distinguishing feature from A229 Pro (4K front, 2K rear).
-
----
-
-## VIOFO A329S
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 2592×1944 | 30 | — | MP4 | `mfr_spec` |
-| R (rear) | driving | H.265 | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| I (interior) | driving | H.265 | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-
-**Notes:** Same platform as A229 Pro. Codec/resolution assumed to match; not independently confirmed from ffprobe.
-
----
-
-## VIOFO A229 Pro / A329S Parking Mode Sub-types
-
-Parking clips for the A229/A329 family go to `DCIM/Movie/Parking/` and share the same filename pattern as driving clips (`PF`/`PR`/`PI` channel codes). Three sub-modes exist but are not distinguishable by folder or filename alone:
-
-| Mode | Description | Expected Bitrate Relative to Driving |
-|------|-------------|---------------------------------------|
-| Event detection | Full-quality clip triggered by motion | ~same as driving |
-| Time-lapse | Reduced-fps timelapse | much lower |
-| Low bitrate | Continuous but reduced quality | lower |
-
-None of these sub-mode bitrates have been measured. Differentiation may require probing fps or video stream bitrate.
-
----
-
-## VIOFO A139 Pro
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | — | — | — | MP4 | `assumed` |
-| R (rear) | driving | H.265 | — | — | — | MP4 | `assumed` |
-| I (interior) | driving | **H.265** | 1920×1080 | — | — | MP4 | `ffprobe` (footage) |
-
-**Notes:** Mixed codec confirmed — interior channel uses HEVC. Front and rear codec/resolution not individually confirmed from ffprobe; H.265 assumed. This camera has the unusual property of using a different codec for the interior vs. other channels, which is worth checking when building transcoding pipelines.
-
----
-
-## VIOFO A119M Pro
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.264 | 1920×1080 | 30 | — | MP4 | `assumed` |
-
-**Notes:** Single-channel 1080P. Codec assumed H.264 (older hardware, pre-H.265 mainstream). Not confirmed from ffprobe.
-
----
-
-## VIOFO A119 Mini 2
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-
-**Notes:** Single-channel 2K. Resolution from VIOFO product page. Bitrate not measured.
-
----
-
-## 70mai M310
-
-| Channel | Mode | Codec | Resolution | FPS | Duration | Container | Source |
-|---------|------|-------|------------|-----|----------|-----------|--------|
-| F (front) | driving | H.265 | 2304×1296 | 30 | 60s | mp4 | `ffprobe` |
-| F (front) | parking | H.265 | — | — | — | mp4 | `assumed` |
-
-**Notes:** Codec, resolution, and fps confirmed from ffprobe (private archive sample + card scan). Segment duration is 60 seconds (not 1/3/5 min like most cameras). Bitrate not logged. Parking mode sub-types (motion detection in `Parking/`, time-lapse in `Lapse/`) likely have different bitrates — not measured. Extension is lowercase `.mp4`.
-
----
-
-## Cansonic UltraDash Z3+ Standard Edition
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| L (wide front) | driving | — | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| R (telephoto front) | driving | — | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-| B (rear, optional) | driving | — | 2560×1440 | 30 | — | MP4 | `mfr_spec` |
-
-**Notes:** All channels listed as 2K QHD on product page. Codec not confirmed. Bitrates not measured.
-
----
-
-## Vantrue N4 Pro S
-
-| Channel | Mode | Codec | Resolution | FPS | Approx File Size | Container | Source |
-|---------|------|-------|------------|-----|-----------------|-----------|--------|
-| A (front) | driving | — | 3840×2160 | 30 | — | MP4 | `mfr_spec` |
-| B (interior) | driving | — | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-| C (rear) | driving | — | 2560×1440 | — | — | MP4 | `mfr_spec` |
-
-**Notes:** Profile confirms A has the highest bitrate, B and C are medium. Resolutions from Vantrue product page. Codec not confirmed from ffprobe. Actual bitrates not measured.
-
----
-
-## Vantrue N4 S
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| A (front) | driving | — | 2560×1440 | — | — | MP4 | `mfr_spec` |
-| B (interior) | driving | — | 2560×1440 | — | — | MP4 | `mfr_spec` |
-| C (rear) | driving | — | 2560×1440 | — | — | MP4 | `mfr_spec` |
-
-**Notes:** Uniform 2.5K across all three channels is the distinguishing spec vs. N4 Pro S. Codec not confirmed. Bitrates not measured.
-
----
-
-## Vantrue E1 Pro
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | — | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-| F (front) | parking (motion) | — | — | — | — | MP4 | `assumed` |
-
-**Notes:** Single-channel. Codec and bitrate not confirmed. Parking mode confirmed present from card scan (separate folders for motion-detection and event clips).
-
----
-
-## BlackVue DR970X Plus
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate (est) | Obs. File Size | Clip Duration | Container | Source |
-|---------|------|-------|------------|-----|---------------|----------------|---------------|-----------|--------|
-| F (front) | driving | — | 3840×2160 | — | ~20–21 Mbps | ~464 MB | — | mp4 | `file_size_est` |
-| R (rear) | driving | — | 1920×1080 | — | ~3–4 Mbps | ~83 MB | — | mp4 | `file_size_est` |
-
-**Notes:** File sizes observed directly from real card (profile YAML). Clip duration not confirmed; estimates assume ~3 min clips (180s). Bitrate estimates: F ≈ 464MB × 8 / 180s ≈ 20.6 Mbps; R ≈ 83MB × 8 / 180s ≈ 3.7 Mbps. Front:rear size ratio is ~5.6×. Codec not confirmed (H.264 or H.265 unknown). Resolution from product page — not ffprobe confirmed.
+| `assumed` | Inferred from hardware platform or era; not verified by sample footage |
 
 ---
 
 ## BlackVue Elite 9
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | — | — | — | — | mp4 | `assumed` |
-| R (rear) | driving | — | — | — | — | mp4 | `assumed` |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 2560x1440 | 30 | ~25.0 Mbps | MP4 | `ffprobe` |
+| PF / IF | parking | HEVC | 3840x2160 | 30 | ~56-60 Mbps | MP4 | `ffprobe` |
+| PR | parking | HEVC | 2560x1440 | 30 | ~25.0 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Real card sampled but no video metadata logged. All values need ffprobe measurement.
-
----
+**Notes:** Mounted sample set showed 61-second clips for the main driving and parking files. The front channel is 4K UHD and the rear is 1440p.
 
 ## BlackVue Elite 8
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.264 (AVC) | 2560×1440 | 30 | — | mp4 | `mfr_spec` |
-| R (rear) | driving | H.264 (AVC) | 2560×1440 | 30 | — | mp4 | `mfr_spec` |
+|---|---|---|---|---|---|---|---|
+| Sample clips | driving | H.264 | 3840x2160 | 30 | ~56 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Codec H.264 (AVC) and resolution 2K QHD (2560×1440) @ 30fps confirmed from official BlackVue Elite 8 product specifications page. Both channels record at the same resolution with Dual HDR — distinguishing feature from Elite 9 (4K front + 2K rear). Bitrate not measured; needs ffprobe confirmation.
+**Notes:** The mounted archive exposed only a small `C####` sample set in this pass, so the clip mix is not yet a full channel map. Treat this as a measured sample baseline, not a complete profile validation.
 
----
+## BlackVue DR900S-2CH
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~14.7 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~10.5 Mbps | MP4 | `ffprobe` |
+| F / R | parking | H.264 | 1920x1080 | 30 | ~10.5-12.6 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The archive contains a mix of driving, parking, and sample clips. Representative clips are 60 to 180 seconds long, with 1080p H.264 as the dominant format.
+
+## BlackVue DR970X-2CH Plus
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| MF (main/front) | driving | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The mounted archive includes real driving clips plus a lot of b-roll. Only the camera-looking `YYYYMMDD_HHMMSS_MODECHANNEL` files were used for this row.
+
+## BlackVue DR750X-2CH Plus
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| NF / MF (front) | driving | H.264 | 1920x1080 | 30 / 60 | ~25.1 Mbps at 60 fps | MP4 | `ffprobe` |
+| NR (rear) | driving | H.264 | 1920x1080 | 30 | ~10.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** This archive has comparison clips mixed with DR750S/DR750 LTE footage, so model labels in file descriptions matter. The measured DR750X Plus front sample was 1080p60.
+
+## BlackVue DR750S-2CH
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~12.6 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~10.5 Mbps | MP4 | `ffprobe` |
+| F / R | parking | H.264 | 1920x1080 | 30 | ~10.5-12.6 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Main clip family uses `NF`/`NR` naming. Parking files also exist with `PF`/`PR`.
+
+## BlackVue DR650S-2CH
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~10.5 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1280x720 | 30 | ~5.2 Mbps | MP4 | `ffprobe` |
+| F / R | parking / event | H.264 | 1920x1080 / 1280x720 | 30 | ~5.2-10.5 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The rear stream is 720p in the sampled archive. Some comparison and screen-capture files also exist in the folder, but they are not dashcam footage.
 
 ## Thinkware U3000 Pro
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | — | — | — | — | — | `assumed` |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 2560x1440 | 30 | ~10.0 Mbps | MP4 | `ffprobe` |
+| F | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0 Mbps | MP4 | `ffprobe` |
+| R | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0-6.4 Mbps | MP4 | `ffprobe` |
+| F | parking (event) | HEVC | 3840x2160 | 30 | ~12.0 Mbps | MP4 | `ffprobe` |
+| F | manual | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Real card sampled but no video metadata logged. High-end model — likely 4K front. All values need ffprobe measurement.
-
----
+**Notes:** The sampled card contains REC, MOT, MAN, and PAK clips. Parking event clips are short and keep 4K resolution.
 
 ## Thinkware U3000
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | — | — | — | — | — | `assumed` |
-| R (rear) | driving | — | — | — | — | — | `assumed` |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 2560x1440 | 30 | ~10.0 Mbps | MP4 | `ffprobe` |
+| F | parking (motion) | HEVC | 2560x1440 | 30 | ~12.0 Mbps | MP4 | `ffprobe` |
+| R | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0-6.4 Mbps | MP4 | `ffprobe` |
+| F | parking (manual) | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
 
-**Notes:** 2CH real card sampled. No video metadata logged. All values need ffprobe measurement.
+**Notes:** The mounted archive shows REC, MOT, MAN, and PAK clips. Front camera clips are 4K in the sampled set.
 
----
-
-## Vueroid S1 4K Infinite
+## Thinkware U1000 Plus
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.265 | 3840×2160 | 30 | — | MP4 | `mfr_spec` |
-| R (rear) | driving | H.265 | 1920×1080 | 30 | — | MP4 | `mfr_spec` |
-| B (rear 2) | driving | H.265 | — | — | — | MP4 | `assumed` |
-| PF | parking (motion) | H.265 | — | 30 | — | MP4 | `ffprobe` (inferred from fps probe) |
-| PF | parking (timelapse) | H.265 | — | 5 | — | MP4 | `ffprobe` (inferred from fps probe) |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / manual | HEVC | 3840x2160 | 30 | ~24.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving / manual | HEVC | 1920x1080 | 30 | ~6.0 Mbps | MP4 | `ffprobe` |
+| F (front) | parking motion / event | HEVC | 3840x2160 | 30 | ~10.0-12.1 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking motion | HEVC | 1920x1080 | 30 | ~3.0 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Parking mode detection confirmed via frame rate probe: 30fps = motion detection, 5fps = timelapse. Both modes use same folder and filename prefix. 4K front spec from product page. Actual bitrates not measured.
+**Notes:** NAS sample patterns include `REC_YYYYMMDD_HHMMSS_F/R`, `MAN_YYYYMMDD_HHMMSS_F/R`, `MOT_YYYYMMDD_HHMMSS_F/R`, and `PAK_YYYYMMDD_HHMMSS_F`.
 
----
+## Thinkware Q800 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~15.9 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The sampled archive contains many produced review/b-roll files. This row uses a camera-looking `REC_YYYY_MM_DD_HH_MM_SS_F` driving clip.
+
+## Thinkware F800 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / manual | H.264 | 1920x1080 | 30 | ~10.0 Mbps | MP4 | `ffprobe` |
+| F / R | parking event | H.264 | 1920x1080 | ~10.7 | ~3.5 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Sampled files use Thinkware-style `REC_`, `MAN_`, and `PAK_` prefixes.
+
+## Thinkware FA200
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | parking timelapse | H.264 | 1920x1080 | ~10 | ~3.3 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking motion | H.264 | 1280x720 | ~15 | ~3.0 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The NAS sample shows `TIM_` and `MOT_` parking families, including front/rear pairs.
+
+## VIOFO A229 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.6 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~24.0 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 | 3840x2160 | 30 | ~4.1 Mbps | MP4 | `ffprobe` |
+| PI | parking | H.264 | 1920x1080 | 30 | ~3.9 Mbps | MP4 | `ffprobe` |
+| PR | parking | H.264 | 2560x1440 | 30 | ~4.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet.
+
+## VIOFO A229 Plus
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~28.7 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~23.8 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.6 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Fresh-format sample set. No parking clips were included in this mounted pass.
+
+## VIOFO A229 Ultra
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 3840x2160 | 30 | ~34.4 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.6 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 | 2560x1440 | 30 | ~12.3 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Front and rear are both 4K in this sample set, which is the key distinction from A229 Pro.
+
+## VIOFO A329S
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~53-66 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~23.8 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.6 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 | 3840x2160 | 30 | ~53.3 Mbps | MP4 | `ffprobe` |
+| PI | parking | H.264 | 1920x1080 | 30 | ~8.2 Mbps | MP4 | `ffprobe` |
+| PR | parking | H.264 | 2560x1440 | 30 | ~23.8 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The mounted archive shows both driving and parking clips with the expected front/rear/interior split. Parking clips can still preserve full 4K on the front channel.
+
+## VIOFO A329T
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~65.5 Mbps | MP4 | `ffprobe` |
+| T (telephoto) | driving | H.264 | 2560x1440 | 30 | ~27.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~27.0 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 | 3840x2160 | 30 | ~4.2 Mbps | MP4 | `ffprobe` |
+| PT | parking | H.264 | 2560x1440 | 30 | ~4.1-4.2 Mbps | MP4 | `ffprobe` |
+| PR | parking | H.264 | 2560x1440 | 30 | ~4.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The telephoto channel is explicitly visible in the sampled filenames. Parking clips stay at very low bitrates compared with driving footage.
+
+## VIOFO A139 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~53.3 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~16.4 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | HEVC | 1920x1080 | 30 | ~13.5-16.4 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 / HEVC | 2560x1440 | 30 | ~9.9-14.8 Mbps | MP4 | `ffprobe` |
+| PR | parking | HEVC | 1920x1080 | 30 | ~6.6-8.2 Mbps | MP4 | `ffprobe` |
+| PI | parking | H.264 / HEVC | 1920x1080 | 30 | ~6.6-8.2 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The mounted archive shows mixed codec behavior across parking clips, which is worth keeping in mind when building transcode rules.
+
+## VIOFO A139
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~27.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~16.4 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~16.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Driving clips use the `YYYY_MMDD_HHMMSS_F/I/R` filename family.
+
+## VIOFO T130
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~27.7 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~9.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~12.3-12.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** NAS sample patterns use `YYYY_MMDD_HHMMSS_F/I/R`.
+
+## VIOFO A129 Duo
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~16.4 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~16.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Sampled camera-looking files use `YYYY_MMDD_HHMMSS_SEQF/R`. The folder also contains unrelated b-roll clips.
+
+## VIOFO A129 Plus Duo
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~11.6-29.6 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~18.4 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 / HEVC | 2560x1440 | 30 | ~8.4-9.8 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The NAS sample shows both compact `YYYYMMDDHHMMSS_SEQF/R/PF` and VIOFO-style `YYYY_MMDD_HHMMSS_PF` filename variants.
+
+## VIOFO A129 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~51.2 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~13.9 Mbps | MP4 | `ffprobe` |
+| PF | parking | H.264 / HEVC | 3840x2160 | 30 | ~8.4-26.6 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Sampled files include both no-sequence and sequence-bearing parking filename variants.
+
+## VIOFO A119 v3
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~25.8 Mbps | MP4 | `ffprobe` |
+| F (front) | parking | H.264 | 2560x1440 | 30 | ~8.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Parking samples use the same timestamp/sequence family with a `P` suffix.
+
+## VIOFO A119 Mini
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 60 | ~26.6 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The sampled A119 Mini driving clip is 1440p60, distinct from the A119 Mini 2 rows below.
+
+## VIOFO A119 Mini 2
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 / 60 | ~26.6-28.8 Mbps | MP4 | `ffprobe` |
+| F (front) | parking timelapse | H.264 | 2560x1440 | 30 | ~30.3 Mbps | MP4 | `ffprobe` |
+| F (front) | parking motion | H.264 | 2560x1440 | 30 | ~3.8 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Direct clips from `Driving Footage` and `Parking Footage` confirm the camera stays at 1440p. Earlier 1080p/HEVC samples were excluded because they were not direct A119 Mini 2 dashcam recordings.
+
+## VIOFO A119M Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.9 Mbps | MP4 | `ffprobe` |
+| F (front) | parking | H.264 | 2560x1440 | 30 | ~3.8-8.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The sampled archive includes both 4K driving and 1440p parking clips.
+
+## 70mai M310
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 2304x1296 | 30 | ~12.0 Mbps | mp4 | `ffprobe` |
+| F (front) | parking / lapse | HEVC | 2304x1296 | 30 | ~12.0 Mbps | mp4 | `ffprobe` |
+
+**Notes:** The mounted archive also contains unrelated 4K b-roll and screen captures, but the actual dashcam footage is 1296p.
+
+## Vantrue N4 Pro S
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| A (front) | driving | HEVC | 3840x2160 | 30 | ~31.9 Mbps | MP4 | `ffprobe` |
+| B (interior) | driving | HEVC | 1920x1080 | 30 | ~9.8 Mbps | MP4 | `ffprobe` |
+| C (rear) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+| A | parking | HEVC | 3840x2160 | 30 | ~31.9 Mbps | MP4 | `ffprobe` |
+| B | parking | HEVC | 1920x1080 | 30 | ~9.8 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The sample set clearly separates A/B/C channels and keeps the front channel at the highest bitrate.
+
+## Vantrue N4 S
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| A (front) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+| B (interior) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+| C (rear) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Uniform 2.5K across all channels is the defining difference from the N4 Pro S sample.
+
+## Vantrue E1 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / event | H.264 | 3840x2160 | 30 | ~31.9 Mbps | MP4 | `ffprobe` |
+| F (front) | parking timelapse | H.264 | 3840x2160 | 30 | ~31.9 Mbps | MP4 | `ffprobe` |
+| F (front) | parking motion | H.264 | 1920x1080 | 15 | ~4.9-5.0 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Direct camera clips from `Driving Clips` and `Parking Clips` confirm this is a 4K camera. `N` and `E` driving/event clips are 4K30; `T` parking timelapse clips are also 4K30; `P` motion-detection parking clips drop to 1080p15.
+
+## Vantrue N4
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| A (front) | driving / event | HEVC | 2560x1440 | 30 | ~10.6-15.6 Mbps | MP4 | `ffprobe` |
+| B (interior) | driving / event | HEVC | 1920x1080 | 30 | ~3.2-8.1 Mbps | MP4 | `ffprobe` |
+| C (rear) | event | HEVC | 1920x1080 | 30 | ~3.7-11.7 Mbps | MP4 | `ffprobe` |
+| A / B | parking | HEVC | 1280x720 | 30 | ~0.7-1.3 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Sampled filenames use `YYYY_MM_DD_HHMMSS_MODE_CHANNEL`, with observed `N`, `E`, and `P` mode tokens.
+
+## Vantrue N5
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| A (front) | driving | HEVC | 2560x1440 / 2592x1944 | 30 | ~14.3-16.0 Mbps | MP4 | `ffprobe` |
+| B / C / D | driving | HEVC | 1920x1080 | 30 | ~9.8 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Sampled files use `YYYYMMDD_HHMMSS_SEQ_N_A/B/C/D`, matching Vantrue's four-channel naming style.
+
+## Vantrue E360
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| A (360/interior/front composite) | driving / event | H.264 | 5184x1944 | 30 | ~28.7 Mbps | MP4 | `ffprobe` |
+| C | event | H.264 | 2560x1440 | 30 | ~14.4 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The sampled 360-channel file is an ultrawide 5184x1944 stream.
+
+## 70mai 4K Omni
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / parking | HEVC | 3840x2160 | 30 | ~31.9-60.3 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9 Mbps | MP4 | `ffprobe` |
+| PI / PR | parking | H.264 | 1920x1080 / 2560x1440 | 30 | ~3.9-4.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** NAS samples show both 70mai-style `NO`/`PA` prefixed files and VIOFO-style parking suffix examples in the same model folder, so treat this archive as mixed-source evidence until a card-origin sample is inspected.
 
 ## Escort M1
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.264 | 1920×1080 | 30 | — | MOV | `assumed` |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~11.9 Mbps | MOV | `ffprobe` |
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~16.4 Mbps | MOV | `ffprobe` |
 
-**Notes:** Codec, resolution, and fps not confirmed — ffprobe unavailable during card scan. H.264 1080P 30fps assumed from Novatek NT96658 platform and 2020 era. Manual lists 720P 60fps and 720P 30fps as alternatives.
-
----
+**Notes:** The mounted archive contains several 180-second driving clips. The model appears to stay at 1080p H.264 in the sampled footage.
 
 ## Escort M2
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.264 | 1920×1080 | 30 | — | MP4 | `assumed` |
-| F (front) | photo | — | — | — | — | JPG | — |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~8.2 Mbps | MP4 | `ffprobe` |
+| F (front) | parking | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+| F (front) | event | H.264 | 1920x1080 | 30 | ~8.2 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Codec and resolution not confirmed from ffprobe. H.264 1080P 30fps assumed from platform era and manual description. Video container is `.MP4`. GPS sidecar (`.map`) paired with every clip. Photos stored as JPG in `Photo/`.
-
----
-
-## Escort MAXcam 360c
-
-| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | — | — | — | — | MOV | `assumed` |
-
-**Notes:** Codec and resolution not confirmed. Card sampled but no video metadata logged. Files use `.MOV` container in `Normal/MAXcam360c/`. GPS sidecar (`_gps.bin`) and g-sensor sidecar (`_gsensor.bin`) present after GPS lock. All values need ffprobe measurement.
-
----
-
-## DJI Mini 3 Pro
-
-| Channel | Mode | Codec | Resolution | FPS | Max Bitrate | Container | Source |
-|---------|------|-------|------------|-----|-------------|-----------|--------|
-| F | video (4K ≤30fps) | H.264 or H.265 | 3840×2160 | up to 30 | 150 Mbps | MP4 | `mfr_spec` |
-| F | video (4K ≥48fps) | H.265 required | 3840×2160 | 48 or 60 | 150 Mbps | MP4 | `mfr_spec` |
-| F | video (2.7K) | H.264 or H.265 | 2720×1530 | up to 60 | — | MP4 | `mfr_spec` |
-| F | video (1080P) | H.264 or H.265 | 1920×1080 | up to 60 | — | MP4 | `mfr_spec` |
-| F | photo | — | 48 MP | — | — | JPG / DNG | `mfr_spec` |
-
-**Notes:** H.265 is required at 4K 48fps and 60fps; codec is user-selectable at lower frame rates. Max bitrate 150 Mbps applies to 4K modes. SRT telemetry sidecar (GPS, altitude, ISO, shutter, aperture, focal length, digital zoom) paired with every video clip. Photos are 48 MP JPG; DNG raw also supported per manual but not observed on the sampled card.
-
----
-
-## Sony Alpha A7 III (ILCE-7M3)
-
-| Channel | Mode | Codec | Resolution | FPS | Audio | Container | Source |
-|---------|------|-------|------------|-----|-------|-----------|--------|
-| F (video) | video | H.264 (AVC High@L5.1) | 3840×2160 | 29.97 | LPCM16, 2ch | MP4 (M4ROOT) | `sidecar_xml` |
-| — | photo | — | 24.2 MP | — | — | ARW | `mfr_spec` |
-
-**Notes:** Video codec, resolution, fps, and audio confirmed from `PRIVATE/M4ROOT/MEDIAPRO.XML` (`videoType="AVC_3840_2160_HP@L51"`, `fps="29.97p"`) and per-clip `C####M01.XML` sidecar (`videoCodec="AVC_3840_2160_HP@L51"`, `captureFps="29.97p"`). This is the first camera in the database where codec and resolution are confirmed from a metadata sidecar rather than ffprobe. AVC_3840_2160_HP@L51 = H.264 High Profile Level 5.1. Audio is dual-channel LPCM16 (linear PCM). Container is Sony XAVC S / M4ROOT MP4 format. Photos are RAW (.ARW) at 24.2 MP. DCIM/ is absent on video-only cards.
-
----
+**Notes:** The archive contains both `CAM` and `PF` families. Parking clips can be 4K HEVC in this sample set.
 
 ## Cobra Road Scout
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
-|---------|------|-------|------------|-----|---------|-----------|--------|
-| F (front) | driving | H.264 | 1920×1080 | 30 | — | MOV | `assumed` |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / SOS | H.264 | 1920x1080 | 30 | ~14.3-14.4 Mbps | MOV | `ffprobe` |
 
-**Notes:** Codec, resolution, and fps not confirmed — ffprobe unavailable during card scan. H.264 1080P 30fps assumed from 2019 hardware era and "HD" manual description. GPS data embedded in video file but format not confirmed.
+**Notes:** The archive shows consistent 180-second SOS clips at 1080p.
 
----
+## Cansonic UltraDash Z3+ Standard Edition
 
-## Gaps Summary
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| L (wide front) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+| R (telephoto front) | driving | HEVC | 2560x1440 | 30 | ~14.3 Mbps | MP4 | `ffprobe` |
+| B (rear) | driving | H.264 | 2560x1440 | 30 | ~11.9 Mbps | MP4 | `ffprobe` |
 
-Cameras that have real card or footage samples but **no ffprobe-confirmed video metadata at all**:
+**Notes:** The archive also contains 4K `C####` clips, but the primary dashcam footage in this pass is 2K QHD across the named channels.
 
-| Camera | Needs |
-|--------|-------|
-| BlackVue Elite 9 | codec, resolution, fps, bitrate |
-| BlackVue Elite 8 | bitrate |
-| Thinkware U3000 | codec, resolution, fps, bitrate |
-| Thinkware U3000 Pro | codec, resolution, fps, bitrate |
-| Escort M1 | codec, resolution, fps, bitrate |
-| Escort M2 | codec, resolution, fps, bitrate |
-| Escort MAXcam 360c | codec, resolution, fps, bitrate |
-| Cobra Road Scout | codec, resolution, fps, bitrate |
-| Vantrue N4 Pro S | codec, bitrate |
-| Vantrue N4 S | codec, resolution, fps, bitrate |
-| Vantrue E1 Pro | codec, resolution, fps, bitrate |
-| BlackVue DR970X Plus | codec, resolution (front), fps |
-| Vueroid S1 4K Infinite | bitrate (all modes), rear resolution |
-| DJI Mini 3 Pro | bitrate (all modes) |
-| Sony Alpha A7 III | bitrate |
+## Rove R2-4K
 
-Cameras where bitrate is logged nowhere:
-- Every camera in this list — bitrate measurements are the largest universal gap.
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | parking impact | H.264 | 2880x2160 | 24 | ~24.6 Mbps | MP4 | `ffprobe` |
 
-To fill these gaps: mount the camera card, run ffprobe on at least one clip per mode per channel, and record `codec_name`, `width`, `height`, `r_frame_rate`, `bit_rate`, and `size` from the video stream. HDR clips should be measured separately.
+**Notes:** The mounted folder has limited raw dashcam footage and several phone/menu clips. The measured camera-looking parking clip uses `YYYY_MMDD_HHMMSS_SEQ`.
 
-```bash
-ffprobe -v quiet -print_format json -show_streams -show_format <clip.mp4>
-```
+## Rove R2-4K Dual
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~20.0 Mbps | MP4 | `ffprobe` |
+| F (front) | protected / parking event | HEVC | 3840x2160 | 30 | ~20.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** Observed raw filename families include `RECYYYYMMDD-HHMMSS-SEQ` and `PROYYYYMMDD-HHMMSS-SEQ`.
+
+## Rove R2-4K Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~36.9 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The driving clips use `YYYY_MMDD_HHMMSS_SEQ`.
+
+## Not Found In This Pass
+
+No mounted media files were found for these models in this archive pass:
+
+- 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
+- DJI Mini 3 Pro
+- Sony Alpha A7 III
+- Vueroid S1 4K Infinite
+
+Those rows stay on manual/spec-driven data until we get real footage samples.
