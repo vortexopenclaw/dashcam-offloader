@@ -18,21 +18,25 @@ struct ContentView: View {
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
             }
+            .help("Refresh mounted memory cards and dashcam sources")
             Button {
                 viewModel.chooseDestinationFolder()
             } label: {
                 Label("Destination", systemImage: "folder")
             }
+            .help("Choose where copied videos will be saved")
             Button {
                 isFeedbackPresented = true
             } label: {
                 Label("Feedback", systemImage: "bubble.left.and.bubble.right")
             }
+            .help("Submit a bug report, feature request, or app feedback")
             Button {
                 isCardLearningPresented = true
             } label: {
                 Label("Learn Card", systemImage: "graduationcap")
             }
+            .help("Send sanitized card details to help add or improve dashcam support")
         }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
