@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var viewModel: TransferViewModel
+    @State private var isFeedbackPresented = false
+    @State private var isCardLearningPresented = false
 
     var body: some View {
         NavigationSplitView {
@@ -21,6 +23,22 @@ struct ContentView: View {
             } label: {
                 Label("Destination", systemImage: "folder")
             }
+            Button {
+                isFeedbackPresented = true
+            } label: {
+                Label("Feedback", systemImage: "bubble.left.and.bubble.right")
+            }
+            Button {
+                isCardLearningPresented = true
+            } label: {
+                Label("Learn Card", systemImage: "graduationcap")
+            }
+        }
+        .sheet(isPresented: $isFeedbackPresented) {
+            FeedbackSheet(viewModel: viewModel)
+        }
+        .sheet(isPresented: $isCardLearningPresented) {
+            CardLearningSheet(viewModel: viewModel)
         }
     }
 
@@ -47,7 +65,7 @@ struct ContentView: View {
             .font(.caption)
             .padding(.horizontal)
 
-            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Hiding Time Machine, backups, system volumes, and folders without dashcam-like media.")
+            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Only showing locations that look like dashcam footage sources.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal)
@@ -195,6 +213,24 @@ struct ContentView: View {
                     Text("No profiles loaded")
                         .foregroundStyle(.secondary)
                 } else {
+                    if let identified = viewModel.identifiedCamera, !identified.isSupported {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("New Dashcam: \(identified.displayName)", systemImage: "sparkles")
+                                .font(.headline)
+                            Text("This card has exact model metadata, but there is not a supported profile yet. Submit a learning package so it can be added without guessing.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                isCardLearningPresented = true
+                            } label: {
+                                Label("Submit Learning Package", systemImage: "paperplane")
+                            }
+                        }
+                        .padding(10)
+                        .background(Color.orange.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+
                     HStack {
                         Text("Selected Profile")
                             .font(.headline)
@@ -211,7 +247,7 @@ struct ContentView: View {
                             }
                         } label: {
                             HStack {
-                                Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
+                                Text(viewModel.selectedProfile?.displayName ?? viewModel.identifiedCamera.map { "New Dashcam - \($0.displayName)" } ?? "Choose Profile")
                                     .lineLimit(1)
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.caption)
@@ -235,6 +271,26 @@ struct ContentView: View {
                     Text("Source cards are never modified. Copies go only to this folder.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Text("Video filename suffix")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField(
+                            "Optional text appended before the extension",
+                            text: Binding(
+                                get: { viewModel.outputNamingOptions.videoFilenameSuffix },
+                                set: { viewModel.setVideoFilenameSuffix($0) }
+                            )
+                        )
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Open destination when copy completes", isOn: $viewModel.openDestinationWhenComplete)
+                            .disabled(viewModel.destinationURL == nil)
+                        Toggle("Eject card when copy completes", isOn: $viewModel.ejectSourceWhenComplete)
+                            .disabled(viewModel.selectedSource == nil)
+                    }
+                    .font(.caption)
                 }
                 Spacer()
                 HStack {
@@ -259,25 +315,24 @@ struct ContentView: View {
     private var filtersSection: some View {
         GroupBox("Filters") {
             VStack(alignment: .leading, spacing: 14) {
-                Toggle("Start date", isOn: Binding(
-                    get: { viewModel.filters.useStartDate },
-                    set: { viewModel.filters.useStartDate = $0; viewModel.rebuildPlan() }
-                ))
-                if viewModel.filters.useStartDate {
+                Picker("Date range", selection: Binding(
+                    get: { viewModel.filters.datePreset },
+                    set: { viewModel.setDatePreset($0) }
+                )) {
+                    ForEach(DateFilterPreset.allCases) { preset in
+                        Text(preset.label).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                if viewModel.filters.datePreset == .custom {
                     DatePicker("From", selection: Binding(
                         get: { viewModel.filters.startDate },
-                        set: { viewModel.filters.startDate = $0; viewModel.rebuildPlan() }
+                        set: { viewModel.setCustomStartDate($0) }
                     ), displayedComponents: .date)
-                }
-
-                Toggle("End date", isOn: Binding(
-                    get: { viewModel.filters.useEndDate },
-                    set: { viewModel.filters.useEndDate = $0; viewModel.rebuildPlan() }
-                ))
-                if viewModel.filters.useEndDate {
                     DatePicker("Through", selection: Binding(
                         get: { viewModel.filters.endDate },
-                        set: { viewModel.filters.endDate = $0; viewModel.rebuildPlan() }
+                        set: { viewModel.setCustomEndDate($0) }
                     ), displayedComponents: .date)
                 }
 
@@ -301,6 +356,13 @@ struct ContentView: View {
                     set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
                 ))
                 Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Toggle("Copy camera settings and boot logs", isOn: Binding(
+                    get: { viewModel.filters.includeCameraSettings },
+                    set: { viewModel.filters.includeCameraSettings = $0; viewModel.rebuildPlan() }
+                ))
+                Text("Copies Config/Settings folders and boot logs into a separate Camera Settings folder for troubleshooting.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Toggle("Separate output folders for driving, parking, protected, photos, and GPS", isOn: Binding(
@@ -345,7 +407,7 @@ struct ContentView: View {
         GroupBox("Copy Plan") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("\(viewModel.copyPlan?.items.count ?? 0) files")
+                    Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files")
                     Text(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -377,7 +439,7 @@ struct ContentView: View {
                         Text(item.clip.displayChannel)
                     }
                     TableColumn("Destination") { item in
-                        Text(item.destinationURL.deletingLastPathComponent().path)
+                        Text(item.destinationURL.path)
                             .font(.caption)
                             .lineLimit(1)
                     }
@@ -404,6 +466,12 @@ struct ContentView: View {
                                     .foregroundStyle(item.status == .failed ? .red : .secondary)
                             }
                         }
+                        if !viewModel.supportFileResults.isEmpty {
+                            Divider()
+                            Text("\(viewModel.supportFileResults.count) settings/log files processed")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .padding(8)
                 }
@@ -423,6 +491,16 @@ struct ContentView: View {
                     .font(.headline.monospacedDigit())
                 Text(viewModel.copyProgress.filesText)
                     .foregroundStyle(.secondary)
+                if !viewModel.copyProgress.speedText.isEmpty {
+                    Text(viewModel.copyProgress.speedText)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                if !viewModel.copyProgress.estimatedRemainingText.isEmpty {
+                    Text(viewModel.copyProgress.estimatedRemainingText)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
                 Text(viewModel.copyProgress.currentFile)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -472,6 +550,225 @@ struct ContentView: View {
         case .low: return .yellow
         case .none: return .secondary
         }
+    }
+}
+
+struct FeedbackSheet: View {
+    @ObservedObject var viewModel: TransferViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var kind: FeedbackKind = .bug
+    @State private var message = ""
+    @State private var contact = ""
+    @State private var includeScan = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Submit Feedback")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Picker("Type", selection: $kind) {
+                ForEach(FeedbackKind.allCases, id: \.self) { kind in
+                    Text(kind.displayName).tag(kind)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            TextEditor(text: $message)
+                .font(.body)
+                .frame(minHeight: 150)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.secondary.opacity(0.25))
+                }
+
+            TextField("Contact email or handle (optional)", text: $contact)
+                .textFieldStyle(.roundedBorder)
+
+            Toggle("Include sanitized scan summary", isOn: $includeScan)
+                .disabled(!viewModel.scanSummary.hasScan)
+
+            if viewModel.scanSummary.hasScan {
+                HStack(spacing: 14) {
+                    Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
+                    Label("\(viewModel.scanSummary.copyableItems) copyable", systemImage: "checkmark.circle")
+                    Label(viewModel.selectedProfile?.displayName ?? "No profile selected", systemImage: "camera")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            if !viewModel.feedbackMessage.isEmpty {
+                Text(viewModel.feedbackMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.feedbackMessage.contains("failed") ? .red : .secondary)
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    dismiss()
+                }
+                Button {
+                    viewModel.submitFeedback(
+                        kind: kind,
+                        message: message,
+                        contact: contact,
+                        includeScan: includeScan && viewModel.scanSummary.hasScan
+                    )
+                } label: {
+                    Label(viewModel.isSubmittingFeedback ? "Submitting" : "Submit", systemImage: "paperplane")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(viewModel.isSubmittingFeedback || message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
+        .onAppear {
+            includeScan = viewModel.scanSummary.hasScan
+            viewModel.feedbackMessage = ""
+        }
+    }
+}
+
+struct CardLearningSheet: View {
+    @ObservedObject var viewModel: TransferViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var manufacturer = ""
+    @State private var model = ""
+    @State private var channelSetup = ""
+    @State private var notes = ""
+    @State private var contact = ""
+
+    private var canSubmit: Bool {
+        viewModel.scanSummary.hasScan &&
+            !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !channelSetup.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !viewModel.isSubmittingFeedback
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Teach a New Card")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            if viewModel.scanSummary.hasScan {
+                HStack(spacing: 14) {
+                    Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
+                    Label("\(viewModel.scanSummary.copyableItems) copyable", systemImage: "checkmark.circle")
+                    Label(viewModel.selectedProfile?.displayName ?? viewModel.identifiedCamera.map { "New Dashcam: \($0.displayName)" } ?? "No profile match", systemImage: "camera")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            } else {
+                Text("Scan the card first, then submit the learning package.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                TextField("Manufacturer", text: $manufacturer)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Model", text: $model)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            TextField("Channel setup, e.g. front/rear/interior or 3CH", text: $channelSetup)
+                .textFieldStyle(.roundedBorder)
+
+            TextEditor(text: $notes)
+                .font(.body)
+                .frame(minHeight: 120)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.secondary.opacity(0.25))
+                }
+
+            TextField("Contact email or handle (optional)", text: $contact)
+                .textFieldStyle(.roundedBorder)
+
+            Text("Sends folder names, filename samples, candidate scores, and counts. It does not upload video files, GPS traces, or unique device IDs.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if !viewModel.feedbackMessage.isEmpty {
+                Text(viewModel.feedbackMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.feedbackMessage.contains("failed") ? .red : .secondary)
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    dismiss()
+                }
+                Button {
+                    submitLearningPackage()
+                } label: {
+                    Label(viewModel.isSubmittingFeedback ? "Submitting" : "Submit Learning Package", systemImage: "paperplane")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!canSubmit)
+            }
+        }
+        .padding(24)
+        .frame(width: 620)
+        .onAppear {
+            viewModel.feedbackMessage = ""
+            if let identified = viewModel.identifiedCamera {
+                manufacturer = identified.displayManufacturer
+                model = identified.model
+                if channelSetup.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    channelSetup = "Unknown"
+                }
+                if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    notes = "Auto-identified from card metadata as \(identified.displayName)."
+                }
+            }
+        }
+    }
+
+    private func submitLearningPackage() {
+        let training = CardTrainingDetails(
+            manufacturer: manufacturer.trimmingCharacters(in: .whitespacesAndNewlines),
+            model: model.trimmingCharacters(in: .whitespacesAndNewlines),
+            channelSetup: channelSetup.trimmingCharacters(in: .whitespacesAndNewlines),
+            notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        let message = [
+            "\(training.manufacturer) \(training.model)",
+            "Channels: \(training.channelSetup)",
+            training.notes
+        ]
+        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        .joined(separator: "\n")
+
+        viewModel.submitFeedback(
+            kind: .training,
+            message: message,
+            contact: contact,
+            includeScan: true,
+            training: training
+        )
     }
 }
 

@@ -3,19 +3,27 @@ import Foundation
 struct CopyExecutor {
     var progressHandler: @MainActor (CopyProgress) -> Void
 
-    func copy(plan: CopyPlan) async -> [CopyPlanItem] {
-        let totalBytes = plan.items.reduce(Int64(0)) { $0 + $1.clip.size }
-        var progress = CopyProgress(totalBytes: totalBytes, totalFiles: plan.items.count, isRunning: true)
+    func copy(plan: CopyPlan) async -> CopyRunResult {
+        let totalBytes = plan.selectedBytes
+        let startDate = Date()
+        var progress = CopyProgress(
+            totalBytes: totalBytes,
+            totalFiles: plan.selectedFileCount,
+            isRunning: true,
+            startedAt: startDate,
+            updatedAt: startDate
+        )
         await update(progress)
 
         var results: [CopyPlanItem] = []
+        var supportResults: [SupportFileItem] = []
         for item in plan.items {
             var result = item
             progress.currentFile = item.clip.filename
             await update(progress)
 
             do {
-                let copied = try await copyOne(item: item) { copiedChunk in
+                let copied = try await copyOne(sourceURL: item.clip.sourceURL, destinationURL: item.destinationURL, expectedSize: item.clip.size) { copiedChunk in
                     progress.copiedBytes += copiedChunk
                     await update(progress)
                 }
@@ -37,9 +45,40 @@ struct CopyExecutor {
             await update(progress)
         }
 
+        for item in plan.supportItems {
+            var result = item
+            progress.currentFile = item.relativePath
+            await update(progress)
+
+            do {
+                let copied = try await copyOne(sourceURL: item.sourceURL, destinationURL: item.destinationURL, expectedSize: item.size) { copiedChunk in
+                    progress.copiedBytes += copiedChunk
+                    await update(progress)
+                }
+                progress.completedFiles += 1
+                if copied {
+                    result.status = .copied
+                    result.message = "Copied"
+                } else {
+                    result.status = .skipped
+                    result.message = "Existing file matched size"
+                    progress.copiedBytes += item.size
+                }
+            } catch {
+                progress.completedFiles += 1
+                result.status = .failed
+                result.message = error.localizedDescription
+            }
+            supportResults.append(result)
+            await update(progress)
+        }
+
         do {
-            try ManifestWriter.write(plan: plan, results: results)
-            progress.summary = "Completed \(results.filter { $0.status == .copied }.count) copied, \(results.filter { $0.status == .skipped }.count) skipped, \(results.filter { $0.status == .failed }.count) failed"
+            try ManifestWriter.write(plan: plan, results: results, supportResults: supportResults)
+            let copiedCount = results.filter { $0.status == .copied }.count + supportResults.filter { $0.status == .copied }.count
+            let skippedCount = results.filter { $0.status == .skipped }.count + supportResults.filter { $0.status == .skipped }.count
+            let failedCount = results.filter { $0.status == .failed }.count + supportResults.filter { $0.status == .failed }.count
+            progress.summary = "Completed \(copiedCount) copied, \(skippedCount) skipped, \(failedCount) failed"
         } catch {
             progress.summary = "Copy finished, but manifest failed: \(error.localizedDescription)"
         }
@@ -47,30 +86,33 @@ struct CopyExecutor {
         progress.currentFile = ""
         progress.isRunning = false
         progress.copiedBytes = max(progress.copiedBytes, totalBytes)
+        progress.updatedAt = Date()
         await update(progress)
 
-        return results
+        return CopyRunResult(mediaItems: results, supportItems: supportResults)
     }
 
     private func update(_ progress: CopyProgress) async {
-        await progressHandler(progress)
+        var updatedProgress = progress
+        updatedProgress.updatedAt = Date()
+        await progressHandler(updatedProgress)
     }
 
-    private func copyOne(item: CopyPlanItem, progress: (Int64) async -> Void) async throws -> Bool {
+    private func copyOne(sourceURL: URL, destinationURL: URL, expectedSize: Int64, progress: (Int64) async -> Void) async throws -> Bool {
         let fileManager = FileManager.default
-        let destination = item.destinationURL
+        let destination = destinationURL
         let destinationDirectory = destination.deletingLastPathComponent()
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
 
         if fileManager.fileExists(atPath: destination.path) {
             let destinationSize = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-            if destinationSize == item.clip.size {
+            if destinationSize == expectedSize {
                 return false
             }
             throw CopyError.conflictingDestination(destination.path)
         }
 
-        let input = try FileHandle(forReadingFrom: item.clip.sourceURL)
+        let input = try FileHandle(forReadingFrom: sourceURL)
         defer { try? input.close() }
         fileManager.createFile(atPath: destination.path, contents: nil)
         let output = try FileHandle(forWritingTo: destination)
@@ -84,10 +126,19 @@ struct CopyExecutor {
         }
 
         let copiedSize = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-        guard copiedSize == item.clip.size else {
+        guard copiedSize == expectedSize else {
             throw CopyError.sizeVerificationFailed
         }
         return true
+    }
+}
+
+struct CopyRunResult: Hashable, Sendable {
+    var mediaItems: [CopyPlanItem]
+    var supportItems: [SupportFileItem]
+
+    var failedCount: Int {
+        mediaItems.filter { $0.status == .failed }.count + supportItems.filter { $0.status == .failed }.count
     }
 }
 

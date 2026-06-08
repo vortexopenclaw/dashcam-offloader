@@ -12,33 +12,65 @@ import Vision
 /// bottom strip where the OSD lives, and look for a known model string.
 ///
 /// This is purely additive signal. Any failure (unreadable clip, no text,
-/// thrown error) results in a silent `nil` — it never crashes or blocks the
+/// thrown error) results in a silent `nil`, it never crashes or blocks the
 /// detection pipeline.
-actor OSDProbe {
+struct OSDProbe {
     /// Extract a frame from a video, OCR the bottom strip, and check for
     /// model name matches.
     ///
     /// - Returns: the matched string from `spec.matchStrings` if found,
     ///   `nil` otherwise.
-    func probe(videoURL: URL, spec: OSDSpec) async -> String? {
-        guard spec.containsModelName, !spec.matchStrings.isEmpty else { return nil }
-
-        guard let frame = extractFrame(from: videoURL) else { return nil }
-        guard let strip = cropBottomStrip(of: frame, percent: spec.stripPercent) else { return nil }
-        guard let recognized = recognizeText(in: strip) else { return nil }
-
-        for candidate in spec.matchStrings {
-            let needle = candidate.lowercased()
-            if recognized.contains(where: { $0.lowercased().contains(needle) }) {
-                return candidate
-            }
-        }
-        return nil
+    func probe(videoURL: URL, spec: OSDSpec) -> String? {
+        probeWithDiagnostics(videoURL: videoURL, spec: spec).matchedString
     }
 
-    /// Pull a single CGImage out of the video. Tries ~5s first (past any
-    /// startup splash), then falls back to ~1s for short clips.
-    private func extractFrame(from videoURL: URL) -> CGImage? {
+    func probeWithDiagnostics(videoURL: URL, spec: OSDSpec) -> OSDProbeResult {
+        guard spec.containsModelName, !spec.matchStrings.isEmpty else {
+            return OSDProbeResult(
+                videoName: videoURL.lastPathComponent,
+                framesExtracted: 0,
+                framesWithText: 0,
+                textCandidateCount: 0,
+                matchedString: nil
+            )
+        }
+
+        var framesExtracted = 0
+        var framesWithText = 0
+        var textCandidateCount = 0
+        for frame in extractFrames(from: videoURL) {
+            framesExtracted += 1
+            guard let strip = cropBottomStrip(of: frame, percent: spec.stripPercent) else { continue }
+            guard let recognized = recognizeText(in: strip) else { continue }
+            framesWithText += 1
+            textCandidateCount += recognized.count
+
+            for candidate in spec.matchStrings {
+                let needle = candidate.lowercased()
+                if recognized.contains(where: { $0.lowercased().contains(needle) }) {
+                    return OSDProbeResult(
+                        videoName: videoURL.lastPathComponent,
+                        framesExtracted: framesExtracted,
+                        framesWithText: framesWithText,
+                        textCandidateCount: textCandidateCount,
+                        matchedString: candidate
+                    )
+                }
+            }
+        }
+        return OSDProbeResult(
+            videoName: videoURL.lastPathComponent,
+            framesExtracted: framesExtracted,
+            framesWithText: framesWithText,
+            textCandidateCount: textCandidateCount,
+            matchedString: nil
+        )
+    }
+
+    /// Pull several CGImages out of the video. Some scenes make the OSD low
+    /// contrast against the road or sky, so retrying across the same clip is
+    /// much more reliable than depending on one frame.
+    private func extractFrames(from videoURL: URL) -> [CGImage] {
         let asset = AVURLAsset(url: videoURL)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -47,15 +79,20 @@ actor OSDProbe {
 
         let candidateTimes = [
             CMTime(seconds: 5, preferredTimescale: 600),
+            CMTime(seconds: 10, preferredTimescale: 600),
+            CMTime(seconds: 20, preferredTimescale: 600),
+            CMTime(seconds: 30, preferredTimescale: 600),
+            CMTime(seconds: 45, preferredTimescale: 600),
             CMTime(seconds: 1, preferredTimescale: 600)
         ]
 
+        var images: [CGImage] = []
         for time in candidateTimes {
             if let image = try? generator.copyCGImage(at: time, actualTime: nil) {
-                return image
+                images.append(image)
             }
         }
-        return nil
+        return images
     }
 
     /// Crop the bottom `percent` (fraction of height) of the image, where the
@@ -99,4 +136,12 @@ actor OSDProbe {
         }
         return results.isEmpty ? nil : results
     }
+}
+
+struct OSDProbeResult: Hashable, Sendable {
+    var videoName: String
+    var framesExtracted: Int
+    var framesWithText: Int
+    var textCandidateCount: Int
+    var matchedString: String?
 }

@@ -8,7 +8,7 @@ Learning new dashcams supports that main offload workflow. A user should be able
 
 ## Current Status
 
-This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date, preview selected files and size, copy to a chosen destination, show progress, skip matching duplicates, and write a local manifest.
+This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview selected files and size, copy to a chosen destination, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, skip matching duplicates, write a local manifest, submit feedback, and submit card-learning packages for unsupported cameras.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
@@ -57,8 +57,11 @@ swift run DashcamOffloader --smoke-test
 - Date/time parsing from filenames and metadata
 - Event/protected/manual/emergency clip handling
 - Copy manifest with source path, destination path, detected mode, detected channel, timestamp, size, and checksum status
+- Optional video filename suffix inserted before the original extension
+- Optional camera settings/log copy for troubleshooting, stored separately from copied footage
 - Clear progress and verification per card/job
-- Sanitized profile-submission bundle for unsupported models, excluding private identifiers and video content by default
+- Learn Card workflow for unsupported models, excluding private identifiers and video content by default
+- Feedback submission for bug reports, feature requests, card learning, and optional sanitized scan summaries
 
 ## Seed Profiles
 
@@ -121,3 +124,12 @@ swift run DashcamOffloader --smoke-test
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles
+- `workers/feedback/` - Cloudflare Worker endpoint for feedback submissions
+
+## Feedback And Card Learning Endpoint
+
+The app includes Feedback and Learn Card buttons in the toolbar. Users can submit bug reports, feature requests, or other feedback. When a source has already been scanned, they can choose to include a sanitized scan summary.
+
+Learn Card submissions ask for manufacturer, model, channel setup, notes, and contact. They attach a sanitized card scan with counts, selected profile, candidate profiles, extension totals, mode/category totals, root folders, folder samples, filename samples, support-file names, capped relative sample paths, and optional redacted setting summaries. They do not upload video files, GPS traces, unique device IDs, or full settings dumps.
+
+The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.
