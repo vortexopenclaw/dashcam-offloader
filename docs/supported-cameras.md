@@ -2,32 +2,32 @@
 
 ## Seeded
 
-- Thinkware U3000 Pro - profile drafted from one real card and official documentation.
-- Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
-- Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
-- VIOFO A329S - base model profile. One real 3CH sample card inspected.
-- VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
-- BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
-- BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
-- VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
-- VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
-- VIOFO A229 Ultra - profile drafted from a private archive sample (no direct card scan). 4K front and rear, 1080P interior. OSD OCR confirmed.
-- VIOFO A139 Pro - profile drafted from a private archive sample (no direct card scan). 3-channel. Distinct filename pattern: no sequence number (YYYY_MMDD_HHMMSS_CHANNEL). Mixed codec: HEVC interior.
-- VIOFO A119M Pro - profile drafted from a private archive sample (no direct card scan). Single-channel front only. Distinct filename pattern: YYYYMMDDHHMMSS_SEQUENCE (no underscore separators in date/time).
-- VIOFO A119 Mini 2 - profile drafted from one real card and official manual V25.12.18. Single-channel front only. Same filename pattern as A119M Pro. Distinct folder structure: parking recordings in DCIM/Parking/ (not DCIM/Movie/Parking/).
-- Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear), 4K/1080P/2.5K resolutions.
-- Vantrue N4 S - profile drafted from one real card. 3-channel (A/B/C), uniform 2.5K across all channels (balanced bitrates).
-- Vantrue E1 Pro - profile drafted from one real single-channel card and official manual. Observed Normal driving clips, motion-detection parking clips, parking event clips, and model-specific `GPS/E1PRO_Settings.ini`.
 - 70mai M310 - profile drafted from a private archive sample and real card scan. Single-channel front only. Distinct filename pattern: MODE_PREFIX + YYYYMMDD-HHMMSS-SEQUENCE + lowercase .mp4. OSD shows date/time only (no model name). Folder structure confirmed: Normal/, Parking/, Lapse/, Event/, Photo/.
+- BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
+- BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via config.ini ap_ssid field (BlackVueElite8-). Filename pattern matches Elite 9 family.
+- BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
 - Cansonic UltraDash Z3+ Standard Edition - profile drafted from a private archive sample and official product page. Dual front-lens camera (L = wide 140°, R = telephoto 164ft) + optional B rear camera (R1). Distinct filename pattern: YYYYMMDD_HHMMSS_CHANNEL (no sequence number, 8-digit date). All channels 2K QHD.
-- Escort M1 - profile drafted from one real card and official user manual. Single-channel front only. Distinct card layout: all footage in Escort_M1/ subfolder (not DCIM/). Filename pattern YYYY_MMDD_HHMMSS_SEQ.MOV. No parking mode.
 - Cobra Road Scout - profile drafted from one real card and official owner's manual. Single-channel front only. Combined radar detector + dashcam. Footage in DCIM/RoadScout/. Filename pattern YYYYMMDD_NNNN_VID.MOV with daily-reset sequence. No parking mode. Permanent rom.bin at card root.
+- DJI Mini 3 Pro - profile drafted from one real card. Single-channel drone. DCIM/100MEDIA/ layout. Filename pattern DJI_####.MP4 with shared global sequence across video and photo. SRT telemetry sidecar paired with every clip.
+- DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
+- Escort M1 - profile drafted from one real card and official user manual. Single-channel front only. Distinct card layout: all footage in Escort_M1/ subfolder (not DCIM/). Filename pattern YYYY_MMDD_HHMMSS_SEQ.MOV. No parking mode.
 - Escort M2 - profile drafted from one real card and official user manual. Single-channel front only. Footage in Normal/, events in Event/, photos in Photo/. Filename pattern YYYYMMDD_NNNN_CAM.MP4 with per-date 4-digit sequence. GPS sidecar (.map) paired with every clip.
 - Escort MAXcam 360c - profile drafted from one real card. Single-channel front only. Combined radar detector + dashcam. Footage in Normal/MAXcam360c/. Filename pattern YYYYMMDD_NNNN_VID.MOV. GPS and g-sensor sidecars (_gps.bin, _gsensor.bin) appear after GPS lock.
-- DJI Mini 3 Pro - profile drafted from one real card. Single-channel drone. DCIM/100MEDIA/ layout. Filename pattern DJI_####.MP4 with shared global sequence across video and photo. SRT telemetry sidecar paired with every clip.
 - Sony Alpha A7 III (ILCE-7M3) - profile drafted from two real cards (one video+photo, one video-only). Mirrorless camera using Sony M4ROOT/XAVC S format. Model detected via PRIVATE/M4ROOT/MEDIAPRO.XML systemKind field. Video codec confirmed H.264 (AVC_3840_2160_HP@L51). Photos are ARW raw files. DCIM/ absent on video-only cards.
-- BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via config.ini ap_ssid field (BlackVueElite8-). Filename pattern matches Elite 9 family.
-- DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
+- Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
+- Thinkware U3000 Pro - profile drafted from one real card and official documentation.
+- Vantrue E1 Pro - profile drafted from one real single-channel card and official manual. Observed Normal driving clips, motion-detection parking clips, parking event clips, and model-specific `GPS/E1PRO_Settings.ini`.
+- Vantrue N4 Pro S - profile drafted from one real card. 3-channel (A/B/C = Front/Interior/Rear), 4K/1080P/2.5K resolutions.
+- Vantrue N4 S - profile drafted from one real card. 3-channel (A/B/C), uniform 2.5K across all channels (balanced bitrates).
+- VIOFO A119 Mini 2 - profile drafted from one real card and official manual V25.12.18. Single-channel front only. Same filename pattern as A119M Pro. Distinct folder structure: parking recordings in DCIM/Parking/ (not DCIM/Movie/Parking/).
+- VIOFO A119M Pro - profile drafted from a private archive sample (no direct card scan). Single-channel front only. Distinct filename pattern: YYYYMMDDHHMMSS_SEQUENCE (no underscore separators in date/time).
+- VIOFO A139 Pro - profile drafted from a private archive sample (no direct card scan). 3-channel. Distinct filename pattern: no sequence number (YYYY_MMDD_HHMMSS_CHANNEL). Mixed codec: HEVC interior.
+- VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
+- VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
+- VIOFO A229 Ultra - profile drafted from a private archive sample (no direct card scan). 4K front and rear, 1080P interior. OSD OCR confirmed.
+- VIOFO A329S - base model profile. One real 3CH sample card inspected.
+- VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
+- Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 
 ## Intake Queue
 
