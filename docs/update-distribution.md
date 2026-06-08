@@ -45,7 +45,7 @@ No User permissions are needed.
 
 Required for Cloudflare publishing:
 
-- `CLOUDFLARE_DASHCAM_OFFLOADER_API_TOKEN`
+- `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN`
 - `CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID`
 
 Optional:
