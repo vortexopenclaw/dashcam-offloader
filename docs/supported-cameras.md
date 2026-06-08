@@ -8,6 +8,7 @@
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
+- BlackVue DR970X LTE Plus - profile drafted from one real card. Built-in LTE variant detected via `model = DR970X LTE Plus` in BlackVue config/version files. Sample had mostly 4K front-only clips plus a few F/R pairs.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
 - VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
