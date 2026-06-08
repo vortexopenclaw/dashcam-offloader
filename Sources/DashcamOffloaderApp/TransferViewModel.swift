@@ -8,6 +8,7 @@ final class TransferViewModel: ObservableObject {
     @Published var selectedSource: MountedSource?
     @Published var destinationURL: URL?
     @Published var detectionCandidates: [DetectionCandidate] = []
+    @Published var identifiedCamera: IdentifiedCamera?
     @Published var selectedProfile: DashcamProfile?
     @Published var clips: [ClipItem] = []
     @Published var filters = FilterState()
@@ -140,6 +141,7 @@ final class TransferViewModel: ObservableObject {
     func selectSource(_ source: MountedSource, scanImmediately: Bool = true) {
         selectedSource = source
         detectionCandidates = []
+        identifiedCamera = nil
         selectedProfile = nil
         clips = []
         lastScannedFiles = []
@@ -180,6 +182,8 @@ final class TransferViewModel: ObservableObject {
         copyPlan = nil
         copyResults = []
         supportFileResults = []
+        identifiedCamera = nil
+        selectedProfile = nil
         scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
 
         Task { [weak self, profiles, selectedSource] in
@@ -189,6 +193,7 @@ final class TransferViewModel: ObservableObject {
                     try CardScanner().scanWithOSD(sourceURL: selectedSource.url, profiles: profiles)
                 }.value
                 self.detectionCandidates = scanResult.candidates
+                self.identifiedCamera = scanResult.identifiedCamera
                 self.selectedProfile = scanResult.selectedProfile
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
@@ -203,9 +208,14 @@ final class TransferViewModel: ObservableObject {
                     categoryCounts: Dictionary(grouping: self.eligibleClips, by: \.outputCategory)
                         .mapValues(\.count),
                     modeCounts: Dictionary(grouping: self.eligibleClips, by: \.displayMode)
-                        .mapValues(\.count)
+                        .mapValues(\.count),
+                    identifiedCamera: scanResult.identifiedCamera
                 )
-                self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) copyable items"
+                if let identified = scanResult.identifiedCamera, !identified.isSupported {
+                    self.statusMessage = "Identified unsupported dashcam: \(identified.displayName). Submit a learning package to add it."
+                } else {
+                    self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) copyable items"
+                }
                 self.rebuildPlan()
             } catch {
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
@@ -215,6 +225,7 @@ final class TransferViewModel: ObservableObject {
     }
 
     func selectProfile(_ profile: DashcamProfile) {
+        identifiedCamera = nil
         selectedProfile = profile
         guard let selectedSource else { return }
         clips = scanner.classify(files: lastScannedFiles, sourceURL: selectedSource.url, profile: profile)
@@ -463,6 +474,7 @@ final class TransferViewModel: ObservableObject {
 
         return FeedbackScanSnapshot(
             volumeName: selectedSource?.name ?? "Unknown",
+            identifiedCamera: identifiedCamera,
             selectedProfileID: selectedProfile?.id,
             selectedProfileName: selectedProfile?.displayName,
             scannedFiles: scanSummary.scannedFiles,

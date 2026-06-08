@@ -44,6 +44,14 @@ enum ScanDiagnostic {
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             let result = try CardScanner().scanWithOSD(sourceURL: sourceURL, profiles: profiles)
             guard let selected = result.selectedProfile else {
+                if let identified = result.identifiedCamera {
+                    print("SCAN NEW_DASHCAM: \(identified.displayName) supported \(identified.isSupported)")
+                    for diagnostic in result.diagnostics {
+                        let profile = diagnostic.profileID ?? "none"
+                        print("SCAN DIAGNOSTIC: \(diagnostic.stage) \(profile) \(diagnostic.outcome) - \(diagnostic.detail)")
+                    }
+                    return true
+                }
                 print("SCAN FAIL: no selected profile")
                 return false
             }

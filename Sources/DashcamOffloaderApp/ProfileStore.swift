@@ -59,7 +59,7 @@ enum ProfileParser {
         let folders = parseFolders(lines)
         let patterns = parseFilenamePatterns(lines)
         let channels = parseChannels(lines, patterns: patterns)
-        let highConfidencePaths = parseDetectionPaths(lines)
+        let highConfidenceEvidence = parseDetectionEvidence(lines)
         let osdSpec = parseOSDSpec(lines)
 
         guard !folders.isEmpty || !patterns.isEmpty else { return nil }
@@ -73,7 +73,7 @@ enum ProfileParser {
             folders: folders,
             filenamePatterns: patterns,
             channels: channels,
-            highConfidencePaths: highConfidencePaths,
+            highConfidenceEvidence: highConfidenceEvidence,
             osdSpec: osdSpec
         )
     }
@@ -216,26 +216,54 @@ enum ProfileParser {
         return channels
     }
 
-    private static func parseDetectionPaths(_ lines: [String]) -> [String] {
+    private static func parseDetectionEvidence(_ lines: [String]) -> [ProfileEvidence] {
         guard let detectionRange = topLevelBlock(named: "detection", in: lines) else { return [] }
         let detectionLines = Array(lines[detectionRange])
         guard let highStart = detectionLines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == "high_confidence:" }) else {
             return []
         }
 
-        var paths: [String] = []
+        var evidence: [ProfileEvidence] = []
+        var currentPath: String?
+        var currentContains: [String] = []
+        var readingContains = false
+
+        func flush() {
+            guard let path = currentPath else { return }
+            evidence.append(ProfileEvidence(path: path, contains: currentContains))
+            currentPath = nil
+            currentContains = []
+            readingContains = false
+        }
+
         for line in detectionLines[(highStart + 1)...] {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasSuffix(":") && !trimmed.hasPrefix("-") && !trimmed.hasPrefix("path:") {
                 break
             }
             if trimmed.hasPrefix("- path:") {
+                flush()
                 if let value = cleanValue(String(trimmed.dropFirst("- path:".count))) {
-                    paths.append(value)
+                    currentPath = value
                 }
+                readingContains = false
+            } else if trimmed.hasPrefix("contains:") {
+                readingContains = true
+                let raw = String(trimmed.dropFirst("contains:".count))
+                if let value = cleanValue(raw) {
+                    currentContains.append(value)
+                    readingContains = false
+                }
+            } else if readingContains && trimmed.hasPrefix("-") {
+                if let value = cleanValue(String(trimmed.dropFirst())) {
+                    currentContains.append(value)
+                }
+            } else if !trimmed.isEmpty, !trimmed.hasPrefix("#") {
+                readingContains = false
             }
         }
-        return paths
+        flush()
+        return evidence
     }
 
     /// Parses an `osd_ocr` detection entry from `detection.high_confidence`.

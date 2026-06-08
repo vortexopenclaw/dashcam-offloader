@@ -222,7 +222,33 @@ enum SmokeTest {
                 return false
             }
 
-            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files; Vueroid parking split OK")
+            let blackVueSupportedSource = temp.appendingPathComponent("blackvue-elite-8", isDirectory: true)
+            try FileManager.default.createDirectory(at: blackVueSupportedSource.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: blackVueSupportedSource.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = ELITE 8".utf8).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("ap_ssid=BlackVueElite8-test".utf8).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Config/config.ini"))
+            try Data(repeating: 10, count: 1024).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Record/20260608_120000_NF.mp4"))
+            let blackVueSupportedScan = try scanner.scanWithOSD(sourceURL: blackVueSupportedSource, profiles: profiles)
+            guard blackVueSupportedScan.identifiedCamera?.displayName == "BlackVue Elite 8",
+                  blackVueSupportedScan.selectedProfile?.id == "blackvue-elite-8" else {
+                print("SMOKE FAIL: BlackVue supported metadata did not select Elite 8")
+                return false
+            }
+
+            let blackVueUnsupportedSource = temp.appendingPathComponent("blackvue-unsupported", isDirectory: true)
+            try FileManager.default.createDirectory(at: blackVueUnsupportedSource.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: blackVueUnsupportedSource.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = Future BlackVue".utf8).write(to: blackVueUnsupportedSource.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data(repeating: 11, count: 1024).write(to: blackVueUnsupportedSource.appendingPathComponent("BlackVue/Record/20260608_121000_NF.mp4"))
+            let blackVueUnsupportedScan = try scanner.scanWithOSD(sourceURL: blackVueUnsupportedSource, profiles: profiles)
+            guard blackVueUnsupportedScan.identifiedCamera?.displayName == "BlackVue Future BlackVue",
+                  blackVueUnsupportedScan.identifiedCamera?.isSupported == false,
+                  blackVueUnsupportedScan.selectedProfile == nil else {
+                print("SMOKE FAIL: unsupported BlackVue metadata should not select nearby profile")
+                return false
+            }
+
+            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files; Vueroid parking split OK; BlackVue unsupported guard OK")
             return true
         } catch {
             print("SMOKE FAIL: \(error.localizedDescription)")
