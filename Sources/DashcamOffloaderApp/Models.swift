@@ -161,6 +161,29 @@ struct ClipItem: Identifiable, Hashable, Sendable {
     }
 
     static func displayLabel(for value: String) -> String {
+        switch value.lowercased() {
+        case "continuous":
+            return "Driving"
+        case "driving_event":
+            return "Driving Event"
+        case "parking_event":
+            return "Parking Event"
+        case "parking_event_secondary":
+            return "Parking Event"
+        case "parking_motion_or_timelapse":
+            return "Parking Motion Or Timelapse"
+        case "in_cabin":
+            return "Interior"
+        case "front":
+            return "Front"
+        case "rear":
+            return "Rear"
+        case "interior":
+            return "Interior"
+        default:
+            break
+        }
+
         let normalized = value
             .replacingOccurrences(of: "_", with: " ")
             .replacingOccurrences(of: "-", with: " ")
