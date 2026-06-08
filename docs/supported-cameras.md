@@ -20,6 +20,7 @@
 - Vantrue E1 Pro - profile drafted from one real single-channel card and official manual. Observed Normal driving clips, motion-detection parking clips, parking event clips, and model-specific `GPS/E1PRO_Settings.ini`.
 - 70mai M310 - profile drafted from a private archive sample and real card scan. Single-channel front only. Distinct filename pattern: MODE_PREFIX + YYYYMMDD-HHMMSS-SEQUENCE + lowercase .mp4. OSD shows date/time only (no model name). Folder structure confirmed: Normal/, Parking/, Lapse/, Event/, Photo/.
 - Cansonic UltraDash Z3+ Standard Edition - profile drafted from a private archive sample and official product page. Dual front-lens camera (L = wide 140°, R = telephoto 164ft) + optional B rear camera (R1). Distinct filename pattern: YYYYMMDD_HHMMSS_CHANNEL (no sequence number, 8-digit date). All channels 2K QHD.
+- Escort M1 - profile drafted from one real card and official user manual. Single-channel front only. Distinct card layout: all footage in Escort_M1/ subfolder (not DCIM/). Filename pattern YYYY_MMDD_HHMMSS_SEQ.MOV. No parking mode.
 
 ## Intake Queue
 
