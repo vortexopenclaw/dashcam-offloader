@@ -21,7 +21,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
         case "viofo":
             return "Viofo"
         case "blackvue":
-            return "Blackvue"
+            return "BlackVue"
         case "70mai":
             return "70mai"
         default:

@@ -22,6 +22,13 @@ cp "$BIN_PATH" "$MACOS_DIR/$PRODUCT_NAME"
 cp -R "$ROOT_DIR/profiles" "$RESOURCES_DIR/Profiles"
 cp "$ROOT_DIR/assets/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
+source_profile_count="$(find "$ROOT_DIR/profiles" -type f -name '*.yaml' | wc -l | tr -d ' ')"
+bundle_profile_count="$(find "$RESOURCES_DIR/Profiles" -type f -name '*.yaml' | wc -l | tr -d ' ')"
+if [[ "$source_profile_count" != "$bundle_profile_count" ]]; then
+  echo "Profile bundle mismatch: source has $source_profile_count profiles, app bundle has $bundle_profile_count" >&2
+  exit 1
+fi
+
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
