@@ -17,6 +17,7 @@ enum SmokeTest {
                 "blackvue-elite-9",
                 "cansonic-ultradash-z3plus-standard",
                 "cobra-road-scout",
+                "dji-rc",
                 "dji-mini-3-pro",
                 "escort-m1",
                 "escort-m2",
