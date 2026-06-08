@@ -1,0 +1,133 @@
+id: dji-rc
+manufacturer: DJI
+model: RC
+slug: dji-rc
+channels: 1
+type: companion_device
+device_class: remote_controller
+source_notes:
+  - docs/card-profiles/dji-rc.md
+  - docs/research/dji-rc.md
+notes: >
+  This is a microSD from a DJI RC remote controller (RM330), not a drone or
+  camera card. Primary content is live-view OcuSync transmission caches
+  recorded during flight. Full-resolution drone footage stays on the drone's
+  own microSD — see the dji-mini-3-pro profile for that card.
+
+detection:
+  high_confidence:
+    - method: folder
+      path: Android/data/dji.go.v5
+      notes: >
+        Android DJI Fly app data directory. The app identifier dji.go.v5 is
+        specific to the DJI Fly application and is not present on any drone
+        microSD card. Presence of this folder uniquely identifies the card
+        as a DJI RC (or similar DJI Android-based controller) microSD.
+  supporting:
+    - method: folder
+      path: Android/data/dji.go.v5/files/MediaCaches
+      notes: Live-view cache folder. Confirms active flight use.
+    - method: file
+      path: Android/data/dji.go.v5/.nomedia
+      notes: >
+        Android .nomedia marker file. Present in DJI app directories to
+        prevent Android gallery from indexing cache files.
+    - method: volume_label
+      value: 'DJI RC'
+      notes: >
+        Observed volume label. May vary if card was reformatted. Not reliable
+        alone — use Android/data/dji.go.v5 as primary signal.
+  negative:
+    - method: folder
+      path: DCIM/100MEDIA
+      notes: >
+        DJI Mini 3 Pro drone card layout. Absence of root-level DCIM
+        distinguishes the RC controller card from the drone card.
+    - method: folder
+      path: PRIVATE/M4ROOT
+      notes: Sony M4ROOT structure — not present on DJI RC cards.
+    - method: folder
+      path: BlackVue
+      notes: BlackVue dashcam folder — not present on DJI RC cards.
+
+folders:
+  - path: Android/data/dji.go.v5/files/MediaCaches
+    mode: live_view_cache
+    validation: real_card_sampled
+    notes: >
+      Live-view OcuSync transmission caches recorded during drone flight.
+      These are low-quality previews (~480p), not full-resolution drone footage.
+      One MP4 file per continuous live-view session.
+  - path: Android/data/dji.go.v5/files/OriginalFiles/Video
+    mode: transferred_drone_video
+    validation: real_card_sampled
+    notes: >
+      Drone footage transferred from the drone to the RC via the DJI Fly app.
+      Empty on the sampled card — transfer must be explicitly triggered by the
+      user in-app. When populated, files should match the DJI_NNNN.MP4 pattern
+      from the drone card.
+  - path: Android/data/dji.go.v5/files/OriginalFiles/Photo
+    mode: transferred_drone_photo
+    validation: real_card_sampled
+    notes: Empty on sampled card. Would contain photos transferred from drone.
+  - path: Android/data/dji.go.v5/files/OriginalFiles/PanoPhoto
+    mode: transferred_drone_panorama
+    validation: real_card_sampled
+    notes: Empty on sampled card. Would contain panorama shots transferred from drone.
+  - path: Android/data/dji.go.v5/files/ImageCaches
+    mode: thumbnails
+    validation: real_card_sampled
+    notes: >
+      Thumbnail cache for drone footage. Contains JPG thumbnails referencing
+      DJI_NNNN filenames from the drone card. Not needed for offload.
+
+filename_patterns:
+  live_view_cache:
+    regex: '^(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_Cache\.mp4$'
+    example: '2022_12_28_09_06_15_Cache.mp4'
+    applies_to:
+      - Android/data/dji.go.v5/files/MediaCaches
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      hour: 4
+      minute: 5
+      second: 6
+    notes: >
+      Full datetime timestamp embedded in filename. Timestamp reflects when
+      the live-view session started. These are OcuSync transmission previews,
+      not primary drone footage.
+
+video:
+  extension: '.mp4'
+  extension_case: lowercase
+  codec: unknown
+  codec_confirmed: assumed
+  content_type: live_view_cache
+  notes: >
+    MediaCache files are live-view OcuSync transmission streams cached locally
+    on the RC controller during flight. Quality is significantly lower than
+    the full-resolution footage on the drone's microSD. Codec and resolution
+    not measured from ffprobe.
+
+offload_behavior:
+  primary_footage: false
+  notes: >
+    This card does NOT contain primary drone footage. The full-resolution
+    MP4s and SRT sidecars are on the drone's own microSD (dji-mini-3-pro
+    profile). MediaCaches on this card are supplementary previews only.
+    OriginalFiles/ may contain transferred drone footage if the user
+    explicitly transferred files in-app — check before skipping.
+  recommend_action: >
+    Alert user that this is the RC controller card, not the drone card.
+    Offer to offload any transferred files in OriginalFiles/ if present.
+    Skip MediaCaches unless user opts in to low-quality preview caches.
+
+validation:
+  card_sampled: true
+  codec_confirmed: false
+  notes: >
+    Real RC card sampled. Android/data/dji.go.v5 folder structure, MediaCaches
+    pattern, and empty OriginalFiles folders all confirmed. No ffprobe run on
+    cache files.
