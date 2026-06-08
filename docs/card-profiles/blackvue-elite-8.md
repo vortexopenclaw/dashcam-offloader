@@ -2,18 +2,18 @@
 
 ## Status
 
-Seed profile, based on one real 2CH sample card read-only scanned at `/Volumes/BlackVue` and official BlackVue product page references.
+Seed profile, based on one real 2CH sample card read-only scanned at `/Volumes/BlackVue` and the official BlackVue Elite 8 manual.
 
 Use `BlackVue Elite 8` as the public app model name. Treat channel count as variant metadata behind the scenes.
 
 ## Source References
 
-- Official product page: <https://blackvuenorthamerica.com/products/blackvue-elite-8-2ch-front-rear-2k-qhd-dash-cam>
-- Official overview: <https://blackvue.com/elite-8-info/>
+- Official manual: <https://manual.blackvue.com/docs/elite-8-series/>
+- Official specs: <https://manual.blackvue.com/docs/elite-8-series/technical-specifications/product-specifications/>
+- Official key features: <https://manual.blackvue.com/docs/elite-8-series/getting-started/key-features/>
 - Official firmware update (Elite 8/9/10 family): <https://blackvue.com/blogs/update/firmware-update-elite-8-9-10-updates-1190778>
-- Retail listing with specs: <https://www.blackboxmycar.com/products/blackvue-elite-8-2-channel-2k-hdr-cloud-dash-cam>
 
-The Elite 8 is a 2CH cloud dash cam with dual Sony IMX675 STARVIS 2 sensors, recording both front and rear at 2K QHD (2560x1440) @ 30fps. It differs from the Elite 9 (4K front + 2K rear) in that both channels share the same 2K resolution.
+The Elite 8 is a 2CH cloud dash cam with dual Sony IMX675 STARVIS 2 sensors, recording both front and rear at 2K QHD (2560x1440) @ 30fps with Dual HDR. It differs from the Elite 9 (4K front + 2K rear) in that both channels share the same 2K resolution. Codec is H.264 (AVC). Video format is MP4.
 
 ## Card Layout
 
@@ -33,11 +33,6 @@ Visible MP4 files use:
 
 `YYYYMMDD_HHMMSS_MODECHANNEL.mp4`
 
-Examples:
-
-- `BlackVue/Record/YYYYMMDD_HHMMSS_NF.mp4`
-- `BlackVue/Record/YYYYMMDD_HHMMSS_NR.mp4`
-
 This matches the Elite 9 pattern exactly.
 
 Observed mode letters:
@@ -51,7 +46,7 @@ Observed channel letters:
 - `F` - front.
 - `R` - rear.
 
-All clips on this card were normal driving recordings with both front and rear channels present. Parking and event files are expected to follow the same naming convention based on Elite 9 family behavior.
+All clips on this card were normal driving recordings with both front and rear channels present. Parking and event files are expected to follow the same naming convention based on Elite 9 family behavior and the official manual's description of Parking Impact and Driving Impact recording modes.
 
 ## Related-File Grouping
 
@@ -95,4 +90,4 @@ Group related files by date, time, and mode letter. The channel letter should no
 
 - Confirm that `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` contain `model = ELITE 8` via binary substring read.
 - Validate parking and impact/event recordings with a card that has P and I mode clips.
-- Confirm codec and bitrate via ffprobe (H.264 expected per manufacturer spec).
+- Confirm bitrate via ffprobe.

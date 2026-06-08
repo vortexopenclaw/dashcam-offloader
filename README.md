@@ -64,6 +64,7 @@ swift run DashcamOffloader --smoke-test
 
 **BlackVue**
 - BlackVue DR970X Plus — 2CH, real card sampled
+- BlackVue Elite 8 — 2CH, real card sampled
 - BlackVue Elite 9 — 2CH, real card sampled
 
 **Cansonic**
@@ -72,8 +73,16 @@ swift run DashcamOffloader --smoke-test
 **Cobra**
 - Cobra Road Scout — 1CH, real card sampled. Combined radar detector + dashcam.
 
+**DJI**
+- DJI Mini 3 Pro — 1CH drone, real card sampled
+
 **Escort**
 - Escort M1 — 1CH, real card sampled
+- Escort M2 — 1CH, real card sampled
+- Escort MAXcam 360c — 1CH, real card sampled. Combined radar detector + dashcam.
+
+**Sony**
+- Sony Alpha A7 III (ILCE-7M3) — 1CH mirrorless camera, real card sampled. Video + photos.
 
 **Thinkware**
 - Thinkware U3000 — 2CH, real card sampled

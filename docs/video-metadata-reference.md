@@ -9,6 +9,7 @@ Running log of codec, resolution, frame rate, and bitrate data across all profil
 | `ffprobe` | Measured directly from real footage |
 | `file_size_est` | Estimated from observed file sizes (±20%) |
 | `mfr_spec` | From manufacturer product page or manual |
+| `sidecar_xml` | Parsed from a per-clip or per-card XML sidecar file |
 | `assumed` | Inferred from hardware platform or era; not verified |
 
 Bitrates vary with scene complexity, firmware version, HDR mode, and camera settings. Values here are baselines for default settings unless noted.
@@ -190,6 +191,17 @@ None of these sub-mode bitrates have been measured. Differentiation may require 
 
 ---
 
+## BlackVue Elite 8
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---------|------|-------|------------|-----|---------|-----------|--------|
+| F (front) | driving | H.264 (AVC) | 2560×1440 | 30 | — | mp4 | `mfr_spec` |
+| R (rear) | driving | H.264 (AVC) | 2560×1440 | 30 | — | mp4 | `mfr_spec` |
+
+**Notes:** Codec H.264 (AVC) and resolution 2K QHD (2560×1440) @ 30fps confirmed from official BlackVue Elite 8 product specifications page. Both channels record at the same resolution with Dual HDR — distinguishing feature from Elite 9 (4K front + 2K rear). Bitrate not measured; needs ffprobe confirmation.
+
+---
+
 ## Thinkware U3000 Pro
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -235,6 +247,52 @@ None of these sub-mode bitrates have been measured. Differentiation may require 
 
 ---
 
+## Escort M2
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---------|------|-------|------------|-----|---------|-----------|--------|
+| F (front) | driving | H.264 | 1920×1080 | 30 | — | MP4 | `assumed` |
+| F (front) | photo | — | — | — | — | JPG | — |
+
+**Notes:** Codec and resolution not confirmed from ffprobe. H.264 1080P 30fps assumed from platform era and manual description. Video container is `.MP4`. GPS sidecar (`.map`) paired with every clip. Photos stored as JPG in `Photo/`.
+
+---
+
+## Escort MAXcam 360c
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---------|------|-------|------------|-----|---------|-----------|--------|
+| F (front) | driving | — | — | — | — | MOV | `assumed` |
+
+**Notes:** Codec and resolution not confirmed. Card sampled but no video metadata logged. Files use `.MOV` container in `Normal/MAXcam360c/`. GPS sidecar (`_gps.bin`) and g-sensor sidecar (`_gsensor.bin`) present after GPS lock. All values need ffprobe measurement.
+
+---
+
+## DJI Mini 3 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Max Bitrate | Container | Source |
+|---------|------|-------|------------|-----|-------------|-----------|--------|
+| F | video (4K ≤30fps) | H.264 or H.265 | 3840×2160 | up to 30 | 150 Mbps | MP4 | `mfr_spec` |
+| F | video (4K ≥48fps) | H.265 required | 3840×2160 | 48 or 60 | 150 Mbps | MP4 | `mfr_spec` |
+| F | video (2.7K) | H.264 or H.265 | 2720×1530 | up to 60 | — | MP4 | `mfr_spec` |
+| F | video (1080P) | H.264 or H.265 | 1920×1080 | up to 60 | — | MP4 | `mfr_spec` |
+| F | photo | — | 48 MP | — | — | JPG / DNG | `mfr_spec` |
+
+**Notes:** H.265 is required at 4K 48fps and 60fps; codec is user-selectable at lower frame rates. Max bitrate 150 Mbps applies to 4K modes. SRT telemetry sidecar (GPS, altitude, ISO, shutter, aperture, focal length, digital zoom) paired with every video clip. Photos are 48 MP JPG; DNG raw also supported per manual but not observed on the sampled card.
+
+---
+
+## Sony Alpha A7 III (ILCE-7M3)
+
+| Channel | Mode | Codec | Resolution | FPS | Audio | Container | Source |
+|---------|------|-------|------------|-----|-------|-----------|--------|
+| F (video) | video | H.264 (AVC High@L5.1) | 3840×2160 | 29.97 | LPCM16, 2ch | MP4 (M4ROOT) | `sidecar_xml` |
+| — | photo | — | 24.2 MP | — | — | ARW | `mfr_spec` |
+
+**Notes:** Video codec, resolution, fps, and audio confirmed from `PRIVATE/M4ROOT/MEDIAPRO.XML` (`videoType="AVC_3840_2160_HP@L51"`, `fps="29.97p"`) and per-clip `C####M01.XML` sidecar (`videoCodec="AVC_3840_2160_HP@L51"`, `captureFps="29.97p"`). This is the first camera in the database where codec and resolution are confirmed from a metadata sidecar rather than ffprobe. AVC_3840_2160_HP@L51 = H.264 High Profile Level 5.1. Audio is dual-channel LPCM16 (linear PCM). Container is Sony XAVC S / M4ROOT MP4 format. Photos are RAW (.ARW) at 24.2 MP. DCIM/ is absent on video-only cards.
+
+---
+
 ## Cobra Road Scout
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -252,15 +310,20 @@ Cameras that have real card or footage samples but **no ffprobe-confirmed video 
 | Camera | Needs |
 |--------|-------|
 | BlackVue Elite 9 | codec, resolution, fps, bitrate |
+| BlackVue Elite 8 | bitrate |
 | Thinkware U3000 | codec, resolution, fps, bitrate |
 | Thinkware U3000 Pro | codec, resolution, fps, bitrate |
 | Escort M1 | codec, resolution, fps, bitrate |
+| Escort M2 | codec, resolution, fps, bitrate |
+| Escort MAXcam 360c | codec, resolution, fps, bitrate |
 | Cobra Road Scout | codec, resolution, fps, bitrate |
 | Vantrue N4 Pro S | codec, bitrate |
 | Vantrue N4 S | codec, resolution, fps, bitrate |
 | Vantrue E1 Pro | codec, resolution, fps, bitrate |
 | BlackVue DR970X Plus | codec, resolution (front), fps |
 | Vueroid S1 4K Infinite | bitrate (all modes), rear resolution |
+| DJI Mini 3 Pro | bitrate (all modes) |
+| Sony Alpha A7 III | bitrate |
 
 Cameras where bitrate is logged nowhere:
 - Every camera in this list — bitrate measurements are the largest universal gap.
