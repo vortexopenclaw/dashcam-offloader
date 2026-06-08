@@ -161,7 +161,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | PI | parking | H.264 | 1920x1080 | 30 | ~3.9 Mbps | MP4 | `ffprobe` |
 | PR | parking | H.264 | 2560x1440 | 30 | ~4.1 Mbps | MP4 | `ffprobe` |
 
-**Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet.
+**Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet. Treat the ~4 Mbps PF/PI/PR rows as low-bitrate parking-mode evidence, not normal driving bitrate.
 
 **Mounted-card update 2026-06-08:** `/Volumes/Untitled` was rechecked and parsed as 6225 MP4 files: 208 driving triplets, 1866 parking triplets, and 1 locked F/I/R triplet. The root `format.txt` file is present but empty, so it is only an exclusion signal.
 
