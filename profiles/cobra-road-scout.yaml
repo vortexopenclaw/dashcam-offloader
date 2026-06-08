@@ -1,0 +1,129 @@
+id: cobra-road-scout
+manufacturer: Cobra
+model: Road Scout
+slug: cobra-road-scout
+channels: 1
+source_notes:
+  - docs/card-profiles/cobra-road-scout.md
+  - docs/research/cobra-road-scout.md
+detection:
+  high_confidence:
+    - method: folder
+      path: DCIM/RoadScout
+      notes: >
+        All footage goes to DCIM/RoadScout/. The "RoadScout" subfolder name is specific
+        to this device and sufficient for high-confidence detection.
+  supporting:
+    - method: file_at_root
+      path: rom.bin
+      notes: >
+        A rom.bin file is permanently present at the card root — likely the DEFENDER
+        red light/speed camera database or radar firmware. Unlike firmware update files
+        on other cameras (which are transient and auto-deleted), this file persists.
+        Strong supporting signal when seen alongside DCIM/RoadScout/.
+    - method: filename_suffix
+      value: _VID
+      notes: >
+        All video clips include a _VID literal token before the extension. This is
+        unusual — most dashcams use a channel letter or mode code at that position.
+    - method: filename_pattern
+      pattern: '^(\d{8})_(\d{4})_VID\.MOV$'
+      notes: >
+        YYYYMMDD 8-digit date (no separator), 4-digit zero-padded daily-reset sequence,
+        _VID suffix, uppercase .MOV extension.
+  negative:
+    - pattern: '_(F|I|R|T|PF|PI|PR)\.(MP4|MOV)$'
+      notes: >
+        Presence of a VIOFO-style channel suffix rules out Cobra Road Scout.
+    - volume_label: 'ESCORT M1'
+      notes: >
+        Road Scout cards format with the generic "NO NAME" volume label, not a branded
+        one. ESCORT M1 volume label indicates a different camera.
+folders:
+  - path: DCIM/RoadScout
+    mode: all_recordings
+    validation: real_card_sampled
+    notes: >
+      All recording modes (continuous loop, G-sensor impact locked, emergency manual
+      lock) use this single folder. No separate locked/event subfolder was observed.
+      Locked clips appear to remain in place but are protected from loop overwrite.
+filename_patterns:
+  normal:
+    regex: '^(\d{8})_(\d{4})_VID\.MOV$'
+    example: 'YYYYMMDD_NNNN_VID.MOV'
+    applies_to:
+      - DCIM/RoadScout
+    case_sensitive: false
+    groups:
+      date: 1
+      sequence: 2
+    timestamp_format: YYYYMMDD
+    timestamp_components:
+      year: '1-4'
+      month: '5-6'
+      day: '7-8'
+    sequence_scope: per_date
+    notes: >
+      Sequence resets to 0001 at the start of each date. Confirmed from card scan:
+      multiple recording dates each begin at 0001. To order clips chronologically,
+      combine date + sequence — sequence alone is not globally unique.
+root_files:
+  - path: rom.bin
+    description: >
+      Permanent file at card root. Likely the DEFENDER speed/red-light camera database
+      or radar firmware blob. Not a transient firmware update file — present regardless
+      of update state.
+channels:
+  front: front
+video:
+  extension: '.MOV'
+  extension_case: uppercase
+  codec: h264
+  codec_confirmed: false
+  resolution_default: '1920x1080'
+  resolution_confirmed: false
+  fps_default: 30
+  fps_confirmed: false
+  clip_duration_minutes_options: [1, 3, 5]
+  clip_duration_default: 3
+  notes: >
+    Codec, resolution, and frame rate not confirmed via ffprobe — bash unavailable
+    during card scan. H.264 1080P 30fps assumed based on 2019 era, FCC ID BBORDCAM
+    hardware, and "HD" branding in manual. All three values need confirmation.
+sequence:
+  scope: per_date
+  padding: 4
+  notes: >
+    Daily-reset counter, zero-padded to 4 digits. Confirmed from card.
+gps:
+  supported: true
+  storage: embedded_in_video
+  notes: >
+    GPS receiver is built into the device (GPS satellite icon shown on display).
+    Cobra Drive HD app can display route overlays from recorded footage, indicating
+    GPS data is stored in the video file. Storage format (track, metadata atom, etc.)
+    not confirmed from ffprobe.
+parking_mode:
+  supported: false
+  notes: >
+    No parking mode. Camera records only when powered via the SmartCord USB through
+    the vehicle's 12V socket. No hardwire kit mentioned in the manual.
+radar_detector:
+  integrated: true
+  type: combined_radar_dashcam
+  bands: [X, K, Ka, Laser]
+  gps_filter: true
+  defender_database: true
+  notes: >
+    The Road Scout is a combined radar detector and dashcam on a single unit.
+    The DEFENDER database (speed cameras, red light cameras) updates via Wi-Fi
+    hotspot. rom.bin at card root is likely this database.
+validation:
+  card_sampled: true
+  footage_sampled: false
+  codec_confirmed: false
+  resolution_confirmed: false
+  notes: >
+    Real card scanned. Folder structure, filename pattern, and sequence behavior
+    directly confirmed. Codec, resolution, and fps not confirmed — ffprobe unavailable.
+    No G-sensor or emergency clips observed in sample (no obvious events in session).
