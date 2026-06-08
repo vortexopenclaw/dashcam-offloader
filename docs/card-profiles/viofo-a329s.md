@@ -18,6 +18,16 @@ The official VIOFO collection page also lists A329S 1CH, A329S 2CH, A329S 2CH IR
 
 VIOFO also documents Multiplex Video for the A329S family. Treat this as an optional combined-output mode, not as a separate camera model.
 
+Do not treat A329S as the same internal hardware platform as the A229 series. It can share a similar folder and filename family, but Ariel confirmed the A329S uses a different processor/internal platform. Codec, bitrate, and transcode assumptions must be measured from direct A329S files rather than inherited from A229 profiles.
+
+## Video Configuration Notes
+
+Confirmed A329S 3CH resolution layout:
+
+- Front: 3840x2160
+- Interior: 2560x1440
+- Rear: 2560x1440
+
 ## Card Layout
 
 Real-card observed:

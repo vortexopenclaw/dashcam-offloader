@@ -24,14 +24,15 @@ detection:
     - folder: DCIM/Photo
   notes: >
     No model-identifying file on card. Folder structure and filename pattern are identical
-    to other VIOFO A229/A329 models. OSD OCR on front-channel video is the recommended
+    to other VIOFO A229 models and similar to A329S. OSD OCR on front-channel video is the recommended
     detection method. Card structure is inferred from VIOFO platform conventions; no real
-    card has been directly scanned.
+    card has been directly scanned. Do not inherit A229 codec or bitrate assumptions for
+    A329S; that model uses a different processor/internal platform.
 folders:
   - path: DCIM/Movie
     mode: continuous
     validation: inferred
-    notes: Inferred from VIOFO platform conventions (confirmed on A229 Pro and A329S real cards).
+    notes: Inferred from VIOFO A229 platform conventions and similar A329S folder evidence.
   - path: DCIM/Movie/RO
     mode: protected
     validation: inferred
@@ -98,7 +99,8 @@ resolutions:
   validation: footage_sampled
   notes: >
     Confirmed from a private archive sample (not a direct card sample). Both front and rear are 4K UHD,
-    distinguishing the Ultra from A229 Pro (4K front, 2K rear) and A229 Plus (2K front, 2K rear).
+    distinguishing the Ultra from A229 Pro (4K front, 1080P interior, 2K rear) and A229 Plus
+    (2K front, 1080P interior, 2K rear).
     Users can adjust resolution in camera settings.
 exclude:
   - .Trashes/**
