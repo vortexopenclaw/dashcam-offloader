@@ -29,15 +29,19 @@ final class TransferViewModel: ObservableObject {
     }
 
     var availableModes: [String] {
-        Array(Set(clips.filter { $0.excludedReason == nil }.map(\.mode))).sorted()
+        Array(Set(footageClips.map(\.mode))).sorted()
     }
 
     var availableChannels: [String] {
-        Array(Set(clips.filter { $0.excludedReason == nil }.map(\.channel))).sorted()
+        Array(Set(footageClips.map(\.channel))).sorted()
     }
 
     var eligibleClips: [ClipItem] {
         clips.filter { $0.excludedReason == nil }
+    }
+
+    var footageClips: [ClipItem] {
+        eligibleClips.filter { !$0.isGPS && !$0.isPhoto }
     }
 
     var profilesByBrand: [(brand: String, profiles: [DashcamProfile])] {
@@ -150,6 +154,7 @@ final class TransferViewModel: ObservableObject {
                 self.selectedProfile = scanResult.selectedProfile
                 self.clips = scanResult.clips
                 self.resetFiltersForCurrentClips()
+                let footageClips = self.footageClips
                 self.scanSummary = ScanSummary(
                     sourcePath: selectedSource.url.path,
                     scannedFiles: scanResult.allFiles.count,
@@ -158,7 +163,7 @@ final class TransferViewModel: ObservableObject {
                     samplePaths: [],
                     categoryCounts: Dictionary(grouping: self.eligibleClips, by: \.outputCategory)
                         .mapValues(\.count),
-                    modeCounts: Dictionary(grouping: self.eligibleClips, by: \.displayMode)
+                    modeCounts: Dictionary(grouping: footageClips, by: \.displayMode)
                         .mapValues(\.count)
                 )
                 self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) copyable items"
@@ -179,8 +184,8 @@ final class TransferViewModel: ObservableObject {
     }
 
     func resetFiltersForCurrentClips() {
-        filters.selectedModes = Set(eligibleClips.filter { !$0.isGPS && !$0.isPhoto }.map(\.mode))
-        filters.selectedChannels = Set(eligibleClips.filter { !$0.isGPS && !$0.isPhoto }.map(\.channel))
+        filters.selectedModes = Set(footageClips.map(\.mode))
+        filters.selectedChannels = Set(footageClips.map(\.channel))
         filters.includePhotos = false
         filters.includeGPS = false
         filters.separateCategoryFolders = true

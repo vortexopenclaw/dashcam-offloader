@@ -104,6 +104,38 @@ enum SmokeTest {
                 return false
             }
 
+            let thinkwareSource = temp.appendingPathComponent("thinkware-u3000-pro", isDirectory: true)
+            try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent("SETTING", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent(".TWSYS/PIV", isDirectory: true), withIntermediateDirectories: true)
+            try Data("settings".utf8).write(to: thinkwareSource.appendingPathComponent("SETTING/U3000PRO_Setting.exe"))
+            try Data(repeating: 6, count: 2048).write(to: thinkwareSource.appendingPathComponent("cont_rec/REC_20260528_175357_F.MP4"))
+            try Data(repeating: 7, count: 1024).write(to: thinkwareSource.appendingPathComponent("cont_rec/REC_20260528_175357_R.MP4"))
+            try Data(repeating: 8, count: 512).write(to: thinkwareSource.appendingPathComponent(".TWSYS/PIV/PLOC_1_1.JPG"))
+            try Data(repeating: 9, count: 512).write(to: thinkwareSource.appendingPathComponent(".TWSYS/PIV/PLOC_2_1.JPG"))
+
+            let thinkwareScan = try scanner.scan(sourceURL: thinkwareSource, profiles: profiles)
+            guard thinkwareScan.candidates.first?.profile.id == "thinkware-u3000-pro" else {
+                print("SMOKE FAIL: Thinkware U3000 Pro was not top candidate")
+                return false
+            }
+            guard Set(thinkwareScan.clips.map(\.channel)) == ["front", "rear"] else {
+                print("SMOKE FAIL: Thinkware channels not mapped to front/rear: \(Set(thinkwareScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            guard Set(thinkwareScan.clips.map(\.displayChannel)) == ["Front", "Rear"] else {
+                print("SMOKE FAIL: Thinkware channel labels wrong: \(Set(thinkwareScan.clips.map(\.displayChannel)).sorted())")
+                return false
+            }
+            guard Set(thinkwareScan.clips.map(\.displayMode)) == ["Driving"] else {
+                print("SMOKE FAIL: Thinkware recording type should display as Driving: \(Set(thinkwareScan.clips.map(\.displayMode)).sorted())")
+                return false
+            }
+            guard !thinkwareScan.clips.contains(where: { $0.relativePath.hasPrefix(".TWSYS/") }) else {
+                print("SMOKE FAIL: Thinkware hidden .TWSYS internals were scanned")
+                return false
+            }
+
             print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files")
             return true
         } catch {
