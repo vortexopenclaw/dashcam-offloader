@@ -26,12 +26,6 @@ detection:
     - path: BlackVue/Config/micom_version.bin
       contains: "model = DR970X LTE Plus"
   supporting:
-    - path: BlackVue/Config/config.ini
-      contains:
-        - "ap_ssid=BlackVue970XLTEP-"
-    - path: BlackVue/Config/bt_ssid.bin
-      contains:
-        - "BlackVue970XLTEP-"
     - folder: BlackVue/Record
     - volume_label: BLACKVUE
       strength: weak
@@ -107,4 +101,4 @@ exclude:
 notes:
   - "Real card sampled at /Volumes/BLACKVUE 2 on 2026-06-08."
   - "Model evidence came from version.bin and micom_version.bin. Raw config.ini also includes private WiFi/cloud settings and must not be logged."
-  - "AP/BT SSID prefix observed as BlackVue970XLTEP-, useful supporting evidence but not a primary model identifier."
+  - "AP/BT SSID values are user-changeable and must not be used as model evidence."

@@ -143,8 +143,6 @@ enum SmokeTest {
                 at: blackvueDR970XSource.appendingPathComponent("BlackVue/Record", isDirectory: true),
                 withIntermediateDirectories: true
             )
-            try Data("ap_ssid=BlackVueElite8-TEST\n".utf8)
-                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/config.ini"))
             try Data("version = 1.009\nmodel = ELITE 8\n".utf8)
                 .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/version.bin"))
             try Data("version = 3.02\nmodel = ELITE 8 v1.009(rev1052)\n".utf8)

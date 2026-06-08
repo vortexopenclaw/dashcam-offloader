@@ -18,10 +18,6 @@ source_notes:
   - docs/research/blackvue-elite-8.md
 detection:
   high_confidence:
-    - path: BlackVue/Config/config.ini
-      contains:
-        - "ap_ssid=BlackVueElite8-"
-  supporting:
     - path: BlackVue/Config/version.bin
       contains:
         - "model = ELITE 8"
@@ -31,6 +27,7 @@ detection:
     - path: BlackVue/Config/smart_gsensor_version.bin
       contains:
         - "model = ELITE 8"
+  supporting:
     - folder: BlackVue/Record
     - volume_label: BLACKVUE
       strength: weak

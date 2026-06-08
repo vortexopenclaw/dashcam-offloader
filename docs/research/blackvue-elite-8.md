@@ -19,7 +19,7 @@
 - Video format confirmed as MP4 from official product specifications page.
 - Key distinction from the Elite 9: the Elite 9 has 4K front + 2K rear; the Elite 8 has 2K on both channels but upgrades the rear to Sony STARVIS 2 (the Elite 9 rear uses STARVIS 1).
 - The firmware update page groups Elite 8, Elite 9, and Elite 10 as a related family, consistent with the shared filename structure observed on real cards.
-- The WiFi SSID follows the format `BlackVueElite8-XXXXXX` where the suffix is a device-specific hex identifier.
+- The default Wi-Fi SSID may follow the format `BlackVueElite8-XXXXXX`, but this is user-changeable and must not be used as model evidence.
 - Parking recording modes: Power Saving (<1mA), Motion detection, Time-lapse.
 - Smart event recording includes: Driving Impact, Parking Impact, Overspeed, Hard Acceleration, Hard Braking, Hard Cornering (with 10-sec pre-buffer).
 
@@ -33,17 +33,17 @@ The real Elite 8 sample at `/Volumes/BlackVue` confirmed:
 - Observed channel letters: `F` and `R`.
 - Complete front/rear pairing for all observed clips.
 - Config folder present: `BlackVue/Config/` with `version.bin`, `micom_version.bin`, `smart_gsensor_version.bin`, `config.ini`, and `bt_ssid.bin`.
-- `config.ini` is plaintext and contains `ap_ssid=BlackVueElite8-XXXXXX` — the WiFi SSID embeds the model name.
-- The binary version files could not be read as text during this scan. Based on the Elite 9 pattern (where `version.bin` contains `model = ELITE 9`), they are expected to contain `model = ELITE 8`, but this is inferred and not yet verified by binary substring read.
+- `config.ini` is plaintext and may contain `ap_ssid=BlackVueElite8-XXXXXX`, but this is a user-changeable Wi-Fi AP name and is not reliable model evidence.
+- The BlackVue model metadata files contain `model = ELITE 8` and are the reliable card-side model evidence.
 - No `BlackVue/System` folder observed on this card.
 
 ## Detection Decision
 
 The Elite 9 uses `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` as high-confidence signals because they contain a plaintext model string that can be matched by binary substring read.
 
-For the Elite 8, those same files are present on the card but their content was not confirmed during this scan. `config.ini` is used as the primary high-confidence detection signal because it is plaintext, directly readable, and unambiguously contains `ap_ssid=BlackVueElite8-`, which distinguishes the Elite 8 from the Elite 9 and other BlackVue models without binary parsing.
+For the Elite 8, those same files are present on the card and should be matched by exact model strings. `config.ini` can help document recording settings, but Wi-Fi SSID/AP fields inside it are user-changeable and must not be used for model identification.
 
-The binary version files are included as supporting signals based on the consistent Elite family pattern, pending direct verification.
+The binary version files are the primary BlackVue model signals. If they identify an unsupported model, the app should show it as a New Dashcam instead of choosing the closest supported BlackVue profile.
 
 ## Privacy Notes
 
