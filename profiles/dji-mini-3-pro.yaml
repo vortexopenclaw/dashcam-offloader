@@ -1,0 +1,173 @@
+id: dji-mini-3-pro
+manufacturer: DJI
+model: Mini 3 Pro
+slug: dji-mini-3-pro
+channels: 1
+type: drone
+source_notes:
+  - docs/card-profiles/dji-mini-3-pro.md
+  - docs/research/dji-mini-3-pro.md
+detection:
+  high_confidence:
+    - method: folder
+      path: DCIM/100MEDIA
+      notes: >
+        DJI Mini 3 Pro primary media folder. Increments to 101MEDIA, 102MEDIA
+        when folder capacity is reached.
+    - method: filename_pattern
+      pattern: '^DJI_\d{4}\.SRT$'
+      notes: >
+        Per-frame telemetry SRT sidecar paired with every video clip. The
+        DJI_NNNN prefix + .SRT extension combination is highly specific to
+        DJI drone footage. No date in filename — date lives in SRT content.
+    - method: filename_pattern
+      pattern: '^DJI_\d{4}\.MP4$'
+      notes: >
+        4-digit global sequence with no date component. DJI_ prefix distinguishes
+        from dashcam naming conventions.
+  supporting:
+    - folder: MISC/THM
+    - method: volume_label
+      value: 'DJI Mini 3'
+      notes: >
+        Observed volume label on sampled card. May vary depending on whether
+        card was formatted in-drone or on a computer — not reliable alone.
+    - method: filename_pattern
+      pattern: '^DJI_\d{4}\.JPG$'
+      notes: Photos share the same DJI_NNNN sequence as video files.
+  negative:
+    - method: folder
+      path: PRIVATE/M4ROOT
+      notes: Sony XAVC S structure — not present on DJI cards.
+    - method: folder
+      path: Normal
+      notes: Escort/Cobra dashcam folder structure — not present on DJI cards.
+folders:
+  - path: DCIM/100MEDIA
+    mode: primary_media
+    validation: real_card_sampled
+    notes: >
+      All video, photo, and SRT files. When capacity reached (999 files),
+      camera creates DCIM/101MEDIA and continues.
+  - path: MISC/THM/100
+    mode: thumbnails
+    validation: real_card_sampled
+    notes: .THM thumbnails and .SCR preview screenshots. Not needed for offload.
+filename_patterns:
+  video:
+    regex: '^DJI_(\d{4})\.MP4$'
+    example: 'DJI_0001.MP4'
+    applies_to:
+      - DCIM/100MEDIA
+    groups:
+      sequence: 1
+    notes: No date in filename — timestamp is in SRT sidecar and video metadata.
+  srt_sidecar:
+    regex: '^DJI_(\d{4})\.SRT$'
+    example: 'DJI_0001.SRT'
+    applies_to:
+      - DCIM/100MEDIA
+    notes: >
+      Per-frame telemetry at ~33ms intervals (30fps). Fields per frame:
+      timestamp, GPS lat/lon, relative altitude, absolute altitude, ISO,
+      shutter speed, aperture (fnum x100), EV, color temperature, focal
+      length (mm x10), digital zoom ratio.
+  photo:
+    regex: '^DJI_(\d{4})\.(JPG|DNG)$'
+    example: 'DJI_0009.JPG'
+    applies_to:
+      - DCIM/100MEDIA
+    notes: >
+      Photos share the global sequence with video. JPEG confirmed on card;
+      DNG supported per manual but not observed on sampled card.
+  thumbnail:
+    regex: '^DJI_(\d{4})\.(THM|SCR)$'
+    example: 'DJI_0001.THM'
+    applies_to:
+      - MISC/THM/100
+channels:
+  primary:
+    notes: Single camera — 1-channel drone. No channel tokens in filenames.
+sequence:
+  scope: global
+  padding: 4
+  notes: >
+    Global counter shared across all media types (video, photo, DNG). Increments
+    monotonically regardless of power cycle. Counter continues across 100MEDIA
+    to 101MEDIA transitions. Setting File Index Mode to Reset in DJI Fly causes
+    per-session restart.
+video:
+  extension: '.MP4'
+  extension_case: uppercase
+  codec: h264_or_h265
+  codec_confirmed: assumed
+  resolution_default: '3840x2160'
+  fps_default: 30
+  resolutions_available:
+    - '3840x2160@24fps'
+    - '3840x2160@25fps'
+    - '3840x2160@30fps'
+    - '3840x2160@48fps'
+    - '3840x2160@50fps'
+    - '3840x2160@60fps'
+    - '2720x1530@24fps'
+    - '2720x1530@25fps'
+    - '2720x1530@30fps'
+    - '2720x1530@48fps'
+    - '2720x1530@50fps'
+    - '2720x1530@60fps'
+    - '1920x1080@24fps'
+    - '1920x1080@25fps'
+    - '1920x1080@30fps'
+    - '1920x1080@48fps'
+    - '1920x1080@50fps'
+    - '1920x1080@60fps'
+    - '1920x1080@120fps'
+  max_bitrate_mbps: 150
+  color_profiles:
+    - Normal
+    - D-Cinelike
+  notes: >
+    H.264 available for 4K<=30fps; H.265 required for 4K>=48fps. Both codecs
+    available at 1080P. Max 150 Mbps. Slow motion at 1080P 120fps. HDR at
+    4K 30fps. Codec not confirmed from ffprobe.
+photos:
+  formats:
+    - JPG
+    - DNG
+  resolution_mp: 48
+  notes: >
+    48MP sensor. JPEG confirmed on sampled card; DNG (RAW) supported per
+    manual, not observed on sampled card.
+telemetry:
+  srt_sidecar: true
+  frame_rate_hz: 30
+  fields:
+    - gps_latitude
+    - gps_longitude
+    - rel_altitude_m
+    - abs_altitude_m
+    - iso
+    - shutter_speed
+    - aperture_fnum
+    - ev
+    - color_temperature_k
+    - focal_length_mm
+    - digital_zoom_ratio
+  notes: >
+    SRT confirmed from real card. One telemetry entry per video frame (~33ms
+    at 30fps). Enables sub-second GPS position and camera exposure tracking.
+parking_mode:
+  supported: false
+  notes: Drone — no parking mode concept.
+hardware:
+  weight_g: 249
+  class: sub_250g
+validation:
+  card_sampled: true
+  srt_confirmed: true
+  codec_confirmed: false
+  notes: >
+    Real card sampled. DCIM/100MEDIA structure, DJI_NNNN pattern, SRT sidecar
+    content (per-frame GPS + camera telemetry), shared video/photo sequence all
+    confirmed. Codec not confirmed from ffprobe.

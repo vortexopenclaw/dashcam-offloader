@@ -1,0 +1,136 @@
+id: escort-m2
+manufacturer: Escort
+model: M2
+slug: escort-m2
+channels: 1
+source_notes:
+  - docs/card-profiles/escort-m2.md
+  - docs/research/escort-m2.md
+detection:
+  high_confidence:
+    - method: volume_label
+      value: 'M2'
+      notes: >
+        Volume label set by the camera on format. "M2" is short and specific
+        to this model — other Escort devices use different labels (e.g.,
+        "ESCORT M1" for the M1). Not sufficient alone; use with folder structure.
+    - method: folder
+      path: Normal
+      notes: >
+        Normal/ at card root (not DCIM/) with paired .map GPS sidecars is the
+        primary structural fingerprint for the Escort M2.
+  supporting:
+    - folder: Photo
+    - method: filename_pattern
+      pattern: '^\d{8}_\d{4}_CAM\.MP4$'
+      notes: >
+        YYYYMMDD_NNNN_CAM.MP4. Uppercase .MP4 extension distinguishes from
+        Escort M1 (.MOV) and Cobra Road Scout (.MOV). _CAM suffix is specific
+        to 1-channel Escort dashcams.
+    - method: file_extension
+      value: '.map'
+      notes: >
+        Proprietary ESCORT .map GPS sidecar paired with every video clip
+        in Normal/. Not used by any other profiled camera.
+  negative:
+    - method: folder
+      path: Escort_M1
+      notes: Escort M1 uses Escort_M1/ root subfolder — not present on M2.
+    - method: folder
+      path: DCIM
+      notes: M2 does not use DCIM/ as its primary footage container.
+    - method: folder
+      path: Normal/MAXcam360c
+      notes: MAXcam 360c stores footage in a model-named subfolder under Normal/ — M2 does not.
+folders:
+  - path: Normal
+    mode: continuous
+    validation: real_card_sampled
+    notes: Standard loop-recorded driving clips with paired .map GPS sidecars.
+  - path: Photo
+    mode: photo
+    validation: real_card_sampled
+    notes: Still photos captured while driving.
+  - path: Event
+    mode: locked
+    validation: not_observed_on_card
+    notes: >
+      G-sensor triggered and manually locked clips. Mentioned in official manual
+      but not present on the sampled card (no events occurred during sampling).
+filename_patterns:
+  video:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_CAM\.MP4$'
+    example: '20240328_0004_CAM.MP4'
+    applies_to:
+      - Normal
+      - Event
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      sequence: 4
+    timestamp_format: YYYYMMDD
+    notes: >
+      Date only in filename (no time component). 4-digit per-day sequence.
+      Channel token is always CAM — 1CH device, no channel disambiguation.
+  photo:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_CAM_IMG\.JPG$'
+    example: '20210807_0030_CAM_IMG.JPG'
+    applies_to:
+      - Photo
+    notes: Same date+sequence structure as video; _IMG suffix before .JPG extension.
+  gps_sidecar:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_CAM\.map$'
+    example: '20240328_0004_CAM.map'
+    applies_to:
+      - Normal
+    notes: Paired 1:1 with every video clip in Normal/. Proprietary ESCORT .map format.
+channels:
+  front:
+    token: CAM
+    notes: Single camera — no channel disambiguation needed.
+sequence:
+  scope: per_date
+  padding: 4
+  notes: >
+    Resets to 0001 each day. Shared across Normal/, Photo/, and Event/ on the
+    same date — clips and photos share the same counter.
+video:
+  extension: '.MP4'
+  extension_case: uppercase
+  codec: h264
+  codec_confirmed: assumed
+  resolution_default: '1920x1080'
+  fps_default: 30
+  resolutions_available:
+    - '1920x1080@30fps'
+    - '1280x720@30fps'
+  clip_duration_minutes_options: [1, 2, 3]
+  notes: >
+    H.264 1080P 30fps assumed from manual specs. Codec not confirmed from ffprobe.
+    Clip duration is configurable: 1, 2, or 3 minutes.
+gps:
+  embedded: false
+  sidecar_format: '.map'
+  notes: >
+    GPS track stored in proprietary ESCORT .map sidecar. Compatible with
+    Drive Smarter app and Escort Live.
+features:
+  parking_mode: true
+  parking_mode_note: >
+    Requires hardwire power kit. Records on motion detection when vehicle is off.
+  adas: true
+  adas_features:
+    - FCWS
+    - LDWS
+  app: Drive Smarter
+hardware:
+  copyright: '©2025 ESCORT INC.'
+validation:
+  card_sampled: true
+  footage_sampled: true
+  codec_confirmed: false
+  notes: >
+    Real card sampled. Folder structure, filename pattern, GPS sidecar pairing,
+    and sequence behavior confirmed. Codec and resolution not confirmed from ffprobe.
+    Event/ folder not observed on sampled card.

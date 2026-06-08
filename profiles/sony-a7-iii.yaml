@@ -1,0 +1,196 @@
+id: sony-a7-iii
+manufacturer: Sony
+model: Alpha A7 III
+slug: sony-a7-iii
+channels: 1
+type: mirrorless_camera
+source_notes:
+  - docs/card-profiles/sony-a7-iii.md
+  - docs/research/sony-a7-iii.md
+detection:
+  high_confidence:
+    - method: xml_field
+      path: PRIVATE/M4ROOT/MEDIAPRO.XML
+      xpath: '/MediaProfile/Properties/System/@systemKind'
+      value: ILCE-7M3
+      notes: >
+        MEDIAPRO.XML is created by the camera on every card, including freshly
+        formatted cards with only one clip. Contains systemKind="ILCE-7M3" —
+        the Sony internal model identifier for the Alpha A7 III. Works on
+        video-only cards where DCIM/ is absent.
+    - method: xml_field
+      path: PRIVATE/M4ROOT/CLIP/*.xml
+      xpath: '/NonRealTimeMeta/Device/@modelName'
+      value: ILCE-7M3
+      notes: >
+        Clip XML sidecar also confirms modelName="ILCE-7M3". Fallback when
+        MEDIAPRO.XML is absent or not yet readable. Every clip on both sampled
+        cards had this field.
+  supporting:
+    - method: file_exists
+      path: PRIVATE/SONY/SONYCARD.IND
+      notes: Present on all Sony Alpha cards. Confirms Sony but not specific model.
+    - method: folder
+      path: PRIVATE/M4ROOT/CLIP
+      notes: Sony XAVC S recording structure. Not used by any other profiled camera.
+    - method: filename_pattern
+      pattern: '^C\d{4}\.MP4$'
+      notes: Sony XAVC S clip naming convention.
+    - method: filename_pattern
+      pattern: '^A73\d{5}\.ARW$'
+      notes: >
+        A7 III-specific photo prefix. Only present when photos have been taken
+        — absent on video-only cards.
+  negative:
+    - method: folder
+      path: DCIM/100MEDIA
+      notes: DJI drone structure — not present on Sony A7 III cards.
+    - method: folder
+      path: Normal
+      notes: Dashcam folder structure — not present.
+    - method: volume_label
+      value: 'Untitled'
+      notes: >
+        Default Sony card label is "Untitled" — too generic for detection.
+        Do not use volume label for A7 III identification.
+folders:
+  - path: PRIVATE/M4ROOT/CLIP
+    mode: video
+    validation: real_card_sampled
+    notes: >
+      Primary video storage. Present even on freshly formatted video-only cards.
+  - path: PRIVATE/M4ROOT/THMBNL
+    mode: thumbnails
+    validation: real_card_sampled
+    notes: JPEG thumbnails for each clip (C0001T01.JPG etc.).
+  - path: PRIVATE/M4ROOT/MEDIAPRO.XML
+    mode: manifest
+    validation: real_card_sampled
+    notes: >
+      Sony media manifest listing all clips with codec, fps, resolution, and
+      systemKind. Present on all cards with at least one clip.
+  - path: DCIM/100MSDCF
+    mode: photos
+    validation: real_card_sampled
+    notes: >
+      Still photos in ARW and/or JPEG. Absent on video-only cards — only
+      created after photos are taken.
+  - path: PRIVATE/AVCHD
+    mode: legacy_avchd
+    validation: real_card_sampled
+    notes: AVCHD recording skeleton. Present even when AVCHD mode is not used.
+filename_patterns:
+  video:
+    regex: '^C(\d{4})\.MP4$'
+    example: 'C0001.MP4'
+    applies_to:
+      - PRIVATE/M4ROOT/CLIP
+    groups:
+      sequence: 1
+    notes: >
+      4-digit sequential clip number. No date or time in filename — use
+      C####M01.XML CreationDate or MEDIAPRO.XML Material for timestamp.
+  video_xml_sidecar:
+    regex: '^C(\d{4})M01\.XML$'
+    example: 'C0001M01.XML'
+    applies_to:
+      - PRIVATE/M4ROOT/CLIP
+    notes: >
+      NonRealTimeMeta XML sidecar present for every clip. Contains: CreationDate,
+      videoCodec (e.g., AVC_3840_2160_HP@L51), resolution, fps, audioCodec
+      (LPCM16), modelName (ILCE-7M3), recording mode, color profile
+      (CaptureGammaEquation).
+  thumbnail:
+    regex: '^C(\d{4})T01\.JPG$'
+    example: 'C0001T01.JPG'
+    applies_to:
+      - PRIVATE/M4ROOT/THMBNL
+  photo_arw:
+    regex: '^A73(\d{5})\.ARW$'
+    example: 'A7307789.ARW'
+    applies_to:
+      - DCIM/100MSDCF
+    groups:
+      sequence: 1
+    notes: >
+      Sony ARW raw. "A73" prefix is Alpha A7 III model-specific. 5-digit
+      sequence independent from video clip numbering.
+  photo_jpg:
+    regex: '^A73(\d{5})\.JPG$'
+    example: 'A7307789.JPG'
+    applies_to:
+      - DCIM/100MSDCF
+    notes: JPEG companion when shooting RAW+JPEG. Not observed on sampled card.
+channels:
+  primary:
+    notes: Single camera body — 1CH. No channel tokens in filenames.
+sequence:
+  video:
+    scope: global
+    padding: 4
+    notes: C0001, C0002... Monotonic across sessions on same card.
+  photo:
+    scope: global
+    padding: 5
+    prefix: A73
+    notes: A73NNNNN. Independent from video clip numbering.
+video:
+  extension: '.MP4'
+  extension_case: uppercase
+  container: xavc_s
+  codec: h264
+  codec_confirmed: true
+  codec_detail: 'AVC_3840_2160_HP@L51'
+  resolution_default: '3840x2160'
+  fps_default: 29.97
+  resolutions_available:
+    - '3840x2160@23.98fps'
+    - '3840x2160@25fps'
+    - '3840x2160@29.97fps'
+    - '1920x1080@23.98fps'
+    - '1920x1080@25fps'
+    - '1920x1080@29.97fps'
+    - '1920x1080@50fps'
+    - '1920x1080@59.94fps'
+    - '1920x1080@119.88fps'
+  audio: LPCM16
+  color_profiles:
+    - rec709
+    - rec709-xvycc
+    - S-Log2
+    - S-Log3
+  notes: >
+    XAVC S format (M4ROOT container). Codec confirmed from both MEDIAPRO.XML
+    (videoType="AVC_3840_2160_HP@L51") and clip XML sidecar on real cards.
+    4K up to 30fps; 1080P up to 120fps slow motion. LPCM16 stereo audio.
+    Max bitrate 100 Mbps per Sony spec — not measured from card files.
+photos:
+  formats:
+    - ARW
+    - JPG
+  resolution_mp: 24.2
+  dimensions: '6000x4000'
+  notes: >
+    24.2 MP full-frame sensor. ARW is Sony proprietary RAW. Camera can shoot
+    RAW-only, JPEG-only, or RAW+JPEG. Sampled card had ARW only. Photo folder
+    (DCIM/) absent on video-only cards.
+parking_mode:
+  supported: false
+  notes: Mirrorless camera — no parking or dashcam-specific recording modes.
+hardware:
+  model_code: ILCE-7M3
+  sensor: 35mm full-frame BSI CMOS, 24.2 MP
+  notes: >
+    Volume label defaults to "Untitled" when formatted. Do not use for
+    detection — use MEDIAPRO.XML systemKind field instead.
+validation:
+  card_sampled: true
+  video_only_card_sampled: true
+  photo_card_sampled: true
+  codec_confirmed: true
+  model_fingerprint_confirmed: true
+  notes: >
+    Two real cards sampled: one with video+photos (user-renamed volume), one
+    freshly formatted video-only card (volume "Untitled"). MEDIAPRO.XML
+    systemKind confirmed as primary detection signal on both. Codec, resolution,
+    and model confirmed from XML sidecars. Detection does not rely on volume label.

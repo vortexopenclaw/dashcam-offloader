@@ -1,0 +1,147 @@
+id: escort-maxcam-360c
+manufacturer: Escort
+model: MAXcam 360c
+slug: escort-maxcam-360c
+channels: 1
+type: combo_radar_dashcam
+source_notes:
+  - docs/card-profiles/escort-maxcam-360c.md
+  - docs/research/escort-maxcam-360c.md
+detection:
+  high_confidence:
+    - method: folder
+      path: Normal/MAXcam360c
+      notes: >
+        All footage stored under Normal/MAXcam360c/ — the literal string
+        "MAXcam360c" as a subfolder name is a device-specific identifier with
+        no ambiguity against other profiled cameras.
+    - method: filename_pattern
+      pattern: '^\d{8}_\d{4}_VID\.MOV$'
+      notes: >
+        _VID suffix on normal clips. Combined with the MAXcam360c subfolder,
+        this is a definitive fingerprint. _SOS suffix used for event clips.
+  supporting:
+    - folder: Event/MAXcam360c
+    - method: file_exists
+      path: DATA/serial_num.txt
+      notes: Device-created serial number file.
+    - method: file_exists
+      path: DATA/gps_userdb.bin
+      notes: >
+        GPS lockout database created by the device. Common to Escort
+        radar+dashcam combos that support GPS lockout points.
+    - method: file_suffix
+      value: '_gps.bin'
+      notes: >
+        GPS sidecar files. Appear once GPS lock is acquired — not present
+        for every clip.
+    - method: file_suffix
+      value: '_gsensor.bin'
+      notes: G-sensor data sidecar. Appears alongside _gps.bin.
+  negative:
+    - method: folder
+      path: DCIM
+      notes: MAXcam 360c does not use DCIM/.
+    - method: folder
+      path: Escort_M1
+      notes: Escort M1 subfolder not present on MAXcam 360c.
+folders:
+  - path: Normal/MAXcam360c
+    mode: continuous
+    validation: real_card_sampled
+    notes: >
+      Standard loop-recorded driving clips. GPS and G-sensor sidecar files
+      stored alongside .MOV clips; sidecars absent before GPS lock acquisition.
+  - path: Event/MAXcam360c
+    mode: locked
+    validation: real_card_sampled
+    notes: G-sensor triggered and manually locked clips. Uses _SOS filename suffix.
+filename_patterns:
+  video_normal:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_VID\.MOV$'
+    example: '20251011_0052_VID.MOV'
+    applies_to:
+      - Normal/MAXcam360c
+    groups:
+      year: 1
+      month: 2
+      day: 3
+      sequence: 4
+    timestamp_format: YYYYMMDD
+  video_event:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_SOS\.MOV$'
+    example: '20250127_0012_SOS.MOV'
+    applies_to:
+      - Event/MAXcam360c
+    notes: >
+      _SOS = G-sensor / emergency event. Same date+sequence structure.
+      Sequence shared with Normal/ clips on the same date.
+  gps_sidecar:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_VID_gps\.bin$'
+    example: '20251011_0052_VID_gps.bin'
+    applies_to:
+      - Normal/MAXcam360c
+    notes: >
+      Absent for clips before GPS lock. Does not appear alongside every clip.
+  gsensor_sidecar:
+    regex: '^(\d{4})(\d{2})(\d{2})_(\d{4})_VID_gsensor\.bin$'
+    example: '20251011_0052_VID_gsensor.bin'
+    applies_to:
+      - Normal/MAXcam360c
+    notes: Paired with _gps.bin; both begin at the same clip.
+ancillary_files:
+  - path: DATA/serial_num.txt
+    description: Camera serial number, plain text.
+  - path: DATA/gps_userdb.bin
+    description: >
+      GPS lockout database. User-programmed GPS lockout points from the
+      radar detector stored here.
+  - path: Normal/MAXcam360c/.deleted.MOV
+    description: >
+      Placeholder for loop-overwritten or manually deleted clips.
+      Not a real video file.
+channels:
+  front:
+    token: VID
+    notes: Single camera — 1CH device. No channel token used for disambiguation.
+sequence:
+  scope: per_date
+  padding: 4
+  notes: >
+    Resets to 0001 each day. Shared across Normal/ and Event/ subfolders on
+    the same date. 4-digit zero-padded.
+video:
+  extension: '.MOV'
+  extension_case: uppercase
+  codec: h264
+  codec_confirmed: assumed
+  resolution_default: '1920x1080'
+  fps_default: 30
+  notes: H.264 1080P 30fps assumed from 2021 hardware era. Not confirmed from ffprobe.
+gps:
+  embedded: false
+  sidecar_format: '_gps.bin'
+  notes: >
+    Proprietary binary sidecar. Absent for clips before GPS fix.
+    gps_userdb.bin in DATA/ is the radar lockout database — separate from
+    per-clip GPS data.
+features:
+  parking_mode: true
+  parking_mode_note: Requires hardwire power kit. Motion detection recording.
+  radar_detector: true
+  radar_detector_note: >
+    Full radar/laser/MRCD detection. DEFENDER camera database stored in
+    DATA/gps_userdb.bin.
+  app: Drive Smarter
+hardware:
+  fcc_id: QKLMXCAM
+  copyright: '©2021 ESCORT Inc.'
+validation:
+  card_sampled: true
+  footage_sampled: true
+  codec_confirmed: false
+  notes: >
+    Real card sampled. Folder structure, filename patterns, GPS/G-sensor sidecar
+    behavior, and ancillary DATA/ files all confirmed. Codec and resolution not
+    confirmed from ffprobe. GPS/G-sensor sidecars confirmed to begin mid-session
+    after GPS lock acquisition. .deleted.MOV placeholder observed.
