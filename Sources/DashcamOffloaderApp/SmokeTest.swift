@@ -327,7 +327,6 @@ enum SmokeTest {
             try FileManager.default.createDirectory(at: blackVueSupportedSource.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: blackVueSupportedSource.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
             try Data("model = ELITE 8".utf8).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Config/version.bin"))
-            try Data("ap_ssid=BlackVueElite8-test".utf8).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Config/config.ini"))
             try Data(repeating: 10, count: 1024).write(to: blackVueSupportedSource.appendingPathComponent("BlackVue/Record/20260608_120000_NF.mp4"))
             let blackVueSupportedScan = try scanner.scanWithOSD(sourceURL: blackVueSupportedSource, profiles: profiles)
             guard blackVueSupportedScan.identifiedCamera?.displayName == "BlackVue Elite 8",
