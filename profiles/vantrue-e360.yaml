@@ -1,0 +1,40 @@
+id: vantrue-e360
+manufacturer: Vantrue
+model: E360
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "YYYYMMDD_HHMMSS_SEQ_(N|E)_(A|C).MP4"
+folders:
+  - path: Normal
+    mode: normal
+  - path: Event
+    mode: event
+  - path: Parking
+    mode: parking
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_(\\d{5})_([NEP])_([AC])\\.(MP4|JPG)$"
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    modes:
+      N: normal
+      E: event
+      P: parking
+    channels:
+      A: panoramic_front
+      B: interior
+      C: rear
+channels:
+  A: panoramic_front
+  B: interior
+  C: rear
+exclude:
+  - GPS/**
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

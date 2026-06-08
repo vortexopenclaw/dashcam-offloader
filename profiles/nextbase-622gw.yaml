@@ -1,0 +1,31 @@
+id: nextbase-622gw
+manufacturer: Nextbase
+model: 622GW
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "YYMMDD_HHMMSS_SEQ_(FH|RH).MP4"
+folders:
+  - path: Videos
+    mode: continuous
+    validation: inferred
+  - path: Protected
+    mode: protected
+    validation: inferred
+filename_patterns:
+  - pattern: "^(\\d{6})_(\\d{6})_(\\d{3})_(FH|RH)\\.MP4$"
+    channels:
+      FH: front
+      RH: rear
+channels:
+  FH: front
+  RH: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
