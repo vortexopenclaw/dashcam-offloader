@@ -33,55 +33,169 @@ struct CardScanner {
     func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
-        let selectedProfile = candidates.first?.profile ?? profiles.first
+        let selectedProfile = candidates.first?.profile
         let clips = selectedProfile.map { classify(files: allFiles, sourceURL: sourceURL, profile: $0) } ?? []
+        let diagnostics = candidates.first.map {
+            [
+                ScanDiagnosticEntry(
+                    stage: "profile_scoring",
+                    profileID: $0.profile.id,
+                    profileName: $0.profile.displayName,
+                    outcome: "selected_initial",
+                    detail: "top score \($0.score), confidence \($0.confidence.rawValue), candidates \(candidates.count)"
+                )
+            ]
+        } ?? [
+            ScanDiagnosticEntry(
+                stage: "profile_scoring",
+                profileID: nil,
+                profileName: nil,
+                outcome: "no_candidates",
+                detail: "No profile scored above zero"
+            )
+        ]
 
         return ScanResult(
             sourceURL: sourceURL,
             allFiles: allFiles,
             candidates: candidates,
             selectedProfile: selectedProfile,
-            clips: clips
+            clips: clips,
+            diagnostics: diagnostics
         )
     }
 
     /// Async scan that augments folder/filename detection with OSD OCR to
     /// disambiguate sibling models (e.g. VIOFO A229 Pro vs Plus vs Ultra).
     ///
-    /// OSD probing only runs when the result is genuinely ambiguous: the top
-    /// candidate is `.medium` confidence and at least one other candidate
-    /// scores within 15 points of it. A confirmed OSD match bumps that
+    /// OSD probing runs when the folder/filename result is ambiguous, or when
+    /// several sibling candidates have OSD specs. VIOFO A229/A329 siblings can
+    /// score high from identical folders and filename patterns, so confidence
+    /// alone is not enough to skip OCR. A confirmed OSD match bumps that
     /// profile's score by 80, re-sorts the candidates, and re-selects the
-    /// winner. OSD probing is best-effort — a failed probe leaves the
-    /// original result unchanged.
-    func scanWithOSD(sourceURL: URL, profiles: [DashcamProfile]) async throws -> ScanResult {
+    /// winner. OSD probing is best-effort, a failed probe leaves the original
+    /// result unchanged.
+    func scanWithOSD(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         var result = try scan(sourceURL: sourceURL, profiles: profiles)
 
-        guard let top = result.candidates.first, top.confidence == .medium else {
+        guard let top = result.candidates.first else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "osd_ocr_gate",
+                profileID: nil,
+                profileName: nil,
+                outcome: "skipped_no_candidates",
+                detail: "No profile candidates available for OSD OCR"
+            ))
             return result
         }
 
         // Disambiguation only matters when another candidate is close behind.
         let hasCompetition = result.candidates.dropFirst().contains { abs(top.score - $0.score) <= 15 }
-        guard hasCompetition else { return result }
+        let osdCandidateCount = result.candidates.filter { $0.profile.osdSpec?.containsModelName == true }.count
+        let hasOSDSiblingCompetition = top.profile.osdSpec?.containsModelName == true && osdCandidateCount >= 2
+        guard hasCompetition || hasOSDSiblingCompetition else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "osd_ocr_gate",
+                profileID: top.profile.id,
+                profileName: top.profile.displayName,
+                outcome: "skipped_no_ocr_competition",
+                detail: "Top score \(top.score), confidence \(top.confidence.rawValue); closeCompetition \(hasCompetition), osdSiblingCandidates \(osdCandidateCount)"
+            ))
+            return result
+        }
+
+        result.diagnostics.append(ScanDiagnosticEntry(
+            stage: "osd_ocr_gate",
+            profileID: top.profile.id,
+            profileName: top.profile.displayName,
+            outcome: "running",
+            detail: "Top score \(top.score), confidence \(top.confidence.rawValue); closeCompetition \(hasCompetition), osdSiblingCandidates \(osdCandidateCount)"
+        ))
 
         let probe = OSDProbe()
         var updatedCandidates = result.candidates
 
         for index in updatedCandidates.indices {
-            guard let spec = updatedCandidates[index].profile.osdSpec, spec.containsModelName else { continue }
+            let candidate = updatedCandidates[index]
+            guard candidate.profile.id == top.profile.id || abs(top.score - candidate.score) <= 15 else {
+                if candidate.profile.osdSpec?.containsModelName == true {
+                    result.diagnostics.append(ScanDiagnosticEntry(
+                        stage: "osd_ocr_probe",
+                        profileID: candidate.profile.id,
+                        profileName: candidate.profile.displayName,
+                        outcome: "skipped_not_competitive",
+                        detail: "Candidate score \(candidate.score) was more than 15 points below top score \(top.score)"
+                    ))
+                }
+                continue
+            }
+            guard let spec = candidate.profile.osdSpec, spec.containsModelName else {
+                result.diagnostics.append(ScanDiagnosticEntry(
+                    stage: "osd_ocr_probe",
+                    profileID: candidate.profile.id,
+                    profileName: candidate.profile.displayName,
+                    outcome: "skipped_no_osd_spec",
+                    detail: "Profile has no OSD OCR spec"
+                ))
+                continue
+            }
 
-            guard let sampleVideo = sampleVideo(
+            let sampleVideos = sampleVideos(
                 for: spec,
                 allFiles: result.allFiles
-            ) else { continue }
+            )
+            let probeChannelList = spec.probeChannels.joined(separator: ",")
+            guard !sampleVideos.isEmpty else {
+                result.diagnostics.append(ScanDiagnosticEntry(
+                    stage: "osd_ocr_probe",
+                    profileID: candidate.profile.id,
+                    profileName: candidate.profile.displayName,
+                    outcome: "skipped_no_sample_videos",
+                    detail: "No video matched probe channels \(probeChannelList)"
+                ))
+                continue
+            }
 
-            if let matched = await probe.probe(videoURL: sampleVideo, spec: spec) {
+            var frameCount = 0
+            var framesWithText = 0
+            var textCandidateCount = 0
+            var matchedString: String?
+            var videosChecked = 0
+
+            for videoURL in sampleVideos {
+                videosChecked += 1
+                let probeResult = probe.probeWithDiagnostics(videoURL: videoURL, spec: spec)
+                frameCount += probeResult.framesExtracted
+                framesWithText += probeResult.framesWithText
+                textCandidateCount += probeResult.textCandidateCount
+                if let matched = probeResult.matchedString {
+                    matchedString = matched
+                    break
+                }
+            }
+
+            let detail = "videos \(videosChecked), frames \(frameCount), framesWithText \(framesWithText), textCandidates \(textCandidateCount)"
+            if let matched = matchedString {
                 updatedCandidates[index].score += 80
                 var evidence = updatedCandidates[index].evidence
                 evidence.append("OSD OCR match \"\(matched)\"")
                 updatedCandidates[index].evidence = Array(evidence.prefix(6))
                 updatedCandidates[index].confidence = confidenceLevel(for: updatedCandidates[index].score)
+                result.diagnostics.append(ScanDiagnosticEntry(
+                    stage: "osd_ocr_probe",
+                    profileID: candidate.profile.id,
+                    profileName: candidate.profile.displayName,
+                    outcome: "matched",
+                    detail: detail
+                ))
+            } else {
+                result.diagnostics.append(ScanDiagnosticEntry(
+                    stage: "osd_ocr_probe",
+                    profileID: candidate.profile.id,
+                    profileName: candidate.profile.displayName,
+                    outcome: "no_match",
+                    detail: detail
+                ))
             }
         }
 
@@ -103,25 +217,25 @@ struct CardScanner {
         return result
     }
 
-    /// Finds a front-channel sample video matching the OSD spec's channels.
+    /// Finds front-channel sample videos matching the OSD spec's channels.
     /// VIOFO front clips end in a channel suffix (e.g. `..._F.MP4`). Falls
-    /// back to any video if no channel-suffixed clip is found.
-    private func sampleVideo(for spec: OSDSpec, allFiles: [URL]) -> URL? {
+    /// back to early videos if no channel-suffixed clip is found.
+    private func sampleVideos(for spec: OSDSpec, allFiles: [URL]) -> [URL] {
         let videos = allFiles.filter { ["mp4", "mov"].contains($0.pathExtension.lowercased()) }
-        guard !videos.isEmpty else { return nil }
+        guard !videos.isEmpty else { return [] }
 
+        var matches: [URL] = []
         for channel in spec.probeChannels {
             let suffix = channel.uppercased()
-            if let match = videos.first(where: { url in
+            matches.append(contentsOf: videos.filter { url in
                 let stem = url.deletingPathExtension().lastPathComponent.uppercased()
                 return stem.hasSuffix(suffix)
-            }) {
-                return match
-            }
+            })
         }
 
-        // No channel-suffixed clip; the OSD is still likely on any front clip.
-        return videos.first
+        // No channel-suffixed clip; the OSD is still likely on early clips.
+        let candidates = matches.isEmpty ? videos : matches
+        return Array(candidates.prefix(5))
     }
 
     private func confidenceLevel(for score: Int) -> DetectionConfidence {
@@ -164,11 +278,20 @@ struct CardScanner {
             }
 
             for (pattern, regex) in compiledPatterns {
-                let nsFilename = filename as NSString
-                let range = NSRange(location: 0, length: nsFilename.length)
-                guard let match = regex.firstMatch(in: filename, range: range), match.range.location != NSNotFound else {
-                    continue
+                var matchedName: String?
+                var matchedResult: NSTextCheckingResult?
+                for candidateName in filenameCandidates(for: filename) {
+                    let nsCandidate = candidateName as NSString
+                    let range = NSRange(location: 0, length: nsCandidate.length)
+                    if let match = regex.firstMatch(in: candidateName, range: range), match.range.location != NSNotFound {
+                        matchedName = candidateName
+                        matchedResult = match
+                        break
+                    }
                 }
+
+                guard let matchedName, let match = matchedResult else { continue }
+                let nsFilename = matchedName as NSString
 
                 let groups = (1..<match.numberOfRanges).compactMap { index -> String? in
                     let matchRange = match.range(at: index)
@@ -377,15 +500,19 @@ struct CardScanner {
                 }
             }
 
-            let sampleNames = allFiles.prefix(80).map(\.lastPathComponent)
+            let sampleNames = allFiles.prefix(600).map(\.lastPathComponent)
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
-                if sampleNames.contains(where: { name in
-                    let range = NSRange(location: 0, length: (name as NSString).length)
-                    return regex.firstMatch(in: name, range: range) != nil
-                }) {
-                    score += 20
-                    evidence.append("filename pattern match")
+                let matchCount = sampleNames.reduce(0) { count, name in
+                    let matched = filenameCandidates(for: name).contains { candidateName in
+                        let range = NSRange(location: 0, length: (candidateName as NSString).length)
+                        return regex.firstMatch(in: candidateName, range: range) != nil
+                    }
+                    return count + (matched ? 1 : 0)
+                }
+                if matchCount > 0 {
+                    score += min(60, 15 + matchCount)
+                    evidence.append("filename pattern match (\(matchCount))")
                     break
                 }
             }
@@ -403,6 +530,21 @@ struct CardScanner {
 
     private func isCandidateExtension(_ ext: String) -> Bool {
         ["mp4", "mov", "jpg", "jpeg", "dat"].contains(ext)
+    }
+
+    private func filenameCandidates(for filename: String) -> [String] {
+        let url = URL(fileURLWithPath: filename)
+        let ext = url.pathExtension
+        guard !ext.isEmpty else { return [filename] }
+
+        let stem = url.deletingPathExtension().lastPathComponent
+        guard let firstSpace = stem.firstIndex(of: " ") else { return [filename] }
+
+        let rawStem = String(stem[..<firstSpace])
+        guard !rawStem.isEmpty else { return [filename] }
+
+        let rawFilename = "\(rawStem).\(ext)"
+        return rawFilename == filename ? [filename] : [filename, rawFilename]
     }
 
     private func shouldSkipTraversal(relativePath: String) -> Bool {
@@ -493,6 +635,7 @@ struct ScanResult {
     var candidates: [DetectionCandidate]
     var selectedProfile: DashcamProfile?
     var clips: [ClipItem]
+    var diagnostics: [ScanDiagnosticEntry]
 }
 
 extension URL {

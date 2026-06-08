@@ -1,7 +1,7 @@
 import Foundation
 
 enum ManifestWriter {
-    static func write(plan: CopyPlan, results: [CopyPlanItem]) throws {
+    static func write(plan: CopyPlan, results: [CopyPlanItem], supportResults: [SupportFileItem] = []) throws {
         let manifestURL = plan.destinationRoot
             .appendingPathComponent("dashcam-offloader-manifests", isDirectory: true)
             .appendingPathComponent("manifest-\(timestampFormatter.string(from: Date())).json")
@@ -24,6 +24,15 @@ enum ManifestWriter {
                     size: $0.clip.size,
                     mode: $0.clip.mode,
                     channel: $0.clip.channel,
+                    status: $0.status.rawValue,
+                    message: $0.message
+                )
+            },
+            supportFiles: supportResults.map {
+                ManifestSupportFile(
+                    sourceRelativePath: $0.relativePath,
+                    destinationRelativePath: $0.destinationURL.relativePath(from: plan.destinationRoot),
+                    size: $0.size,
                     status: $0.status.rawValue,
                     message: $0.message
                 )
@@ -51,6 +60,7 @@ private struct ManifestPayload: Encodable {
     var profileId: String
     var profileName: String
     var files: [ManifestFile]
+    var supportFiles: [ManifestSupportFile]
 }
 
 private struct ManifestFile: Encodable {
@@ -63,3 +73,10 @@ private struct ManifestFile: Encodable {
     var message: String?
 }
 
+private struct ManifestSupportFile: Encodable {
+    var sourceRelativePath: String
+    var destinationRelativePath: String
+    var size: Int64
+    var status: String
+    var message: String?
+}

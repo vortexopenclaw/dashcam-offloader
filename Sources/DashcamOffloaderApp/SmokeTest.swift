@@ -91,6 +91,8 @@ enum SmokeTest {
             try Data("model=E1PRO".utf8).write(to: source.appendingPathComponent("GPS/E1PRO_Settings.ini"))
             try Data(repeating: 1, count: 2048).write(to: source.appendingPathComponent("Normal/20260101_120000_00001_N_A.MP4"))
             try Data(repeating: 2, count: 1024).write(to: source.appendingPathComponent("Parking/20260101_121000_00002_P_A.MP4"))
+            try FileManager.default.createDirectory(at: source.appendingPathComponent("Config", isDirectory: true), withIntermediateDirectories: true)
+            try Data("resolution=4k".utf8).write(to: source.appendingPathComponent("Config/settings.ini"))
 
             let backupSource = temp.appendingPathComponent("Time Machine Backups", isDirectory: true)
             let emptySource = temp.appendingPathComponent("Generic Storage", isDirectory: true)
@@ -114,14 +116,23 @@ enum SmokeTest {
                 print("SMOKE FAIL: show all did not reveal backup source")
                 return false
             }
+            let emptyScan = try scanner.scan(sourceURL: emptySource, profiles: profiles)
+            guard emptyScan.selectedProfile == nil, emptyScan.candidates.isEmpty else {
+                print("SMOKE FAIL: empty source selected a profile")
+                return false
+            }
 
-            let scan = try scanner.scan(sourceURL: source, profiles: profiles)
+            let scan = try scanner.scanWithOSD(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
                 print("SMOKE FAIL: E1 Pro was not top candidate")
                 return false
             }
             guard scan.candidates.first?.confidence == .high else {
                 print("SMOKE FAIL: E1 Pro did not score high confidence")
+                return false
+            }
+            guard scan.diagnostics.contains(where: { $0.stage == "osd_ocr_gate" && $0.outcome == "skipped_no_ocr_competition" }) else {
+                print("SMOKE FAIL: OSD gate diagnostic missing")
                 return false
             }
 
@@ -139,11 +150,24 @@ enum SmokeTest {
                 destinationRoot: destination,
                 profile: profile,
                 clips: scan.clips,
-                filters: filters
+                filters: filters,
+                namingOptions: OutputNamingOptions(videoFilenameSuffix: "Opp traffic up Maltby cloudy")
             )
 
             guard plan.items.count == 2, plan.selectedBytes == 3072 else {
                 print("SMOKE FAIL: unexpected plan \(plan.items.count) files \(plan.selectedBytes) bytes")
+                return false
+            }
+            guard plan.items.contains(where: { $0.destinationURL.lastPathComponent == "20260101_120000_00001_N_A Opp traffic up Maltby cloudy.MP4" }) else {
+                print("SMOKE FAIL: video filename suffix was not inserted before the extension")
+                return false
+            }
+            guard !plan.items.contains(where: { $0.destinationURL.lastPathComponent.hasSuffix(".MP4 Opp traffic up Maltby cloudy") }) else {
+                print("SMOKE FAIL: video filename suffix changed the extension")
+                return false
+            }
+            guard plan.supportItems.isEmpty else {
+                print("SMOKE FAIL: settings files were included by default")
                 return false
             }
             guard plan.items.contains(where: { $0.destinationURL.path.contains("/Driving/") }) else {
@@ -152,6 +176,96 @@ enum SmokeTest {
             }
             guard plan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") }) else {
                 print("SMOKE FAIL: parking output folder missing")
+                return false
+            }
+
+            filters.includeCameraSettings = true
+            let settingsPlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: filters
+            )
+            guard settingsPlan.supportItems.contains(where: { $0.relativePath == "Config/settings.ini" }) else {
+                print("SMOKE FAIL: Config settings file was not planned")
+                return false
+            }
+            guard settingsPlan.supportItems.first?.destinationURL.path.contains("/Camera Settings/") == true else {
+                print("SMOKE FAIL: settings file destination folder missing")
+                return false
+            }
+
+            let vueroidSource = temp.appendingPathComponent("vueroid-s1", isDirectory: true)
+            try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("PARK", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 3, count: 1024).write(to: vueroidSource.appendingPathComponent("INF/20260101_120000_INF_F_N.mp4"))
+            try Data(repeating: 4, count: 1024).write(to: vueroidSource.appendingPathComponent("PARK/20260101_121000_PRK_F_N.mp4"))
+            try Data(repeating: 5, count: 1024).write(to: vueroidSource.appendingPathComponent("PEVENT/20260101_122000_PVT_F_N.mp4"))
+            try Data("boot ok".utf8).write(to: vueroidSource.appendingPathComponent(".boot.log"))
+
+            let vueroidScan = try scanner.scan(sourceURL: vueroidSource, profiles: profiles)
+            guard vueroidScan.candidates.first?.profile.id == "vueroid-s1-4k-infinite" else {
+                print("SMOKE FAIL: Vueroid S1 was not top candidate")
+                return false
+            }
+
+            let modes = Set(vueroidScan.clips.map(\.mode))
+            guard modes.contains("parking"), modes.contains("parking_event") else {
+                print("SMOKE FAIL: Vueroid parking modes not split: \(modes.sorted())")
+                return false
+            }
+            guard vueroidScan.clips.contains(where: { $0.mode == "parking_event" && $0.outputCategory == "Parking Events" }) else {
+                print("SMOKE FAIL: Vueroid parking event category missing")
+                return false
+            }
+            guard vueroidScan.clips.contains(where: { $0.mode == "continuous" && $0.outputCategory == "Driving" }) else {
+                print("SMOKE FAIL: Vueroid continuous category missing")
+                return false
+            }
+            let vueroidCategoryCounts = Dictionary(
+                grouping: vueroidScan.clips.filter { $0.excludedReason == nil },
+                by: \.outputCategory
+            )
+            .mapValues(\.count)
+            guard vueroidCategoryCounts["Driving"] == 1,
+                  vueroidCategoryCounts["Parking"] == 1,
+                  vueroidCategoryCounts["Parking Events"] == 1,
+                  vueroidCategoryCounts["Other", default: 0] == 0 else {
+                print("SMOKE FAIL: Vueroid output groups wrong: \(vueroidCategoryCounts)")
+                return false
+            }
+            var vueroidFilters = FilterState()
+            vueroidFilters.selectedModes = Set(vueroidScan.clips.map(\.mode))
+            vueroidFilters.selectedChannels = Set(vueroidScan.clips.map(\.channel))
+            vueroidFilters.includeCameraSettings = true
+            if let vueroidProfile = vueroidScan.selectedProfile {
+                let vueroidPlan = CopyPlanner().makePlan(
+                    sourceRoot: vueroidSource,
+                    destinationRoot: destination,
+                    profile: vueroidProfile,
+                    clips: vueroidScan.clips,
+                    filters: vueroidFilters
+                )
+                guard vueroidPlan.supportItems.contains(where: { $0.relativePath == ".boot.log" }) else {
+                    print("SMOKE FAIL: Vueroid boot log was not planned")
+                    return false
+                }
+            }
+
+            let progress = CopyProgress(
+                totalBytes: 4_000_000,
+                copiedBytes: 2_000_000,
+                totalFiles: 4,
+                completedFiles: 2,
+                currentFile: "sample.mp4",
+                isRunning: true,
+                startedAt: Date(timeIntervalSinceNow: -2),
+                updatedAt: Date()
+            )
+            guard progress.speedText.hasSuffix("MB/s"), progress.estimatedRemainingText.hasPrefix("ETA ") else {
+                print("SMOKE FAIL: progress speed or ETA unavailable")
                 return false
             }
 
@@ -177,7 +291,7 @@ enum SmokeTest {
                 return false
             }
 
-            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files")
+            print("SMOKE PASS: \(scan.candidates.first?.profile.displayName ?? "unknown") \(plan.items.count) files; Vueroid parking split OK")
             return true
         } catch {
             print("SMOKE FAIL: \(error.localizedDescription)")
