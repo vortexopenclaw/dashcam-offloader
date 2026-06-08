@@ -8,13 +8,10 @@ The Mac app should check a public manifest, not the private GitHub repository. P
 
 Default public endpoints:
 
-- `https://updates.vortexradar.com/dashcam-offloader/latest.json`
-- `https://updates.vortexradar.com/dashcam-offloader/download/latest`
-
-Worker fallback before a custom route is attached:
-
 - `https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/latest.json`
 - `https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest`
+
+A custom domain is not required right now. If one is added later, keep the same path structure and update the app manifest URL intentionally.
 
 ## Cloudflare Resources
 
@@ -25,7 +22,7 @@ Worker fallback before a custom route is attached:
 
 ## Dedicated Token
 
-Use a Dashcam Offloader-specific Cloudflare API token. The token should be scoped to the Cloudflare account that owns `vortexradar.com`, and to the `vortexradar.com` zone if custom-domain automation is enabled.
+Use a Dashcam Offloader-specific Cloudflare API token. The token should be scoped to the Cloudflare account that owns the Worker and R2 bucket.
 
 Minimum account permissions:
 
@@ -33,11 +30,11 @@ Minimum account permissions:
 - Workers R2 Storage: Edit
 - Account Settings: Read
 
-Optional zone permissions:
+Optional zone permissions for future custom-domain routing:
 
 - Zone: Read
-- Workers Routes: Edit, if routing `updates.vortexradar.com` through the Worker
-- DNS: Edit, only if automation should create or change `updates.vortexradar.com`
+- Workers Routes: Edit
+- DNS: Edit
 
 No User permissions are needed.
 
@@ -66,7 +63,7 @@ The workflow maps these dedicated secrets to Wrangler's standard `CLOUDFLARE_API
   "releaseNotesURL": "https://github.com/vortexopenclaw/dashcam-offloader/releases/tag/latest",
   "assetName": "Dashcam-Offloader-abcdef1.zip",
   "assetKey": "dashcam-offloader/releases/Dashcam-Offloader-abcdef1.zip",
-  "downloadURL": "https://updates.vortexradar.com/dashcam-offloader/download/latest",
+  "downloadURL": "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest",
   "sha256": "...",
   "minimumMacOSVersion": "14.0",
   "publishedAt": "2026-06-08T20:00:00Z",
