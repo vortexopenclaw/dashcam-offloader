@@ -14,6 +14,8 @@ The prototype is local-only and keeps source cards read-only. It does not downlo
 
 Firmware filename knowledge is maintainer research only: public firmware downloads may be inspected outside the app to learn filename patterns, but the Mac app only compares filenames already present on a card as weak bonus evidence.
 
+Public app updates should be distributed through Cloudflare, not private GitHub release URLs. See `docs/update-distribution.md`.
+
 ## Run The Prototype
 
 From the repo root:
@@ -117,6 +119,7 @@ swift run DashcamOffloader --smoke-test
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
 - `docs/profile-schema.md` - camera profile format
 - `docs/video-metadata-reference.md` - codec, resolution, bitrate, and fps reference across all cameras
+- `docs/update-distribution.md` - public Cloudflare update channel and release publishing notes
 - `docs/research/` - manual/source-link notes and research artifacts
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
