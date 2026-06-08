@@ -54,13 +54,27 @@ filename_patterns:
 channels:
   F:
     position: front
+    resolution: 3840x2160
+    fps: 30
     bitrate: highest
     observed_file_size_bytes: 464800000
   R:
     position: rear
+    resolution: 1920x1080
+    fps: 30
     bitrate: lower
     observed_file_size_bytes: 83400000
     bitrate_ratio_to_front: 5.6
+
+resolutions:
+  F: 3840x2160
+  R: 1920x1080
+  fps_default: 30
+  validation: real_card_sampled
+  notes: >
+    Real 2CH sample card and official DR970X Plus specs agree on 4K front
+    plus 1080p rear. Rear channel is lower bitrate than front but should not
+    be treated as unknown or omitted.
 
 firmware:
   observed_version: "2.008"
@@ -78,6 +92,7 @@ exclude:
 notes:
   - "Single Record/ folder for all modes (vs separate folders per mode)"
   - "Mode codes: N=normal, E=event, I=event/impact, P=parking"
+  - "Front channel is 4K30; rear channel is 1080p30"
   - "E vs I prefix distinction unclear (manual vs G-sensor?)"
   - "Front channel bitrate ~5.6× higher than rear"
   - "Config files contain privacy-sensitive WiFi/cloud credentials - exclude from analysis"

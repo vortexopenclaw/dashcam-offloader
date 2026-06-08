@@ -31,27 +31,29 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| Sample clips | driving | H.264 | 3840x2160 | 30 | ~56 Mbps | MP4 | `ffprobe` |
+| F (front) | driving | H.264 | 2560x1440 | 30 | TBD | MP4 | `mfr_spec` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | TBD | MP4 | `mfr_spec` |
 
-**Notes:** The mounted archive exposed only a small `C####` sample set in this pass, so the clip mix is not yet a full channel map. Treat this as a measured sample baseline, not a complete profile validation.
+**Notes:** Official Elite 8 specs list both front and rear as 2K QHD 30 fps. The sampled 2CH card confirmed front/rear pairing and the BlackVue filename pattern, but bitrate still needs a measured ffprobe pass from direct Elite 8 footage.
 
 ## BlackVue DR900S-2CH
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| F (front) | driving | H.264 | 1920x1080 | 30 | ~14.7 Mbps | MP4 | `ffprobe` |
-| R (rear) | driving | H.264 | 1920x1080 | 30 | ~10.5 Mbps | MP4 | `ffprobe` |
-| F / R | parking | H.264 | 1920x1080 | 30 | ~10.5-12.6 Mbps | MP4 | `ffprobe` |
+| F (front) | driving default / 4K | H.264 / HEVC | 3840x2160 | 30 | ~12-25 Mbps | MP4 | `mfr_spec` |
+| F (front) | driving alternate / high-frame-rate | H.264 / HEVC | 1920x1080 | 60 | ~12 Mbps | MP4 | `mfr_spec` |
+| R (rear) | driving | H.264 / HEVC | 1920x1080 | 30 | ~6-10 Mbps | MP4 | `mfr_spec` |
 
-**Notes:** The archive contains a mix of driving, parking, and sample clips. Representative clips are 60 to 180 seconds long, with 1080p H.264 as the dominant format.
+**Notes:** DR900S front is a 4K camera. The 1080p60 front mode is an alternate setting, not the model's front-camera ceiling. Default/reference selection should prefer the 30 fps mode while preserving the 60 fps mode as available.
 
 ## BlackVue DR970X-2CH Plus
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
 | MF (main/front) | driving | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving / event / parking | HEVC | 1920x1080 | 30 | ~10-11 Mbps | MP4 | `ffprobe` |
 
-**Notes:** The mounted archive includes real driving clips plus a lot of b-roll. Only the camera-looking `YYYYMMDD_HHMMSS_MODECHANNEL` files were used for this row.
+**Notes:** The real 2CH card and official specs agree on 4K front plus 1080p rear. Only camera-looking `YYYYMMDD_HHMMSS_MODECHANNEL` files should be used; review b-roll and produced clips in the same archive are excluded.
 
 ## BlackVue DR750X-2CH Plus
 
@@ -280,18 +282,20 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
 | F (front) | driving | H.264 | 2560x1440 | 60 | ~26.6 Mbps | MP4 | `ffprobe` |
+| F (front) | driving default | H.264 | 2560x1440 | 30 | TBD | MP4 | `mfr_spec` |
 
-**Notes:** The sampled A119 Mini driving clip is 1440p60, distinct from the A119 Mini 2 rows below.
+**Notes:** The sampled A119 Mini driving clip is 1440p60, distinct from the A119 Mini 2 rows below. Keep the measured 60 fps row, but prefer 30 fps as the default/reference mode when both settings are available.
 
 ## VIOFO A119 Mini 2
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| F (front) | driving | H.264 | 2560x1440 | 30 / 60 | ~26.6-28.8 Mbps | MP4 | `ffprobe` |
+| F (front) | driving default | H.264 | 2560x1440 | 30 | ~28.8 Mbps | MP4 | `ffprobe` |
+| F (front) | driving alternate / high-frame-rate | H.264 | 2560x1440 | 60 | ~26.6 Mbps | MP4 | `ffprobe` |
 | F (front) | parking timelapse | H.264 | 2560x1440 | 30 | ~30.3 Mbps | MP4 | `ffprobe` |
 | F (front) | parking motion | H.264 | 2560x1440 | 30 | ~3.8 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Direct clips from `Driving Footage` and `Parking Footage` confirm the camera stays at 1440p. Earlier 1080p/HEVC samples were excluded because they were not direct A119 Mini 2 dashcam recordings.
+**Notes:** Direct clips from `Driving Footage` and `Parking Footage` confirm the camera stays at 1440p. Earlier 1080p/HEVC samples were excluded because they were not direct A119 Mini 2 dashcam recordings. Keep 30 fps as the default/reference row and preserve 60 fps as an alternate mode.
 
 ## VIOFO A119M Pro
 
