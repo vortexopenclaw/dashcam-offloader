@@ -9,7 +9,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var folders: [ProfileFolder]
     var filenamePatterns: [FilenamePattern]
     var channels: [String: String]
-    var highConfidencePaths: [String]
+    var highConfidenceEvidence: [ProfileEvidence]
     var osdSpec: OSDSpec?
 
     var displayName: String {
@@ -22,6 +22,35 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
             return "Viofo"
         case "blackvue":
             return "BlackVue"
+        case "70mai":
+            return "70mai"
+        default:
+            return manufacturer.capitalized
+        }
+    }
+}
+
+struct ProfileEvidence: Hashable, Sendable {
+    var path: String
+    var contains: [String]
+}
+
+struct IdentifiedCamera: Codable, Hashable, Sendable {
+    var manufacturer: String
+    var model: String
+    var evidence: [String]
+    var isSupported: Bool
+
+    var displayName: String {
+        "\(displayManufacturer) \(model)"
+    }
+
+    var displayManufacturer: String {
+        switch manufacturer.lowercased() {
+        case "blackvue":
+            return "BlackVue"
+        case "viofo":
+            return "Viofo"
         case "70mai":
             return "70mai"
         default:
@@ -368,6 +397,7 @@ struct ScanSummary: Hashable, Sendable {
     var samplePaths: [String] = []
     var categoryCounts: [String: Int] = [:]
     var modeCounts: [String: Int] = [:]
+    var identifiedCamera: IdentifiedCamera?
 
     var hasScan: Bool {
         !sourcePath.isEmpty
@@ -430,6 +460,7 @@ struct CardTrainingDetails: Codable, Hashable, Sendable {
 
 struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var volumeName: String
+    var identifiedCamera: IdentifiedCamera?
     var selectedProfileID: String?
     var selectedProfileName: String?
     var scannedFiles: Int

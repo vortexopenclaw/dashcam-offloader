@@ -135,6 +135,7 @@ function sanitizeTraining(training) {
 function sanitizeScan(scan) {
   return {
     volumeName: stringValue(scan.volumeName),
+    identifiedCamera: sanitizeIdentifiedCamera(scan.identifiedCamera),
     selectedProfileID: optionalString(scan.selectedProfileID),
     selectedProfileName: optionalString(scan.selectedProfileName),
     scannedFiles: numberValue(scan.scannedFiles),
@@ -167,6 +168,21 @@ function sanitizeScan(scan) {
     scanDiagnostics: Array.isArray(scan.scanDiagnostics)
       ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
       : [],
+  };
+}
+
+function sanitizeIdentifiedCamera(camera) {
+  if (!camera || typeof camera !== "object" || Array.isArray(camera)) {
+    return null;
+  }
+
+  return {
+    manufacturer: stringValue(camera.manufacturer).slice(0, 120),
+    model: stringValue(camera.model).slice(0, 160),
+    evidence: Array.isArray(camera.evidence)
+      ? camera.evidence.slice(0, 10).map(stringValue)
+      : [],
+    isSupported: Boolean(camera.isSupported),
   };
 }
 

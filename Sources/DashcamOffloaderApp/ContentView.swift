@@ -225,6 +225,24 @@ struct ContentView: View {
                     Text("No profiles loaded")
                         .foregroundStyle(.secondary)
                 } else {
+                    if let identified = viewModel.identifiedCamera, !identified.isSupported {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("New Dashcam: \(identified.displayName)", systemImage: "sparkles")
+                                .font(.headline)
+                            Text("This card has exact model metadata, but there is not a supported profile yet. Submit a learning package so it can be added without guessing.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Button {
+                                isCardLearningPresented = true
+                            } label: {
+                                Label("Submit Learning Package", systemImage: "paperplane")
+                            }
+                        }
+                        .padding(10)
+                        .background(Color.orange.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+
                     HStack {
                         Text("Selected Profile")
                             .font(.headline)
@@ -241,7 +259,7 @@ struct ContentView: View {
                             }
                         } label: {
                             HStack {
-                                Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
+                                Text(viewModel.selectedProfile?.displayName ?? viewModel.identifiedCamera.map { "New Dashcam - \($0.displayName)" } ?? "Choose Profile")
                                     .lineLimit(1)
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.caption)
@@ -740,7 +758,7 @@ struct CardLearningSheet: View {
                 HStack(spacing: 14) {
                     Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
                     Label("\(viewModel.scanSummary.copyableItems) copyable", systemImage: "checkmark.circle")
-                    Label(viewModel.selectedProfile?.displayName ?? "No profile match", systemImage: "camera")
+                    Label(viewModel.selectedProfile?.displayName ?? viewModel.identifiedCamera.map { "New Dashcam: \($0.displayName)" } ?? "No profile match", systemImage: "camera")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -799,6 +817,16 @@ struct CardLearningSheet: View {
         .frame(width: 620)
         .onAppear {
             viewModel.feedbackMessage = ""
+            if let identified = viewModel.identifiedCamera {
+                manufacturer = identified.displayManufacturer
+                model = identified.model
+                if channelSetup.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    channelSetup = "Unknown"
+                }
+                if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    notes = "Auto-identified from card metadata as \(identified.displayName)."
+                }
+            }
         }
     }
 
