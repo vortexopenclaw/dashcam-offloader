@@ -30,7 +30,7 @@ Channels observed: F (front), I (interior), R (rear).
 | I | Interior | 1920×1080 (1080P) |
 | R | Rear | 3840×2160 (4K UHD) |
 
-Both front and rear are 4K — distinguishing the A229 Ultra from A229 Pro (4K front, 2K rear) and A229 Plus (2K front, 2K rear).
+Both front and rear are 4K — distinguishing the A229 Ultra from A229 Pro (4K front, 1080P interior, 2K rear) and A229 Plus (2K front, 1080P interior, 2K rear).
 
 ## Clip Duration
 
