@@ -369,11 +369,13 @@ struct CardScanner {
                 }
             }
 
-            for path in profile.highConfidencePaths {
-                let evidenceURL = sourceURL.appendingPathComponent(path)
+            for modelEvidence in profile.highConfidenceEvidence {
+                let evidenceURL = sourceURL.appendingPathComponent(modelEvidence.path)
                 if fileManager.fileExists(atPath: evidenceURL.path) {
-                    score += 60
-                    evidence.append("model evidence \(path)")
+                    if modelEvidence.contains.isEmpty || fileContains(evidenceURL, all: modelEvidence.contains) {
+                        score += 60
+                        evidence.append("model evidence \(modelEvidence.path)")
+                    }
                 }
             }
 
@@ -403,6 +405,17 @@ struct CardScanner {
 
     private func isCandidateExtension(_ ext: String) -> Bool {
         ["mp4", "mov", "jpg", "jpeg", "dat"].contains(ext)
+    }
+
+    private func fileContains(_ url: URL, all needles: [String]) -> Bool {
+        guard let data = try? Data(contentsOf: url, options: [.mappedIfSafe]) else {
+            return false
+        }
+
+        return needles.allSatisfy { needle in
+            guard let needleData = needle.data(using: .utf8), !needleData.isEmpty else { return false }
+            return data.range(of: needleData) != nil
+        }
     }
 
     private func shouldSkipTraversal(relativePath: String) -> Bool {

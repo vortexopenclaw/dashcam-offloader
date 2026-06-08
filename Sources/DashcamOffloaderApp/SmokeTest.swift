@@ -115,6 +115,54 @@ enum SmokeTest {
                 return false
             }
 
+            let blackvueElite8Source = temp.appendingPathComponent("BlackVue Elite 8", isDirectory: true)
+            let blackvueDR970XSource = temp.appendingPathComponent("BlackVue DR970X Plus", isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: blackvueElite8Source.appendingPathComponent("BlackVue/Config", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: blackvueElite8Source.appendingPathComponent("BlackVue/Record", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: blackvueDR970XSource.appendingPathComponent("BlackVue/Config", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: blackvueDR970XSource.appendingPathComponent("BlackVue/Record", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try Data("ap_ssid=BlackVueElite8-TEST\n".utf8)
+                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/config.ini"))
+            try Data("version = 1.009\nmodel = ELITE 8\n".utf8)
+                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("version = 3.02\nmodel = ELITE 8 v1.009(rev1052)\n".utf8)
+                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data("version = 2.008\nmodel = DR970X Plus\n".utf8)
+                .write(to: blackvueDR970XSource.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("version = 2.01\nmodel = DR970X Plus v2.008(rev1568)\n".utf8)
+                .write(to: blackvueDR970XSource.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data(repeating: 3, count: 1024)
+                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Record/20260101_120000_NF.mp4"))
+            try Data(repeating: 4, count: 1024)
+                .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Record/20260101_120000_NR.mp4"))
+            try Data(repeating: 5, count: 1024)
+                .write(to: blackvueDR970XSource.appendingPathComponent("BlackVue/Record/20260101_120000_NF.mp4"))
+            try Data(repeating: 6, count: 1024)
+                .write(to: blackvueDR970XSource.appendingPathComponent("BlackVue/Record/20260101_120000_NR.mp4"))
+
+            let elite8Scan = try scanner.scan(sourceURL: blackvueElite8Source, profiles: profiles)
+            guard elite8Scan.candidates.first?.profile.id == "blackvue-elite-8" else {
+                print("SMOKE FAIL: Elite 8 was not top BlackVue candidate")
+                return false
+            }
+            let dr970xScan = try scanner.scan(sourceURL: blackvueDR970XSource, profiles: profiles)
+            guard dr970xScan.candidates.first?.profile.id == "blackvue-dr970x-plus" else {
+                print("SMOKE FAIL: DR970X Plus was not top BlackVue candidate")
+                return false
+            }
+
             let scan = try scanner.scan(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
                 print("SMOKE FAIL: E1 Pro was not top candidate")
