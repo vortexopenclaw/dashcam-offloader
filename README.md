@@ -69,6 +69,9 @@ swift run DashcamOffloader --smoke-test
 **Cansonic**
 - Cansonic UltraDash Z3+ Standard Edition — dual front lens (wide + telephoto) + optional rear (R1), footage sampled
 
+**Escort**
+- Escort M1 — 1CH, real card sampled
+
 **Thinkware**
 - Thinkware U3000 — 2CH, real card sampled
 - Thinkware U3000 Pro — real card sampled
