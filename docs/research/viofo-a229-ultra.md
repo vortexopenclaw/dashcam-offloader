@@ -2,16 +2,18 @@
 
 ## Camera Overview
 
-The VIOFO A229 Ultra is VIOFO's flagship 3-channel dashcam, featuring 4K UHD front and rear cameras paired with a 1080P ultra-wide interior camera. It shares the Novatek-based platform common to the A229 and A329 lineup, with identical filename conventions.
+The VIOFO A229 Ultra is VIOFO's flagship 3-channel dashcam, featuring 4K UHD front and rear cameras paired with a 1080P ultra-wide interior camera. It shares the A229-series filename convention with A229 Pro and A229 Plus.
 
-The A229 Ultra's distinguishing feature: **4K on both front and rear**, whereas the A229 Pro has 4K front with 2K rear, and the A229 Plus has 2K on both.
+A329S may share a similar visible filename family, but it uses a different processor/internal platform. Do not apply A229 Ultra codec, bitrate, or metadata assumptions to A329S without direct A329S clip validation.
+
+The A229 Ultra's distinguishing feature: **4K on both front and rear**, whereas the A229 Pro has 4K front with 2K rear and 1080P interior, and the A229 Plus has 2K front/rear with 1080P interior.
 
 ### A229 Lineup Resolution Comparison
 
 | Model | Front | Interior | Rear |
 |-------|-------|----------|------|
 | A229 Ultra | 4K (3840×2160) | 1080P (1920×1080) | 4K (3840×2160) |
-| A229 Pro | 4K (3840×2160) | 2K (2560×1440) | 2K (2560×1440) |
+| A229 Pro | 4K (3840×2160) | 1080P (1920×1080) | 2K (2560×1440) |
 | A229 Plus | 2K (2560×1440) | 1080P (1920×1080) | 2K (2560×1440) |
 
 ## Filename and Folder Structure
