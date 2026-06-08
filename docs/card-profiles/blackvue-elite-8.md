@@ -1,0 +1,98 @@
+# BlackVue Elite 8
+
+## Status
+
+Seed profile, based on one real 2CH sample card read-only scanned at `/Volumes/BlackVue` and official BlackVue product page references.
+
+Use `BlackVue Elite 8` as the public app model name. Treat channel count as variant metadata behind the scenes.
+
+## Source References
+
+- Official product page: <https://blackvuenorthamerica.com/products/blackvue-elite-8-2ch-front-rear-2k-qhd-dash-cam>
+- Official overview: <https://blackvue.com/elite-8-info/>
+- Official firmware update (Elite 8/9/10 family): <https://blackvue.com/blogs/update/firmware-update-elite-8-9-10-updates-1190778>
+- Retail listing with specs: <https://www.blackboxmycar.com/products/blackvue-elite-8-2-channel-2k-hdr-cloud-dash-cam>
+
+The Elite 8 is a 2CH cloud dash cam with dual Sony IMX675 STARVIS 2 sensors, recording both front and rear at 2K QHD (2560x1440) @ 30fps. It differs from the Elite 9 (4K front + 2K rear) in that both channels share the same 2K resolution.
+
+## Card Layout
+
+Real-card observed:
+
+- `BlackVue/Record` - video recordings.
+- `BlackVue/Config/version.bin` - model and firmware metadata, binary file.
+- `BlackVue/Config/micom_version.bin` - model and firmware metadata, binary file.
+- `BlackVue/Config/smart_gsensor_version.bin` - model and firmware metadata, binary file.
+- `BlackVue/Config/config.ini` - private settings and network config, exclude by default.
+- `BlackVue/Config/bt_ssid.bin` - private Bluetooth/network metadata, exclude by default.
+- No `BlackVue/System` folder observed on this card.
+
+## Filename Patterns
+
+Visible MP4 files use:
+
+`YYYYMMDD_HHMMSS_MODECHANNEL.mp4`
+
+Examples:
+
+- `BlackVue/Record/YYYYMMDD_HHMMSS_NF.mp4`
+- `BlackVue/Record/YYYYMMDD_HHMMSS_NR.mp4`
+
+This matches the Elite 9 pattern exactly.
+
+Observed mode letters:
+
+- `N` - normal or continuous recording (confirmed on card).
+- `P` - parking recording (expected, not observed on this card).
+- `I` - impact or event recording (expected, not observed on this card).
+
+Observed channel letters:
+
+- `F` - front.
+- `R` - rear.
+
+All clips on this card were normal driving recordings with both front and rear channels present. Parking and event files are expected to follow the same naming convention based on Elite 9 family behavior.
+
+## Related-File Grouping
+
+Group related files by date, time, and mode letter. The channel letter should not be part of the grouping key.
+
+## Channel Variants
+
+- 2CH - front and rear. Validated from the sampled card.
+
+## Model Detection
+
+**Primary detection signal (confirmed, plaintext):**
+
+- `BlackVue/Config/config.ini` contains `ap_ssid=BlackVueElite8-`. The WiFi AP SSID embeds the model name and is readable as plain text, distinguishing Elite 8 from Elite 9 and other BlackVue models without binary parsing.
+
+**Supporting signals (inferred from Elite 9 family pattern; binary files present on card but content not directly verified):**
+
+- `BlackVue/Config/version.bin` — expected to contain `model = ELITE 8` based on Elite 9 equivalent behavior.
+- `BlackVue/Config/micom_version.bin` — expected to contain `model = ELITE 8`.
+- `BlackVue/Config/smart_gsensor_version.bin` — expected to contain `model = ELITE 8`.
+
+**Additional supporting signal:**
+
+- MP4 `cprt` metadata contains model and firmware fields. Extract only safe fields; do not store private fields such as product serial, temperature, or GPS-related state.
+
+**Weak signal:**
+
+- Volume label `BLACKVUE`. Useful as a hint only because users can rename volumes.
+
+## Exclude By Default
+
+- `.Trashes/**`
+- `.fseventsd/**`
+- `.Spotlight-V100/**`
+- `._*`
+- `BlackVue/Config/config.ini`
+- `BlackVue/Config/bt_ssid.bin`
+- `BlackVue/System/**`
+
+## Open Questions
+
+- Confirm that `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` contain `model = ELITE 8` via binary substring read.
+- Validate parking and impact/event recordings with a card that has P and I mode clips.
+- Confirm codec and bitrate via ffprobe (H.264 expected per manufacturer spec).

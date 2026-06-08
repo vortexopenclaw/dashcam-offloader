@@ -1,0 +1,92 @@
+id: blackvue-elite-8
+manufacturer: BlackVue
+model: Elite 8
+status: seed
+channel_variants:
+  - channels: 2
+    roles:
+      - front
+      - rear
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles:
+    - front
+    - rear
+source_notes:
+  - docs/card-profiles/blackvue-elite-8.md
+  - docs/research/blackvue-elite-8.md
+detection:
+  high_confidence:
+    - path: BlackVue/Config/config.ini
+      contains:
+        - "ap_ssid=BlackVueElite8-"
+  supporting:
+    - path: BlackVue/Config/version.bin
+      contains:
+        - "model = ELITE 8"
+    - path: BlackVue/Config/micom_version.bin
+      contains:
+        - "model = ELITE 8"
+    - path: BlackVue/Config/smart_gsensor_version.bin
+      contains:
+        - "model = ELITE 8"
+    - folder: BlackVue/Record
+    - volume_label: BLACKVUE
+      strength: weak
+  metadata_rules:
+    - source: mp4_cprt
+      safe_fields:
+        - model
+        - ver
+        - rev
+        - isp_front_ver
+        - isp_rear_ver
+        - lang
+      ignore_fields:
+        - psn
+        - temp
+        - GPS
+folders:
+  - path: BlackVue/Record
+    mode: mixed_recordings
+    validation: real_card_sampled
+  - path: BlackVue/Config
+    mode: model_and_settings
+    validation: real_card_sampled
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([NPI])([FR])\\.mp4$"
+    applies_to:
+      - BlackVue/Record
+    case_sensitive: true
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+modes:
+  N: normal
+  P: parking
+  I: impact_event
+channels:
+  F: front
+  R: rear
+grouping:
+  keys:
+    - date
+    - time
+    - mode
+  expected_sets:
+    two_channel:
+      - F
+      - R
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - BlackVue/Config/config.ini
+  - BlackVue/Config/bt_ssid.bin
+  - BlackVue/System/**
