@@ -16,6 +16,8 @@ The toolbar includes an `Updates` control for manual app update checks. It check
 
 Firmware filename knowledge is maintainer research only: public firmware downloads may be inspected outside the app to learn filename patterns, but the Mac app only compares filenames already present on a card as weak bonus evidence.
 
+Public app updates should be distributed through Cloudflare, not private GitHub release URLs. See `docs/update-distribution.md`.
+
 ## Run The Prototype
 
 From the repo root:
@@ -123,6 +125,7 @@ swift run DashcamOffloader --smoke-test
 - `docs/profile-schema.md` - camera profile format
 - `docs/video-metadata-reference.md` - codec, resolution, bitrate, and fps reference across all cameras
 - `docs/config-settings-reference.md` - safe config/settings extraction notes for profile research and redacted submissions
+- `docs/update-distribution.md` - public Cloudflare update channel and release publishing notes
 - `docs/research/` - manual/source-link notes and research artifacts
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
