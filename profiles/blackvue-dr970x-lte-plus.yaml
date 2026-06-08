@@ -70,26 +70,28 @@ observed_media:
     codec: HEVC
     resolution: 3840x2160
     fps: 30
-    bitrate: approximately 60 Mbps
+    bitrate: approximately 61 Mbps
   rear:
     codec: HEVC
     resolution: 1920x1080
     fps: 30
-    bitrate: approximately 10 Mbps
+    bitrate: approximately 11 Mbps
 firmware:
-  observed_version: "1.008"
-  observed_revision: 1375
+  observed_version: "2.007"
+  observed_revision: 1584
   micom_version: "2.00"
   config_path: BlackVue/Config/version.bin
 privacy:
   do_not_read:
     - BlackVue/Config/config.ini
     - BlackVue/Config/bt_ssid.bin
+    - BlackVue/Config/modem_revision.bin
   do_not_log:
     - WiFi SSIDs
     - WiFi passwords
     - Cloud credentials
     - Bluetooth identifiers
+    - Modem identifiers
 exclude:
   - .Trashes/**
   - .fseventsd/**
@@ -97,8 +99,12 @@ exclude:
   - "._*"
   - BlackVue/Config/config.ini
   - BlackVue/Config/bt_ssid.bin
+  - BlackVue/Config/modem_revision.bin
   - BlackVue/System/**
 notes:
-  - "Real card sampled at /Volumes/BLACKVUE 2 on 2026-06-08."
+  - "Firmware 1.x sample was originally observed at /Volumes/BLACKVUE 2 on 2026-06-08."
+  - "Firmware 2.007 sample was observed at /Volumes/BLACKVUE on 2026-06-08 after a major update with HDR support."
+  - "Detection intentionally keys on the exact model string, not the firmware version, so 1.x and 2.x cards remain supported."
   - "Model evidence came from version.bin and micom_version.bin. Raw config.ini also includes private WiFi/cloud settings and must not be logged."
+  - "modem_revision.bin can include LTE modem identifiers and must be treated as private."
   - "AP/BT SSID values are user-changeable and must not be used as model evidence."
