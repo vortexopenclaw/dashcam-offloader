@@ -69,6 +69,9 @@ swift run DashcamOffloader --smoke-test
 **Cansonic**
 - Cansonic UltraDash Z3+ Standard Edition — dual front lens (wide + telephoto) + optional rear (R1), footage sampled
 
+**Cobra**
+- Cobra Road Scout — 1CH, real card sampled. Combined radar detector + dashcam.
+
 **Escort**
 - Escort M1 — 1CH, real card sampled
 
@@ -103,6 +106,7 @@ swift run DashcamOffloader --smoke-test
 - `docs/project-plan.md` - phased build plan
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
 - `docs/profile-schema.md` - camera profile format
+- `docs/video-metadata-reference.md` - codec, resolution, bitrate, and fps reference across all cameras
 - `docs/research/` - manual/source-link notes and research artifacts
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
