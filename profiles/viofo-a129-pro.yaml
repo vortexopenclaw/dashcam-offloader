@@ -1,0 +1,52 @@
+id: viofo-a129-pro
+manufacturer: VIOFO
+model: A129 Pro
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "YYYYMMDD_HHMMSS(F|R|PF|PR).MP4"
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: inferred
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: inferred
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: inferred
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})(F|R|PF|PR)\\.MP4$"
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    modes:
+      PF: parking
+      PR: parking
+    channels:
+      F: front
+      R: rear
+      PF: parking_front
+      PR: parking_rear
+  - pattern: "^(\\d{8})_(\\d{6})_(\\d+)(PF|PR)\\.MP4$"
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    modes:
+      PF: parking
+      PR: parking
+    channels:
+      PF: parking_front
+      PR: parking_rear
+channels:
+  F: front
+  R: rear
+  PF: parking_front
+  PR: parking_rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
