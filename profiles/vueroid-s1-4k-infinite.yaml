@@ -61,13 +61,41 @@ folders:
     validation: manual_confirmed
     notes: No visible MP4 files on either sampled card.
   - path: PARK
-    mode: parking_motion_or_timelapse
+    mode: parking
     prefix: PRK
     validation: real_card_sampled
+    parking_mode_detection:
+      method: video_frame_rate
+      signal: nominalFrameRate
+      modes:
+        parking_motion:
+          frame_rate: 30
+          audio: true
+          clip_duration_seconds: 30
+          notes: >
+            Motion/impact detection mode. Standard-speed recording triggered by movement.
+            30 fps H.264 video with AAC audio. Clips are exactly 30 seconds.
+        parking_timelapse:
+          frame_rate: 5
+          audio: false
+          clip_duration_seconds: 20
+          notes: >
+            Time-lapse mode. 5 fps H.264 video, no audio track. Each clip covers
+            a compressed interval. File sizes are pre-allocated identically to motion
+            clips — size cannot be used to distinguish modes.
+      notes: >
+        Motion detection and time-lapse parking clips use the same PARK/ folder and
+        PRK_ filename prefix and are indistinguishable by filename alone. Frame rate
+        from the video track is the reliable signal: 30 fps = motion detection,
+        5 fps = time-lapse. The app should probe one PARK clip per card using
+        AVURLAsset.tracks(withMediaType: .video).first?.nominalFrameRate.
   - path: PEVENT
     mode: parking_event
     prefix: PVT
     validation: real_card_sampled
+    notes: >
+      Impact/G-sensor events during parking. Saved separately regardless of whether
+      the main parking mode is motion detection or time-lapse.
   - path: USER
     mode: manual
     prefix: USR
