@@ -1,0 +1,7 @@
+name = "dashcam-offloader-updates"
+main = "worker.js"
+compatibility_date = "2026-06-08"
+
+[[r2_buckets]]
+binding = "UPDATES_BUCKET"
+bucket_name = "dashcam-offloader-updates"
