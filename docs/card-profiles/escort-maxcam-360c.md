@@ -69,10 +69,20 @@ Not present for every clip — begin appearing once GPS receiver acquires satell
 
 | Setting | Value | Confirmed |
 |---------|-------|-----------|
-| Codec | H.264 | assumed |
-| Resolution | 1920×1080 | assumed |
-| Frame rate | 30 fps | assumed |
+| Codec | H.264 | confirmed |
+| Resolution | 2560×1440 | confirmed |
+| Frame rate | 30 fps | confirmed |
 | Container | MOV | confirmed |
+
+Mounted `/Volumes/NO NAME` pass on 2026-06-08 measured:
+
+- Normal clip `Normal/MAXcam360c/20251010_0047_VID.MOV`: H.264 2560x1440 30 fps, about 28.6 Mbps, 60.1 seconds.
+- Event clip `Event/MAXcam360c/20250127_0012_SOS.MOV`: H.264 2560x1440 30 fps, about 28.4 Mbps, 60.1 seconds.
+- Parsed files: 65 normal driving clips and 1 locked/event clip.
+
+Safe version file:
+
+- `MasterVersionInfo_SW_v1.13_HW_v1.01.bin`: `MasterVersion:1.13`, `Main:R22`, `Antenna:R07`, `DSP:2.11`, `BLE:R07`, `HW_VERSION:1.01`.
 
 ---
 

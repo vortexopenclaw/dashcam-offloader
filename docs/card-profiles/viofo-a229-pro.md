@@ -133,6 +133,16 @@ Additional direct-camera NAS examples from the A229 Pro folder measured:
 - `format.txt`
 - `DCIM/.diskdb`
 
+## Media Metadata Notes
+
+Mounted-card pass on 2026-06-08 measured the current `/Volumes/Untitled` card:
+
+- Driving/locked F: H.264 3840x2160 30 fps at about 36.0 Mbps.
+- Driving/locked I: H.264 1920x1080 30 fps at about 15.6 Mbps.
+- Driving/locked R: H.264 2560x1440 30 fps at about 23.8 Mbps.
+- Parking PF/PI/PR keep the same resolutions and 30 fps but drop to about 3.9-4.1 Mbps.
+- Root `format.txt` is present but empty and should only be treated as an exclusion signal.
+
 ## Open Questions
 
 - Whether the RO folder can also contain locked parking clips (as observed on A329S). Only

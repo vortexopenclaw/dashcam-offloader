@@ -87,6 +87,16 @@ Group related files by date, time, and prefix (the `YYYYMMDD_HHMMSS_PREFIX` port
 - `._*`
 - macOS sidecars and hidden OS folders
 
+## Media And Config Notes
+
+Mounted-card pass on 2026-06-08 measured the current `/Volumes/S1-4K` 3CH card:
+
+- F: H.264 3840x2160 30 fps at about 48 Mbps across driving, manual, parking, and parking event samples.
+- I: H.264 1920x1080 30 fps at about 13-15 Mbps.
+- R: H.264 2560x1440 30 fps at about 22 Mbps.
+- `CONFIG/config.bin` is a 1441-byte binary config file. A safe printable-string pass found `S1-4K V1.04.2`, build date `Mar  3 2026, 16:43:29`, and `S1-4K`.
+- Keep `CONFIG/**` excluded from normal footage copy. Redacted summaries can use the safe model/firmware strings.
+
 ## Open Questions
 
 - Whether `EVENT` uses prefix `EVT` or a different token when visible MP4 files exist.

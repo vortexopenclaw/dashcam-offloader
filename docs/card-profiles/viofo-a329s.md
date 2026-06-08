@@ -118,6 +118,17 @@ Importer behavior:
 - `DCIM/._FWA329S.bin`
 - `DCIM/Movie/.dashcamexport/**`
 
+## Media Metadata Notes
+
+Mounted-card pass on 2026-06-08 measured the current `/Volumes/A329S` 3CH card:
+
+- Driving F: H.264 3840x2160 30 fps at about 65.5 Mbps.
+- Driving I/R: H.264 2560x1440 30 fps at about 27.0 Mbps.
+- Parking PF: H.264 3840x2160 30 fps at about 12.3 Mbps.
+- Parking PI/PR: H.264 2560x1440 30 fps at about 8.2 Mbps.
+- `RO` contains both normal `F/I/R` and parking `PF/PI/PR` suffix families.
+- Root `format.txt` is present but empty and should only be treated as an exclusion signal.
+
 ## Open Questions
 
 - Confirm whether `RO` only contains locked events or can also include manual saves.
