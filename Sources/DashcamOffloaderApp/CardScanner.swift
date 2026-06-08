@@ -413,6 +413,7 @@ struct CardScanner {
             part == ".Trashes" ||
             part == ".TemporaryItems" ||
             part == ".dashcamexport" ||
+            part == ".TWSYS" ||
             part == "System Volume Information"
         }
     }
@@ -424,6 +425,7 @@ struct CardScanner {
         if relativePath.localizedCaseInsensitiveContains("device.uid") { return true }
         if relativePath.localizedCaseInsensitiveContains("thumbnail") { return true }
         if relativePath.localizedCaseInsensitiveContains("setting/") { return true }
+        if relativePath.hasPrefix(".TWSYS/") { return true }
         return false
     }
 
