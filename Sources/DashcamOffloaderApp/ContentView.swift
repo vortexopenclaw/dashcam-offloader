@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var viewModel: TransferViewModel
+    @StateObject private var updateViewModel = UpdateViewModel()
+    @State private var isShowingUpdates = false
 
     var body: some View {
         NavigationSplitView {
@@ -21,6 +23,15 @@ struct ContentView: View {
             } label: {
                 Label("Destination", systemImage: "folder")
             }
+            Button {
+                isShowingUpdates = true
+                updateViewModel.checkForUpdates()
+            } label: {
+                Label("Updates", systemImage: "arrow.down.circle")
+            }
+        }
+        .sheet(isPresented: $isShowingUpdates) {
+            updateSheet
         }
     }
 
@@ -446,6 +457,77 @@ struct ContentView: View {
         }
         .padding()
         .background(.bar)
+    }
+
+    private var updateSheet: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("App Updates")
+                        .font(.title2.bold())
+                    Text(updateViewModel.statusMessage)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if updateViewModel.isChecking || updateViewModel.isDownloading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+
+            if let info = updateViewModel.info {
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Current version \(info.currentVersion)", systemImage: "app.badge")
+                    Label("Latest version \(info.latestVersion)", systemImage: info.isNewer ? "sparkles" : "checkmark.circle")
+                    Label(info.releaseName, systemImage: "tag")
+                    if let assetName = info.assetName {
+                        Label(assetName, systemImage: "archivebox")
+                    } else {
+                        Label("No app download asset found", systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .font(.subheadline)
+            } else {
+                Text("Check GitHub Releases for the newest Dashcam Offloader build.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Downloads are opened by macOS after they finish. For current unsigned prototype builds, replace the existing app with the downloaded app bundle when prompted.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Button {
+                    updateViewModel.checkForUpdates()
+                } label: {
+                    Label("Check Now", systemImage: "arrow.clockwise")
+                }
+                .disabled(updateViewModel.isChecking || updateViewModel.isDownloading)
+
+                Spacer()
+
+                Button {
+                    isShowingUpdates = false
+                } label: {
+                    Text("Close")
+                }
+
+                Button {
+                    if updateViewModel.info?.assetDownloadURL == nil {
+                        updateViewModel.openReleasePage()
+                    } else {
+                        updateViewModel.downloadAndInstall()
+                    }
+                } label: {
+                    Label(updateViewModel.info?.primaryActionTitle ?? "Open Release Page", systemImage: "arrow.down.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(updateViewModel.info == nil || updateViewModel.isChecking || updateViewModel.isDownloading)
+            }
+        }
+        .padding(24)
+        .frame(width: 520)
     }
 
     private func countChips(title: String, counts: [(String, Int)]) -> some View {
