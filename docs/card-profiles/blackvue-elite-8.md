@@ -58,19 +58,16 @@ Group related files by date, time, and mode letter. The channel letter should no
 
 ## Model Detection
 
-**Primary detection signal (confirmed, plaintext):**
+**Primary detection signals:**
 
-- `BlackVue/Config/config.ini` contains `ap_ssid=BlackVueElite8-`. The WiFi AP SSID embeds the model name and is readable as plain text, distinguishing Elite 8 from Elite 9 and other BlackVue models without binary parsing.
-
-**Supporting signals (inferred from Elite 9 family pattern; binary files present on card but content not directly verified):**
-
-- `BlackVue/Config/version.bin` — expected to contain `model = ELITE 8` based on Elite 9 equivalent behavior.
-- `BlackVue/Config/micom_version.bin` — expected to contain `model = ELITE 8`.
-- `BlackVue/Config/smart_gsensor_version.bin` — expected to contain `model = ELITE 8`.
+- `BlackVue/Config/version.bin` - contains the BlackVue model field.
+- `BlackVue/Config/micom_version.bin` - contains the BlackVue model field.
+- `BlackVue/Config/smart_gsensor_version.bin` - contains the BlackVue model field.
 
 **Additional supporting signal:**
 
 - MP4 `cprt` metadata contains model and firmware fields. Extract only safe fields; do not store private fields such as product serial, temperature, or GPS-related state.
+- `BlackVue/Config/config.ini` can document settings such as recording and parking configuration, but Wi-Fi SSID fields are user-changeable and must not be used for model identification.
 
 **Weak signal:**
 

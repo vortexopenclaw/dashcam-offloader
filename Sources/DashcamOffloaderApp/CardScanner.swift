@@ -45,12 +45,9 @@ struct CardScanner {
                     outcome: "selected_initial",
                     detail: "top score \($0.score), confidence \($0.confidence.rawValue), candidates \(candidates.count)"
                 ),
-                ScanDiagnosticEntry(
-                    stage: "metadata_identification",
-                    profileID: selectedProfile?.id,
-                    profileName: selectedProfile?.displayName,
-                    outcome: identifiedCamera.map { $0.isSupported ? "matched_supported_model" : "identified_unsupported_model" } ?? "no_explicit_model_metadata",
-                    detail: identifiedCamera.map { "\($0.displayName); evidence \($0.evidence.joined(separator: ", "))" } ?? "No explicit BlackVue model metadata found"
+                makeMetadataDiagnostic(
+                    identifiedCamera: identifiedCamera,
+                    selectedProfile: selectedProfile
                 )
             ]
         } ?? [
@@ -61,12 +58,9 @@ struct CardScanner {
                 outcome: "no_candidates",
                 detail: "No profile scored above zero"
             ),
-            ScanDiagnosticEntry(
-                stage: "metadata_identification",
-                profileID: nil,
-                profileName: nil,
-                outcome: identifiedCamera.map { $0.isSupported ? "matched_supported_model" : "identified_unsupported_model" } ?? "no_explicit_model_metadata",
-                detail: identifiedCamera.map { "\($0.displayName); evidence \($0.evidence.joined(separator: ", "))" } ?? "No explicit BlackVue model metadata found"
+            makeMetadataDiagnostic(
+                identifiedCamera: identifiedCamera,
+                selectedProfile: selectedProfile
             )
         ]
 
@@ -548,32 +542,22 @@ struct CardScanner {
     }
 
     private func identifyCamera(sourceURL: URL, profiles: [DashcamProfile]) -> IdentifiedCamera? {
-        guard let blackVue = identifyBlackVue(sourceURL: sourceURL, profiles: profiles) else {
-            return nil
-        }
-        return blackVue
-    }
-
-    private func identifyBlackVue(sourceURL: URL, profiles: [DashcamProfile]) -> IdentifiedCamera? {
-        let evidencePaths = [
-            "BlackVue/Config/version.bin",
-            "BlackVue/Config/micom_version.bin",
-            "BlackVue/Config/smart_gsensor_version.bin"
-        ]
-
-        for path in evidencePaths {
-            let url = sourceURL.appendingPathComponent(path)
-            guard let model = blackVueModelString(in: url) else { continue }
-            let supported = profiles.contains { profile in
-                profile.manufacturer.caseInsensitiveCompare("BlackVue") == .orderedSame &&
-                    normalizedModelName(profile.model) == normalizedModelName(model)
+        for rule in metadataIdentificationRules {
+            for path in rule.paths {
+                let url = sourceURL.appendingPathComponent(path)
+                guard let rawModel = firstRegexCapture(in: url, pattern: rule.pattern) else { continue }
+                let model = rule.displayModel(rawModel)
+                let supported = profiles.contains { profile in
+                    profile.manufacturer.caseInsensitiveCompare(rule.manufacturer) == .orderedSame &&
+                        normalizedModelName(profile.model) == normalizedModelName(model)
+                }
+                return IdentifiedCamera(
+                    manufacturer: rule.manufacturer,
+                    model: model,
+                    evidence: ["\(path) \(rule.evidenceLabel)"],
+                    isSupported: supported
+                )
             }
-            return IdentifiedCamera(
-                manufacturer: "BlackVue",
-                model: displayBlackVueModelName(model),
-                evidence: ["\(path) model field"],
-                isSupported: supported
-            )
         }
 
         return nil
@@ -590,26 +574,55 @@ struct CardScanner {
             }) {
                 return exact.profile
             }
+            return nil
         }
         return candidates.first?.profile
     }
 
-    private func blackVueModelString(in url: URL) -> String? {
+    private var metadataIdentificationRules: [MetadataIdentificationRule] {
+        [
+            MetadataIdentificationRule(
+                manufacturer: "BlackVue",
+                paths: [
+                    "BlackVue/Config/version.bin",
+                    "BlackVue/Config/micom_version.bin",
+                    "BlackVue/Config/smart_gsensor_version.bin"
+                ],
+                pattern: #"(?im)\bmodel\s*=\s*([^\r\n]+)"#,
+                evidenceLabel: "model field",
+                displayModel: displayBlackVueModelName
+            ),
+            MetadataIdentificationRule(
+                manufacturer: "Thinkware",
+                paths: ["SETTING/lang/ver.dat"],
+                pattern: #"(?im)\bDevice\s+Name\s*:\s*([A-Za-z0-9][A-Za-z0-9+ _-]*)"#,
+                evidenceLabel: "device name",
+                displayModel: displayThinkwareModelName
+            ),
+            MetadataIdentificationRule(
+                manufacturer: "Sony",
+                paths: ["PRIVATE/M4ROOT/MEDIAPRO.XML"],
+                pattern: #"(?i)\bsystemKind\s*=\s*"([^"]+)""#,
+                evidenceLabel: "system kind",
+                displayModel: displaySonyModelName
+            )
+        ]
+    }
+
+    private func firstRegexCapture(in url: URL, pattern: String) -> String? {
         guard let data = try? Data(contentsOf: url, options: [.mappedIfSafe]) else {
             return nil
         }
         let decoded = String(decoding: data, as: UTF8.self)
-        guard let range = decoded.range(
-            of: #"(?im)\bmodel\s*=\s*([^\r\n\0]+)"#,
-            options: .regularExpression
-        ) else {
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: decoded, range: NSRange(decoded.startIndex..., in: decoded)),
+              match.numberOfRanges > 1,
+              let captureRange = Range(match.range(at: 1), in: decoded) else {
             return nil
         }
 
-        let line = String(decoded[range])
-        guard let separator = line.firstIndex(of: "=") else { return nil }
-        let model = line[line.index(after: separator)...]
-            .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\0")))
+        let model = String(decoded[captureRange])
+            .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\0\"'")))
         return model.isEmpty ? nil : model
     }
 
@@ -623,6 +636,21 @@ struct CardScanner {
                     return lower.prefix(1).uppercased() + lower.dropFirst()
                 }
                 .joined(separator: " ")
+        }
+        return trimmed
+    }
+
+    private func displayThinkwareModelName(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let upper = trimmed.uppercased()
+        if upper == "U3000PRO" { return "U3000 Pro" }
+        return upper
+    }
+
+    private func displaySonyModelName(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.uppercased() == "ILCE-7M3" {
+            return "Alpha A7 III"
         }
         return trimmed
     }
@@ -648,6 +676,16 @@ struct CardScanner {
             guard let needleData = needle.data(using: .utf8), !needleData.isEmpty else { return false }
             return data.range(of: needleData) != nil
         }
+    }
+
+    private func makeMetadataDiagnostic(identifiedCamera: IdentifiedCamera?, selectedProfile: DashcamProfile?) -> ScanDiagnosticEntry {
+        ScanDiagnosticEntry(
+            stage: "metadata_identification",
+            profileID: selectedProfile?.id,
+            profileName: selectedProfile?.displayName,
+            outcome: identifiedCamera.map { $0.isSupported ? "matched_supported_model" : "identified_unsupported_model" } ?? "no_explicit_model_metadata",
+            detail: identifiedCamera.map { "\($0.displayName); evidence \($0.evidence.joined(separator: ", "))" } ?? "No explicit model metadata found"
+        )
     }
 
     private func filenameCandidates(for filename: String) -> [String] {
@@ -747,6 +785,14 @@ struct ScanResult {
     var selectedProfile: DashcamProfile?
     var clips: [ClipItem]
     var diagnostics: [ScanDiagnosticEntry]
+}
+
+private struct MetadataIdentificationRule {
+    var manufacturer: String
+    var paths: [String]
+    var pattern: String
+    var evidenceLabel: String
+    var displayModel: (String) -> String
 }
 
 extension URL {
