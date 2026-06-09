@@ -153,6 +153,66 @@ enum VerificationTest {
                 print("VERIFY FAIL: unsupported card generic diagnostic missing")
                 return false
             }
+
+            let unknownSiblingSource = temp.appendingPathComponent("unknown-sibling-family", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknownSiblingSource.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 18, count: 1024).write(to: unknownSiblingSource.appendingPathComponent("VIDEO/20260609_141500_F.MP4"))
+            try Data(repeating: 19, count: 1024).write(to: unknownSiblingSource.appendingPathComponent("VIDEO/20260609_141500_R.MP4"))
+            let siblingPattern = FilenamePattern(
+                rawPattern: "^(\\d{8})_(\\d{6})_([FR])\\.MP4$",
+                regexPattern: "^(\\d{8})_(\\d{6})_([FR])\\.MP4$",
+                modeMap: [:],
+                channelMap: ["F": "front", "R": "rear"],
+                timestampFormat: .yyyymmddHhmmss
+            )
+            let siblingProfiles = [
+                DashcamProfile(
+                    id: "examplecam-alpha",
+                    manufacturer: "ExampleCam",
+                    model: "Alpha",
+                    status: "test",
+                    confidence: "medium",
+                    folders: [ProfileFolder(path: "VIDEO", mode: "continuous", importable: true)],
+                    filenamePatterns: [siblingPattern],
+                    channels: ["F": "front", "R": "rear"],
+                    detectionRules: [],
+                    disqualifyingRules: [],
+                    osdSpec: nil
+                ),
+                DashcamProfile(
+                    id: "examplecam-beta",
+                    manufacturer: "ExampleCam",
+                    model: "Beta",
+                    status: "test",
+                    confidence: "medium",
+                    folders: [ProfileFolder(path: "VIDEO", mode: "continuous", importable: true)],
+                    filenamePatterns: [siblingPattern],
+                    channels: ["F": "front", "R": "rear"],
+                    detectionRules: [],
+                    disqualifyingRules: [],
+                    osdSpec: nil
+                )
+            ]
+            let unknownSiblingScan = try scanner.scan(sourceURL: unknownSiblingSource, profiles: siblingProfiles)
+            guard unknownSiblingScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: ambiguous sibling card selected exact model \(unknownSiblingScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard unknownSiblingScan.identifiedCamera == nil else {
+                print("VERIFY FAIL: ambiguous sibling card should not identify exact camera")
+                return false
+            }
+            guard unknownSiblingScan.clips.count == 2,
+                  Set(unknownSiblingScan.clips.map(\.channel)) == ["front", "rear"],
+                  unknownSiblingScan.clips.allSatisfy({ $0.outputCategory == "Driving" }) else {
+                print("VERIFY FAIL: ambiguous sibling card generic import lost clip metadata")
+                return false
+            }
+            guard unknownSiblingScan.diagnostics.contains(where: { $0.stage == "profile_selection_guard" && $0.outcome == "selected_generic_new_card" }) else {
+                print("VERIFY FAIL: ambiguous sibling card did not record selection guard")
+                return false
+            }
+
             var unknownFilters = FilterState()
             unknownFilters.selectedModes = Set(unknownScan.clips.map(\.mode))
             unknownFilters.selectedChannels = Set(unknownScan.clips.map(\.channel))
@@ -357,7 +417,7 @@ enum VerificationTest {
                 return false
             }
             guard a329tScan.selectedProfile?.id == "viofo-a329t" else {
-                print("VERIFY FAIL: A329T fixture selected \(a329tScan.selectedProfile?.id ?? "nil")")
+                print("VERIFY FAIL: A329T fixture selected \(a329tScan.selectedProfile?.id ?? "nil"); candidates \(a329tScan.candidates.prefix(6).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" }); diagnostics \(a329tScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

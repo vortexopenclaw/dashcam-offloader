@@ -67,7 +67,7 @@ folders:
     mode: still_image
     validation: real_card_sampled
 filename_patterns:
-  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|T|PF|PI|PR|PT)\\.MP4$"
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.MP4$"
     applies_to:
       - DCIM/Movie
       - DCIM/Movie/RO
@@ -84,7 +84,7 @@ filename_patterns:
       Sequence number is a global monotonic counter across all channels and modes.
       Observed as 6 digits (000511-006759) on real-card samples; manual example shows
       5 digits. Treat as variable-length.
-  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|T|PF|PI|PR|PT)\\.JPG$"
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.JPG$"
     applies_to:
       - DCIM/Photo
     case_sensitive: true
@@ -99,11 +99,9 @@ channels:
   F: front
   I: interior
   R: rear
-  T: telephoto
   PF: parking_front
   PI: parking_interior
   PR: parking_rear
-  PT: parking_telephoto
 grouping:
   keys:
     - year
@@ -119,8 +117,9 @@ grouping:
       - PI
       - PR
   notes: >
-    T and PT channels appear when a telephoto camera is attached. Grouping key is
-    timestamp (year + month_day + time), not sequence number.
+    Telephoto T/PT tokens are reserved for telephoto-equipped A329T-style cards,
+    not A229 Pro exact-model matching. Grouping key is timestamp (year +
+    month_day + time), not sequence number.
 resolutions:
   F: 3840x2160
   I: 1920x1080

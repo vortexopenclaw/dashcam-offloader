@@ -52,7 +52,7 @@ struct CardScanner {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
-        let selectionIssue = topCandidate.flatMap(profileSelectionIssue)
+        let selectionIssue = topCandidate.flatMap { profileSelectionIssue($0, allCandidates: candidates) }
         let identifiedCamera = identifyCamera(from: candidates, selectedProfile: nil)
         let selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
@@ -121,20 +121,83 @@ struct CardScanner {
         )
     }
 
-    private func profileSelectionIssue(_ candidate: DetectionCandidate) -> String? {
+    private func profileSelectionIssue(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> String? {
         if candidate.confidence == .low {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
         }
 
-        let hasModelEvidence = candidate.evidence.contains { evidence in
-            evidence.hasPrefix("model text ") || evidence.hasPrefix("model evidence ")
-        }
+        let hasModelEvidence = hasExplicitModelEvidence(candidate)
         let hasFilenameEvidence = candidate.evidence.contains { $0.hasPrefix("filename pattern match ") }
-        if hasModelEvidence || hasFilenameEvidence {
+        if hasModelEvidence {
+            return nil
+        }
+
+        if hasFilenameEvidence,
+           hasSameManufacturerAmbiguity(candidate, allCandidates: allCandidates),
+           !hasDistinctiveFilenameEvidence(candidate, allCandidates: allCandidates) {
+            return "Top candidate matched filename structure, but nearby \(candidate.profile.displayManufacturer) sibling profiles also matched and no explicit model text or OSD proof was found. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
+        }
+
+        if hasFilenameEvidence {
             return nil
         }
 
         return "Top candidate matched only shared folder/volume structure, with no model text or filename-pattern verification. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
+    }
+
+    private func hasExplicitModelEvidence(_ candidate: DetectionCandidate) -> Bool {
+        candidate.evidence.contains { evidence in
+            evidence.hasPrefix("model text ") ||
+                evidence.hasPrefix("model evidence ") ||
+                evidence.hasPrefix("OSD OCR match ")
+        }
+    }
+
+    private func hasSameManufacturerAmbiguity(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> Bool {
+        let candidateManufacturer = compactModelToken(candidate.profile.manufacturer)
+        guard !candidateManufacturer.isEmpty else { return false }
+
+        return allCandidates.contains { other in
+            guard other.profile.id != candidate.profile.id else { return false }
+            guard compactModelToken(other.profile.manufacturer) == candidateManufacturer else { return false }
+            guard other.confidence != .low else { return false }
+            guard other.score >= max(20, candidate.score - 20) else { return false }
+            guard !hasExplicitModelEvidence(other) else { return false }
+            return other.evidence.contains { evidence in
+                evidence.hasPrefix("filename pattern match ") ||
+                    evidence.hasPrefix("folder ") ||
+                    evidence.hasPrefix("volume label ")
+            }
+        }
+    }
+
+    private func hasDistinctiveFilenameEvidence(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> Bool {
+        let tokens = filenameChannelTokens(from: candidate)
+        guard !tokens.isEmpty else { return false }
+
+        let candidateManufacturer = compactModelToken(candidate.profile.manufacturer)
+        let siblingChannelTokens = allCandidates
+            .filter { other in
+                other.profile.id != candidate.profile.id &&
+                    compactModelToken(other.profile.manufacturer) == candidateManufacturer &&
+                    other.score >= max(20, candidate.score - 20)
+            }
+            .flatMap { $0.profile.channels.keys.map { $0.uppercased() } }
+
+        guard !siblingChannelTokens.isEmpty else { return false }
+        return tokens.contains { !siblingChannelTokens.contains($0) }
+    }
+
+    private func filenameChannelTokens(from candidate: DetectionCandidate) -> [String] {
+        guard let evidence = candidate.evidence.first(where: { $0.hasPrefix("filename channel tokens ") }) else {
+            return []
+        }
+
+        let raw = String(evidence.dropFirst("filename channel tokens ".count))
+        return raw
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
     }
 
     /// Async scan that augments folder/filename detection with OSD OCR to
@@ -280,9 +343,30 @@ struct CardScanner {
         result.identifiedCamera = identifyCamera(from: updatedCandidates, selectedProfile: result.selectedProfile)
 
         // Re-select and re-classify if the winner changed.
-        if let newTop = updatedCandidates.first,
-           newTop.confidence != .low,
-           newTop.profile.id != result.selectedProfile?.id {
+        let updatedSelectionIssue = updatedCandidates.first.flatMap { profileSelectionIssue($0, allCandidates: updatedCandidates) }
+        if let updatedSelectionIssue, let newTop = updatedCandidates.first {
+            let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: sourceURL))
+            result.selectedProfile = DashcamProfile.genericNewDashcam
+            result.clips = parkingPatternResult.clips
+            result.identifiedCamera = nil
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "profile_selection_guard",
+                profileID: newTop.profile.id,
+                profileName: newTop.profile.displayName,
+                outcome: "selected_generic_new_card",
+                detail: updatedSelectionIssue
+            ))
+            result.diagnostics.append(contentsOf: parkingPatternResult.diagnostics)
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "generic_fallback",
+                profileID: DashcamProfile.genericNewDashcam.id,
+                profileName: DashcamProfile.genericNewDashcam.displayName,
+                outcome: "classified_generic_clips",
+                detail: "Used filename dates and folder semantics because no reliable supported profile was selected"
+            ))
+        } else if let newTop = updatedCandidates.first,
+                  newTop.confidence != .low,
+                  newTop.profile.id != result.selectedProfile?.id {
             result.selectedProfile = newTop.profile
             result.clips = classifyWithParkingPatterns(files: result.allFiles, sourceURL: sourceURL, profile: newTop.profile).clips
         } else if result.selectedProfile == nil {
@@ -329,11 +413,10 @@ struct CardScanner {
         guard let top = candidates.first else { return nil }
         guard top.confidence != .low else { return nil }
 
-        let hasExplicitModelEvidence = top.evidence.contains { evidence in
-            evidence.hasPrefix("model text ") ||
-            evidence.hasPrefix("model evidence ") ||
-            evidence.hasPrefix("filename pattern match ")
-        }
+        let hasExplicitModelEvidence = hasExplicitModelEvidence(top) ||
+            (top.evidence.contains { $0.hasPrefix("filename pattern match ") } &&
+                (!hasSameManufacturerAmbiguity(top, allCandidates: candidates) ||
+                    hasDistinctiveFilenameEvidence(top, allCandidates: candidates)))
         guard hasExplicitModelEvidence else { return nil }
 
         let profile = selectedProfile ?? top.profile
@@ -900,12 +983,24 @@ struct CardScanner {
 
             let sampleNames = representativeDetectionFilenames(from: allFiles)
             var totalFilenameMatches = 0
+            var matchedChannelTokens = Set<String>()
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
+                let channelMap = mergedChannelMap(profile: profile, pattern: pattern)
                 let matchCount = sampleNames.reduce(0) { count, name in
                     let matched = filenameCandidates(for: name).contains { candidateName in
-                        let range = NSRange(location: 0, length: (candidateName as NSString).length)
-                        return regex.firstMatch(in: candidateName, range: range) != nil
+                        let nsCandidate = candidateName as NSString
+                        let range = NSRange(location: 0, length: nsCandidate.length)
+                        guard let match = regex.firstMatch(in: candidateName, range: range) else { return false }
+                        for index in 1..<match.numberOfRanges {
+                            let matchRange = match.range(at: index)
+                            guard matchRange.location != NSNotFound else { continue }
+                            let group = nsCandidate.substring(with: matchRange)
+                            if channelMap[group] != nil {
+                                matchedChannelTokens.insert(group)
+                            }
+                        }
+                        return true
                     }
                     return count + (matched ? 1 : 0)
                 }
@@ -914,6 +1009,9 @@ struct CardScanner {
             if totalFilenameMatches > 0 {
                 score += min(90, 15 + totalFilenameMatches)
                 evidence.append("filename pattern match (\(totalFilenameMatches))")
+                if !matchedChannelTokens.isEmpty {
+                    evidence.append("filename channel tokens \(matchedChannelTokens.sorted().joined(separator: ","))")
+                }
             }
 
             guard score > 0 else { return nil }
