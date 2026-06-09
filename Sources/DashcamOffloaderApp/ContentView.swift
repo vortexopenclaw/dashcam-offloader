@@ -740,6 +740,10 @@ struct CardLearningSheet: View {
             !viewModel.isSubmittingFeedback
     }
 
+    private var learningSnapshot: FeedbackScanSnapshot? {
+        viewModel.makeFeedbackScanSnapshot()
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -792,6 +796,8 @@ struct CardLearningSheet: View {
             Text("Sends folder names, filename samples, candidate scores, and counts. It does not upload video files, GPS traces, or unique device IDs.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            learningPackagePreview
 
             if !viewModel.feedbackMessage.isEmpty {
                 Text(viewModel.feedbackMessage)
@@ -852,6 +858,48 @@ struct CardLearningSheet: View {
             includeScan: true,
             training: training
         )
+    }
+
+    @ViewBuilder
+    private var learningPackagePreview: some View {
+        if let snapshot = learningSnapshot {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 14) {
+                    Label("\(snapshot.sampleRelativePaths.count) sample paths", systemImage: "list.bullet.rectangle")
+                    Label("\(snapshot.filenameSamples.count) filename samples", systemImage: "text.page")
+                    Label("\(snapshot.settingSnapshots.count) settings files", systemImage: "gearshape")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                if snapshot.sampleRelativePaths.isEmpty {
+                    Text("No safe sample paths were selected from this scan. Rescan the card before submitting so the learning package includes useful file examples.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                } else {
+                    Text("The app selects safe examples automatically. These are path names only, not uploaded video files.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(Array(snapshot.sampleRelativePaths.prefix(12)), id: \.self) { path in
+                                Text(path)
+                                    .font(.caption.monospaced())
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 96)
+                    .padding(8)
+                    .background(Color.secondary.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+            }
+        }
     }
 }
 
