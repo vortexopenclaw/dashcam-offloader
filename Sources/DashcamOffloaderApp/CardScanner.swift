@@ -4,23 +4,32 @@ struct CardScanner {
     private let fileManager = FileManager.default
 
     func discoverMountedSources(showAllVolumes: Bool = false) -> [MountedSource] {
-        let volumesURL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
-        guard let urls = try? fileManager.contentsOfDirectory(
-            at: volumesURL,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
+        let resourceKeys: [URLResourceKey] = [.isDirectoryKey, .volumeIsBrowsableKey]
+        let urls = fileManager.mountedVolumeURLs(
+            includingResourceValuesForKeys: resourceKeys,
+            options: [.skipHiddenVolumes]
+        ) ?? fallbackVolumeDirectoryURLs(resourceKeys: resourceKeys)
 
         return urls
             .filter { url in
-                let values = try? url.resourceValues(forKeys: Set<URLResourceKey>([.isDirectoryKey]))
+                let standardizedURL = url.standardizedFileURL
+                guard standardizedURL.path.hasPrefix("/Volumes/") else { return false }
+                let values = try? standardizedURL.resourceValues(forKeys: Set(resourceKeys))
                 guard values?.isDirectory == true else { return false }
-                return shouldShowMountedSource(url, showAllVolumes: showAllVolumes)
+                guard values?.volumeIsBrowsable != false else { return false }
+                return shouldShowMountedSource(standardizedURL, showAllVolumes: showAllVolumes)
             }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
-            .map { MountedSource(url: $0, name: $0.lastPathComponent) }
+            .map { MountedSource(url: $0.standardizedFileURL, name: $0.lastPathComponent) }
+    }
+
+    private func fallbackVolumeDirectoryURLs(resourceKeys: [URLResourceKey]) -> [URL] {
+        let volumesURL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
+        return (try? fileManager.contentsOfDirectory(
+            at: volumesURL,
+            includingPropertiesForKeys: resourceKeys,
+            options: [.skipsHiddenFiles]
+        )) ?? []
     }
 
     func mountedSource(forUserSelectedURL url: URL) -> MountedSource {

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel: TransferViewModel
     @State private var isFeedbackPresented = false
     @State private var isCardLearningPresented = false
@@ -16,9 +17,9 @@ struct ContentView: View {
         }
         .toolbar {
             Button {
-                viewModel.refreshSources()
+                viewModel.refreshSources(userInitiated: true)
             } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
+                Label("Refresh Sources", systemImage: "arrow.clockwise")
             }
             Button {
                 viewModel.chooseDestinationFolder()
@@ -36,6 +37,11 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isCardLearningPresented) {
             CardLearningSheet(viewModel: viewModel)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                viewModel.refreshSources()
+            }
         }
     }
 
@@ -84,14 +90,24 @@ struct ContentView: View {
                 }
             }
 
-            Button {
-                viewModel.scanSelectedSource()
-            } label: {
-                Label(viewModel.isScanning ? "Scanning" : "Rescan Card", systemImage: "waveform.path.ecg")
-                    .frame(maxWidth: .infinity)
+            VStack(spacing: 8) {
+                Button {
+                    viewModel.refreshSources(userInitiated: true)
+                } label: {
+                    Label("Refresh Sources", systemImage: "arrow.clockwise")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    viewModel.scanSelectedSource()
+                } label: {
+                    Label(viewModel.isScanning ? "Scanning" : "Rescan Selected Card", systemImage: "waveform.path.ecg")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(viewModel.selectedSource == nil || viewModel.isScanning)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.selectedSource == nil || viewModel.isScanning)
             .padding([.horizontal, .bottom])
         }
     }

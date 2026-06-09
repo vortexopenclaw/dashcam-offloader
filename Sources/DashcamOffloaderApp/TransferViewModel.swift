@@ -168,15 +168,34 @@ final class TransferViewModel: ObservableObject {
         }
     }
 
-    func refreshSources() {
+    func refreshSources(userInitiated: Bool = false) {
         let previousSource = selectedSource
-        mountedSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
+        let discoveredSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
             .map(sourceWithCustomName)
+        let discoveredIDs = Set(discoveredSources.map(\.id))
+        let manualSources = mountedSources
+            .filter { !isMountedVolumeSource($0) }
+            .filter { FileManager.default.fileExists(atPath: $0.url.path) }
+            .filter { !discoveredIDs.contains($0.id) }
+            .map(sourceWithCustomName)
+
+        mountedSources = (discoveredSources + manualSources).sorted { lhs, rhs in
+            if isMountedVolumeSource(lhs) != isMountedVolumeSource(rhs) {
+                return isMountedVolumeSource(lhs)
+            }
+            return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+        }
+
         if let previousSource,
            let refreshedSource = mountedSources.first(where: { $0.id == previousSource.id }) {
             selectedSource = refreshedSource
         } else {
             selectedSource = mountedSources.first
+            clearSourceDerivedState(for: selectedSource)
+        }
+
+        if userInitiated {
+            statusMessage = "Sources refreshed. Found \(mountedSources.count) \(mountedSources.count == 1 ? "source" : "sources")"
         }
     }
 
@@ -203,6 +222,10 @@ final class TransferViewModel: ObservableObject {
     func setShowAllVolumes(_ value: Bool) {
         showAllVolumes = value
         refreshSources()
+    }
+
+    private func isMountedVolumeSource(_ source: MountedSource) -> Bool {
+        sourceVolumeURL(for: source.url).path.hasPrefix("/Volumes/")
     }
 
     func loadProfiles() {
@@ -237,17 +260,7 @@ final class TransferViewModel: ObservableObject {
 
     func selectSource(_ source: MountedSource, scanImmediately: Bool = true) {
         selectedSource = source
-        detectionCandidates = []
-        selectedProfile = nil
-        clips = []
-        lastScannedFiles = []
-        lastScanDiagnostics = []
-        excludedQueueClipIDs = []
-        selectedQueueItemIDs = []
-        copyPlan = nil
-        copyResults = []
-        supportFileResults = []
-        scanSummary = ScanSummary(sourcePath: source.url.path)
+        clearSourceDerivedState(for: source)
         statusMessage = "Selected \(source.name)"
 
         if scanImmediately {
@@ -332,20 +345,24 @@ final class TransferViewModel: ObservableObject {
 
         if selectedSource?.id == source.id {
             selectedSource = mountedSources.first
-            detectionCandidates = []
-            selectedProfile = nil
-            clips = []
-            lastScannedFiles = []
-            lastScanDiagnostics = []
-            excludedQueueClipIDs = []
-            selectedQueueItemIDs = []
-            copyPlan = nil
-            copyResults = []
-            supportFileResults = []
-            scanSummary = selectedSource.map { ScanSummary(sourcePath: $0.url.path) } ?? ScanSummary()
+            clearSourceDerivedState(for: selectedSource)
         }
 
         statusMessage = status
+    }
+
+    private func clearSourceDerivedState(for source: MountedSource?) {
+        detectionCandidates = []
+        selectedProfile = nil
+        clips = []
+        lastScannedFiles = []
+        lastScanDiagnostics = []
+        excludedQueueClipIDs = []
+        selectedQueueItemIDs = []
+        copyPlan = nil
+        copyResults = []
+        supportFileResults = []
+        scanSummary = source.map { ScanSummary(sourcePath: $0.url.path) } ?? ScanSummary()
     }
 
     func chooseDestinationFolder() {
