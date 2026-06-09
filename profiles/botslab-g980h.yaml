@@ -30,6 +30,13 @@ folders:
       and impact events. Generic parking-pattern inference should split
       continuous/low-bitrate and motion/event-style parking when the timing and
       size patterns support it.
+  - path: 360CARDVR/SECVIDEO
+    mode: parking_timelapse
+    validation: app_submission_sampled
+    notes: >
+      Observed on the 3CH follow-up card after switching from sentry parking to
+      timelapse mode. Clips were written at longer regular intervals in channel
+      folders under SECVIDEO.
   - path: 360CARDVR/GPS
     mode: gps
     import: false
@@ -52,11 +59,13 @@ parking_mode:
   observed:
     - sentry_motion_or_impact
     - continuous_low_bitrate
+    - timelapse
   notes: >
     The first observed 4CH card had REC driving clips plus PARKING clips that
     the app split into Parking Continuous / Low Bitrate and Parking Motion
-    Detection groups. Confirm exact parking-mode naming from future config or
-    longer parking samples when available.
+    Detection groups. The 3CH follow-up card added SECVIDEO clips after the user
+    switched to timelapse parking mode, so SECVIDEO is treated as Parking
+    Timelapse.
 video:
   observed_samples:
     - folder: 360CARDVR/REC

@@ -12,7 +12,7 @@
 - Direct card read from `/Volumes/NO NAME`
 - High-confidence marker file: `MISC/G980HMCN5291.TXT`
 
-The card was tested in 4CH mode with driving footage and sentry-mode parking footage. Future tests may include 3CH mode, different resolution settings, and timelapse parking mode.
+The card was tested in 4CH mode with driving footage and sentry-mode parking footage, then in 3CH mode with the front channel raised to the fake 4K mode and parking switched to timelapse.
 
 ## Card Layout
 
@@ -20,6 +20,7 @@ The card was tested in 4CH mode with driving footage and sentry-mode parking foo
 |---|---|
 | `360CARDVR/REC/` | Driving clips |
 | `360CARDVR/PARKING/` | Parking clips |
+| `360CARDVR/SECVIDEO/` | Timelapse-style parking clips |
 | `360CARDVR/GPS/` | GPS/support data, not imported as footage |
 | `MISC/G980HMCN5291.TXT` | Model marker used for exact model detection |
 
@@ -49,9 +50,16 @@ Observed 4CH mode samples:
 - `AC` left: H.264, 1920x1080, 25 fps.
 - `AD` right: H.264, 1920x1080, 25 fps.
 
+The 3CH follow-up card should be used to compare fake 4K front clips against the
+4CH baseline and to confirm `SECVIDEO` timelapse samples.
+
 ## Parking Behavior
 
-The submitted test used sentry-mode parking with motion and impact events. The app split observed parking into Parking Continuous / Low Bitrate and Parking Motion Detection groups.
+The submitted 4CH test used sentry-mode parking with motion and impact events.
+The app split observed parking into Parking Continuous / Low Bitrate and Parking
+Motion Detection groups. The 3CH follow-up card added `SECVIDEO` clips after the
+user switched to timelapse parking mode, so the profile treats `SECVIDEO` as
+Parking Timelapse.
 
 Keep generic detection conservative for future Botslab-like cards:
 

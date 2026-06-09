@@ -13,13 +13,16 @@ struct CopyPlanner {
             guard clip.excludedReason == nil else { return false }
             if clip.isPhoto && !filters.includePhotos { return false }
             if clip.isGPS && !filters.includeGPS { return false }
-            if !filters.selectedModes.isEmpty,
-               filters.selectedModes.allSatisfy({ !ClipItem.isParkingMode($0) }),
-               clip.isParkingFootage {
-                return false
+            if clip.isVideo {
+                if filters.selectedModes.isEmpty { return false }
+                if filters.selectedChannels.isEmpty { return false }
+                if filters.selectedModes.allSatisfy({ !ClipItem.isParkingMode($0) }),
+                   clip.isParkingFootage {
+                    return false
+                }
+                if !filters.selectedModes.contains(clip.mode) { return false }
+                if !filters.selectedChannels.contains(clip.channel) { return false }
             }
-            if !filters.selectedModes.isEmpty && !filters.selectedModes.contains(clip.mode) { return false }
-            if !filters.selectedChannels.isEmpty && !filters.selectedChannels.contains(clip.channel) { return false }
             if filters.useStartDate, clip.canUseTimestampForDateFiltering, let timestamp = clip.timestamp, timestamp < Calendar.current.startOfDay(for: filters.startDate) {
                 return false
             }

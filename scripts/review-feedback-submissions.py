@@ -74,6 +74,7 @@ def kv_path(namespace_id: str, suffix: str) -> str:
 
 
 def list_keys(namespace_id: str, prefix: str, limit: int) -> list[dict[str, Any]]:
+    limit = max(limit, 10)
     query = urllib.parse.urlencode({"prefix": prefix, "limit": str(limit)})
     result = api_request(kv_path(namespace_id, f"/keys?{query}"))
     return list(result or [])
@@ -105,9 +106,9 @@ def submission_text(record: dict[str, Any]) -> str:
 def summary_for(record: dict[str, Any], key: str) -> dict[str, Any]:
     payload = record.get("payload") if isinstance(record.get("payload"), dict) else record
     learning = payload.get("cardLearning") or payload.get("learning") or payload.get("training") or {}
-    scan = payload.get("scanSummary") or {}
-    if not scan and isinstance(payload.get("scan"), dict):
-        scan = payload["scan"]
+    scan = payload.get("scan") or payload.get("scanSummary") or {}
+    if not scan and isinstance(learning.get("scanSummary"), dict):
+        scan = learning["scanSummary"]
     identified = scan.get("identifiedCamera") or {}
     return {
         "key": key,

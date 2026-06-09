@@ -164,7 +164,10 @@ enum VerificationTest {
                 "360CARDVR/PARKING/FRONT",
                 "360CARDVR/PARKING/REAR",
                 "360CARDVR/PARKING/LEFT",
-                "360CARDVR/PARKING/RIGHT"
+                "360CARDVR/PARKING/RIGHT",
+                "360CARDVR/SECVIDEO/FRONT",
+                "360CARDVR/SECVIDEO/REAR",
+                "360CARDVR/SECVIDEO/LEFT"
             ] {
                 try FileManager.default.createDirectory(at: botslabSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
             }
@@ -177,7 +180,10 @@ enum VerificationTest {
                 ("360CARDVR/PARKING/FRONT", "AA"),
                 ("360CARDVR/PARKING/REAR", "AB"),
                 ("360CARDVR/PARKING/LEFT", "AC"),
-                ("360CARDVR/PARKING/RIGHT", "AD")
+                ("360CARDVR/PARKING/RIGHT", "AD"),
+                ("360CARDVR/SECVIDEO/FRONT", "AA"),
+                ("360CARDVR/SECVIDEO/REAR", "AB"),
+                ("360CARDVR/SECVIDEO/LEFT", "AC")
             ]
             for (folder, suffix) in botslabSamples {
                 try Data(repeating: 31, count: 2048).write(
@@ -200,6 +206,10 @@ enum VerificationTest {
             guard botslabScan.clips.contains(where: { $0.channel == "left" && $0.outputCategory == "Driving" }),
                   botslabScan.clips.contains(where: { $0.channel == "right" && $0.isParkingFootage }) else {
                 print("VERIFY FAIL: Botslab mode/channel classification wrong")
+                return false
+            }
+            guard botslabScan.clips.contains(where: { $0.relativePath.hasPrefix("360CARDVR/SECVIDEO/") && $0.displayMode == "Parking Timelapse" }) else {
+                print("VERIFY FAIL: Botslab SECVIDEO clips should be Parking Timelapse")
                 return false
             }
 
@@ -545,6 +555,32 @@ enum VerificationTest {
 
             guard plan.items.count == 2, plan.selectedBytes == 3072 else {
                 print("VERIFY FAIL: unexpected plan \(plan.items.count) files \(plan.selectedBytes) bytes")
+                return false
+            }
+            var emptyModeFilters = filters
+            emptyModeFilters.selectedModes = []
+            let emptyModePlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: emptyModeFilters
+            )
+            guard emptyModePlan.items.isEmpty else {
+                print("VERIFY FAIL: deselecting all recording types should clear the download queue")
+                return false
+            }
+            var emptyChannelFilters = filters
+            emptyChannelFilters.selectedChannels = []
+            let emptyChannelPlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: emptyChannelFilters
+            )
+            guard emptyChannelPlan.items.isEmpty else {
+                print("VERIFY FAIL: deselecting all channels should clear the download queue")
                 return false
             }
             guard plan.items.contains(where: { $0.destinationURL.lastPathComponent == "20260101_120000_00001_N_A Opp traffic up Maltby cloudy.MP4" }) else {
