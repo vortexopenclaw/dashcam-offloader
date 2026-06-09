@@ -27,7 +27,7 @@ Security notes:
 - Keep the endpoint write-only. Do not expose an unauthenticated listing route.
 - Prefer R2 for durable records; KV is acceptable for simple testing.
 - Set `ALLOWED_ORIGINS` if browser clients are added later. The Mac app is not browser-CORS constrained.
-- Keep payloads small. The Worker rejects bodies over 256 KB.
+- Keep payloads small. The Worker rejects bodies over 1 MB.
 - Treat stored submissions as private user data and avoid public buckets.
 - Do not put Cloudflare credentials or bucket names in the Mac app.
 

@@ -223,6 +223,44 @@ enum VerificationTest {
                 return false
             }
 
+            let z4TimelapseSource = temp.appendingPathComponent("z4-timelapse", isDirectory: true)
+            try FileManager.default.createDirectory(at: z4TimelapseSource.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: z4TimelapseSource.appendingPathComponent("PROTECTED", isDirectory: true), withIntermediateDirectories: true)
+            for suffix in ["L", "R", "B"] {
+                try createSparseFile(
+                    at: z4TimelapseSource.appendingPathComponent("VIDEO/20260609_130000_\(suffix).MP4"),
+                    size: suffix == "B" ? 120_000_000 : 400_000_000
+                )
+            }
+            for minute in 0..<4 {
+                let timestamp = String(format: "20260609_130%d00", minute)
+                for suffix in ["L", "R", "B"] {
+                    try createSparseFile(
+                        at: z4TimelapseSource.appendingPathComponent("PROTECTED/P\(timestamp)_\(suffix).MP4"),
+                        size: suffix == "B" ? 120_000_000 : 400_000_000
+                    )
+                }
+            }
+            for suffix in ["L", "R", "B"] {
+                try createSparseFile(
+                    at: z4TimelapseSource.appendingPathComponent("PROTECTED/P20260609_140000_\(suffix).MP4"),
+                    size: suffix == "B" ? 120_000_000 : 400_000_000
+                )
+            }
+            let z4TimelapseScan = try scanner.scan(sourceURL: z4TimelapseSource, profiles: profiles)
+            guard z4TimelapseScan.candidates.first?.profile.id == "cansonic-ultradash-z4-standard" else {
+                print("VERIFY FAIL: Z4 timelapse fixture did not select Z4")
+                return false
+            }
+            let z4PatternCounts = Dictionary(grouping: z4TimelapseScan.clips.compactMap(\.inferredParkingPattern), by: { $0 })
+                .mapValues(\.count)
+            guard z4PatternCounts[.timelapse] == 12,
+                  z4PatternCounts[.motionOrImpact] == 3,
+                  z4PatternCounts[.impactDetection] == nil else {
+                print("VERIFY FAIL: Z4 protected P clips mislabeled: \(z4PatternCounts.map { "\($0.key.rawValue)=\($0.value)" }.sorted())")
+                return false
+            }
+
             let scan = try scanner.scanWithOSD(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
                 print("VERIFY FAIL: E1 Pro was not top candidate")
@@ -350,8 +388,8 @@ enum VerificationTest {
                 print("VERIFY FAIL: Cansonic Z4 output groups wrong: \(cansonicCategories)")
                 return false
             }
-            guard Set(cansonicZ4Scan.clips.map(\.displayMode)).contains("Parking Impact Detection") else {
-                print("VERIFY FAIL: Cansonic Z4 protected clips were not labeled as parking impact detection")
+            guard Set(cansonicZ4Scan.clips.map(\.displayMode)).contains("Parking Motion / Impact") else {
+                print("VERIFY FAIL: Cansonic Z4 protected clips were not labeled as parking motion/impact")
                 return false
             }
             guard Set(cansonicZ4Scan.clips.map(\.channel)) == ["front", "front_telephoto", "rear"] else {
@@ -611,5 +649,12 @@ enum VerificationTest {
             print("VERIFY FAIL: \(error.localizedDescription)")
             return false
         }
+    }
+
+    private static func createSparseFile(at url: URL, size: UInt64) throws {
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.truncate(atOffset: size)
+        try handle.close()
     }
 }

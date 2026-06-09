@@ -5,11 +5,17 @@ status: app_submission_sampled
 channels: 3
 source_notes:
   - App training submission c4f6f86d-d32f-4163-9b95-884a3dfae512
+  - App training submission e4c70755-886c-4f43-9c21-a344a82a6d5c
   - >
     The original app submission from build 0.1.0 1 ddb6eb2 included folder
     and filename samples but no videoSpecSamples, folderSummaries, or
     settingSnapshots. It also labeled all 27 files as Other / Recording before
     the Z4 profile existed.
+  - >
+    Follow-up app submission from build 0.1.0 1 83bb74e included folder
+    summaries, file sizes, video spec samples, and grouped video spec summaries
+    from a 45-file Z4 card set to Highest video quality and timelapse parking
+    mode around 1 PM.
 detection:
   supporting:
     - folder: VIDEO
@@ -26,9 +32,12 @@ folders:
     mode: parking_event
     validation: app_submission_sampled
     notes: >
-      Sample card uses P-prefixed synchronized L/R/B clips for protected parking
-      events. User notes say the card was configured for motion and impact
-      detection parking mode.
+      Sample cards use P-prefixed synchronized L/R/B clips for protected parking
+      clips. User notes from the first sample say the card was configured for
+      motion and impact detection parking mode. User notes from the second sample
+      say the card was configured for timelapse parking mode. Do not assume all
+      P-prefixed PROTECTED clips are impacts; infer from timing and size when
+      config evidence is absent.
 filename_patterns:
   - pattern: "^(\\d{8})_(\\d{6})_([LRB])\\.MP4$"
     applies_to:
@@ -60,10 +69,14 @@ parking_mode:
   observed:
     - motion_detection
     - impact_detection
+    - timelapse
   notes: >
-    User-submitted app notes identify the sample as motion and impact detection
-    parking mode. The card sample has PROTECTED/P-prefixed clips but no readable
-    config file was present in the app submission.
+    User-submitted app notes identify one sample as motion and impact detection
+    parking mode and a later sample as timelapse parking mode. The timelapse
+    card has four consecutive one-minute P-prefixed L/R/B PROTECTED moments
+    starting around 1 PM, plus one isolated protected parking moment. No readable
+    config/settings file was present on the card, so exact motion-vs-impact
+    separation is not available from this Z4 evidence alone.
 video:
   observed_samples:
     - channel: L
@@ -74,6 +87,16 @@ video:
       bitrate_mbps: 31.1
       durations_seconds:
         observed: [6.4, 9.7, 29.0, 60.0]
+      notes: High video quality sample.
+    - channel: L
+      folder: VIDEO
+      codec: h264
+      resolution: 3840x2160
+      fps: 30
+      bitrate_mbps: 31.0-41.0
+      durations_seconds:
+        observed: [3.1, 60.0]
+      notes: Highest video quality follow-up sample.
     - channel: R
       folder: VIDEO
       codec: h264
@@ -82,6 +105,16 @@ video:
       bitrate_mbps: 31.1
       durations_seconds:
         observed: [6.4, 9.7, 29.0, 60.0]
+      notes: High video quality sample.
+    - channel: R
+      folder: VIDEO
+      codec: h264
+      resolution: 3840x2160
+      fps: 30
+      bitrate_mbps: 31.1-41.0
+      durations_seconds:
+        observed: [3.1, 60.0]
+      notes: Highest video quality follow-up sample.
     - channel: B
       folder: VIDEO
       codec: h264
@@ -90,11 +123,31 @@ video:
       bitrate_mbps: 11.7-11.9
       durations_seconds:
         observed: [4.0, 9.7, 29.0, 60.0]
+      notes: High and highest video quality samples remained around 12 Mbps in observed app/direct-card evidence.
+    - folder: PROTECTED
+      parking_mode: timelapse
+      channels: [L, R, B]
+      codec: h264
+      resolution:
+        L: 3840x2160
+        R: 3840x2160
+        B: 2560x1440
+      fps: 30
+      bitrate_mbps:
+        L: 31.1
+        R: 31.1
+        B: 11.7-11.9
+      durations_seconds:
+        observed: [33.2, 41.0, 60.0]
+      notes: >
+        Follow-up timelapse parking card used regular one-minute P-prefixed
+        protected moments at 11:45-11:48 and an isolated protected parking
+        moment at 12:59.
 validation:
   app_submission_sampled: true
   card_sampled: true
   notes: >
-    Direct card read at /Volumes/ULTRADASH confirmed 27 clips in VIDEO/ and
-    PROTECTED/, synchronized L/R/B channels, H.264 video, 4K front/telephoto and
-    2K rear samples. The direct card had 15 VIDEO driving clips and 12 PROTECTED
-    P-prefixed parking-event clips.
+    Direct card reads at /Volumes/ULTRADASH confirmed synchronized L/R/B
+    channels, H.264 video, 4K front/telephoto and 2K rear samples. The first
+    direct read had 27 clips; the follow-up read had 45 clips with 30 VIDEO
+    driving clips and 15 PROTECTED P-prefixed parking clips.

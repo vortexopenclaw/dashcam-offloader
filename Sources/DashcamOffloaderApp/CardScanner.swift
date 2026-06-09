@@ -483,21 +483,36 @@ struct CardScanner {
         let parkingClips = clips.filter { clip in
             clip.excludedReason == nil &&
                 clip.isVideo &&
-                clip.outputCategory == "Parking" &&
+                Self.isParkingOutputCategory(clip.outputCategory) &&
                 clip.timestamp != nil &&
                 !clip.hasSuspiciousTimestamp &&
                 inferredByRelativePath[clip.relativePath] == nil
         }
 
         let groupedByFolder = Dictionary(grouping: parkingClips) { clip in
-            URL(fileURLWithPath: clip.relativePath).deletingLastPathComponent().path
+            relativeFolderPath(for: clip.relativePath)
         }
 
         for (folder, folderClips) in groupedByFolder {
             let moments = groupedRecordingMoments(folderClips)
-            guard moments.count >= 4 else { continue }
+            let defaultPattern = defaultParkingPattern(for: folderClips)
+            guard moments.count >= 4 else {
+                if let defaultPattern {
+                    for clip in folderClips {
+                        inferredByRelativePath[clip.relativePath] = defaultPattern
+                    }
+                    diagnostics.append(ScanDiagnosticEntry(
+                        stage: "parking_pattern_inference",
+                        profileID: nil,
+                        profileName: nil,
+                        outcome: "classified_default",
+                        detail: "\(folder.isEmpty ? "." : folder): \(moments.count) recording moments, default=\(defaultPattern.rawValue)"
+                    ))
+                }
+                continue
+            }
 
-            let momentPatterns = inferParkingPatternsByMoment(moments)
+            let momentPatterns = inferParkingPatternsByMoment(moments, defaultPattern: defaultPattern ?? .motionDetection)
             let patternCounts = Dictionary(grouping: momentPatterns.values, by: { $0 })
                 .mapValues(\.count)
 
@@ -543,14 +558,25 @@ struct CardScanner {
             lowerPath.contains("/pevent/") ||
             lowerPath.hasPrefix("pevent/")
 
-        if isProtectedFolder && (hasParkingChannelSuffix(clip.filename) || hasParkingFilenamePrefix(clip.filename)) {
+        if lowerPath.contains("/pevent/") || lowerPath.hasPrefix("pevent/") {
             return .impactDetection
         }
 
-        if clip.mode.lowercased().contains("parking_event") {
+        if isProtectedFolder && hasParkingChannelSuffix(clip.filename) {
             return .impactDetection
         }
 
+        return nil
+    }
+
+    private static func isParkingOutputCategory(_ category: String) -> Bool {
+        category == "Parking" || category == "Parking Events"
+    }
+
+    private func defaultParkingPattern(for clips: [ClipItem]) -> ParkingPattern? {
+        if clips.contains(where: { $0.outputCategory == "Parking Events" }) {
+            return .motionOrImpact
+        }
         return nil
     }
 
@@ -570,7 +596,10 @@ struct CardScanner {
         return stem.range(of: #"^P20\d{6}[_-]?\d{6}"#, options: .regularExpression) != nil
     }
 
-    private func inferParkingPatternsByMoment(_ moments: [(key: Int, timestamp: Date, totalBytes: Int64)]) -> [Int: ParkingPattern] {
+    private func inferParkingPatternsByMoment(
+        _ moments: [(key: Int, timestamp: Date, totalBytes: Int64)],
+        defaultPattern: ParkingPattern
+    ) -> [Int: ParkingPattern] {
         var inferred: [Int: ParkingPattern] = [:]
 
         var runStart = 0
@@ -583,8 +612,11 @@ struct CardScanner {
             }
 
             if runEnd - runStart + 1 >= 4 {
+                let runMoments = Array(moments[runStart...runEnd])
+                let medianMomentSize = median(runMoments.map(\.totalBytes).map(Double.init)) ?? 0
+                let pattern: ParkingPattern = medianMomentSize <= 300_000_000 ? .continuousLowBitrate : .timelapse
                 for index in runStart...runEnd {
-                    inferred[moments[index].key] = .continuousLowBitrate
+                    inferred[moments[index].key] = pattern
                 }
             }
 
@@ -600,7 +632,7 @@ struct CardScanner {
         }
 
         for moment in moments where inferred[moment.key] == nil {
-            inferred[moment.key] = .motionDetection
+            inferred[moment.key] = defaultPattern
         }
 
         return inferred
@@ -634,6 +666,13 @@ struct CardScanner {
             return (key, timestamp, clips.reduce(Int64(0)) { $0 + $1.size })
         }
         .sorted { $0.timestamp < $1.timestamp }
+    }
+
+    private func relativeFolderPath(for relativePath: String) -> String {
+        guard let slashIndex = relativePath.lastIndex(of: "/") else {
+            return "."
+        }
+        return String(relativePath[..<slashIndex])
     }
 
     private func recordingMomentKey(for timestamp: Date) -> Int {

@@ -44,6 +44,9 @@ struct ContentView: View {
                 viewModel.refreshSources()
             }
         }
+        .task {
+            viewModel.startInitialSourceDiscovery()
+        }
     }
 
     private var sourceList: some View {

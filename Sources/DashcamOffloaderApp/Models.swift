@@ -233,7 +233,9 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             normalized.contains("parking event") ||
             normalized.contains("pevent") ||
             normalized.contains("parking_impact") ||
-            normalized.contains("parking impact") {
+            normalized.contains("parking impact") ||
+            normalized.contains("parking_motion") ||
+            normalized.contains("parking motion") {
             return "Parking Events"
         }
         if normalized.contains("event") ||
@@ -645,6 +647,9 @@ struct FeedbackVideoSpecSummary: Codable, Hashable, Sendable {
     var totalFileSizeBytes: Int64
     var minFileSizeBytes: Int64?
     var maxFileSizeBytes: Int64?
+    var firstTimestamp: String?
+    var lastTimestamp: String?
+    var timestampSourceCounts: [String: Int]?
     var sampleRelativePaths: [String]
     var sampleCodecs: [String]
     var sampleResolutions: [String]
@@ -683,5 +688,11 @@ extension Sequence where Element: Hashable {
             result.append(element)
         }
         return result
+    }
+}
+
+extension Collection {
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }

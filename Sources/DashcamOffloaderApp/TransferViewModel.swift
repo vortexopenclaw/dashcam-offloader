@@ -32,6 +32,7 @@ final class TransferViewModel: ObservableObject {
     private let planner = CopyPlanner()
     private let feedbackService = FeedbackService.production
     private var workspaceNotificationTokens: [NSObjectProtocol] = []
+    private var didStartInitialSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
@@ -39,9 +40,9 @@ final class TransferViewModel: ObservableObject {
     private var customSourceNames: [MountedSource.ID: String] = [:]
 
     init() {
-        refreshSources()
         loadProfiles()
         startVolumeObservation()
+        statusMessage = "Ready. Looking for mounted cards..."
     }
 
     deinit {
@@ -196,6 +197,15 @@ final class TransferViewModel: ObservableObject {
 
         if userInitiated {
             statusMessage = "Sources refreshed. Found \(mountedSources.count) \(mountedSources.count == 1 ? "source" : "sources")"
+        }
+    }
+
+    func startInitialSourceDiscovery() {
+        guard !didStartInitialSourceDiscovery else { return }
+        didStartInitialSourceDiscovery = true
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            self?.refreshSources()
         }
     }
 
@@ -913,8 +923,16 @@ final class TransferViewModel: ObservableObject {
 
         for key in grouped.keys.sorted() {
             let bucket = grouped[key, default: []]
+            let byTimestamp = bucket.sorted { lhs, rhs in
+                if lhs.timestamp != rhs.timestamp {
+                    return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
+                }
+                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
+            }
             let bucketSamples = [
-                bucket.first,
+                byTimestamp.first,
+                byTimestamp[safe: byTimestamp.count / 2],
+                byTimestamp.last,
                 bucket.max(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) }),
                 bucket.min(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) })
             ]
@@ -1010,7 +1028,11 @@ final class TransferViewModel: ObservableObject {
                     totalFileSizeBytes: sizes.reduce(Int64(0), +),
                     minFileSizeBytes: sizes.min(),
                     maxFileSizeBytes: sizes.max(),
-                    sampleRelativePaths: Array(paths.prefix(6)),
+                    firstTimestamp: feedbackTimestamp(bucket.compactMap(\.timestamp).min()),
+                    lastTimestamp: feedbackTimestamp(bucket.compactMap(\.timestamp).max()),
+                    timestampSourceCounts: Dictionary(grouping: bucket, by: { $0.timestampSource.rawValue })
+                        .mapValues(\.count),
+                    sampleRelativePaths: representativePaths(from: paths, bucket: bucket, sourceRoot: sourceRoot),
                     sampleCodecs: Array(bucketSamples.compactMap(\.codec).uniquedPreservingOrder().prefix(6)),
                     sampleResolutions: Array(resolutions.uniquedPreservingOrder().prefix(6)),
                     sampleFrameRates: Array(frameRates.uniquedPreservingOrder().prefix(6)),
@@ -1020,6 +1042,39 @@ final class TransferViewModel: ObservableObject {
                     sampleDurationMax: durations.max()
                 )
             }
+    }
+
+    private func representativePaths(from sortedPaths: [String], bucket: [ClipItem], sourceRoot: URL?) -> [String] {
+        var selected: [String] = []
+        func append(_ path: String?) {
+            guard let path, !selected.contains(path) else { return }
+            selected.append(path)
+        }
+
+        append(sortedPaths.first)
+        append(sortedPaths[safe: sortedPaths.count / 2])
+        append(sortedPaths.last)
+
+        let bySize = bucket.sorted { $0.size < $1.size }
+        append(bySize.first.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) })
+        append(bySize.last.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) })
+
+        let byTimestamp = bucket
+            .filter { $0.timestamp != nil }
+            .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
+        append(byTimestamp.first.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) })
+        append(byTimestamp[safe: byTimestamp.count / 2].map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) })
+        append(byTimestamp.last.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) })
+
+        for path in sortedPaths where selected.count < 10 {
+            append(path)
+        }
+        return Array(selected.prefix(10))
+    }
+
+    private func feedbackTimestamp(_ date: Date?) -> String? {
+        guard let date else { return nil }
+        return ISO8601DateFormatter().string(from: date)
     }
 
     private func videoSpecBucketKey(for clip: ClipItem) -> String {
