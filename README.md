@@ -129,7 +129,7 @@ swift run DashcamOffloader --smoke-test
 
 The app includes Feedback and Learn Card buttons in the toolbar. Users can submit bug reports, feature requests, or other feedback. When a source has already been scanned, they can choose to include a sanitized scan summary.
 
-Learn Card submissions ask for manufacturer, model, channel setup, notes, and contact. They attach a sanitized card scan with counts, selected profile, candidate profiles, extension totals, mode/category totals, root folders, folder samples, filename samples, support-file names, capped relative sample paths, and optional redacted setting summaries. They do not upload video files, GPS traces, unique device IDs, or full settings dumps.
+Learn Card submissions ask for manufacturer, model, channel setup, notes, and contact. They attach a sanitized card scan with counts, selected profile, candidate profiles, extension totals, mode/category totals, root folders, folder samples, filename samples, support-file names, capped relative sample paths, optional sampled video specs, and optional redacted setting summaries. They do not upload video files, GPS traces, unique device IDs, or full settings dumps.
 
 The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.
 

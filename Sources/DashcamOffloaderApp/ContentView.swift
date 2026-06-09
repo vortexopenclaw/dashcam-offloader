@@ -188,6 +188,20 @@ struct ContentView: View {
                     if !viewModel.scanSummary.sortedModeCounts.isEmpty {
                         countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
                     }
+
+                    HStack {
+                        Button {
+                            viewModel.probeVideoSpecs()
+                        } label: {
+                            Label(viewModel.isProbingVideoSpecs ? "Probing Specs" : "Probe Video Specs", systemImage: "film")
+                        }
+                        .disabled(viewModel.isProbingVideoSpecs || viewModel.eligibleClips.filter(\.isVideo).isEmpty)
+                        Text("Samples representative clips for codec, resolution, fps, bitrate, and duration.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    videoSpecSamples(viewModel.scanSummary.videoSpecSamples)
                 }
             }
             .padding(8)
@@ -547,6 +561,32 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private func videoSpecSamples(_ samples: [VideoSpecSnapshot]) -> some View {
+        if !samples.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Video Specs")
+                    .font(.caption.bold())
+                ForEach(samples.prefix(8)) { sample in
+                    HStack(spacing: 8) {
+                        Text(sample.channel)
+                            .font(.caption.bold())
+                        Text(sample.mode)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\(sample.codec) \(sample.dimensionsText)")
+                            .font(.caption.monospacedDigit())
+                        Text(sample.frameRateText)
+                            .font(.caption.monospacedDigit())
+                        Text(sample.bitrateText)
+                            .font(.caption.monospacedDigit())
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+
     private func confidenceColor(_ confidence: DetectionConfidence) -> Color {
         switch confidence {
         case .high: return .green
@@ -722,7 +762,7 @@ struct CardLearningSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Text("Sends folder names, filename samples, candidate scores, and counts. It does not upload video files, GPS traces, or unique device IDs.")
+            Text("Sends folder names, filename samples, sampled video specs, candidate scores, and counts. It does not upload video files, GPS traces, or unique device IDs.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -797,6 +837,7 @@ struct CardLearningSheet: View {
                     Label("\(snapshot.sampleRelativePaths.count) sample paths", systemImage: "list.bullet.rectangle")
                     Label("\(snapshot.filenameSamples.count) filename samples", systemImage: "text.page")
                     Label("\(snapshot.settingSnapshots.count) settings files", systemImage: "gearshape")
+                    Label("\(snapshot.videoSpecSamples.count) video specs", systemImage: "film")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -826,6 +867,20 @@ struct CardLearningSheet: View {
                     .padding(8)
                     .background(Color.secondary.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+
+                if !snapshot.videoSpecSamples.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Sampled video specs")
+                            .font(.caption.bold())
+                        ForEach(snapshot.videoSpecSamples.prefix(6)) { sample in
+                            Text("\(sample.channel) \(sample.mode): \(sample.codec) \(sample.dimensionsText), \(sample.frameRateText), \(sample.bitrateText)")
+                                .font(.caption.monospacedDigit())
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
         }
