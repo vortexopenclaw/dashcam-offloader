@@ -23,6 +23,15 @@ struct CardScanner {
             .map { MountedSource(url: $0, name: $0.lastPathComponent) }
     }
 
+    func mountedSource(forUserSelectedURL url: URL) -> MountedSource {
+        let standardizedURL = url.standardizedFileURL
+        if let volumeURL = mountedVolumeRoot(containing: standardizedURL) {
+            return MountedSource(url: volumeURL, name: volumeURL.lastPathComponent)
+        }
+
+        return MountedSource(url: standardizedURL, name: standardizedURL.lastPathComponent)
+    }
+
     func shouldShowMountedSource(_ url: URL, showAllVolumes: Bool) -> Bool {
         if isSystemVolume(url) { return false }
         if showAllVolumes { return true }
@@ -446,6 +455,15 @@ struct CardScanner {
             name == "system" ||
             name == "data" ||
             name.hasPrefix("com.apple.")
+    }
+
+    private func mountedVolumeRoot(containing url: URL) -> URL? {
+        let components = url.standardizedFileURL.pathComponents
+        guard components.count >= 3, components[1] == "Volumes" else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: "/Volumes/\(components[2])", isDirectory: true)
     }
 
     private func isObviousNonDashcamVolume(_ url: URL) -> Bool {

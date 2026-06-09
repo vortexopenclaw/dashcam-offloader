@@ -135,10 +135,8 @@ final class TransferViewModel: ObservableObject {
         panel.directoryURL = selectedSource?.url ?? URL(fileURLWithPath: "/Volumes", isDirectory: true)
 
         if panel.runModal() == .OK, let url = panel.url {
-            let source = MountedSource(url: url, name: url.lastPathComponent)
-            if !mountedSources.contains(source) {
-                mountedSources.insert(source, at: 0)
-            }
+            let source = scanner.mountedSource(forUserSelectedURL: url)
+            upsertMountedSource(source)
             selectSource(source, scanImmediately: true)
         }
     }
@@ -159,6 +157,14 @@ final class TransferViewModel: ObservableObject {
 
         if scanImmediately {
             scanSelectedSource()
+        }
+    }
+
+    private func upsertMountedSource(_ source: MountedSource) {
+        if let existingIndex = mountedSources.firstIndex(where: { $0.id == source.id }) {
+            mountedSources[existingIndex] = source
+        } else {
+            mountedSources.insert(source, at: 0)
         }
     }
 

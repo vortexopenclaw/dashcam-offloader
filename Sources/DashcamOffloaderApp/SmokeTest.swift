@@ -101,6 +101,19 @@ enum SmokeTest {
             try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
 
             let scanner = CardScanner()
+            let blackVueCardSource = scanner.mountedSource(
+                forUserSelectedURL: URL(fileURLWithPath: "/Volumes/BLACKVUE/BlackVue/Record", isDirectory: true)
+            )
+            guard blackVueCardSource.url.path == "/Volumes/BLACKVUE",
+                  blackVueCardSource.name == "BLACKVUE" else {
+                print("SMOKE FAIL: nested volume selection did not normalize to card root: \(blackVueCardSource.url.path)")
+                return false
+            }
+            let manualFolderSource = scanner.mountedSource(forUserSelectedURL: source)
+            guard manualFolderSource.url == source.standardizedFileURL else {
+                print("SMOKE FAIL: non-volume manual folder should keep exact source path")
+                return false
+            }
             guard scanner.shouldShowMountedSource(source, showAllVolumes: false) else {
                 print("SMOKE FAIL: dashcam-like source was filtered")
                 return false
