@@ -37,6 +37,16 @@ Storage:
 - Or bind `FEEDBACK_KV` to a KV namespace for simpler storage.
 - If neither binding exists, the Worker logs the JSON record for local development.
 
+Review:
+
+```bash
+scripts/review-feedback-submissions.py list --date 2026-06-09
+scripts/review-feedback-submissions.py search Botslab --date 2026-06-09
+scripts/review-feedback-submissions.py get feedback/2026-06-09/<submission-id>.json
+```
+
+The review helper loads Cloudflare credentials from the OpenClaw workspace environment and redacts contact fields.
+
 Local run:
 
 ```bash

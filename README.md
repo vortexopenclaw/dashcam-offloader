@@ -72,6 +72,9 @@ swift run DashcamOffloader --verify
 
 ## Seed Profiles
 
+**Botslab**
+- Botslab G980H — 4CH, app submission and real card sampled. Detected from `MISC/G980HMCN5291.TXT`; generic `360CARDVR` cards should remain unrecognized unless exact model evidence is present.
+
 **BlackVue**
 - BlackVue DR970X Plus — 2CH, real card sampled
 - BlackVue Elite 8 — 2CH, real card sampled
@@ -79,6 +82,7 @@ swift run DashcamOffloader --verify
 
 **Cansonic**
 - Cansonic UltraDash Z3+ Standard Edition — dual front lens (wide + telephoto) + optional rear (R1), footage sampled
+- Cansonic UltraDash Z4 Standard Edition — 3CH, app submission and real card sampled. Uses `VIDEO/` driving clips and `PROTECTED/` P-prefixed protected parking clips.
 
 **Cobra**
 - Cobra Road Scout — 1CH, real card sampled. Combined radar detector + dashcam.
@@ -124,6 +128,7 @@ swift run DashcamOffloader --verify
 - `Sources/DashcamOffloaderApp/` - SwiftUI app, scanner, detector, planner, and copy engine
 - `scripts/build-macos-app.sh` - builds `build/Dashcam Offloader.app`
 - `DESIGN.md` - product and technical design baseline
+- `docs/agent-handoff.md` - cross-machine handoff notes for future agents
 - `docs/project-plan.md` - phased build plan
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
 - `docs/profile-schema.md` - camera profile format
@@ -132,6 +137,7 @@ swift run DashcamOffloader --verify
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles
+- `scripts/review-feedback-submissions.py` - private Cloudflare submission review helper
 - `workers/feedback/` - Cloudflare Worker endpoint for feedback submissions
 
 ## Feedback And Card Learning Endpoint
@@ -143,3 +149,5 @@ Learn Card submissions ask for manufacturer, model, camera channel count, what e
 The scan summary includes safe structure and fingerprinting details such as exact camera identification when the app can derive it confidently, root folders, folder summaries, extension counts, representative filenames, safe support-file names, timestamp-source counts, inferred parking-pattern counts, and representative video specs when the app can read them locally. It does not upload videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, full settings dumps, or other personally identifying information.
 
 The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.
+
+Maintainers can review private stored submissions with `scripts/review-feedback-submissions.py`. It loads Cloudflare credentials from the OpenClaw workspace environment and redacts contact fields in output.

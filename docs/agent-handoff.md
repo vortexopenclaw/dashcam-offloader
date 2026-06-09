@@ -1,0 +1,87 @@
+# Agent Handoff
+
+Last updated: 2026-06-09
+
+This file is the cross-machine handoff source for agents working from GitHub. Do not rely on local OpenClaw memory as the only source of truth for important Dashcam Offloader state.
+
+## Current Build
+
+- Latest known published commit at handoff time: `16cd0f7`
+- Direct Cloudflare download: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest>
+- GitHub releases carry the packaged ZIP artifacts.
+
+## Verify Before Publishing
+
+Run these from the repo root:
+
+```bash
+swift build
+swift run DashcamOffloader --verify
+scripts/build-macos-app.sh
+build/Dashcam\ Offloader.app/Contents/MacOS/DashcamOffloader --verify
+node --check workers/feedback/worker.js
+python3 -m py_compile scripts/review-feedback-submissions.py
+git diff --check
+```
+
+When publishing, upload to GitHub/Cloudflare and report the direct Cloudflare link plus a short status summary of what changed and what was verified.
+
+## Submission Review
+
+Use `scripts/review-feedback-submissions.py` to inspect Cloudflare KV submissions. It loads credentials through the workspace env loader and checks `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN` first, then `CLOUDFLARE_WORKERS_API_TOKEN`.
+
+Useful commands:
+
+```bash
+scripts/review-feedback-submissions.py list --date 2026-06-09
+scripts/review-feedback-submissions.py search Botslab --date 2026-06-09
+scripts/review-feedback-submissions.py search ULTRADASH --date 2026-06-09
+scripts/review-feedback-submissions.py get feedback/2026-06-09/<submission-id>.json
+```
+
+Submissions should include `appVersion`, `identifiedCamera`, selected profile/candidates/evidence, diagnostics, folder summaries, file sizes, setting snapshots, video spec samples, and video spec summaries. The Worker currently accepts up to 1 MB and stores up to 64 video spec samples plus 120 video spec summaries.
+
+## Current Scanner Rules
+
+- Prefer explicit model evidence over folders: model strings, safe config fragments, OSD proof, distinctive filename/channel tokens, and known marker files.
+- Folder-only evidence can identify a family or brand, but should not force a specific sibling model.
+- Same-brand sibling guard: when multiple profiles match shared structure and there is no distinctive model clue, fall back to `generic-new-dashcam`.
+- Volume labels are weak evidence only.
+- App submissions should get close to what a direct mounted-card read can gather, without uploading video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, device IDs, full config dumps, or other private identifiers.
+- Generic/unknown dashcam import must stay useful for transfer even when exact model detection is not safe.
+
+## Recent Camera Notes
+
+- **Cansonic UltraDash Z4 Standard Edition**
+  - Profile: `profiles/cansonic-ultradash-z4-standard.yaml`
+  - Evidence: app submissions plus direct card reads from `/Volumes/ULTRADASH`.
+  - Layout: `VIDEO/` driving clips and `PROTECTED/` P-prefixed parking clips.
+  - Channels: `L` front, `R` front telephoto, `B` rear.
+  - Video: L/R 3840x2160 H.264 30fps, B 2560x1440 H.264 30fps.
+  - Parking: observed sentry motion/impact sample and timelapse sample. Do not label every protected clip as impact; infer from timing, continuity, duration, and specs when config evidence is absent.
+
+- **Botslab G980H**
+  - Profile: `profiles/botslab-g980h.yaml`
+  - Evidence: app submission plus direct card read from `/Volumes/NO NAME`.
+  - Layout: `360CARDVR/REC`, `360CARDVR/PARKING`, `360CARDVR/GPS`.
+  - High-confidence marker: `MISC/G980HMCN5291.TXT`.
+  - Channels: `AA` front, `AB` rear, `AC` left, `AD` right.
+  - Generic 360CARDVR cards should appear in Sources, but remain new/unrecognized unless exact model evidence is present.
+
+- **VIOFO A329T**
+  - A329T no longer misidentifies as A229 Plus when telephoto `T/PT` filename evidence is present.
+  - A229-family folder evidence alone is not enough to force an A229 sibling.
+
+- **Vueroid H1**
+  - Detects from `CONFIG/config.bin` model text like `H1-QHD-INFINITE`.
+  - Treat as 1CH/front-only from H1 evidence.
+
+## UX Preferences Captured In Repo
+
+- Do not post ZIP files directly to chat by default. Publish to Cloudflare/GitHub and send the direct Cloudflare link.
+- Use "verification" wording, not "smoke test."
+- Keep generated manifests out of the default user workflow.
+- Download destination should not default to model/date/channel nested folders unless the user asks for it.
+- Source cards should disappear after eject without restarting, and Refresh Sources should rescan mounted cards.
+- The main app window should appear before mounted-card scans and permission prompts block the user.
+- Improve Camera Support should be draggable. Camera channel examples should be placeholder text, not prefilled white text.
