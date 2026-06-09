@@ -132,3 +132,12 @@ The app includes Feedback and Learn Card buttons in the toolbar. Users can submi
 Learn Card submissions ask for manufacturer, model, channel setup, notes, and contact. They attach a sanitized card scan with counts, selected profile, candidate profiles, extension totals, mode/category totals, root folders, folder samples, filename samples, support-file names, capped relative sample paths, and optional redacted setting summaries. They do not upload video files, GPS traces, unique device IDs, or full settings dumps.
 
 The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.
+
+Maintainers can review remote Learn Card submissions with:
+
+```bash
+python3 scripts/review-feedback-submissions.py list --kind training
+python3 scripts/review-feedback-submissions.py get <feedback-id-or-kv-key>
+```
+
+This is the preferred path for learning from distant testers. The app sends a sanitized scan manifest, not video files.

@@ -50,3 +50,12 @@ Deploy:
 ```bash
 wrangler deploy
 ```
+
+Review stored submissions:
+
+```bash
+python3 ../../scripts/review-feedback-submissions.py list --kind training
+python3 ../../scripts/review-feedback-submissions.py get <feedback-id-or-kv-key>
+```
+
+Remote Learn Card submissions are the intended workflow for adding support from distant testers. They provide model evidence, folder/file samples, candidate scoring, and safe settings summaries without sending raw video files or private configuration values.
