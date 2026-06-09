@@ -165,22 +165,6 @@ Copy rules:
 - Surface conflicts when destination file exists with different size.
 - Track bytes copied and files copied.
 - Show errors but keep copying unaffected files where safe.
-- Write a local manifest after the job completes.
-
-Manifest fields:
-
-- Job start and end time.
-- Source path.
-- Destination path.
-- Selected camera profile.
-- Selected filters.
-- Per-file source relative path.
-- Per-file destination relative path.
-- Size.
-- Status: copied, skipped, failed.
-- Error message when present.
-
-Keep the manifest local to the user-selected destination. Do not commit manifests to the repo.
 
 ## Internal Packaging
 
@@ -208,7 +192,7 @@ The first working pass is complete when it can:
 8. Preview selected files and total size.
 9. Copy selected files.
 10. Show 0 to 100 percent copy progress.
-11. Finish with a clear completed status and manifest.
+11. Finish with a clear completed status.
 
 ## Suggested Implementation Order
 

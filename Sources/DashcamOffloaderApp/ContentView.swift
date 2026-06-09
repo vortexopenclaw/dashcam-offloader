@@ -118,6 +118,8 @@ struct ContentView: View {
                 Spacer()
             }
             .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: 8))
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
@@ -224,7 +226,7 @@ struct ContentView: View {
             workflowStep(
                 number: 3,
                 title: "Download",
-                detail: "\(viewModel.copyPlan?.selectedFileCount ?? 0) files ready",
+                detail: viewModel.destinationURL == nil ? "Choose folder first" : "\(viewModel.copyPlan?.selectedFileCount ?? 0) files ready",
                 complete: !(viewModel.copyPlan?.items.isEmpty ?? true)
             )
         }
@@ -397,6 +399,15 @@ struct ContentView: View {
                     }
                 }
 
+                if viewModel.destinationURL == nil {
+                    Label("Choose a download folder before downloading. The preview below will populate after the card scan, but copying stays disabled until a folder is selected.", systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
+                    .disabled(viewModel.destinationURL == nil)
+
                 DisclosureGroup("Download options", isExpanded: $showDownloadOptions) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
@@ -404,7 +415,7 @@ struct ContentView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             TextField(
-                                "Optional text appended before the extension",
+                                "Optional text appended to the end of the file name",
                                 text: Binding(
                                     get: { viewModel.outputNamingOptions.videoFilenameSuffix },
                                     set: { viewModel.setVideoFilenameSuffix($0) }
@@ -412,8 +423,6 @@ struct ContentView: View {
                             )
                             .textFieldStyle(.roundedBorder)
                         }
-                        Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
-                            .disabled(viewModel.destinationURL == nil)
                         Toggle("Eject card when complete", isOn: $viewModel.ejectSourceWhenComplete)
                             .disabled(viewModel.selectedSource == nil)
                     }
@@ -488,6 +497,9 @@ struct ContentView: View {
                             get: { viewModel.filters.separateCategoryFolders },
                             set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
                         ))
+                        Text("When off, files copy directly into the chosen download folder. The app no longer creates model, date, or channel folders by default.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.top, 6)
                 }
@@ -532,16 +544,40 @@ struct ContentView: View {
                     Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files")
                     Text(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")
                         .foregroundStyle(.secondary)
+                    if !viewModel.selectedQueueItemIDs.isEmpty {
+                        Text("\(viewModel.selectedQueueItemIDs.count) selected")
+                            .foregroundStyle(.secondary)
+                    }
                     Spacer()
+                    Button {
+                        viewModel.removeSelectedQueueItems()
+                    } label: {
+                        Label("Remove Selected", systemImage: "minus.circle")
+                    }
+                    .disabled(viewModel.selectedQueueItemIDs.isEmpty || viewModel.copyProgress.isRunning)
+
+                    Button {
+                        viewModel.restoreQueuedFiles()
+                    } label: {
+                        Label("Reset Queue", systemImage: "arrow.counterclockwise")
+                    }
+                    .disabled(viewModel.copyProgress.isRunning)
+
                     Button {
                         viewModel.rebuildPlan()
                     } label: {
                         Label("Refresh Preview", systemImage: "doc.text.magnifyingglass")
                     }
-                    .disabled(viewModel.destinationURL == nil || viewModel.selectedProfile == nil)
+                    .disabled(viewModel.selectedProfile == nil || viewModel.copyProgress.isRunning)
                 }
 
-                Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? []) {
+                if viewModel.destinationURL == nil {
+                    Label("Download folder required before copying", systemImage: "folder.badge.questionmark")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? [], selection: $viewModel.selectedQueueItemIDs) {
                     TableColumn("File") { item in
                         Text(item.clip.filename)
                             .lineLimit(1)
@@ -634,14 +670,24 @@ struct ContentView: View {
                 }
                 .disabled(viewModel.destinationURL == nil)
 
-                Button {
-                    viewModel.startCopy()
-                } label: {
-                    Label("Download Footage", systemImage: "arrow.down.doc")
-                        .frame(minWidth: 140)
+                if viewModel.copyProgress.isRunning {
+                    Button {
+                        viewModel.cancelCopy()
+                    } label: {
+                        Label("Stop Downloading", systemImage: "stop.circle")
+                            .frame(minWidth: 140)
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Button {
+                        viewModel.startCopy()
+                    } label: {
+                        Label(viewModel.destinationURL == nil ? "Choose Folder First" : "Download Footage", systemImage: "arrow.down.doc")
+                            .frame(minWidth: 140)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(viewModel.destinationURL == nil || (viewModel.copyPlan?.items.isEmpty ?? true))
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(viewModel.copyPlan?.items.isEmpty ?? true || viewModel.copyProgress.isRunning)
             }
         }
         .padding()
@@ -767,7 +813,7 @@ struct CardLearningSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var manufacturer = ""
     @State private var model = ""
-    @State private var selectedChannelCount: Int?
+    @State private var selectedChannelCount = 1
     @State private var channelDescription = ""
     @State private var notes = ""
     @State private var contact = ""
@@ -776,15 +822,11 @@ struct CardLearningSheet: View {
         viewModel.scanSummary.hasScan &&
             !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            selectedChannelCount != nil &&
             !channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !viewModel.isSubmittingFeedback
     }
 
     private var channelSetup: String {
-        guard let selectedChannelCount else {
-            return ""
-        }
         return "\(selectedChannelCount)CH: \(channelDescription.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
 
@@ -832,13 +874,12 @@ struct CardLearningSheet: View {
                     .foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 10) {
                     Picker("Camera channels", selection: $selectedChannelCount) {
-                        Text("Select").tag(nil as Int?)
                         ForEach(1...4, id: \.self) { count in
-                            Text("\(count)CH").tag(Optional(count))
+                            Text("\(count)CH").tag(count)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .frame(width: 120, alignment: .leading)
+                    .pickerStyle(.segmented)
+                    .frame(width: 220, alignment: .leading)
                     .onChange(of: selectedChannelCount) { _, newValue in
                         updateChannelDescription(for: newValue)
                     }
@@ -907,42 +948,29 @@ struct CardLearningSheet: View {
         .frame(width: 620)
         .onAppear {
             viewModel.feedbackMessage = ""
-            prefillFromDetectedProfileIfNeeded()
+            prefillFromScanIfNeeded()
         }
     }
 
-    private func prefillFromDetectedProfileIfNeeded() {
-        guard let profile = viewModel.selectedProfile,
-              profile.id != DashcamProfile.genericNewDashcam.id else {
-            return
+    private func prefillFromScanIfNeeded() {
+        let inferred = viewModel.inferredLearningChannelSetup
+        selectedChannelCount = inferred.count
+        if channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            channelDescription = inferred.description
         }
+
+        guard let profile = viewModel.selectedProfile,
+              profile.id != DashcamProfile.genericNewDashcam.id else { return }
+
         if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             manufacturer = profile.manufacturer
         }
         if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             model = profile.model
         }
-        if selectedChannelCount == nil {
-            selectedChannelCount = min(max(profile.channels.count, 1), 4)
-        }
-        if channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let labels = profile.channels
-                .sorted { $0.key < $1.key }
-                .map(\.value)
-            if !labels.isEmpty {
-                channelDescription = labels.joined(separator: " / ")
-            } else {
-                updateChannelDescription(for: selectedChannelCount)
-            }
-        }
     }
 
-    private func updateChannelDescription(for count: Int?) {
-        guard let count else {
-            channelDescription = ""
-            return
-        }
-
+    private func updateChannelDescription(for count: Int) {
         guard channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }

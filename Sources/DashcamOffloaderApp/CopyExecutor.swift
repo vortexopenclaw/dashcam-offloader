@@ -18,6 +18,7 @@ struct CopyExecutor {
         var results: [CopyPlanItem] = []
         var supportResults: [SupportFileItem] = []
         for item in plan.items {
+            guard !Task.isCancelled else { break }
             var result = item
             progress.currentFile = item.clip.filename
             await update(progress)
@@ -36,6 +37,12 @@ struct CopyExecutor {
                     result.message = "Existing file matched size"
                     progress.copiedBytes += item.clip.size
                 }
+            } catch is CancellationError {
+                result.status = .cancelled
+                result.message = "Stopped by user"
+                results.append(result)
+                await update(progress)
+                break
             } catch {
                 progress.completedFiles += 1
                 result.status = .failed
@@ -46,6 +53,7 @@ struct CopyExecutor {
         }
 
         for item in plan.supportItems {
+            guard !Task.isCancelled else { break }
             var result = item
             progress.currentFile = item.relativePath
             await update(progress)
@@ -64,6 +72,12 @@ struct CopyExecutor {
                     result.message = "Existing file matched size"
                     progress.copiedBytes += item.size
                 }
+            } catch is CancellationError {
+                result.status = .cancelled
+                result.message = "Stopped by user"
+                supportResults.append(result)
+                await update(progress)
+                break
             } catch {
                 progress.completedFiles += 1
                 result.status = .failed
@@ -73,19 +87,24 @@ struct CopyExecutor {
             await update(progress)
         }
 
-        do {
-            try ManifestWriter.write(plan: plan, results: results, supportResults: supportResults)
+        let stopped = Task.isCancelled ||
+            results.contains { $0.status == .cancelled } ||
+            supportResults.contains { $0.status == .cancelled }
+
+        if stopped {
+            progress.summary = "Download stopped after \(progress.completedFiles) of \(progress.totalFiles) files"
+        } else {
             let copiedCount = results.filter { $0.status == .copied }.count + supportResults.filter { $0.status == .copied }.count
             let skippedCount = results.filter { $0.status == .skipped }.count + supportResults.filter { $0.status == .skipped }.count
             let failedCount = results.filter { $0.status == .failed }.count + supportResults.filter { $0.status == .failed }.count
             progress.summary = "Completed \(copiedCount) copied, \(skippedCount) skipped, \(failedCount) failed"
-        } catch {
-            progress.summary = "Download finished, but manifest failed: \(error.localizedDescription)"
         }
 
         progress.currentFile = ""
         progress.isRunning = false
-        progress.copiedBytes = max(progress.copiedBytes, totalBytes)
+        if !stopped {
+            progress.copiedBytes = max(progress.copiedBytes, totalBytes)
+        }
         progress.updatedAt = Date()
         await update(progress)
 
@@ -115,10 +134,19 @@ struct CopyExecutor {
         let input = try FileHandle(forReadingFrom: sourceURL)
         defer { try? input.close() }
         fileManager.createFile(atPath: destination.path, contents: nil)
+        var didFinishWriting = false
+        defer {
+            if !didFinishWriting {
+                try? fileManager.removeItem(at: destination)
+            }
+        }
         let output = try FileHandle(forWritingTo: destination)
         defer { try? output.close() }
 
         while true {
+            if Task.isCancelled {
+                throw CancellationError()
+            }
             let data = input.readData(ofLength: 1024 * 1024)
             guard !data.isEmpty else { break }
             output.write(data)
@@ -129,6 +157,7 @@ struct CopyExecutor {
         guard copiedSize == expectedSize else {
             throw CopyError.sizeVerificationFailed
         }
+        didFinishWriting = true
         return true
     }
 }

@@ -160,12 +160,16 @@ enum VerificationTest {
                 clips: unknownScan.clips,
                 filters: unknownFilters
             )
-            guard unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/rough-2026-06-07/") && $0.destinationURL.lastPathComponent == "NO_DATE_FRONT.AVI" }) else {
-                print("VERIFY FAIL: rough filesystem-date folder missing for unsupported AVI")
+            guard unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/Driving/") && $0.destinationURL.lastPathComponent == "NO_DATE_FRONT.AVI" }) else {
+                print("VERIFY FAIL: unsupported AVI was not planned in the Driving folder")
                 return false
             }
-            guard unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/camera-clock-suspect-2012-01-01/") && $0.destinationURL.lastPathComponent == "20120101_010101_F.TS" }) else {
-                print("VERIFY FAIL: suspect camera-clock folder missing for unsupported TS")
+            guard !unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/rough-2026-06-07/") || $0.destinationURL.path.contains("/camera-clock-suspect-2012-01-01/") }) else {
+                print("VERIFY FAIL: unsupported plan still creates date folders")
+                return false
+            }
+            guard unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") && $0.destinationURL.lastPathComponent == "20120101_010101_F.TS" }) else {
+                print("VERIFY FAIL: suspect camera-clock TS was not planned in the Parking folder")
                 return false
             }
             var dateFilteredUnknownFilters = unknownFilters
@@ -256,6 +260,14 @@ enum VerificationTest {
             }
             guard plan.supportItems.isEmpty else {
                 print("VERIFY FAIL: settings files were included by default")
+                return false
+            }
+            guard !plan.items.contains(where: { $0.destinationURL.path.contains(profile.displayName) }) else {
+                print("VERIFY FAIL: plan still creates a model-name folder by default")
+                return false
+            }
+            guard !plan.items.contains(where: { $0.destinationURL.path.contains("/2026-01-01/") || $0.destinationURL.path.contains("/front/") || $0.destinationURL.path.contains("/rear/") }) else {
+                print("VERIFY FAIL: plan still creates date or channel folders by default")
                 return false
             }
             guard plan.items.contains(where: { $0.destinationURL.path.contains("/Driving/") }) else {

@@ -26,6 +26,7 @@ final class TransferViewModel: ObservableObject {
     @Published var outputNamingOptions = OutputNamingOptions()
     @Published var isSubmittingFeedback = false
     @Published var feedbackMessage = ""
+    @Published var selectedQueueItemIDs: Set<CopyPlanItem.ID> = []
 
     private let scanner = CardScanner()
     private let planner = CopyPlanner()
@@ -33,6 +34,8 @@ final class TransferViewModel: ObservableObject {
     private var workspaceNotificationTokens: [NSObjectProtocol] = []
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
+    private var excludedQueueClipIDs: Set<ClipItem.ID> = []
+    private var copyTask: Task<Void, Never>?
 
     init() {
         refreshSources()
@@ -63,6 +66,28 @@ final class TransferViewModel: ObservableObject {
         eligibleClips.filter { !$0.isGPS && !$0.isPhoto }
     }
 
+    var inferredLearningChannelSetup: (count: Int, description: String) {
+        let profileChannels = selectedProfile?.channels ?? [:]
+        if selectedProfile?.id != DashcamProfile.genericNewDashcam.id, !profileChannels.isEmpty {
+            let labels = orderedChannelLabels(from: profileChannels.values)
+            if !labels.isEmpty {
+                return (min(max(labels.count, 1), 4), labels.joined(separator: " / "))
+            }
+        }
+
+        let labels = orderedChannelLabels(from: footageClips.map(\.channel))
+        if !labels.isEmpty {
+            return (min(max(labels.count, 1), 4), labels.joined(separator: " / "))
+        }
+
+        let groupedCount = inferredSynchronizedChannelCount()
+        if groupedCount > 1 {
+            return (groupedCount, defaultChannelDescription(for: groupedCount))
+        }
+
+        return (1, defaultChannelDescription(for: 1))
+    }
+
     var profilesByBrand: [(brand: String, profiles: [DashcamProfile])] {
         let grouped = Dictionary(grouping: profiles, by: \.displayManufacturer)
         return grouped.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
@@ -74,6 +99,50 @@ final class TransferViewModel: ObservableObject {
                     }
                 )
             }
+    }
+
+    private func orderedChannelLabels(from values: some Sequence<String>) -> [String] {
+        let ignored = Set(["", "unknown", "gps"])
+        let labels = Set(
+            values
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !ignored.contains($0) }
+        )
+
+        let preferred = ["front", "interior", "cabin", "in_cabin", "rear", "telephoto"]
+        return labels.sorted { lhs, rhs in
+            let lhsIndex = preferred.firstIndex(of: lhs) ?? preferred.count
+            let rhsIndex = preferred.firstIndex(of: rhs) ?? preferred.count
+            if lhsIndex != rhsIndex { return lhsIndex < rhsIndex }
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }
+        .map(ClipItem.displayLabel(for:))
+    }
+
+    private func inferredSynchronizedChannelCount() -> Int {
+        let groups = Dictionary(grouping: footageClips) { clip in
+            if clip.timestampSource == .filename, let timestamp = clip.timestamp {
+                return "timestamp:\(Int(timestamp.timeIntervalSince1970))"
+            }
+            return "stem:\(clip.filenameStemWithoutChannelHint)"
+        }
+        let count = groups.values.map(\.count).max() ?? 1
+        return min(max(count, 1), 4)
+    }
+
+    private func defaultChannelDescription(for count: Int) -> String {
+        switch count {
+        case 1:
+            return "Front"
+        case 2:
+            return "Front / rear"
+        case 3:
+            return "Front / cabin / rear"
+        case 4:
+            return "Front / front interior / rear / rear interior"
+        default:
+            return ""
+        }
     }
 
     func refreshSources() {
@@ -148,6 +217,8 @@ final class TransferViewModel: ObservableObject {
         clips = []
         lastScannedFiles = []
         lastScanDiagnostics = []
+        excludedQueueClipIDs = []
+        selectedQueueItemIDs = []
         copyPlan = nil
         copyResults = []
         supportFileResults = []
@@ -192,6 +263,8 @@ final class TransferViewModel: ObservableObject {
         copyPlan = nil
         copyResults = []
         supportFileResults = []
+        excludedQueueClipIDs = []
+        selectedQueueItemIDs = []
         scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
 
         Task { [weak self, profiles, selectedSource] in
@@ -293,19 +366,25 @@ final class TransferViewModel: ObservableObject {
     }
 
     func rebuildPlan() {
-        guard let selectedSource, let destinationURL, let selectedProfile else {
+        guard let selectedSource, let selectedProfile else {
             copyPlan = nil
             return
         }
 
+        let previewDestination = destinationURL ?? URL(fileURLWithPath: "/Choose Download Folder", isDirectory: true)
         copyPlan = planner.makePlan(
             sourceRoot: selectedSource.url,
-            destinationRoot: destinationURL,
+            destinationRoot: previewDestination,
             profile: selectedProfile,
-            clips: clips,
+            clips: clips.filter { !excludedQueueClipIDs.contains($0.id) },
             filters: filters,
             namingOptions: outputNamingOptions
         )
+        if let itemIDs = copyPlan?.items.map(\.id) {
+            selectedQueueItemIDs.formIntersection(Set(itemIDs))
+        } else {
+            selectedQueueItemIDs = []
+        }
     }
 
     func setVideoFilenameSuffix(_ value: String) {
@@ -314,10 +393,15 @@ final class TransferViewModel: ObservableObject {
     }
 
     func startCopy() {
+        guard destinationURL != nil else {
+            statusMessage = "Choose a download folder first"
+            return
+        }
         guard let copyPlan, !copyPlan.items.isEmpty else {
             statusMessage = "Nothing selected to download"
             return
         }
+        guard !copyProgress.isRunning else { return }
 
         statusMessage = "Downloading..."
         copyResults = []
@@ -329,24 +413,45 @@ final class TransferViewModel: ObservableObject {
             }
         }
 
-        Task {
+        copyTask = Task { [weak self] in
             let result = await executor.copy(plan: copyPlan)
+            guard let self else { return }
             copyResults = result.mediaItems
             supportFileResults = result.supportItems
             lastOutputDirectory = copyPlan.destinationRoot
             let baseMessage = copyProgress.summary.isEmpty ? "Download complete" : copyProgress.summary
             var finalMessage = baseMessage
-            if openDestinationWhenComplete {
+            if !Task.isCancelled && openDestinationWhenComplete {
                 openOutputDirectory()
             }
-            if ejectSourceWhenComplete {
+            if !Task.isCancelled && ejectSourceWhenComplete {
                 let ejectMessage = await ejectCopiedSource(copyPlan.sourceRoot, failedCount: result.failedCount)
                 if !ejectMessage.isEmpty {
                     finalMessage = "\(baseMessage). \(ejectMessage)"
                 }
             }
             statusMessage = finalMessage
+            copyTask = nil
         }
+    }
+
+    func cancelCopy() {
+        guard copyProgress.isRunning else { return }
+        statusMessage = "Stopping download..."
+        copyTask?.cancel()
+    }
+
+    func removeSelectedQueueItems() {
+        guard !selectedQueueItemIDs.isEmpty else { return }
+        excludedQueueClipIDs.formUnion(selectedQueueItemIDs)
+        selectedQueueItemIDs = []
+        rebuildPlan()
+    }
+
+    func restoreQueuedFiles() {
+        excludedQueueClipIDs = []
+        selectedQueueItemIDs = []
+        rebuildPlan()
     }
 
     func openOutputDirectory() {
@@ -871,6 +976,30 @@ final class TransferViewModel: ObservableObject {
             guard let value, !value.isEmpty else { return nil }
             return value
         }.joined(separator: " ")
+    }
+}
+
+private extension ClipItem {
+    var filenameStemWithoutChannelHint: String {
+        var stem = URL(fileURLWithPath: filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+
+        for suffix in ["PF", "PI", "PR", "PT", "NF", "NI", "NR", "NT", "EF", "EI", "ER", "ET", "MF", "MI", "MR", "MT", "F", "I", "R", "T", "A", "B", "C", "D"] {
+            guard stem.hasSuffix(suffix) else { continue }
+            let suffixStart = stem.index(stem.endIndex, offsetBy: -suffix.count)
+            if suffixStart == stem.startIndex {
+                continue
+            }
+            let previousCharacter = stem[stem.index(before: suffixStart)]
+            if previousCharacter.isNumber || previousCharacter == "_" || previousCharacter == "-" || previousCharacter == " " {
+                stem.removeSubrange(suffixStart..<stem.endIndex)
+                break
+            }
+        }
+
+        return stem
     }
 }
 

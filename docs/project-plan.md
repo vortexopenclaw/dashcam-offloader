@@ -17,7 +17,6 @@
 - Classify clips.
 - Print a summary by mode, channel, and date range.
 - Accept a user-selected destination path.
-- Produce a copy manifest from source card to destination.
 - Support dry-run copy planning.
 
 ## Phase 3 - Safe Copy Engine
@@ -28,7 +27,6 @@
 - Resume interrupted jobs.
 - Verify file size and optional checksum.
 - Track copy progress and results per card.
-- Export manifest as JSON and CSV.
 
 ## Phase 4 - Mac App
 

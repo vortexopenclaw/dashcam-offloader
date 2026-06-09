@@ -31,7 +31,6 @@ struct CopyPlanner {
                 destinationURL: destinationURL(
                     for: clip,
                     destinationRoot: destinationRoot,
-                    profile: profile,
                     filters: filters,
                     namingOptions: namingOptions
                 ),
@@ -42,7 +41,6 @@ struct CopyPlanner {
         let supportItems = filters.includeCameraSettings ? settingsItems(
             sourceRoot: sourceRoot,
             destinationRoot: destinationRoot,
-            profile: profile
         ) : []
 
         return CopyPlan(
@@ -58,38 +56,17 @@ struct CopyPlanner {
     private func destinationURL(
         for clip: ClipItem,
         destinationRoot: URL,
-        profile: DashcamProfile,
         filters: FilterState,
         namingOptions: OutputNamingOptions
     ) -> URL {
-        let day = dayFolder(for: clip)
-        let modelFolder = safePathComponent(profile.displayName)
-        let categoryFolder = safePathComponent(filters.separateCategoryFolders ? clip.outputCategory : clip.mode)
-        let channelFolder = safePathComponent(clip.channel)
         let outputFilename = filename(for: clip, namingOptions: namingOptions)
+        guard filters.separateCategoryFolders else {
+            return destinationRoot.appendingPathComponent(outputFilename)
+        }
 
         return destinationRoot
-            .appendingPathComponent(modelFolder, isDirectory: true)
-            .appendingPathComponent(categoryFolder, isDirectory: true)
-            .appendingPathComponent(day, isDirectory: true)
-            .appendingPathComponent(channelFolder, isDirectory: true)
+            .appendingPathComponent(safePathComponent(clip.outputCategory), isDirectory: true)
             .appendingPathComponent(outputFilename)
-    }
-
-    private func dayFolder(for clip: ClipItem) -> String {
-        guard let timestamp = clip.timestamp else { return "undated" }
-        let day = Self.dayFormatter.string(from: timestamp)
-        if clip.hasSuspiciousTimestamp {
-            return "camera-clock-suspect-\(day)"
-        }
-        switch clip.timestampSource {
-        case .filename:
-            return day
-        case .filesystemModified, .filesystemCreated:
-            return "rough-\(day)"
-        case .none:
-            return "undated"
-        }
     }
 
     private func filename(for clip: ClipItem, namingOptions: OutputNamingOptions) -> String {
@@ -133,8 +110,7 @@ struct CopyPlanner {
 
     private func settingsItems(
         sourceRoot: URL,
-        destinationRoot: URL,
-        profile: DashcamProfile
+        destinationRoot: URL
     ) -> [SupportFileItem] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(
@@ -146,7 +122,6 @@ struct CopyPlanner {
             return []
         }
 
-        let modelFolder = safePathComponent(profile.displayName)
         let volumeFolder = safePathComponent(sourceRoot.lastPathComponent)
         var items: [SupportFileItem] = []
 
@@ -162,7 +137,6 @@ struct CopyPlanner {
 
             let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
             let destinationURL = destinationRoot
-                .appendingPathComponent(modelFolder, isDirectory: true)
                 .appendingPathComponent("Camera Settings", isDirectory: true)
                 .appendingPathComponent(volumeFolder.isEmpty ? "source" : volumeFolder, isDirectory: true)
                 .appendingPathComponent(relativePath)
@@ -218,10 +192,4 @@ struct CopyPlanner {
             ClipItem.gpsExtensions.contains(ext)
     }
 
-    private static let dayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
 }

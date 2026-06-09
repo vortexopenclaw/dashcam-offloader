@@ -316,6 +316,7 @@ enum CopyStatus: String, Hashable, Sendable {
     case planned
     case copied
     case skipped
+    case cancelled
     case failed
 }
 
