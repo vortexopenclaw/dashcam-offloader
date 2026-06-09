@@ -24,6 +24,9 @@ The real Elite 9 sample at `/Volumes/BLACKVUE` confirmed:
 - Observed channel letters: `F` and `R`.
 - Complete front/rear pairing for all observed groups.
 - Model metadata in `BlackVue/Config/version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin`.
+- 3050 parsed MP4 files in the current mounted-card pass: 1154 normal front/rear pairs, 281 parking front/rear pairs, and 90 impact/event front/rear pairs.
+- Representative footage is HEVC 4K30 front and HEVC 2K30 rear across driving, parking, and impact/event modes.
+- Front clips measured about 56.5-60.0 Mbps, while rear clips measured about 23.9-25.1 Mbps.
 
 MP4 metadata also includes a `cprt` block with model and firmware fields, but that block includes private fields too. Use it only with field-level extraction and redaction.
 

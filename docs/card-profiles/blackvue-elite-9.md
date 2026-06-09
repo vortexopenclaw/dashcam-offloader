@@ -55,12 +55,12 @@ Observed channel letters:
 
 Observed suffix counts:
 
-- `NF` - 1187 files.
-- `NR` - 1187 files.
-- `PF` - 253 files.
-- `PR` - 253 files.
-- `IF` - 85 files.
-- `IR` - 85 files.
+- `NF` - 1154 files.
+- `NR` - 1154 files.
+- `PF` - 281 files.
+- `PR` - 281 files.
+- `IF` - 90 files.
+- `IR` - 90 files.
 
 ## Related-File Grouping
 
@@ -69,10 +69,21 @@ Group related files by date, time, and mode letter. The channel letter should no
 Observed groups:
 
 - 1525 total groups.
-- 1187 complete `NF/NR` pairs.
-- 253 complete `PF/PR` pairs.
-- 85 complete `IF/IR` pairs.
+- 1154 complete `NF/NR` pairs.
+- 281 complete `PF/PR` pairs.
+- 90 complete `IF/IR` pairs.
 - No incomplete front/rear pairs were observed on this sample card.
+
+## Video Specifications
+
+Mounted `/Volumes/BLACKVUE` pass on 2026-06-08 measured representative clips:
+
+- Front driving `NF`: HEVC 3840x2160 30 fps, about 60.0 Mbps.
+- Rear driving `NR`: HEVC 2560x1440 30 fps, about 25.0 Mbps.
+- Front impact/event `IF`: HEVC 3840x2160 30 fps, about 56.5 Mbps.
+- Rear impact/event `IR`: HEVC 2560x1440 30 fps, about 23.9 Mbps.
+- Front parking `PF`: HEVC 3840x2160 30 fps, about 60.0 Mbps.
+- Rear parking `PR`: HEVC 2560x1440 30 fps, about 25.1 Mbps.
 
 ## Channel Variants
 

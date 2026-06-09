@@ -69,10 +69,20 @@ Not present for every clip — begin appearing once GPS receiver acquires satell
 
 | Setting | Value | Confirmed |
 |---------|-------|-----------|
-| Codec | H.264 | assumed |
-| Resolution | 1920×1080 | assumed |
-| Frame rate | 30 fps | assumed |
+| Codec | H.264 | confirmed |
+| Resolution | 2560×1440 | confirmed |
+| Frame rate | 30 fps | confirmed |
 | Container | MOV | confirmed |
+
+Mounted `/Volumes/NO NAME` pass on 2026-06-08 measured:
+
+- Normal clip `Normal/MAXcam360c/20251010_0047_VID.MOV`: H.264 2560x1440 30 fps, about 28.6 Mbps, 60.1 seconds.
+- Event clip `Event/MAXcam360c/20250127_0012_SOS.MOV`: H.264 2560x1440 30 fps, about 28.4 Mbps, 60.1 seconds.
+- Parsed files: 65 normal driving clips and 1 locked/event clip.
+
+Firmware update file note:
+
+- `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file. It is not expected on a normal MAXcam card and must not be used for make/model detection.
 
 ---
 
@@ -87,4 +97,4 @@ Not present for every clip — begin appearing once GPS receiver acquires satell
 
 ## Detection Notes
 
-Primary signal: `Normal/MAXcam360c/` folder. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic — do not use. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` provide supporting evidence.
+Primary signal: `Normal/MAXcam360c/` folder, with `Event/MAXcam360c/` as supporting structural evidence when present. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic — do not use. `DATA/serial_num.txt` is private and must not be used for detection or public docs. `DATA/gps_userdb.bin` is a radar GPS lockout database and should be excluded from normal footage handling.

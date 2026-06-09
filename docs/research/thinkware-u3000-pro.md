@@ -14,7 +14,9 @@
 - The manual's filename examples only show front and rear examples:
   - `REC_YYYYMMDD_HHMMSS_F.MP4`
   - `REC_YYYYMMDD_HHMMSS_R.MP4`
+- A real 3CH card provided by Ariel on 2026-06-08 confirms cabin clips use `incabin_rec/EXT_YYYYMMDD_HHMMSS_I.MP4`.
+- A representative cabin clip measured H.264 1920x1080 30 fps at about 8 Mbps stream bitrate.
 
 ## Current Conclusion
 
-The in-cabin folder is confirmed as `incabin_rec`, but the in-cabin filename suffix is not confirmed by the manual. Do not infer `_I`, `_C`, or another channel token until a real U3000 Pro cabin recording sample is available.
+The in-cabin folder is `incabin_rec`; real-card evidence confirms `EXT` is the in-cabin prefix and `I` is the interior channel token.

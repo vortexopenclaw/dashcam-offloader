@@ -47,11 +47,17 @@ folders:
     validation: manual_confirmed_sample_missing
   - path: incabin_rec
     mode: in_cabin
-    prefix: unknown
-    validation: manual_confirmed_sample_missing
-    notes: Manual confirms this folder and the Interior IR camera requirement, but not the in-cabin filename suffix.
+    prefix: EXT
+    validation: real_card_sampled
+    notes: Real 3CH card confirms EXT prefix with I channel suffix for Interior IR cabin recordings.
 filename_patterns:
   - pattern: "^(REC|EVT|MOT|PAK|PAS)_(\\d{8})_(\\d{6})_([A-Z]+(?:_[A-Z]+)?)\\.MP4$"
+    timestamp:
+      date_group: 2
+      time_group: 3
+      format: YYYYMMDD_HHMMSS
+    channel_group: 4
+  - pattern: "^(EXT)_(\\d{8})_(\\d{6})_(I)\\.MP4$"
     timestamp:
       date_group: 2
       time_group: 3
@@ -60,11 +66,7 @@ filename_patterns:
 channels:
   F: front
   R: rear
-unconfirmed_channels:
-  in_cabin:
-    folder: incabin_rec
-    filename_suffix: unknown
-    evidence: manual_confirms_folder_only
+  I: interior
 unknown_channel_variants:
   - F_SS
   - R_SS

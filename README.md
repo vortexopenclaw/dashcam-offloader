@@ -117,6 +117,7 @@ swift run DashcamOffloader --smoke-test
 - `docs/card-intake-checklist.md` - repeatable SD-card analysis checklist
 - `docs/profile-schema.md` - camera profile format
 - `docs/video-metadata-reference.md` - codec, resolution, bitrate, and fps reference across all cameras
+- `docs/config-settings-reference.md` - safe config/settings extraction notes for profile research and redacted submissions
 - `docs/research/` - manual/source-link notes and research artifacts
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes

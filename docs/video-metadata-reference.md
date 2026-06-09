@@ -27,6 +27,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** Mounted sample set showed 61-second clips for the main driving and parking files. The front channel is 4K UHD and the rear is 1440p.
 
+**Mounted-card update 2026-06-08:** `/Volumes/BLACKVUE` parsed 3050 MP4 files: 1154 complete normal front/rear pairs, 281 complete parking front/rear pairs, and 90 complete impact/event front/rear pairs. Safe model/version strings in `version.bin`, `micom_version.bin`, and `smart_gsensor_version.bin` confirm `ELITE 9` firmware/config evidence.
+
 ## BlackVue Elite 8
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -50,8 +52,20 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
 | MF (main/front) | driving | HEVC | 3840x2160 | 30 | ~60.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~11.0 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The mounted archive includes real driving clips plus a lot of b-roll. Only the camera-looking `YYYYMMDD_HHMMSS_MODECHANNEL` files were used for this row.
+
+## BlackVue DR970X LTE Plus
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| NF (front) | driving | HEVC | 3840x2160 | 30 | ~60.9-61.0 Mbps | MP4 | `ffprobe` |
+| NR (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9-11.0 Mbps | MP4 | `ffprobe` |
+| PF (front) | parking | HEVC | 3840x2160 | 30 | ~60.9-62.1 Mbps | MP4 | `ffprobe` |
+| PR (rear) | parking | HEVC | 1920x1080 | 30 | ~11.0-11.6 Mbps | MP4 | `ffprobe` |
+
+**Mounted-card update 2026-06-08:** Firmware 2.007 / rev1584 sample at `/Volumes/BLACKVUE` contains both driving clips (`NF`/`NR`, 3 front/rear pairs) and parking clips (`PF`/`PR`, 2 front/rear pairs) in the same single `BlackVue/Record` folder with `YYYYMMDD_HHMMSS_MODECHANNEL.mp4` names. `version.bin` and `micom_version.bin` identify `DR970X LTE Plus`; detection should match that model string rather than the firmware version so 1.x and 2.x firmware cards both work. `ffprobe` reports HEVC Main, 8-bit `yuv420p`, and no HDR color-transfer/primaries tags, so the firmware HDR change appears to be in-camera processing rather than HDR10-style file metadata in these samples.
 
 ## BlackVue DR750X-2CH Plus
 
@@ -88,12 +102,15 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 |---|---|---|---|---|---|---|---|
 | F (front) | driving | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
 | R (rear) | driving | HEVC | 2560x1440 | 30 | ~10.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving / in-cabin | H.264 | 1920x1080 | 30 | ~8.0 Mbps | MP4 | `ffprobe` |
 | F | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0 Mbps | MP4 | `ffprobe` |
 | R | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0-6.4 Mbps | MP4 | `ffprobe` |
 | F | parking (event) | HEVC | 3840x2160 | 30 | ~12.0 Mbps | MP4 | `ffprobe` |
 | F | manual | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The sampled card contains REC, MOT, MAN, and PAK clips. Parking event clips are short and keep 4K resolution.
+
+**Mounted-card update 2026-06-08:** `/Volumes/U3000Pro` currently confirms continuous driving at 4K30 front and 2K30 rear. The 3CH card with Interior IR cabin camera enabled adds `incabin_rec/EXT_YYYYMMDD_HHMMSS_I.MP4` clips at 1080p30 H.264, about 8 Mbps stream bitrate. Parking/event samples on this card are 15 fps: `parking_rec` front measured 4K15 at ~11.9 Mbps, rear measured 2K15 at ~5.0 Mbps; `motion_timelapse_rec` measured 2K15 at ~5.0 Mbps on both channels. Hidden `.parking_rec_sec` `PAS` files measured 720p15 at ~0.6 Mbps and should be treated as secondary/internal parking evidence, not normal user footage.
 
 ## Thinkware U3000
 
@@ -157,6 +174,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet.
 
+**Mounted-card update 2026-06-08:** `/Volumes/Untitled` was rechecked and parsed as 6225 MP4 files: 208 driving triplets, 1866 parking triplets, and 1 locked F/I/R triplet. The root `format.txt` file is present but empty, so it is only an exclusion signal.
+
 ## VIOFO A229 Plus
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -190,6 +209,27 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | PR | parking | H.264 | 2560x1440 | 30 | ~23.8 Mbps | MP4 | `ffprobe` |
 
 **Notes:** The mounted archive shows both driving and parking clips with the expected front/rear/interior split. Parking clips can still preserve full 4K on the front channel.
+
+**Mounted-card update 2026-06-08:** `/Volumes/A329S` currently measures 4K front plus 2K interior and 2K rear for the sampled 3CH configuration. Driving clips measured ~65.5 Mbps front and ~27.0 Mbps interior/rear. Parking clips measured 4K30 front at ~12.3 Mbps and 2K30 interior/rear at ~8.2 Mbps. Protected `RO` contains both normal `F/I/R` and parking `PF/PI/PR` families.
+
+## Vueroid S1 4K Infinite
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~48.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | manual | H.264 | 3840x2160 | 30 | ~48.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | manual | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | manual | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | parking | H.264 | 3840x2160 | 30 | ~47.2 Mbps | MP4 | `ffprobe` |
+| I (interior) | parking | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `ffprobe` |
+| F (front) | parking event | H.264 | 3840x2160 | 30 | ~48.1 Mbps | MP4 | `ffprobe` |
+| I (interior) | parking event | H.264 | 1920x1080 | 30 | ~13.2 Mbps | MP4 | `ffprobe` |
+| R (rear) | parking event | H.264 | 2560x1440 | 30 | ~22.1 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The mounted `/Volumes/S1-4K` 3CH card parsed 1082 MP4 files across `INF`, `PARK`, `USER`, and `PEVENT`. Safe strings in `CONFIG/config.bin` include `S1-4K V1.04.2`, build date `Mar  3 2026, 16:43:29`, and `S1-4K`. `CONFIG/config.bin` should remain excluded from footage copy by default but can be read in redacted form for model and firmware evidence.
 
 ## VIOFO A329T
 
@@ -401,6 +441,15 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The archive contains both `CAM` and `PF` families. Parking clips can be 4K HEVC in this sample set.
 
+## Escort MAXcam 360c
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~28.6 Mbps | MOV | `ffprobe` |
+| F (front) | locked / event | H.264 | 2560x1440 | 30 | ~28.4 Mbps | MOV | `ffprobe` |
+
+**Notes:** Mounted `/Volumes/NO NAME` card parsed 65 normal `VID` clips and 1 event `SOS` clip under model-specific `MAXcam360c` folders. Those folders and clip suffixes are the reliable model signals. `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied to the sampled card as a firmware update file and is not expected by default. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` should stay excluded from public/default handling.
+
 ## Cobra Road Scout
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -451,6 +500,5 @@ No mounted media files were found for these models in this archive pass:
 - 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
 - DJI Mini 3 Pro
 - Sony Alpha A7 III
-- Vueroid S1 4K Infinite
 
 Those rows stay on manual/spec-driven data until we get real footage samples.
