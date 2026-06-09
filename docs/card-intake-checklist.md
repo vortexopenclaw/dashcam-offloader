@@ -42,11 +42,11 @@ Default public intake should capture filenames and structural metadata only, not
 
 For each folder and filename pattern:
 
-- Recording mode: continuous, driving event, parking motion, parking event, manual, SOS, screenshot, unknown.
+- Recording mode: continuous, driving event, parking motion, parking event, manually saved/protected, manual, SOS, screenshot, unknown.
 - Camera channel: front, rear, interior, telephoto, unknown.
 - Timestamp format.
 - Extra suffixes or variants.
-- Whether files appear protected by folder, filename, filesystem flags, or unknown.
+- Whether files appear protected by folder, filename, filesystem read-only flags, or unknown. Treat user-saved/protected clips as a distinct dashcam workflow even when they stay in normal recording folders.
 
 ## Model Detection
 

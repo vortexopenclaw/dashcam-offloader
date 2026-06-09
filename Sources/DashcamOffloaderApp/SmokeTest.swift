@@ -81,6 +81,9 @@ enum SmokeTest {
             try FileManager.default.createDirectory(at: unknownSource.appendingPathComponent("Events", isDirectory: true), withIntermediateDirectories: true)
             try Data(repeating: 10, count: 1024).write(to: unknownSource.appendingPathComponent("Driving/20260608_101112_F.MP4"))
             try Data(repeating: 11, count: 1024).write(to: unknownSource.appendingPathComponent("Driving/20260608_101112_R.MP4"))
+            let readOnlyProtectedClip = unknownSource.appendingPathComponent("Driving/20260608_101500_F.MP4")
+            try Data(repeating: 14, count: 1024).write(to: readOnlyProtectedClip)
+            try FileManager.default.setAttributes([.posixPermissions: 0o444], ofItemAtPath: readOnlyProtectedClip.path)
             try Data(repeating: 12, count: 1024).write(to: unknownSource.appendingPathComponent("Parking/Event/20260608_111213_PR.MP4"))
             try Data(repeating: 13, count: 1024).write(to: unknownSource.appendingPathComponent("Events/REC_20260608_121314_SOS.MOV"))
 
@@ -89,7 +92,7 @@ enum SmokeTest {
                 print("SMOKE FAIL: unsupported card did not use generic fallback: \(unknownScan.selectedProfile?.id ?? "nil")")
                 return false
             }
-            guard unknownScan.clips.count == 4, unknownScan.clips.allSatisfy({ $0.timestamp != nil }) else {
+            guard unknownScan.clips.count == 5, unknownScan.clips.allSatisfy({ $0.timestamp != nil }) else {
                 print("SMOKE FAIL: unsupported card did not parse generic timestamps")
                 return false
             }
@@ -104,8 +107,12 @@ enum SmokeTest {
             .mapValues(\.count)
             guard unknownCategories["Driving"] == 2,
                   unknownCategories["Parking Events"] == 1,
-                  unknownCategories["Protected"] == 1 else {
+                  unknownCategories["Protected"] == 2 else {
                 print("SMOKE FAIL: unsupported card categories wrong: \(unknownCategories)")
+                return false
+            }
+            guard unknownScan.clips.contains(where: { $0.relativePath == "Driving/20260608_101500_F.MP4" && $0.mode == "protected" }) else {
+                print("SMOKE FAIL: unsupported card read-only protected clip missing")
                 return false
             }
             guard unknownScan.diagnostics.contains(where: { $0.stage == "generic_fallback" }) else {
