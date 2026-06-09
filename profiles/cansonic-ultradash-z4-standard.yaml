@@ -5,6 +5,11 @@ status: app_submission_sampled
 channels: 3
 source_notes:
   - App training submission c4f6f86d-d32f-4163-9b95-884a3dfae512
+  - >
+    The original app submission from build 0.1.0 1 ddb6eb2 included folder
+    and filename samples but no videoSpecSamples, folderSummaries, or
+    settingSnapshots. It also labeled all 27 files as Other / Recording before
+    the Z4 profile existed.
 detection:
   supporting:
     - folder: VIDEO
@@ -67,22 +72,29 @@ video:
       resolution: 3840x2160
       fps: 30
       bitrate_mbps: 31.1
+      durations_seconds:
+        observed: [6.4, 9.7, 29.0, 60.0]
     - channel: R
       folder: VIDEO
       codec: h264
       resolution: 3840x2160
       fps: 30
       bitrate_mbps: 31.1
+      durations_seconds:
+        observed: [6.4, 9.7, 29.0, 60.0]
     - channel: B
       folder: VIDEO
       codec: h264
       resolution: 2560x1440
       fps: 30
-      bitrate_mbps: 11.9
+      bitrate_mbps: 11.7-11.9
+      durations_seconds:
+        observed: [4.0, 9.7, 29.0, 60.0]
 validation:
   app_submission_sampled: true
   card_sampled: true
   notes: >
     Direct card read at /Volumes/ULTRADASH confirmed 27 clips in VIDEO/ and
     PROTECTED/, synchronized L/R/B channels, H.264 video, 4K front/telephoto and
-    2K rear samples.
+    2K rear samples. The direct card had 15 VIDEO driving clips and 12 PROTECTED
+    P-prefixed parking-event clips.

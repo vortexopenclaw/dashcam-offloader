@@ -897,19 +897,31 @@ final class TransferViewModel: ObservableObject {
 
         var selected: [ClipItem] = []
         var seenKeys: Set<String> = []
-        for clip in videoClips {
+        let grouped = Dictionary(grouping: videoClips) { clip in
             let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
             let pattern = clip.inferredParkingPattern?.rawValue ?? "none"
-            let key = "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)|\(pattern)|\(folder)|\(clip.extensionLowercased)"
-            guard seenKeys.insert(key).inserted else { continue }
-            selected.append(clip)
-            if selected.count >= 24 { break }
+            return "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)|\(pattern)|\(folder)|\(clip.extensionLowercased)"
+        }
+
+        for key in grouped.keys.sorted() {
+            let bucket = grouped[key, default: []]
+            let bucketSamples = [
+                bucket.first,
+                bucket.max(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) }),
+                bucket.min(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) })
+            ]
+            for sample in bucketSamples.compactMap({ $0 }) {
+                guard seenKeys.insert(sample.id).inserted else { continue }
+                selected.append(sample)
+                if selected.count >= 32 { break }
+            }
+            if selected.count >= 32 { break }
         }
 
         if selected.count < 8 {
             for clip in videoClips where !selected.contains(clip) {
                 selected.append(clip)
-                if selected.count >= 24 { break }
+                if selected.count >= 32 { break }
             }
         }
 
@@ -934,6 +946,7 @@ final class TransferViewModel: ObservableObject {
             return FeedbackVideoSpecSample(
                 relativePath: sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot),
                 extensionLowercased: fileURL.pathExtension.lowercased(),
+                fileSizeBytes: fileSizeBytes(for: fileURL),
                 mode: clip.mode,
                 displayMode: clip.displayMode,
                 outputCategory: clip.outputCategory,
@@ -947,6 +960,13 @@ final class TransferViewModel: ObservableObject {
                 durationSeconds: duration
             )
         }
+    }
+
+    private func fileSizeBytes(for fileURL: URL) -> Int64? {
+        guard let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
+            return nil
+        }
+        return Int64(size)
     }
 
     private func codecName(for track: AVAssetTrack) -> String? {

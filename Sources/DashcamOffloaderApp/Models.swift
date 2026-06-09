@@ -618,6 +618,7 @@ struct FeedbackFolderSummary: Codable, Hashable, Sendable {
 struct FeedbackVideoSpecSample: Codable, Hashable, Sendable {
     var relativePath: String
     var extensionLowercased: String
+    var fileSizeBytes: Int64?
     var mode: String?
     var displayMode: String?
     var outputCategory: String?

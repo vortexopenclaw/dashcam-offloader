@@ -1,6 +1,7 @@
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
+const MAX_VIDEO_SPEC_SAMPLES = 32;
 const MAX_SETTING_SNAPSHOTS = 20;
 const MAX_SETTING_VALUES = 40;
 const MAX_TRAINING_FIELD_LENGTH = 1000;
@@ -162,7 +163,7 @@ function sanitizeScan(scan) {
     supportFileSamples: safePathList(scan.supportFileSamples, 40),
     ignoredSupportFileSamples: safePathList(scan.ignoredSupportFileSamples, 60),
     videoSpecSamples: Array.isArray(scan.videoSpecSamples)
-      ? scan.videoSpecSamples.slice(0, 16).map(sanitizeVideoSpecSample).filter(Boolean)
+      ? scan.videoSpecSamples.slice(0, MAX_VIDEO_SPEC_SAMPLES).map(sanitizeVideoSpecSample).filter(Boolean)
       : [],
     settingSnapshots: Array.isArray(scan.settingSnapshots)
       ? scan.settingSnapshots.slice(0, MAX_SETTING_SNAPSHOTS).map(sanitizeSettingSnapshot).filter(Boolean)
@@ -208,6 +209,7 @@ function sanitizeVideoSpecSample(sample) {
   return {
     relativePath,
     extensionLowercased: stringValue(sample.extensionLowercased).toLowerCase(),
+    fileSizeBytes: nullableNumber(sample.fileSizeBytes),
     mode: optionalString(sample.mode),
     displayMode: optionalString(sample.displayMode),
     outputCategory: optionalString(sample.outputCategory),
