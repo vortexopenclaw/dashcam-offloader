@@ -731,7 +731,11 @@ struct CardScanner {
     }
 
     private func isCandidateExtension(_ ext: String) -> Bool {
-        ["mp4", "mov", "jpg", "jpeg", "dat"].contains(ext)
+        isVideoExtension(ext) || ["jpg", "jpeg", "dat"].contains(ext)
+    }
+
+    private func isVideoExtension(_ ext: String) -> Bool {
+        ["mp4", "mov", "avi", "mkv", "ts", "m2ts", "mts", "3gp"].contains(ext)
     }
 
     private func fileContains(_ url: URL, all needles: [String]) -> Bool {
@@ -849,7 +853,7 @@ struct CardScanner {
     }
 
     private func isFileProtectedByReadOnlyAttribute(_ fileURL: URL, extensionLowercased: String) -> Bool {
-        guard ["mp4", "mov", "avi", "mkv"].contains(extensionLowercased) else { return false }
+        guard isVideoExtension(extensionLowercased) else { return false }
         guard let permissions = try? fileManager
             .attributesOfItem(atPath: fileURL.path)[.posixPermissions] as? NSNumber else {
             return false
