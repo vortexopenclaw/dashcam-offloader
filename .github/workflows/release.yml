@@ -69,7 +69,7 @@ jobs:
           PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           npx --yes wrangler@latest r2 bucket create "$BUCKET" || true
-          npx --yes wrangler@latest r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH"
+          npx --yes wrangler@latest r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
           cat > build/latest.json <<JSON
           {
@@ -87,5 +87,5 @@ jobs:
           }
           JSON
 
-          npx --yes wrangler@latest r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json
+          npx --yes wrangler@latest r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
           npx --yes wrangler@latest deploy --config workers/updates/wrangler.toml
