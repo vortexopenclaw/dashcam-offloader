@@ -52,7 +52,10 @@ export default {
       ...sanitizeFeedback(body),
     };
 
-    await storeRecord(env, id, record);
+    const stored = await storeRecord(env, id, record);
+    if (!stored) {
+      return json({ error: "storage_unavailable" }, 503, request, env);
+    }
 
     return json({ ok: true, id }, 202, request, env);
   },
@@ -350,20 +353,25 @@ function isSensitiveSettingPair(key, value) {
 async function storeRecord(env, id, record) {
   const key = `feedback/${record.receivedAt.slice(0, 10)}/${id}.json`;
   const body = JSON.stringify(record, null, 2);
+  let stored = false;
 
   if (env.FEEDBACK_BUCKET) {
     await env.FEEDBACK_BUCKET.put(key, body, {
       httpMetadata: { contentType: "application/json" },
     });
+    stored = true;
   }
 
   if (env.FEEDBACK_KV) {
     await env.FEEDBACK_KV.put(key, body);
+    stored = true;
   }
 
   if (!env.FEEDBACK_BUCKET && !env.FEEDBACK_KV) {
     console.log(body);
   }
+
+  return stored;
 }
 
 function json(value, status = 200, request, env) {
