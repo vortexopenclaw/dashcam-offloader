@@ -189,18 +189,6 @@ struct ContentView: View {
                         countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
                     }
 
-                    HStack {
-                        Button {
-                            viewModel.probeVideoSpecs()
-                        } label: {
-                            Label(viewModel.isProbingVideoSpecs ? "Probing Specs" : "Probe Video Specs", systemImage: "film")
-                        }
-                        .disabled(viewModel.isProbingVideoSpecs || viewModel.eligibleClips.filter(\.isVideo).isEmpty)
-                        Text("Samples representative clips for codec, resolution, fps, bitrate, and duration.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
                     videoSpecSamples(viewModel.scanSummary.videoSpecSamples)
                 }
             }
@@ -762,7 +750,7 @@ struct CardLearningSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Text("Sends folder names, filename samples, sampled video specs, candidate scores, and counts. It does not upload video files, GPS traces, or unique device IDs.")
+            Text("Sends folder names, filename samples, sampled video specs, candidate scores, and counts. Video specs are collected automatically from representative clips when needed. It does not upload video files, GPS traces, or unique device IDs.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -881,6 +869,10 @@ struct CardLearningSheet: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                } else if viewModel.eligibleClips.contains(where: \.isVideo) {
+                    Text("Video specs will be sampled automatically from representative clips when you submit.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
