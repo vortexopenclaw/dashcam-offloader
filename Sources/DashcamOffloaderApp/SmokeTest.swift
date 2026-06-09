@@ -213,6 +213,44 @@ enum SmokeTest {
                 return false
             }
 
+            let unknownSource = temp.appendingPathComponent("unsupported-card", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknownSource.appendingPathComponent("Driving", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: unknownSource.appendingPathComponent("Parking/Event", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: unknownSource.appendingPathComponent("Events", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 10, count: 1024).write(to: unknownSource.appendingPathComponent("Driving/20260608_101112_F.MP4"))
+            try Data(repeating: 11, count: 1024).write(to: unknownSource.appendingPathComponent("Driving/20260608_101112_R.MP4"))
+            try Data(repeating: 12, count: 1024).write(to: unknownSource.appendingPathComponent("Parking/Event/20260608_111213_PR.MP4"))
+            try Data(repeating: 13, count: 1024).write(to: unknownSource.appendingPathComponent("Events/REC_20260608_121314_SOS.MOV"))
+
+            let unknownScan = try scanner.scanWithOSD(sourceURL: unknownSource, profiles: profiles)
+            guard unknownScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("SMOKE FAIL: unsupported card did not use generic fallback: \(unknownScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard unknownScan.clips.count == 4, unknownScan.clips.allSatisfy({ $0.timestamp != nil }) else {
+                print("SMOKE FAIL: unsupported card did not parse generic timestamps")
+                return false
+            }
+            guard Set(unknownScan.clips.map(\.channel)) == ["front", "rear", "unknown"] else {
+                print("SMOKE FAIL: unsupported card channels wrong: \(Set(unknownScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            let unknownCategories = Dictionary(
+                grouping: unknownScan.clips.filter { $0.excludedReason == nil },
+                by: \.outputCategory
+            )
+            .mapValues(\.count)
+            guard unknownCategories["Driving"] == 2,
+                  unknownCategories["Parking Events"] == 1,
+                  unknownCategories["Protected"] == 1 else {
+                print("SMOKE FAIL: unsupported card categories wrong: \(unknownCategories)")
+                return false
+            }
+            guard unknownScan.diagnostics.contains(where: { $0.stage == "generic_fallback" }) else {
+                print("SMOKE FAIL: unsupported card generic diagnostic missing")
+                return false
+            }
+
             let scan = try scanner.scanWithOSD(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
                 print("SMOKE FAIL: E1 Pro was not top candidate")
@@ -434,7 +472,7 @@ enum SmokeTest {
             let blackVueUnsupportedScan = try scanner.scanWithOSD(sourceURL: blackVueUnsupportedSource, profiles: profiles)
             guard blackVueUnsupportedScan.identifiedCamera?.displayName == "BlackVue Future BlackVue",
                   blackVueUnsupportedScan.identifiedCamera?.isSupported == false,
-                  blackVueUnsupportedScan.selectedProfile == nil else {
+                  blackVueUnsupportedScan.selectedProfile?.id == "generic-new-dashcam" else {
                 print("SMOKE FAIL: unsupported BlackVue metadata should not select nearby profile")
                 return false
             }
@@ -459,7 +497,7 @@ enum SmokeTest {
             let thinkwareUnsupportedScan = try scanner.scanWithOSD(sourceURL: thinkwareUnsupportedSource, profiles: profiles)
             guard thinkwareUnsupportedScan.identifiedCamera?.displayName == "Thinkware U4000",
                   thinkwareUnsupportedScan.identifiedCamera?.isSupported == false,
-                  thinkwareUnsupportedScan.selectedProfile == nil else {
+                  thinkwareUnsupportedScan.selectedProfile?.id == "generic-new-dashcam" else {
                 print("SMOKE FAIL: unsupported Thinkware metadata should not select nearby profile")
                 return false
             }
