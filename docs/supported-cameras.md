@@ -4,6 +4,8 @@
 
 - 70mai 4K Omni - filename-only seed from private archive samples. NO/PA/EV mode prefix with F/R channel suffix observed.
 - 70mai M310 - profile drafted from a private archive sample and real card scan. Single-channel front only. Distinct filename pattern: MODE_PREFIX + YYYYMMDD-HHMMSS-SEQUENCE + lowercase .mp4. OSD shows date/time only (no model name). Folder structure confirmed: Normal/, Parking/, Lapse/, Event/, Photo/.
+- BlackVue DR770X Box - profile drafted from one remote Learn Card scan. Exact model detected from BlackVue `version.bin` / `micom_version.bin`; only front driving clips observed so far.
+- BlackVue DR970X LTE Plus - profile drafted from one real card. Built-in LTE variant detected via `model = DR970X LTE Plus` in BlackVue config/version files. Sample had mostly 4K front-only clips plus a few F/R pairs.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
 - BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via BlackVue model metadata files; Wi-Fi SSID/AP fields are user-changeable and not valid model evidence. Filename pattern matches Elite 9 family.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.

@@ -12,6 +12,7 @@ enum SmokeTest {
             let expectedProfileIDs = [
                 "70mai-4k-omni",
                 "70mai-m310",
+                "blackvue-dr770x-box",
                 "blackvue-dr970x-lte-plus",
                 "blackvue-dr970x-plus",
                 "blackvue-elite-8",
@@ -137,6 +138,7 @@ enum SmokeTest {
             }
 
             let blackvueElite8Source = temp.appendingPathComponent("BlackVue Elite 8", isDirectory: true)
+            let blackvueDR770XBoxSource = temp.appendingPathComponent("BlackVue DR770X Box", isDirectory: true)
             let blackvueDR970XLteSource = temp.appendingPathComponent("BlackVue DR970X LTE Plus", isDirectory: true)
             let blackvueDR970XLteFirmware2Source = temp.appendingPathComponent("BlackVue DR970X LTE Plus Firmware 2", isDirectory: true)
             let blackvueDR970XSource = temp.appendingPathComponent("BlackVue DR970X Plus", isDirectory: true)
@@ -146,6 +148,14 @@ enum SmokeTest {
             )
             try FileManager.default.createDirectory(
                 at: blackvueElite8Source.appendingPathComponent("BlackVue/Record", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Config", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Record", isDirectory: true),
                 withIntermediateDirectories: true
             )
             try FileManager.default.createDirectory(
@@ -176,6 +186,10 @@ enum SmokeTest {
                 .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/version.bin"))
             try Data("version = 3.02\nmodel = ELITE 8 v1.009(rev1052)\n".utf8)
                 .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data("version = 1.001\nmodel = DR770X Box\n".utf8)
+                .write(to: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("version = 1.00\nmodel = DR770X Box v1.001(rev1000)\n".utf8)
+                .write(to: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Config/micom_version.bin"))
             try Data("version = 1.008\nmodel = DR970X LTE Plus\n".utf8)
                 .write(to: blackvueDR970XLteSource.appendingPathComponent("BlackVue/Config/version.bin"))
             try Data("version = 2.00\nmodel = DR970X LTE Plus\n".utf8)
@@ -192,6 +206,10 @@ enum SmokeTest {
                 .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Record/20260101_120000_NF.mp4"))
             try Data(repeating: 4, count: 1024)
                 .write(to: blackvueElite8Source.appendingPathComponent("BlackVue/Record/20260101_120000_NR.mp4"))
+            try Data(repeating: 11, count: 1024)
+                .write(to: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Record/19991231_170101_NF.mp4"))
+            try Data(repeating: 12, count: 1024)
+                .write(to: blackvueDR770XBoxSource.appendingPathComponent("BlackVue/Record/19991231_170201_NF.mp4"))
             try Data(repeating: 7, count: 1024)
                 .write(to: blackvueDR970XLteSource.appendingPathComponent("BlackVue/Record/20260101_120000_NF.mp4"))
             try Data(repeating: 8, count: 1024)
@@ -208,6 +226,11 @@ enum SmokeTest {
             let elite8Scan = try scanner.scan(sourceURL: blackvueElite8Source, profiles: profiles)
             guard elite8Scan.candidates.first?.profile.id == "blackvue-elite-8" else {
                 print("SMOKE FAIL: Elite 8 was not top BlackVue candidate")
+                return false
+            }
+            let dr770xBoxScan = try scanner.scan(sourceURL: blackvueDR770XBoxSource, profiles: profiles)
+            guard dr770xBoxScan.candidates.first?.profile.id == "blackvue-dr770x-box" else {
+                print("SMOKE FAIL: DR770X Box was not top BlackVue candidate")
                 return false
             }
             let dr970xLteScan = try scanner.scan(sourceURL: blackvueDR970XLteSource, profiles: profiles)
