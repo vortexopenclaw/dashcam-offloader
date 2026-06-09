@@ -399,8 +399,17 @@ final class TransferViewModel: ObservableObject {
             return
         }
 
+        if kind == .training {
+            guard training != nil, includeScan, scanSummary.hasScan, makeFeedbackScanSnapshot() != nil else {
+                feedbackMessage = "Scan a card first, then use Learn Card to submit dashcam training data."
+                return
+            }
+        }
+
         isSubmittingFeedback = true
         feedbackMessage = "Submitting feedback..."
+
+        let scanSnapshot = includeScan ? makeFeedbackScanSnapshot() : nil
 
         let submission = FeedbackSubmission(
             kind: kind,
@@ -409,7 +418,7 @@ final class TransferViewModel: ObservableObject {
             appVersion: appVersionString(),
             createdAt: ISO8601DateFormatter().string(from: Date()),
             training: training,
-            scan: includeScan ? makeFeedbackScanSnapshot() : nil
+            scan: scanSnapshot
         )
 
         Task { [weak self, feedbackService] in

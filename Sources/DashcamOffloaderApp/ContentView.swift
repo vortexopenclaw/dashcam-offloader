@@ -659,7 +659,7 @@ struct FeedbackSheet: View {
             }
 
             Picker("Type", selection: $kind) {
-                ForEach(FeedbackKind.allCases, id: \.self) { kind in
+                ForEach(FeedbackKind.generalFeedbackCases, id: \.self) { kind in
                     Text(kind.displayName).tag(kind)
                 }
             }

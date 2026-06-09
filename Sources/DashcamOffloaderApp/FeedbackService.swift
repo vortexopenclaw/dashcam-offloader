@@ -21,7 +21,7 @@ struct FeedbackService {
         }
 
         guard (200..<300).contains(httpResponse.statusCode) else {
-            let message = String(data: data, encoding: .utf8)
+            let message = FeedbackFailure.message(from: data)
             throw FeedbackError.serverRejected(statusCode: httpResponse.statusCode, message: message)
         }
 
@@ -35,6 +35,36 @@ struct FeedbackService {
 
 private struct FeedbackResponse: Decodable {
     var id: String
+}
+
+private struct FeedbackFailure: Decodable {
+    var error: String
+
+    static func message(from data: Data) -> String? {
+        if let failure = try? JSONDecoder().decode(FeedbackFailure.self, from: data) {
+            return readableMessage(for: failure.error)
+        }
+        return String(data: data, encoding: .utf8)
+    }
+
+    private static func readableMessage(for error: String) -> String {
+        switch error {
+        case "training_required", "training_needed":
+            return "Card learning submissions need a scanned card. Scan the card, then use Learn Card."
+        case "training_manufacturer_required":
+            return "Card learning submissions need a manufacturer."
+        case "training_model_required":
+            return "Card learning submissions need a model."
+        case "training_channelSetup_required":
+            return "Card learning submissions need a channel setup."
+        case "message_required":
+            return "Add a short note before submitting."
+        case "payload_too_large":
+            return "The feedback package is too large to submit."
+        default:
+            return error.replacingOccurrences(of: "_", with: " ")
+        }
+    }
 }
 
 enum FeedbackError: LocalizedError {

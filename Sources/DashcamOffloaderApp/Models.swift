@@ -442,6 +442,10 @@ enum FeedbackKind: String, CaseIterable, Codable, Hashable, Sendable {
     case training
     case other
 
+    static var generalFeedbackCases: [FeedbackKind] {
+        [.bug, .feature, .other]
+    }
+
     var displayName: String {
         switch self {
         case .bug:

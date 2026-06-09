@@ -83,6 +83,9 @@ function validateFeedback(body) {
     if (!body.training || typeof body.training !== "object" || Array.isArray(body.training)) {
       return { ok: false, error: "training_required" };
     }
+    if (!body.scan || typeof body.scan !== "object" || Array.isArray(body.scan)) {
+      return { ok: false, error: "training_needed" };
+    }
     for (const field of ["manufacturer", "model", "channelSetup"]) {
       if (typeof body.training[field] !== "string" || body.training[field].trim().length === 0) {
         return { ok: false, error: `training_${field}_required` };
