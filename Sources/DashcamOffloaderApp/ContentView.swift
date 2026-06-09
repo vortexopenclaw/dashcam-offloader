@@ -700,8 +700,16 @@ struct CardLearningSheet: View {
                     .textFieldStyle(.roundedBorder)
             }
 
-            TextField("Channel setup, e.g. front/rear/interior or 3CH", text: $channelSetup)
-                .textFieldStyle(.roundedBorder)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Camera channels")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField("Example: 2CH front/rear, 3CH front/rear/interior, or Unknown", text: $channelSetup)
+                    .textFieldStyle(.roundedBorder)
+                Text("Enter the camera views on this card. Use Unknown if you are not sure.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             TextEditor(text: $notes)
                 .font(.body)
