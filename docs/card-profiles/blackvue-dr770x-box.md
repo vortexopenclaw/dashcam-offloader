@@ -2,7 +2,7 @@
 
 ## Status
 
-Seed profile, based first on a real app-submitted Learn Card package, then augmented with private NAS archive clips from `/Volumes/Dashcams/Blackvue DR770X Box` for multi-channel examples and media measurements.
+Seed profile, based first on a real app-submitted Learn Card package, then augmented with private NAS archive clips from `/Volumes/Dashcams/BlackVue DR770X Box` for multi-channel examples and media measurements.
 
 Use `BlackVue DR770X Box` as the public app model name.
 

@@ -43,7 +43,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | O (interior) | driving / parking / impact | H.264 | 1920x1080 | 30 / 29.97 | ~10.0 Mbps | MP4 | `ffprobe` |
 | R (rear) | driving / parking / impact | H.264 | 1920x1080 | 30 / 29.97 | ~10.0 Mbps | MP4 | `ffprobe` |
 
-**Notes:** The real app-submitted Learn Card package confirmed `BlackVue/Record`, `BlackVue/Config`, exact DR770X Box model metadata, and four `NF` clips with an unset-camera-clock style `19991231` date. The NAS archive at `/Volumes/Dashcams/Blackvue DR770X Box` adds 38 direct camera clips in `Driving Clips` and `Parking Clips` for media measurements and 3-channel examples. Observed mode letters are `M`, `N`, `P`, and `I`; observed channel letters are `F`, `O`, and `R`.
+**Notes:** The real app-submitted Learn Card package confirmed `BlackVue/Record`, `BlackVue/Config`, exact DR770X Box model metadata, and four `NF` clips with an unset-camera-clock style `19991231` date. The NAS archive at `/Volumes/Dashcams/BlackVue DR770X Box` adds 38 direct camera clips in `Driving Clips` and `Parking Clips` for media measurements and 3-channel examples. Observed mode letters are `M`, `N`, `P`, and `I`; observed channel letters are `F`, `O`, and `R`.
 
 ## BlackVue DR900S-2CH
 

@@ -1,0 +1,88 @@
+id: cansonic-ultradash-z4-standard
+manufacturer: Cansonic
+model: UltraDash Z4 Standard Edition
+status: app_submission_sampled
+channels: 3
+source_notes:
+  - App training submission c4f6f86d-d32f-4163-9b95-884a3dfae512
+detection:
+  supporting:
+    - folder: VIDEO
+      validation: app_submission_sampled
+    - folder: PROTECTED
+      validation: app_submission_sampled
+    - volume_label: ULTRADASH
+      strength: weak
+folders:
+  - path: VIDEO
+    mode: continuous
+    validation: app_submission_sampled
+  - path: PROTECTED
+    mode: parking_event
+    validation: app_submission_sampled
+    notes: >
+      Sample card uses P-prefixed synchronized L/R/B clips for protected parking
+      events. User notes say the card was configured for motion and impact
+      detection parking mode.
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([LRB])\\.MP4$"
+    applies_to:
+      - VIDEO
+    case_sensitive: true
+    validation: app_submission_sampled
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    channels:
+      L: front
+      R: front_telephoto
+      B: rear
+  - pattern: "^P(\\d{8})_(\\d{6})_([LRB])\\.MP4$"
+    applies_to:
+      - PROTECTED
+    case_sensitive: true
+    validation: app_submission_sampled
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    channels:
+      L: front
+      R: front_telephoto
+      B: rear
+channels:
+  L: front
+  R: front_telephoto
+  B: rear
+parking_mode:
+  observed:
+    - motion_detection
+    - impact_detection
+  notes: >
+    User-submitted app notes identify the sample as motion and impact detection
+    parking mode. The card sample has PROTECTED/P-prefixed clips but no readable
+    config file was present in the app submission.
+video:
+  observed_samples:
+    - channel: L
+      folder: VIDEO
+      codec: h264
+      resolution: 3840x2160
+      fps: 30
+      bitrate_mbps: 31.1
+    - channel: R
+      folder: VIDEO
+      codec: h264
+      resolution: 3840x2160
+      fps: 30
+      bitrate_mbps: 31.1
+    - channel: B
+      folder: VIDEO
+      codec: h264
+      resolution: 2560x1440
+      fps: 30
+      bitrate_mbps: 11.9
+validation:
+  app_submission_sampled: true
+  card_sampled: true
+  notes: >
+    Direct card read at /Volumes/ULTRADASH confirmed 27 clips in VIDEO/ and
+    PROTECTED/, synchronized L/R/B channels, H.264 video, 4K front/telephoto and
+    2K rear samples.

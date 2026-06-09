@@ -37,7 +37,7 @@ struct ContentView: View {
             FeedbackSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $isCardLearningPresented) {
-            CardLearningSheet(viewModel: viewModel)
+            CardLearningSheet(viewModel: viewModel, selectedBrand: activeProfileBrand)
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -323,9 +323,16 @@ struct ContentView: View {
                         compactProfileMenu(
                             title: activeProfileModelTitle,
                             placeholder: "Model",
-                            options: profilesForActiveBrand.map(\.model)
+                            options: profilesForActiveBrand.map(\.model),
+                            footerOptions: ["New model..."]
                         ) { model in
-                            guard let profile = profilesForActiveBrand.first(where: { $0.model == model }) else { return }
+                            if model == "New model..." {
+                                viewModel.selectProfile(.genericNewDashcam)
+                                return
+                            }
+                            guard let profile = profilesForActiveBrand.first(where: { $0.model == model }) else {
+                                return
+                            }
                             selectedProfileBrand = profile.displayManufacturer
                             viewModel.selectProfile(profile)
                         }
@@ -412,12 +419,21 @@ struct ContentView: View {
         title: String?,
         placeholder: String,
         options: [String],
+        footerOptions: [String] = [],
         action: @escaping (String) -> Void
     ) -> some View {
         Menu {
             ForEach(options, id: \.self) { option in
                 Button(option) {
                     action(option)
+                }
+            }
+            if !footerOptions.isEmpty {
+                Divider()
+                ForEach(footerOptions, id: \.self) { option in
+                    Button(option) {
+                        action(option)
+                    }
                 }
             }
         } label: {
@@ -915,6 +931,7 @@ struct FeedbackSheet: View {
 
 struct CardLearningSheet: View {
     @ObservedObject var viewModel: TransferViewModel
+    var selectedBrand: String?
     @Environment(\.dismiss) private var dismiss
     @State private var manufacturer = ""
     @State private var model = ""
@@ -984,6 +1001,8 @@ struct CardLearningSheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .accessibilityLabel("Camera channels")
                     .frame(width: 220, alignment: .leading)
                     .onChange(of: selectedChannelCount) { _, newValue in
                         updateChannelDescription(for: newValue)
@@ -1064,8 +1083,16 @@ struct CardLearningSheet: View {
             channelDescription = inferred.description
         }
 
-        guard let profile = viewModel.selectedProfile,
-              profile.id != DashcamProfile.genericNewDashcam.id else { return }
+        if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let selectedBrand,
+               selectedBrand != DashcamProfile.genericNewDashcam.displayManufacturer {
+                manufacturer = selectedBrand
+            }
+            return
+        }
+
+        guard let profile = viewModel.selectedProfile else { return }
 
         if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             manufacturer = profile.manufacturer

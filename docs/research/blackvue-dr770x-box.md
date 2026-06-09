@@ -20,7 +20,7 @@ The submission also confirmed that stored Learn Card data remains a structural/s
 
 Read-only source:
 
-- `/Volumes/Dashcams/Blackvue DR770X Box`
+- `/Volumes/Dashcams/BlackVue DR770X Box`
 
 Direct camera footage folders:
 

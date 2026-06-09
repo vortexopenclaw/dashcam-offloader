@@ -543,7 +543,7 @@ struct CardScanner {
             lowerPath.contains("/pevent/") ||
             lowerPath.hasPrefix("pevent/")
 
-        if isProtectedFolder && hasParkingChannelSuffix(clip.filename) {
+        if isProtectedFolder && (hasParkingChannelSuffix(clip.filename) || hasParkingFilenamePrefix(clip.filename)) {
             return .impactDetection
         }
 
@@ -560,6 +560,14 @@ struct CardScanner {
             .lastPathComponent
             .uppercased()
         return ["PF", "PI", "PR", "PT"].contains { stem.hasSuffix($0) }
+    }
+
+    private func hasParkingFilenamePrefix(_ filename: String) -> Bool {
+        let stem = URL(fileURLWithPath: filenameCandidates(for: filename).last ?? filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        return stem.range(of: #"^P20\d{6}[_-]?\d{6}"#, options: .regularExpression) != nil
     }
 
     private func inferParkingPatternsByMoment(_ moments: [(key: Int, timestamp: Date, totalBytes: Int64)]) -> [Int: ParkingPattern] {
@@ -1019,6 +1027,10 @@ struct CardScanner {
         let pathTokens = genericTokens(from: relativePath)
         let filenameTokens = genericTokens(from: filenameCandidates(for: filename).last ?? filename)
         let tokens = pathTokens + filenameTokens
+
+        if (tokens.contains("protected") || tokens.contains("ro")) && hasParkingFilenamePrefix(filename) {
+            return "parking_event"
+        }
 
         if tokens.contains("pevent") ||
             tokens.contains("parkingevent") ||

@@ -4,6 +4,17 @@ slug: cansonic-ultradash-z3plus-standard
 channels: 2  # built-in; 3 with optional R1 rear camera
 
 detection:
+  disqualifying:
+    - path: VIDEO
+      must_not_exist: true
+      notes: >
+        Cansonic Z4 cards observed with VIDEO/ at root. Do not let the shared
+        L/R/B filename pattern identify those cards as Z3+.
+    - path: PROTECTED
+      must_not_exist: true
+      notes: >
+        Cansonic Z4 cards observed with PROTECTED/ at root and P-prefixed clips.
+        Z3+ folder structure was not confirmed from a direct card scan.
   high_confidence:
     - method: filename_pattern
       pattern: '^(\d{8})_(\d{6})_([LRB])\.MP4$'

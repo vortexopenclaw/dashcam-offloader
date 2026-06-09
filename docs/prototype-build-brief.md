@@ -126,7 +126,7 @@ GPS handling:
 - If GPS data is embedded inside the video file, copying the video preserves that GPS metadata with the clip.
 - The prototype does not extract embedded GPS data or publish private GPS content.
 
-The prototype should support current seeded profile patterns, including Viofo, Vantrue, Blackvue, Thinkware, Vueroid, 70mai, and Cansonic examples already represented in `profiles/`.
+The prototype should support current seeded profile patterns, including Viofo, Vantrue, BlackVue, Thinkware, Vueroid, 70mai, and Cansonic examples already represented in `profiles/`.
 
 ## Filtering Requirements
 

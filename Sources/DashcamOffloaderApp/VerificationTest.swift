@@ -323,6 +323,42 @@ enum VerificationTest {
                 return false
             }
 
+            let cansonicZ4Source = temp.appendingPathComponent("ULTRADASH", isDirectory: true)
+            try FileManager.default.createDirectory(at: cansonicZ4Source.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: cansonicZ4Source.appendingPathComponent("PROTECTED", isDirectory: true), withIntermediateDirectories: true)
+            for suffix in ["L", "R", "B"] {
+                try Data(repeating: 41, count: 1024).write(
+                    to: cansonicZ4Source.appendingPathComponent("VIDEO/20260609_114113_\(suffix).MP4")
+                )
+                try Data(repeating: 42, count: 1024).write(
+                    to: cansonicZ4Source.appendingPathComponent("PROTECTED/P20260609_114525_\(suffix).MP4")
+                )
+            }
+
+            let cansonicZ4Scan = try scanner.scan(sourceURL: cansonicZ4Source, profiles: profiles)
+            guard cansonicZ4Scan.selectedProfile?.id == "cansonic-ultradash-z4-standard" else {
+                print("VERIFY FAIL: Cansonic Z4 selected \(cansonicZ4Scan.selectedProfile?.id ?? "nil"); candidates \(cansonicZ4Scan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" })")
+                return false
+            }
+            guard !cansonicZ4Scan.candidates.contains(where: { $0.profile.id == "cansonic-ultradash-z3plus-standard" }) else {
+                print("VERIFY FAIL: Cansonic Z3+ should be disqualified by Z4 VIDEO/PROTECTED card layout")
+                return false
+            }
+            let cansonicCategories = Dictionary(grouping: cansonicZ4Scan.clips, by: \.outputCategory).mapValues(\.count)
+            guard cansonicCategories["Driving"] == 3,
+                  cansonicCategories["Parking Events"] == 3 else {
+                print("VERIFY FAIL: Cansonic Z4 output groups wrong: \(cansonicCategories)")
+                return false
+            }
+            guard Set(cansonicZ4Scan.clips.map(\.displayMode)).contains("Parking Impact Detection") else {
+                print("VERIFY FAIL: Cansonic Z4 protected clips were not labeled as parking impact detection")
+                return false
+            }
+            guard Set(cansonicZ4Scan.clips.map(\.channel)) == ["front", "front_telephoto", "rear"] else {
+                print("VERIFY FAIL: Cansonic Z4 channels wrong: \(Set(cansonicZ4Scan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
             var filters = FilterState()
             filters.selectedModes = Set(scan.clips.map(\.mode))
             filters.selectedChannels = Set(scan.clips.map(\.channel))
