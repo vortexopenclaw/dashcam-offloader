@@ -404,10 +404,10 @@ enum VerificationTest {
             }
 
             let thinkwareSource = temp.appendingPathComponent("thinkware-u3000-pro", isDirectory: true)
-            try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent("SETTING", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: thinkwareSource.appendingPathComponent(".TWSYS/PIV", isDirectory: true), withIntermediateDirectories: true)
-            try Data("settings".utf8).write(to: thinkwareSource.appendingPathComponent("SETTING/U3000PRO_Setting.exe"))
+            try Data("Device Name:U3000PRO".utf8).write(to: thinkwareSource.appendingPathComponent("SETTING/lang/ver.dat"))
             try Data(repeating: 6, count: 2048).write(to: thinkwareSource.appendingPathComponent("cont_rec/REC_20260528_175357_F.MP4"))
             try Data(repeating: 7, count: 1024).write(to: thinkwareSource.appendingPathComponent("cont_rec/REC_20260528_175357_R.MP4"))
             try Data(repeating: 8, count: 512).write(to: thinkwareSource.appendingPathComponent(".TWSYS/PIV/PLOC_1_1.JPG"))
@@ -418,20 +418,33 @@ enum VerificationTest {
                 print("VERIFY FAIL: Thinkware U3000 Pro was not top candidate")
                 return false
             }
-            guard Set(thinkwareScan.clips.map(\.channel)) == ["front", "rear"] else {
-                print("VERIFY FAIL: Thinkware channels not mapped to front/rear: \(Set(thinkwareScan.clips.map(\.channel)).sorted())")
+            let thinkwareDownloadableClips = thinkwareScan.clips.filter { $0.excludedReason == nil }
+            guard Set(thinkwareDownloadableClips.map(\.channel)) == ["front", "rear"] else {
+                print("VERIFY FAIL: Thinkware channels not mapped to front/rear: \(Set(thinkwareDownloadableClips.map(\.channel)).sorted())")
                 return false
             }
-            guard Set(thinkwareScan.clips.map(\.displayChannel)) == ["Front", "Rear"] else {
-                print("VERIFY FAIL: Thinkware channel labels wrong: \(Set(thinkwareScan.clips.map(\.displayChannel)).sorted())")
+            guard Set(thinkwareDownloadableClips.map(\.displayChannel)) == ["Front", "Rear"] else {
+                print("VERIFY FAIL: Thinkware channel labels wrong: \(Set(thinkwareDownloadableClips.map(\.displayChannel)).sorted())")
                 return false
             }
-            guard Set(thinkwareScan.clips.map(\.displayMode)) == ["Driving"] else {
-                print("VERIFY FAIL: Thinkware recording type should display as Driving: \(Set(thinkwareScan.clips.map(\.displayMode)).sorted())")
+            guard Set(thinkwareDownloadableClips.map(\.displayMode)) == ["Driving"] else {
+                print("VERIFY FAIL: Thinkware recording type should display as Driving: \(Set(thinkwareDownloadableClips.map(\.displayMode)).sorted())")
                 return false
             }
             guard !thinkwareScan.clips.contains(where: { $0.relativePath.hasPrefix(".TWSYS/") }) else {
                 print("VERIFY FAIL: Thinkware hidden .TWSYS internals were scanned")
+                return false
+            }
+
+            let thinkwareNonProSource = temp.appendingPathComponent("thinkware-u3000", isDirectory: true)
+            try FileManager.default.createDirectory(at: thinkwareNonProSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: thinkwareNonProSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try Data("Device Name:U3000".utf8).write(to: thinkwareNonProSource.appendingPathComponent("SETTING/lang/ver.dat"))
+            try Data(repeating: 10, count: 2048).write(to: thinkwareNonProSource.appendingPathComponent("cont_rec/REC_20260528_180000_F.MP4"))
+
+            let thinkwareNonProScan = try scanner.scan(sourceURL: thinkwareNonProSource, profiles: profiles)
+            guard thinkwareNonProScan.candidates.first?.profile.id == "thinkware-u3000" else {
+                print("VERIFY FAIL: Thinkware U3000 was not top candidate")
                 return false
             }
 

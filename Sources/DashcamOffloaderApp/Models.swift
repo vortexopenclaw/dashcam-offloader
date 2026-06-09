@@ -9,7 +9,8 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var folders: [ProfileFolder]
     var filenamePatterns: [FilenamePattern]
     var channels: [String: String]
-    var highConfidencePaths: [String]
+    var detectionRules: [DetectionRule]
+    var disqualifyingRules: [DetectionRule]
     var osdSpec: OSDSpec?
 
     var displayName: String {
@@ -40,9 +41,20 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
         folders: [],
         filenamePatterns: [],
         channels: [:],
-        highConfidencePaths: [],
+        detectionRules: [],
+        disqualifyingRules: [],
         osdSpec: nil
     )
+}
+
+struct DetectionRule: Hashable, Sendable {
+    var path: String?
+    var contains: String?
+    var exists: Bool?
+    var volumeLabel: String?
+    var mustNotContain: String?
+    var mustNotExist: Bool?
+    var score: Int
 }
 
 /// Describes the burned-in on-screen-display (OSD) model-name signal for a

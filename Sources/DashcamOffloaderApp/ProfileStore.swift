@@ -59,7 +59,8 @@ enum ProfileParser {
         let folders = parseFolders(lines)
         let patterns = parseFilenamePatterns(lines)
         let channels = parseChannels(lines, patterns: patterns)
-        let highConfidencePaths = parseDetectionPaths(lines)
+        let detectionRules = parseDetectionRules(lines)
+        let disqualifyingRules = parseDisqualifyingRules(lines)
         let osdSpec = parseOSDSpec(lines)
 
         guard !folders.isEmpty || !patterns.isEmpty else { return nil }
@@ -73,7 +74,8 @@ enum ProfileParser {
             folders: folders,
             filenamePatterns: patterns,
             channels: channels,
-            highConfidencePaths: highConfidencePaths,
+            detectionRules: detectionRules,
+            disqualifyingRules: disqualifyingRules,
             osdSpec: osdSpec
         )
     }
@@ -240,26 +242,110 @@ enum ProfileParser {
         return channels
     }
 
-    private static func parseDetectionPaths(_ lines: [String]) -> [String] {
+    private static func parseDetectionRules(_ lines: [String]) -> [DetectionRule] {
         guard let detectionRange = topLevelBlock(named: "detection", in: lines) else { return [] }
         let detectionLines = Array(lines[detectionRange])
-        guard let highStart = detectionLines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == "high_confidence:" }) else {
-            return []
+        var rules: [DetectionRule] = []
+        var currentSection: String?
+        var currentRule: DetectionRule?
+
+        func sectionScore(_ section: String?, for rule: DetectionRule) -> Int {
+            if rule.volumeLabel != nil {
+                return section == "supporting" ? 8 : 20
+            }
+            return section == "supporting" ? 18 : 60
         }
 
-        var paths: [String] = []
-        for line in detectionLines[(highStart + 1)...] {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.hasSuffix(":") && !trimmed.hasPrefix("-") && !trimmed.hasPrefix("path:") {
-                break
+        func flush() {
+            guard var rule = currentRule else { return }
+            if rule.score == 0 {
+                rule.score = sectionScore(currentSection, for: rule)
             }
+            if rule.path != nil || rule.volumeLabel != nil {
+                rules.append(rule)
+            }
+            currentRule = nil
+        }
+
+        for line in detectionLines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasSuffix(":") && !trimmed.hasPrefix("-") {
+                flush()
+                currentSection = String(trimmed.dropLast())
+                continue
+            }
+
+            guard currentSection == "high_confidence" || currentSection == "supporting" else {
+                continue
+            }
+
             if trimmed.hasPrefix("- path:") {
-                if let value = cleanValue(String(trimmed.dropFirst("- path:".count))) {
-                    paths.append(value)
-                }
+                flush()
+                currentRule = DetectionRule(
+                    path: cleanValue(String(trimmed.dropFirst("- path:".count))),
+                    contains: nil,
+                    exists: nil,
+                    volumeLabel: nil,
+                    mustNotContain: nil,
+                    mustNotExist: nil,
+                    score: 0
+                )
+            } else if trimmed.hasPrefix("- volume_label:") {
+                flush()
+                currentRule = DetectionRule(
+                    path: nil,
+                    contains: nil,
+                    exists: nil,
+                    volumeLabel: cleanValue(String(trimmed.dropFirst("- volume_label:".count))),
+                    mustNotContain: nil,
+                    mustNotExist: nil,
+                    score: 0
+                )
+            } else if trimmed.hasPrefix("contains:") {
+                currentRule?.contains = cleanValue(String(trimmed.dropFirst("contains:".count)))
+            } else if trimmed.hasPrefix("exists:") {
+                currentRule?.exists = (cleanValue(String(trimmed.dropFirst("exists:".count))) ?? "true") != "false"
             }
         }
-        return paths
+        flush()
+        return rules
+    }
+
+    private static func parseDisqualifyingRules(_ lines: [String]) -> [DetectionRule] {
+        guard let detectionRange = topLevelBlock(named: "detection", in: lines) else { return [] }
+        let detectionLines = Array(lines[detectionRange])
+        var rules: [DetectionRule] = []
+        var currentRule: DetectionRule?
+
+        func flush() {
+            guard let rule = currentRule else { return }
+            if rule.path != nil && (rule.mustNotContain != nil || rule.mustNotExist == true) {
+                rules.append(rule)
+            }
+            currentRule = nil
+        }
+
+        for line in detectionLines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("- path:") {
+                flush()
+                currentRule = DetectionRule(
+                    path: cleanValue(String(trimmed.dropFirst("- path:".count))),
+                    contains: nil,
+                    exists: nil,
+                    volumeLabel: nil,
+                    mustNotContain: nil,
+                    mustNotExist: nil,
+                    score: 0
+                )
+            } else if trimmed.hasPrefix("must_not_contain:") {
+                currentRule?.mustNotContain = cleanValue(String(trimmed.dropFirst("must_not_contain:".count)))
+            } else if trimmed.hasPrefix("must_not_exist:") {
+                currentRule?.mustNotExist = (cleanValue(String(trimmed.dropFirst("must_not_exist:".count))) ?? "true") != "false"
+            }
+        }
+        flush()
+        return rules
     }
 
     /// Parses an `osd_ocr` detection entry from `detection.high_confidence`.

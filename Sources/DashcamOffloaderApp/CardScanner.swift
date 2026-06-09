@@ -666,6 +666,10 @@ struct CardScanner {
             var score = 0
             var evidence: [String] = []
 
+            if profile.disqualifyingRules.contains(where: { disqualifyingRuleMatches($0, sourceURL: sourceURL) }) {
+                return nil
+            }
+
             for folder in profile.folders {
                 let folderURL = sourceURL.appendingPathComponent(folder.path)
                 var isDirectory: ObjCBool = false
@@ -675,16 +679,21 @@ struct CardScanner {
                 }
             }
 
-            for path in profile.highConfidencePaths {
-                let evidenceURL = sourceURL.appendingPathComponent(path)
-                if fileManager.fileExists(atPath: evidenceURL.path) {
-                    score += 60
-                    evidence.append("model evidence \(path)")
+            for rule in profile.detectionRules {
+                if detectionRuleMatches(rule, sourceURL: sourceURL) {
+                    score += rule.score
+                    if let path = rule.path, let contains = rule.contains {
+                        evidence.append("model text \(contains) in \(path)")
+                    } else if let path = rule.path {
+                        evidence.append("model evidence \(path)")
+                    } else if let volumeLabel = rule.volumeLabel {
+                        evidence.append("volume label \(volumeLabel)")
+                    }
                 }
             }
 
             if volumeLabel(sourceURL.lastPathComponent, matchesProfile: profile) {
-                score += 20
+                score += 10
                 evidence.append("volume label \(sourceURL.lastPathComponent)")
             }
 
@@ -714,6 +723,51 @@ struct CardScanner {
             if lhs.score != rhs.score { return lhs.score > rhs.score }
             return lhs.profile.displayName < rhs.profile.displayName
         }
+    }
+
+    private func detectionRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {
+        if let volumeLabel = rule.volumeLabel {
+            return compactModelToken(sourceURL.lastPathComponent) == compactModelToken(volumeLabel)
+        }
+
+        guard let path = rule.path else { return false }
+        let evidenceURL = sourceURL.appendingPathComponent(path)
+        guard fileManager.fileExists(atPath: evidenceURL.path) else { return false }
+
+        if rule.exists == true || rule.contains == nil {
+            return true
+        }
+
+        guard let contains = rule.contains else { return false }
+        return evidenceText(at: evidenceURL)?.localizedCaseInsensitiveContains(contains) == true
+    }
+
+    private func disqualifyingRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {
+        guard let path = rule.path else { return false }
+        let evidenceURL = sourceURL.appendingPathComponent(path)
+        let exists = fileManager.fileExists(atPath: evidenceURL.path)
+
+        if rule.mustNotExist == true, exists {
+            return true
+        }
+        if let mustNotContain = rule.mustNotContain,
+           exists,
+           evidenceText(at: evidenceURL)?.localizedCaseInsensitiveContains(mustNotContain) == true {
+            return true
+        }
+
+        return false
+    }
+
+    private func evidenceText(at url: URL) -> String? {
+        guard let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+              let fileSize = values.fileSize,
+              fileSize <= 1_000_000,
+              let data = try? Data(contentsOf: url) else {
+            return nil
+        }
+
+        return String(decoding: data, as: UTF8.self)
     }
 
     private func isCandidateExtension(_ ext: String) -> Bool {
