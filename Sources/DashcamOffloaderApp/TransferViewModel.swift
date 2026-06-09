@@ -34,6 +34,7 @@ final class TransferViewModel: ObservableObject {
     private let feedbackService = FeedbackService.production
     private var workspaceNotificationTokens: [NSObjectProtocol] = []
     private var didStartInitialSourceDiscovery = false
+    private var canRunAutomaticSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
@@ -112,7 +113,7 @@ final class TransferViewModel: ObservableObject {
                 .filter { !ignored.contains($0) }
         )
 
-        let preferred = ["front", "interior", "rear", "telephoto"]
+        let preferred = ["front", "rear", "left", "right", "interior", "telephoto"]
         return labels.sorted { lhs, rhs in
             let lhsIndex = preferred.firstIndex(of: lhs) ?? preferred.count
             let rhsIndex = preferred.firstIndex(of: rhs) ?? preferred.count
@@ -137,6 +138,10 @@ final class TransferViewModel: ObservableObject {
             return "interior"
         case "r", "rear", "back", "parking_rear", "pr":
             return "rear"
+        case "l", "left", "left_side", "parking_left", "pl":
+            return "left"
+        case "right", "right_side", "parking_right":
+            return "right"
         case "t", "telephoto", "parking_telephoto", "pt":
             return "telephoto"
         default:
@@ -164,10 +169,14 @@ final class TransferViewModel: ObservableObject {
         case 3:
             return "Front / interior / rear"
         case 4:
-            return "Front / interior / rear / telephoto"
+            return "Front / rear / left / right"
         default:
             return ""
         }
+    }
+
+    func defaultLearningChannelDescription(for count: Int) -> String {
+        defaultChannelDescription(for: count)
     }
 
     func refreshSources(userInitiated: Bool = false) {
@@ -205,9 +214,18 @@ final class TransferViewModel: ObservableObject {
         guard !didStartInitialSourceDiscovery else { return }
         didStartInitialSourceDiscovery = true
         Task { @MainActor [weak self] in
-            await Task.yield()
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            self?.canRunAutomaticSourceDiscovery = true
             self?.refreshSources()
         }
+    }
+
+    func refreshSourcesAfterActivation() {
+        guard canRunAutomaticSourceDiscovery else {
+            startInitialSourceDiscovery()
+            return
+        }
+        refreshSources()
     }
 
     private func startVolumeObservation() {
@@ -224,7 +242,7 @@ final class TransferViewModel: ObservableObject {
                 queue: .main
             ) { [weak self] _ in
                 Task { @MainActor [weak self] in
-                    self?.refreshSources()
+                    self?.refreshSourcesAfterActivation()
                 }
             }
         }

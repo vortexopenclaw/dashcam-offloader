@@ -1,10 +1,11 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel: TransferViewModel
     @State private var isFeedbackPresented = false
-    @State private var isCardLearningPresented = false
+    @State private var cardLearningWindow: NSWindow?
     @State private var showDownloadOptions = false
     @State private var showDownloadFilters = false
     @State private var selectedProfileBrand: String?
@@ -36,12 +37,9 @@ struct ContentView: View {
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
         }
-        .sheet(isPresented: $isCardLearningPresented) {
-            CardLearningSheet(viewModel: viewModel, selectedBrand: activeProfileBrand)
-        }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                viewModel.refreshSources()
+                viewModel.refreshSourcesAfterActivation()
             }
         }
         .task {
@@ -355,7 +353,7 @@ struct ContentView: View {
                             }
                             Spacer()
                             Button {
-                                isCardLearningPresented = true
+                                presentCardLearningWindow()
                             } label: {
                                 Label("Submit Learning Data", systemImage: "graduationcap")
                             }
@@ -402,7 +400,7 @@ struct ContentView: View {
         if let selectedProfile = viewModel.selectedProfile {
             return selectedProfile.displayManufacturer
         }
-        return viewModel.profilesByBrand.first?.brand
+        return nil
     }
 
     private var profilesForActiveBrand: [DashcamProfile] {
@@ -449,6 +447,34 @@ struct ContentView: View {
             .fixedSize(horizontal: true, vertical: false)
         }
         .menuStyle(.borderlessButton)
+    }
+
+    private func presentCardLearningWindow() {
+        if let cardLearningWindow, cardLearningWindow.isVisible {
+            cardLearningWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 660, height: 650),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Improve Camera Support"
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.contentView = NSHostingView(rootView: CardLearningSheet(
+            viewModel: viewModel,
+            selectedBrand: activeProfileBrand,
+            onClose: { [weak window] in
+                window?.close()
+            }
+        ))
+        cardLearningWindow = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     private var shouldShowLearnCardPrompt: Bool {
@@ -935,6 +961,7 @@ struct FeedbackSheet: View {
 struct CardLearningSheet: View {
     @ObservedObject var viewModel: TransferViewModel
     var selectedBrand: String?
+    var onClose: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var manufacturer = ""
     @State private var model = ""
@@ -947,12 +974,20 @@ struct CardLearningSheet: View {
         viewModel.scanSummary.hasScan &&
             !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            !channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !viewModel.isSubmittingFeedback
     }
 
     private var channelSetup: String {
-        return "\(selectedChannelCount)CH: \(channelDescription.trimmingCharacters(in: .whitespacesAndNewlines))"
+        let description = channelDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        return "\(selectedChannelCount)CH: \(description.isEmpty ? channelPlaceholder : description)"
+    }
+
+    private var channelPlaceholder: String {
+        let inferred = viewModel.inferredLearningChannelSetup
+        if inferred.count == selectedChannelCount, !inferred.description.isEmpty {
+            return inferred.description
+        }
+        return viewModel.defaultLearningChannelDescription(for: selectedChannelCount)
     }
 
     var body: some View {
@@ -962,7 +997,7 @@ struct CardLearningSheet: View {
                     .font(.title2.bold())
                 Spacer()
                 Button {
-                    dismiss()
+                    close()
                 } label: {
                     Image(systemName: "xmark")
                 }
@@ -1007,11 +1042,8 @@ struct CardLearningSheet: View {
                     .labelsHidden()
                     .accessibilityLabel("Camera channels")
                     .frame(width: 220, alignment: .leading)
-                    .onChange(of: selectedChannelCount) { _, newValue in
-                        updateChannelDescription(for: newValue)
-                    }
 
-                    TextField("Front / rear", text: $channelDescription)
+                    TextField(channelPlaceholder, text: $channelDescription)
                         .textFieldStyle(.roundedBorder)
                 }
                 Text("Choose the number of camera views, then describe them however the camera uses them.")
@@ -1060,7 +1092,7 @@ struct CardLearningSheet: View {
             HStack {
                 Spacer()
                 Button("Cancel") {
-                    dismiss()
+                    close()
                 }
                 Button {
                     submitLearningPackage()
@@ -1082,9 +1114,6 @@ struct CardLearningSheet: View {
     private func prefillFromScanIfNeeded() {
         let inferred = viewModel.inferredLearningChannelSetup
         selectedChannelCount = inferred.count
-        if channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            channelDescription = inferred.description
-        }
 
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -1105,22 +1134,11 @@ struct CardLearningSheet: View {
         }
     }
 
-    private func updateChannelDescription(for count: Int) {
-        guard channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return
-        }
-
-        switch count {
-        case 1:
-            channelDescription = "Front"
-        case 2:
-            channelDescription = "Front / rear"
-        case 3:
-            channelDescription = "Front / interior / rear"
-        case 4:
-            channelDescription = "Front / interior / rear / telephoto"
-        default:
-            channelDescription = ""
+    private func close() {
+        if let onClose {
+            onClose()
+        } else {
+            dismiss()
         }
     }
 
@@ -1148,7 +1166,7 @@ struct CardLearningSheet: View {
             training: training,
             successMessage: "Learning package submitted successfully.",
             onSuccess: {
-                dismiss()
+                close()
             }
         )
     }

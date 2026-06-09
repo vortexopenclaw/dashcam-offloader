@@ -154,6 +154,74 @@ enum VerificationTest {
                 return false
             }
 
+            let botslabSource = temp.appendingPathComponent("NO NAME", isDirectory: true)
+            for folder in [
+                "MISC",
+                "360CARDVR/REC/FRONT",
+                "360CARDVR/REC/REAR",
+                "360CARDVR/REC/LEFT",
+                "360CARDVR/REC/RIGHT",
+                "360CARDVR/PARKING/FRONT",
+                "360CARDVR/PARKING/REAR",
+                "360CARDVR/PARKING/LEFT",
+                "360CARDVR/PARKING/RIGHT"
+            ] {
+                try FileManager.default.createDirectory(at: botslabSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            try Data().write(to: botslabSource.appendingPathComponent("MISC/G980HMCN5291.TXT"))
+            let botslabSamples: [(String, String)] = [
+                ("360CARDVR/REC/FRONT", "AA"),
+                ("360CARDVR/REC/REAR", "AB"),
+                ("360CARDVR/REC/LEFT", "AC"),
+                ("360CARDVR/REC/RIGHT", "AD"),
+                ("360CARDVR/PARKING/FRONT", "AA"),
+                ("360CARDVR/PARKING/REAR", "AB"),
+                ("360CARDVR/PARKING/LEFT", "AC"),
+                ("360CARDVR/PARKING/RIGHT", "AD")
+            ]
+            for (folder, suffix) in botslabSamples {
+                try Data(repeating: 31, count: 2048).write(
+                    to: botslabSource.appendingPathComponent("\(folder)/20260609135005_000001\(suffix).MP4")
+                )
+            }
+            guard scanner.shouldShowMountedSource(botslabSource, showAllVolumes: false) else {
+                print("VERIFY FAIL: Botslab-style 360CARDVR card was filtered from sources")
+                return false
+            }
+            let botslabScan = try scanner.scan(sourceURL: botslabSource, profiles: profiles)
+            guard botslabScan.selectedProfile?.id == "botslab-g980h" else {
+                print("VERIFY FAIL: Botslab G980H fixture selected \(botslabScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard Set(botslabScan.clips.map(\.channel)) == ["front", "rear", "left", "right"] else {
+                print("VERIFY FAIL: Botslab channels wrong: \(Set(botslabScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            guard botslabScan.clips.contains(where: { $0.channel == "left" && $0.outputCategory == "Driving" }),
+                  botslabScan.clips.contains(where: { $0.channel == "right" && $0.isParkingFootage }) else {
+                print("VERIFY FAIL: Botslab mode/channel classification wrong")
+                return false
+            }
+
+            let unknown360Source = temp.appendingPathComponent("unknown-360cardvr", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknown360Source.appendingPathComponent("360CARDVR/REC/FRONT", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: unknown360Source.appendingPathComponent("360CARDVR/REC/LEFT", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 32, count: 2048).write(to: unknown360Source.appendingPathComponent("360CARDVR/REC/FRONT/20260609135005_000001AA.MP4"))
+            try Data(repeating: 33, count: 2048).write(to: unknown360Source.appendingPathComponent("360CARDVR/REC/LEFT/20260609135005_000002AC.MP4"))
+            guard scanner.shouldShowMountedSource(unknown360Source, showAllVolumes: false) else {
+                print("VERIFY FAIL: unknown 360CARDVR card was filtered from sources")
+                return false
+            }
+            let unknown360Scan = try scanner.scan(sourceURL: unknown360Source, profiles: profiles)
+            guard unknown360Scan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: unknown 360CARDVR card should stay generic, got \(unknown360Scan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard Set(unknown360Scan.clips.map(\.channel)) == ["front", "left"] else {
+                print("VERIFY FAIL: unknown 360CARDVR generic channels wrong: \(Set(unknown360Scan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
             let unknownSiblingSource = temp.appendingPathComponent("unknown-sibling-family", isDirectory: true)
             try FileManager.default.createDirectory(at: unknownSiblingSource.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
             try Data(repeating: 18, count: 1024).write(to: unknownSiblingSource.appendingPathComponent("VIDEO/20260609_141500_F.MP4"))

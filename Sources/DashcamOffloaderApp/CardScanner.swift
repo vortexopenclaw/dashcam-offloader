@@ -54,7 +54,7 @@ struct CardScanner {
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap { profileSelectionIssue($0, allCandidates: candidates) }
         let identifiedCamera = identifyCamera(from: candidates, selectedProfile: nil)
-        let selectedProfile: DashcamProfile?
+        var selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
             selectedProfile = topCandidate.profile
         } else if topCandidate != nil {
@@ -62,6 +62,11 @@ struct CardScanner {
         } else {
             selectedProfile = nil
         }
+
+        if selectedProfile == nil, hasCandidateMedia(in: allFiles) {
+            selectedProfile = DashcamProfile.genericNewDashcam
+        }
+
         let rawClips: [ClipItem]
         if let selectedProfile, selectedProfile.id != DashcamProfile.genericNewDashcam.id {
             rawClips = classify(files: allFiles, sourceURL: sourceURL, profile: selectedProfile)
@@ -138,6 +143,10 @@ struct CardScanner {
             return "Top candidate matched filename structure, but nearby \(candidate.profile.displayManufacturer) sibling profiles also matched and no explicit model text or OSD proof was found. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
         }
 
+        if hasFilenameEvidence, requiresExplicitModelEvidence(candidate.profile) {
+            return "Top candidate matched a supported card layout, but this profile requires exact model evidence. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
+        }
+
         if hasFilenameEvidence {
             return nil
         }
@@ -151,6 +160,10 @@ struct CardScanner {
                 evidence.hasPrefix("model evidence ") ||
                 evidence.hasPrefix("OSD OCR match ")
         }
+    }
+
+    private func requiresExplicitModelEvidence(_ profile: DashcamProfile) -> Bool {
+        ["botslab-g980h"].contains(profile.id)
     }
 
     private func hasSameManufacturerAmbiguity(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> Bool {
@@ -893,6 +906,7 @@ struct CardScanner {
             "setting",
             "settings",
             "sos_rec",
+            "360cardvr",
             "user"
         ]
 
@@ -905,7 +919,7 @@ struct CardScanner {
             }
         }
 
-        return hasShallowMediaFile(in: url, depth: 0, maxDepth: 2, remainingBudget: 400)
+        return hasShallowMediaFile(in: url, depth: 0, maxDepth: 3, remainingBudget: 600)
     }
 
     private func hasShallowMediaFile(in url: URL, depth: Int, maxDepth: Int, remainingBudget: Int) -> Bool {
@@ -1099,6 +1113,13 @@ struct CardScanner {
             ClipItem.gpsExtensions.contains(ext)
     }
 
+    private func hasCandidateMedia(in files: [URL]) -> Bool {
+        files.contains { fileURL in
+            let ext = fileURL.pathExtension.lowercased()
+            return ClipItem.videoExtensions.contains(ext) || ClipItem.photoExtensions.contains(ext)
+        }
+    }
+
     private func filenameCandidates(for filename: String) -> [String] {
         let url = URL(fileURLWithPath: filename)
         let ext = url.pathExtension
@@ -1252,6 +1273,12 @@ struct CardScanner {
         if tokens.contains("rear") || tokens.contains("back") || tokens.contains("rearcam") || tokens.contains("rearcamera") {
             return "rear"
         }
+        if tokens.contains("left") || tokens.contains("leftcam") || tokens.contains("leftcamera") {
+            return "left"
+        }
+        if tokens.contains("right") || tokens.contains("rightcam") || tokens.contains("rightcamera") {
+            return "right"
+        }
         if tokens.contains("interior") || tokens.contains("inside") || tokens.contains("cabin") || tokens.contains("incabin") {
             return "interior"
         }
@@ -1272,6 +1299,22 @@ struct CardScanner {
                 return "rear"
             case "I":
                 return "interior"
+            default:
+                break
+            }
+        }
+
+        if compactStem.range(of: #"20\d{18}A[A-D]$"#, options: .regularExpression) != nil {
+            let suffix = String(compactStem.suffix(2))
+            switch suffix {
+            case "AA":
+                return "front"
+            case "AB":
+                return "rear"
+            case "AC":
+                return "left"
+            case "AD":
+                return "right"
             default:
                 break
             }

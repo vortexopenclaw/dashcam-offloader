@@ -1,0 +1,92 @@
+id: botslab-g980h
+manufacturer: Botslab
+model: G980H
+status: app_submission_sampled
+channels: 4
+source_notes:
+  - App training submission 9d0bd1cb-7593-4276-9b09-2cd793d57dee
+  - >
+    First app submission came from build 0.1.0 1 afd33a4 and was correctly
+    treated as no profile match, but source filtering missed the card unless
+    all volumes were shown. The card was tested in 4CH mode with driving footage
+    and sentry-mode parking footage.
+detection:
+  high_confidence:
+    - path: MISC/G980HMCN5291.TXT
+      exists: true
+  supporting:
+    - folder: 360CARDVR
+    - folder: 360CARDVR/REC
+    - folder: 360CARDVR/PARKING
+folders:
+  - path: 360CARDVR/REC
+    mode: continuous
+    validation: app_submission_sampled
+  - path: 360CARDVR/PARKING
+    mode: parking_event
+    validation: app_submission_sampled
+    notes: >
+      User notes identify the sample as sentry-mode parking footage with motion
+      and impact events. Generic parking-pattern inference should split
+      continuous/low-bitrate and motion/event-style parking when the timing and
+      size patterns support it.
+  - path: 360CARDVR/GPS
+    mode: gps
+    import: false
+    validation: app_submission_sampled
+filename_patterns:
+  - pattern: "^(\\d{8})(\\d{6})_(\\d{6})(A[A-D])\\.MP4$"
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    channels:
+      AA: front
+      AB: rear
+      AC: left
+      AD: right
+channels:
+  AA: front
+  AB: rear
+  AC: left
+  AD: right
+parking_mode:
+  observed:
+    - sentry_motion_or_impact
+    - continuous_low_bitrate
+  notes: >
+    The first observed 4CH card had REC driving clips plus PARKING clips that
+    the app split into Parking Continuous / Low Bitrate and Parking Motion
+    Detection groups. Confirm exact parking-mode naming from future config or
+    longer parking samples when available.
+video:
+  observed_samples:
+    - folder: 360CARDVR/REC
+      channel: AA
+      position: front
+      codec: h264
+      resolution: 2880x1620
+      fps: 25
+      notes: App-submitted video spec sample from 4CH mode.
+    - folder: 360CARDVR/REC
+      channel: AB
+      position: rear
+      codec: h264
+      resolution: 1920x1080
+      fps: 25
+      notes: App-submitted video spec sample from 4CH mode.
+    - folder: 360CARDVR/REC
+      channel: AC
+      position: left
+      codec: h264
+      resolution: 1920x1080
+      fps: 25
+      notes: App-submitted video spec sample from 4CH mode.
+    - folder: 360CARDVR/REC
+      channel: AD
+      position: right
+      codec: h264
+      resolution: 1920x1080
+      fps: 25
+      notes: App-submitted video spec sample from 4CH mode.
+validation:
+  app_submission_sampled: true
+  card_sampled: true

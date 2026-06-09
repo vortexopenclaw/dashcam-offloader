@@ -355,6 +355,12 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             return "Rear"
         case "interior":
             return "Interior"
+        case "left":
+            return "Left"
+        case "right":
+            return "Right"
+        case "front_telephoto":
+            return "Front Telephoto"
         default:
             break
         }
