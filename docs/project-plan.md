@@ -37,7 +37,7 @@
 - Allow manual source selection.
 - Allow user-selected destination folders.
 - Display detected camera and confidence evidence.
-- Provide filters for camera channel, recording mode, date range, and protected/event clips.
+- Provide filters for camera channel, recording mode, date range, and protected/event clips, including user-saved emergency clips flagged by folder, filename, or file-level read-only protection.
 - Run multiple card copy jobs at once.
 
 ## Phase 5 - Guided New-Camera Intake

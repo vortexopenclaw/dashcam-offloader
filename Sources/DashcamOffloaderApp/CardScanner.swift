@@ -340,6 +340,10 @@ struct CardScanner {
                 }
             }
 
+            if isFileProtectedByReadOnlyAttribute(fileURL, extensionLowercased: ext) {
+                mode = protectedMode(from: mode)
+            }
+
             let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
 
             return ClipItem(
@@ -383,6 +387,10 @@ struct CardScanner {
                 if ext != "dat" {
                     excludedReason = "GPS/settings sidecar excluded by default"
                 }
+            }
+
+            if isFileProtectedByReadOnlyAttribute(fileURL, extensionLowercased: ext) {
+                mode = protectedMode(from: mode)
             }
 
             let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
@@ -840,6 +848,26 @@ struct CardScanner {
         }
 
         return "continuous"
+    }
+
+    private func isFileProtectedByReadOnlyAttribute(_ fileURL: URL, extensionLowercased: String) -> Bool {
+        guard ["mp4", "mov", "avi", "mkv"].contains(extensionLowercased) else { return false }
+        guard let permissions = try? fileManager
+            .attributesOfItem(atPath: fileURL.path)[.posixPermissions] as? NSNumber else {
+            return false
+        }
+        return permissions.intValue & 0o222 == 0
+    }
+
+    private func protectedMode(from mode: String) -> String {
+        let normalized = mode.lowercased()
+        if normalized == "gps" || normalized == "photo" || normalized.contains("bookmark") {
+            return mode
+        }
+        if normalized.contains("parking") {
+            return "parking_protected"
+        }
+        return "protected"
     }
 
     private func genericChannel(relativePath: String, filename: String) -> String {
