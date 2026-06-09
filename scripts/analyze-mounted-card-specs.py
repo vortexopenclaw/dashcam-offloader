@@ -205,7 +205,7 @@ def parse_vueroid(root: Path, path: Path) -> ClipInfo | None:
 def parse_thinkware(root: Path, path: Path) -> ClipInfo | None:
     rel = path.relative_to(root).as_posix()
     match = re.match(
-        r"(?P<prefix>[A-Z]+)_\d{8}_\d{6}_(?P<channel>F|R)(?:_[A-Z]+)?\.(?:MP4|mp4)$",
+        r"(?P<prefix>[A-Z]+)_\d{8}_\d{6}_(?P<channel>F|R|I)(?:_[A-Z]+)?\.(?:MP4|mp4)$",
         path.name,
     )
     if not match:

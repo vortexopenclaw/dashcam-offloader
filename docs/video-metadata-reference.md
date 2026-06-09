@@ -102,6 +102,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 |---|---|---|---|---|---|---|---|
 | F (front) | driving | HEVC | 3840x2160 | 30 | ~30.0 Mbps | MP4 | `ffprobe` |
 | R (rear) | driving | HEVC | 2560x1440 | 30 | ~10.0 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving / in-cabin | H.264 | 1920x1080 | 30 | ~8.0 Mbps | MP4 | `ffprobe` |
 | F | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0 Mbps | MP4 | `ffprobe` |
 | R | parking (motion) | HEVC | 2560x1440 | 30 | ~5.0-6.4 Mbps | MP4 | `ffprobe` |
 | F | parking (event) | HEVC | 3840x2160 | 30 | ~12.0 Mbps | MP4 | `ffprobe` |
@@ -109,7 +110,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The sampled card contains REC, MOT, MAN, and PAK clips. Parking event clips are short and keep 4K resolution.
 
-**Mounted-card update 2026-06-08:** `/Volumes/U3000Pro` currently confirms continuous driving at 4K30 front and 2K30 rear. Parking/event samples on this card are 15 fps: `parking_rec` front measured 4K15 at ~11.9 Mbps, rear measured 2K15 at ~5.0 Mbps; `motion_timelapse_rec` measured 2K15 at ~5.0 Mbps on both channels. Hidden `.parking_rec_sec` `PAS` files measured 720p15 at ~0.6 Mbps and should be treated as secondary/internal parking evidence, not normal user footage.
+**Mounted-card update 2026-06-08:** `/Volumes/U3000Pro` currently confirms continuous driving at 4K30 front and 2K30 rear. The 3CH card with Interior IR cabin camera enabled adds `incabin_rec/EXT_YYYYMMDD_HHMMSS_I.MP4` clips at 1080p30 H.264, about 8 Mbps stream bitrate. Parking/event samples on this card are 15 fps: `parking_rec` front measured 4K15 at ~11.9 Mbps, rear measured 2K15 at ~5.0 Mbps; `motion_timelapse_rec` measured 2K15 at ~5.0 Mbps on both channels. Hidden `.parking_rec_sec` `PAS` files measured 720p15 at ~0.6 Mbps and should be treated as secondary/internal parking evidence, not normal user footage.
 
 ## Thinkware U3000
 
