@@ -286,6 +286,43 @@ enum VerificationTest {
                 return false
             }
 
+            let a329tSource = temp.appendingPathComponent("A329T", isDirectory: true)
+            try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Movie/Parking", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Movie/RO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Photo", isDirectory: true), withIntermediateDirectories: true)
+            for index in 1...30 {
+                let sequence = String(format: "%06d", 314000 + index)
+                let second = String(format: "%02d", index % 60)
+                for suffix in ["F", "R", "T"] {
+                    try Data(repeating: UInt8(index), count: 1024).write(
+                        to: a329tSource.appendingPathComponent("DCIM/Movie/2026_0609_1022\(second)_\(sequence)\(suffix).MP4")
+                    )
+                }
+                for suffix in ["PF", "PR", "PT"] {
+                    try Data(repeating: UInt8(index), count: 512).write(
+                        to: a329tSource.appendingPathComponent("DCIM/Movie/Parking/2026_0609_1122\(second)_\(sequence)\(suffix).MP4")
+                    )
+                    try Data(repeating: UInt8(index), count: 256).write(
+                        to: a329tSource.appendingPathComponent("DCIM/Movie/RO/2026_0609_1222\(second)_\(sequence)\(suffix).MP4")
+                    )
+                }
+                for suffix in ["F", "R", "T", "PF", "PR", "PT"] {
+                    try Data(repeating: UInt8(index), count: 128).write(
+                        to: a329tSource.appendingPathComponent("DCIM/Photo/2026_0609_1322\(second)_\(sequence)\(suffix).JPG")
+                    )
+                }
+            }
+
+            let a329tScan = try scanner.scan(sourceURL: a329tSource, profiles: profiles)
+            guard a329tScan.candidates.first?.profile.id == "viofo-a329t" else {
+                print("VERIFY FAIL: A329T-specific T/PT evidence did not beat A229 siblings: \(a329tScan.candidates.prefix(4).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" })")
+                return false
+            }
+            guard a329tScan.selectedProfile?.id == "viofo-a329t" else {
+                print("VERIFY FAIL: A329T fixture selected \(a329tScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+
             var filters = FilterState()
             filters.selectedModes = Set(scan.clips.map(\.mode))
             filters.selectedChannels = Set(scan.clips.map(\.channel))

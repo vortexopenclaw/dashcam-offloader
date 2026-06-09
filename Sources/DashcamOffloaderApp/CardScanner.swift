@@ -826,7 +826,8 @@ struct CardScanner {
                 evidence.append("volume label \(sourceURL.lastPathComponent)")
             }
 
-            let sampleNames = allFiles.prefix(600).map(\.lastPathComponent)
+            let sampleNames = representativeDetectionFilenames(from: allFiles)
+            var totalFilenameMatches = 0
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
                 let matchCount = sampleNames.reduce(0) { count, name in
@@ -836,22 +837,45 @@ struct CardScanner {
                     }
                     return count + (matched ? 1 : 0)
                 }
-                if matchCount > 0 {
-                    score += min(60, 15 + matchCount)
-                    evidence.append("filename pattern match (\(matchCount))")
-                    break
-                }
+                totalFilenameMatches += matchCount
+            }
+            if totalFilenameMatches > 0 {
+                score += min(90, 15 + totalFilenameMatches)
+                evidence.append("filename pattern match (\(totalFilenameMatches))")
             }
 
             guard score > 0 else { return nil }
             let confidence = confidenceLevel(for: score)
 
-            return DetectionCandidate(profile: profile, score: score, confidence: confidence, evidence: Array(evidence.prefix(5)))
+            return DetectionCandidate(profile: profile, score: score, confidence: confidence, evidence: Array(evidence.prefix(8)))
         }
         .sorted { lhs, rhs in
             if lhs.score != rhs.score { return lhs.score > rhs.score }
             return lhs.profile.displayName < rhs.profile.displayName
         }
+    }
+
+    private func representativeDetectionFilenames(from allFiles: [URL]) -> [String] {
+        let candidateFiles = allFiles.filter { isCandidateExtension($0.pathExtension.lowercased()) }
+        guard candidateFiles.count > 2_000 else {
+            return candidateFiles.map(\.lastPathComponent)
+        }
+
+        var result: [String] = []
+        var seen = Set<String>()
+        let groupedByFolder = Dictionary(grouping: candidateFiles) { fileURL in
+            fileURL.deletingLastPathComponent().path
+        }
+        for folder in groupedByFolder.keys.sorted() {
+            for fileURL in groupedByFolder[folder, default: []].prefix(250) {
+                let name = fileURL.lastPathComponent
+                if seen.insert(name).inserted {
+                    result.append(name)
+                }
+            }
+        }
+
+        return Array(result.prefix(5_000))
     }
 
     private func detectionRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {

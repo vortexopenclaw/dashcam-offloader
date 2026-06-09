@@ -1268,7 +1268,8 @@ final class TransferViewModel: ObservableObject {
         let bundle = Bundle.main
         let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
         let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
-        return [version, build].compactMap { value in
+        let commit = bundle.object(forInfoDictionaryKey: "DashcamOffloaderBuildCommit") as? String
+        return [version, build, commit].compactMap { value in
             guard let value, !value.isEmpty else { return nil }
             return value
         }.joined(separator: " ")

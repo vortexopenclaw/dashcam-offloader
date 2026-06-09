@@ -9,6 +9,7 @@ APP_DIR="$ROOT_DIR/build/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
+BUILD_COMMIT="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 
 cd "$ROOT_DIR"
 
@@ -22,7 +23,7 @@ cp "$BIN_PATH" "$MACOS_DIR/$PRODUCT_NAME"
 cp -R "$ROOT_DIR/profiles" "$RESOURCES_DIR/Profiles"
 cp "$ROOT_DIR/assets/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
-cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
+cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -45,6 +46,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <string>0.1.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
+  <key>DashcamOffloaderBuildCommit</key>
+  <string>$BUILD_COMMIT</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSHighResolutionCapable</key>
