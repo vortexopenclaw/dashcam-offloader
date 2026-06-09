@@ -126,6 +126,7 @@ enum ProfileParser {
     }
 
     private static func parseFilenamePatterns(_ lines: [String]) -> [FilenamePattern] {
+        let topLevelModes = parseTopLevelMap(named: "modes", in: lines)
         var patterns: [FilenamePattern] = []
         var inFilenameSection = false
         var currentPattern: String?
@@ -137,10 +138,12 @@ enum ProfileParser {
         func flush() {
             guard let raw = currentPattern else { return }
             let normalized = normalizeRegex(raw)
+            var mergedModeMap = topLevelModes
+            mergedModeMap.merge(modeMap) { _, patternValue in patternValue }
             patterns.append(FilenamePattern(
                 rawPattern: raw,
                 regexPattern: normalized,
-                modeMap: modeMap,
+                modeMap: mergedModeMap,
                 channelMap: channelMap,
                 timestampFormat: timestampFormat
             ))
@@ -187,6 +190,17 @@ enum ProfileParser {
         flush()
 
         return patterns
+    }
+
+    private static func parseTopLevelMap(named blockName: String, in lines: [String]) -> [String: String] {
+        guard let range = topLevelBlock(named: blockName, in: lines) else { return [:] }
+        var values: [String: String] = [:]
+        for line in lines[range] {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.hasPrefix("-"), let pair = parseMapPair(trimmed) else { continue }
+            values[pair.key] = pair.value
+        }
+        return values
     }
 
     private static func parseChannels(_ lines: [String], patterns: [FilenamePattern]) -> [String: String] {
