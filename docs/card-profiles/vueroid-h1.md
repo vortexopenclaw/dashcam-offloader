@@ -12,6 +12,8 @@ card `/Volumes/H1-QHD-INF`.
   `H1-QHD-INFINITE V0.5.9`.
 - Supporting volume label: `H1-QHD-INF`.
 - `CONFIG/.boot.log` entries repeatedly report `1CH`.
+- `CONFIG/.boot.log` also records a `DRIVE TO PARK` transition, confirming the
+  card entered parking mode.
 
 ## Channels
 
@@ -30,6 +32,18 @@ card `/Volumes/H1-QHD-INF`.
 - `BOOKMARK/` -> non-video bookmark area, not imported by default
 - `CONFIG/` -> camera configuration and logs, excluded from normal video import
 
+## Observed Settings And Media Specs
+
+- `CONFIG/config.bin` exposes model, firmware, and build-date strings, but not a
+  readable named parking-mode setting.
+- `CONFIG/.boot.log` exposes operational state clues such as `1CH`,
+  `DRIVE ON`, `OFF-ACC OUT`, and `DRIVE TO PARK`.
+- The mounted H1 sample includes `PARK/` clips and a `PEVENT/` clip after the
+  `DRIVE TO PARK` transition. That confirms parking recording was active, but
+  the readable config/log evidence does not name the exact parking mode.
+- Sample driving and parking MP4s are H.264, 2560x1440, 30 fps, approximately
+  22 Mbps.
+
 ## App Submission Notes
 
 The initial app scan correctly captured the root folders, media file counts, mode
@@ -39,6 +53,7 @@ included `CONFIG/config.bin` as a support-file sample, but did not preserve the
 safe model string inside it in `settingSnapshots`. That meant the strongest H1
 identifier was available on the card but missing from the learning payload.
 
-The scanner now treats config-like `.bin` files as eligible for short safe
-model/version fragments, so future learning submissions can include strings like
-`H1-QHD-INFINITE V0.5.9` without uploading full settings dumps.
+The scanner now treats config-like `.bin` files and text logs as eligible for
+short safe setting evidence. Future learning submissions can include strings like
+`H1-QHD-INFINITE V0.5.9`, plus concise operational clues like `1CH` and
+`DRIVE TO PARK`, without uploading full settings dumps.

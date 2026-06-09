@@ -974,10 +974,21 @@ final class TransferViewModel: ObservableObject {
             safeValues[pair.key] = sanitizedSettingValue(pair.value)
         }
 
+        for pair in extractSafeOperationalSettings(from: text) where safeValues.count < 20 {
+            safeValues[pair.key] = sanitizedSettingValue(pair.value)
+        }
+
         if safeValues.isEmpty {
             let fragments = extractSafeModelFragments(from: text)
             for (index, fragment) in fragments.prefix(8).enumerated() {
                 safeValues["modelEvidence\(index + 1)"] = sanitizedSettingValue(fragment)
+            }
+        }
+
+        if safeValues.isEmpty {
+            let fragments = extractSafeOperationalFragments(from: text)
+            for (index, fragment) in fragments.prefix(8).enumerated() {
+                safeValues["operationEvidence\(index + 1)"] = sanitizedSettingValue(fragment)
             }
         }
 
@@ -1027,23 +1038,6 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func extractSafeModelFragments(from text: String) -> [String] {
-        let printableRuns = text
-            .unicodeScalars
-            .reduce(into: [String]()) { runs, scalar in
-                let isPrintableASCII = scalar.value >= 32 && scalar.value <= 126
-                if isPrintableASCII {
-                    if runs.isEmpty {
-                        runs.append(String(scalar))
-                    } else {
-                        runs[runs.count - 1].append(String(scalar))
-                    }
-                } else if runs.last?.isEmpty == false {
-                    runs.append("")
-                }
-            }
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { $0.count >= 4 && $0.count <= 120 }
-
         let usefulFragments = [
             "model",
             "firmware",
@@ -1068,13 +1062,110 @@ final class TransferViewModel: ObservableObject {
             "70mai"
         ]
 
-        return printableRuns
+        return printableRuns(from: text)
             .filter { fragment in
                 let lower = fragment.lowercased()
                 return usefulFragments.contains { lower.contains($0) } &&
                     !isSensitiveSetting(key: "modelEvidence", value: fragment)
             }
             .uniquedPreservingOrder()
+    }
+
+    private func extractSafeOperationalSettings(from text: String) -> [(key: String, value: String)] {
+        var settings: [(key: String, value: String)] = []
+        let fragments = printableRuns(from: text)
+
+        if let channelCount = fragments.compactMap({ fragment -> String? in
+            guard let range = fragment.range(
+                of: #"(?i)\b([1-4])CH\b"#,
+                options: .regularExpression
+            ) else {
+                return nil
+            }
+            return String(fragment[range]).uppercased()
+        }).first {
+            settings.append(("channelCountEvidence", channelCount))
+        }
+
+        if fragments.contains(where: { $0.range(of: #"(?i)\bDRIVE TO PARK\b"#, options: .regularExpression) != nil }) {
+            settings.append(("parkingStateEvidence", "DRIVE TO PARK"))
+        }
+
+        if fragments.contains(where: { $0.range(of: #"(?i)\bPARK\b"#, options: .regularExpression) != nil }) {
+            settings.append(("parkingEvidence", "PARK"))
+        }
+
+        return settings.filter { !isSensitiveSetting(key: $0.key, value: $0.value) }
+    }
+
+    private func extractSafeOperationalFragments(from text: String) -> [String] {
+        let usefulFragments = [
+            "parking",
+            "drive to park",
+            "park",
+            "resolution",
+            "quality",
+            "bitrate",
+            "bit rate",
+            "fps",
+            "frame",
+            "codec",
+            "encoding",
+            "hdr",
+            "wdr",
+            "loop",
+            "audio",
+            "motion",
+            "impact",
+            "event",
+            "timelapse",
+            "time lapse",
+            "low bitrate",
+            "record",
+            "recording",
+            "video",
+            "1ch",
+            "2ch",
+            "3ch",
+            "4ch",
+            "qhd",
+            "uhd",
+            "fhd",
+            "4k",
+            "2k",
+            "h264",
+            "h.264",
+            "h265",
+            "h.265",
+            "hevc"
+        ]
+
+        return printableRuns(from: text)
+            .filter { fragment in
+                let lower = fragment.lowercased()
+                return usefulFragments.contains { lower.contains($0) } &&
+                    !isSensitiveSetting(key: "operationEvidence", value: fragment)
+            }
+            .uniquedPreservingOrder()
+    }
+
+    private func printableRuns(from text: String) -> [String] {
+        text
+            .unicodeScalars
+            .reduce(into: [String]()) { runs, scalar in
+                let isPrintableASCII = scalar.value >= 32 && scalar.value <= 126
+                if isPrintableASCII {
+                    if runs.isEmpty {
+                        runs.append(String(scalar))
+                    } else {
+                        runs[runs.count - 1].append(String(scalar))
+                    }
+                } else if runs.last?.isEmpty == false {
+                    runs.append("")
+                }
+            }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 4 && $0.count <= 120 }
     }
 
     private func isUsefulSettingKey(_ key: String) -> Bool {
@@ -1084,6 +1175,10 @@ final class TransferViewModel: ObservableObject {
             "firmware",
             "version",
             "fw",
+            "camera",
+            "video",
+            "record",
+            "recording",
             "resolution",
             "quality",
             "bitrate",
@@ -1105,6 +1200,8 @@ final class TransferViewModel: ObservableObject {
             "microphone",
             "gps",
             "speed",
+            "gsensor",
+            "g-sensor",
             "timezone",
             "time zone",
             "frequency",
