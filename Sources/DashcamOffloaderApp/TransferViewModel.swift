@@ -105,11 +105,11 @@ final class TransferViewModel: ObservableObject {
         let ignored = Set(["", "unknown", "gps"])
         let labels = Set(
             values
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .compactMap(normalizedPhysicalChannelLabel)
                 .filter { !ignored.contains($0) }
         )
 
-        let preferred = ["front", "interior", "cabin", "in_cabin", "rear", "telephoto"]
+        let preferred = ["front", "interior", "rear", "telephoto"]
         return labels.sorted { lhs, rhs in
             let lhsIndex = preferred.firstIndex(of: lhs) ?? preferred.count
             let rhsIndex = preferred.firstIndex(of: rhs) ?? preferred.count
@@ -117,6 +117,28 @@ final class TransferViewModel: ObservableObject {
             return lhs.localizedStandardCompare(rhs) == .orderedAscending
         }
         .map(ClipItem.displayLabel(for:))
+    }
+
+    private func normalizedPhysicalChannelLabel(_ value: String) -> String? {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
+        switch normalized {
+        case "", "unknown", "gps":
+            return nil
+        case "f", "front", "parking_front", "pf":
+            return "front"
+        case "i", "interior", "inside", "cabin", "in_cabin", "parking_interior", "parking_cabin", "pi":
+            return "interior"
+        case "r", "rear", "back", "parking_rear", "pr":
+            return "rear"
+        case "t", "telephoto", "parking_telephoto", "pt":
+            return "telephoto"
+        default:
+            return normalized
+        }
     }
 
     private func inferredSynchronizedChannelCount() -> Int {
@@ -137,9 +159,9 @@ final class TransferViewModel: ObservableObject {
         case 2:
             return "Front / rear"
         case 3:
-            return "Front / cabin / rear"
+            return "Front / interior / rear"
         case 4:
-            return "Front / front interior / rear / rear interior"
+            return "Front / interior / rear / telephoto"
         default:
             return ""
         }

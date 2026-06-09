@@ -335,7 +335,7 @@ struct CardScanner {
                     mode = mappedMode
                 }
                 if let mappedChannel = firstMappedValue(in: groups.sorted { $0.count > $1.count }, map: mergedChannelMap(profile: profile, pattern: pattern)) {
-                    channel = mappedChannel
+                    channel = physicalChannelLabel(from: mappedChannel)
                 }
                 timestamp = parseTimestamp(groups: groups, format: pattern.timestampFormat)
                 break
@@ -683,6 +683,11 @@ struct CardScanner {
                 }
             }
 
+            if volumeLabel(sourceURL.lastPathComponent, matchesProfile: profile) {
+                score += 20
+                evidence.append("volume label \(sourceURL.lastPathComponent)")
+            }
+
             let sampleNames = allFiles.prefix(600).map(\.lastPathComponent)
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
@@ -760,6 +765,34 @@ struct CardScanner {
         var map = profile.channels
         map.merge(pattern.channelMap) { _, new in new }
         return map
+    }
+
+    private func physicalChannelLabel(from value: String) -> String {
+        switch value.lowercased().replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: " ", with: "_") {
+        case "parking_front", "pf":
+            return "front"
+        case "parking_interior", "parking_cabin", "pi":
+            return "interior"
+        case "parking_rear", "pr":
+            return "rear"
+        case "parking_telephoto", "pt":
+            return "telephoto"
+        default:
+            return value
+        }
+    }
+
+    private func volumeLabel(_ label: String, matchesProfile profile: DashcamProfile) -> Bool {
+        let normalizedLabel = compactModelToken(label)
+        guard !normalizedLabel.isEmpty else { return false }
+        return normalizedLabel == compactModelToken(profile.model) ||
+            normalizedLabel == compactModelToken(profile.displayName)
+    }
+
+    private func compactModelToken(_ value: String) -> String {
+        value
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
     }
 
     private func firstMappedValue(in groups: [String], map: [String: String]) -> String? {

@@ -79,6 +79,7 @@ struct ContentView: View {
                             sourceRow(source)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                 }
             }
@@ -124,6 +125,7 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var mainPanel: some View {
@@ -278,29 +280,26 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    HStack {
-                        Spacer()
-                        Menu {
-                            ForEach(viewModel.profilesByBrand, id: \.brand) { group in
-                                Menu(group.brand) {
-                                    ForEach(group.profiles) { profile in
-                                        Button(profile.model) {
-                                            viewModel.selectProfile(profile)
-                                        }
+                    Menu {
+                        ForEach(viewModel.profilesByBrand, id: \.brand) { group in
+                            Menu(group.brand) {
+                                ForEach(group.profiles) { profile in
+                                    Button(profile.model) {
+                                        viewModel.selectProfile(profile)
                                     }
                                 }
                             }
-                        } label: {
-                            HStack {
-                                Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
-                                    .lineLimit(1)
-                                Image(systemName: "chevron.up.chevron.down")
-                                    .font(.caption)
-                            }
-                            .frame(minWidth: 220, alignment: .trailing)
                         }
-                        .menuStyle(.borderlessButton)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
+                                .lineLimit(1)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                        }
+                        .fixedSize(horizontal: true, vertical: false)
                     }
+                    .menuStyle(.borderlessButton)
 
                     if shouldShowLearnCardPrompt {
                         Divider()
@@ -408,7 +407,7 @@ struct ContentView: View {
                 Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
                     .disabled(viewModel.destinationURL == nil)
 
-                DisclosureGroup("Download options", isExpanded: $showDownloadOptions) {
+                expandableSection("Download options", isExpanded: $showDownloadOptions) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
                             Text("Video filename suffix")
@@ -441,7 +440,7 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                DisclosureGroup("Filters and extras", isExpanded: $showDownloadFilters) {
+                expandableSection("Filters and extras", isExpanded: $showDownloadFilters) {
                     VStack(alignment: .leading, spacing: 14) {
                         Picker("Date range", selection: Binding(
                             get: { viewModel.filters.datePreset },
@@ -507,6 +506,32 @@ struct ContentView: View {
             .padding(8)
             .onChange(of: viewModel.filters.selectedModes) { _, _ in viewModel.rebuildPlan() }
             .onChange(of: viewModel.filters.selectedChannels) { _, _ in viewModel.rebuildPlan() }
+        }
+    }
+
+    private func expandableSection<Content: View>(
+        _ title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                isExpanded.wrappedValue.toggle()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
+                    Text(title)
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded.wrappedValue {
+                content()
+            }
         }
     }
 
@@ -890,7 +915,7 @@ struct CardLearningSheet: View {
                 Text("Choose the number of camera views, then describe them however the camera uses them.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("Examples: front / rear, front / cabin / telephoto, front / front interior / rear / rear interior, 360 exterior.")
+                Text("Examples: front / rear, front / interior / telephoto, front / interior / rear / telephoto, 360 interior.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -981,9 +1006,9 @@ struct CardLearningSheet: View {
         case 2:
             channelDescription = "Front / rear"
         case 3:
-            channelDescription = "Front / cabin / rear"
+            channelDescription = "Front / interior / rear"
         case 4:
-            channelDescription = "Front / front interior / rear / rear interior"
+            channelDescription = "Front / interior / rear / telephoto"
         default:
             channelDescription = ""
         }
@@ -997,9 +1022,9 @@ struct CardLearningSheet: View {
             notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
         )
         let message = [
-            "\(training.manufacturer) \(training.model)",
-            "Channels: \(training.channelSetup)",
-            training.notes
+            "Camera: \(training.manufacturer) \(training.model)",
+            "Camera channels: \(training.channelSetup)",
+            training.notes.isEmpty ? "" : "User notes: \(training.notes)"
         ]
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         .joined(separator: "\n")

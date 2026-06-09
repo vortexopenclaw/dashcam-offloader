@@ -228,6 +228,55 @@ enum VerificationTest {
                 return false
             }
 
+            let a329sSource = temp.appendingPathComponent("A329S", isDirectory: true)
+            try FileManager.default.createDirectory(at: a329sSource.appendingPathComponent("DCIM/Movie/Parking", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: a329sSource.appendingPathComponent("DCIM/Movie/RO", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 21, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/2026_0528_130000_000001F.MP4"))
+            try Data(repeating: 22, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/2026_0528_130000_000001I.MP4"))
+            try Data(repeating: 23, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/2026_0528_130000_000001R.MP4"))
+            try Data(repeating: 24, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/Parking/2026_0528_131000_000002PF.MP4"))
+            try Data(repeating: 25, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/Parking/2026_0528_131000_000002PI.MP4"))
+            try Data(repeating: 26, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/Parking/2026_0528_131000_000002PR.MP4"))
+            try Data(repeating: 27, count: 1024).write(to: a329sSource.appendingPathComponent("DCIM/Movie/RO/2026_0528_132000_000003PF.MP4"))
+
+            let a329sScan = try scanner.scan(sourceURL: a329sSource, profiles: profiles)
+            guard a329sScan.candidates.first?.profile.id == "viofo-a329s" else {
+                print("VERIFY FAIL: A329S volume-label tie did not beat A229 Plus: \(a329sScan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score)" })")
+                return false
+            }
+            guard Set(a329sScan.clips.map(\.channel)) == ["front", "interior", "rear"] else {
+                print("VERIFY FAIL: A329S parking channels leaked into physical channels: \(Set(a329sScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            var a329sFilters = FilterState()
+            a329sFilters.selectedModes = Set(a329sScan.clips.map(\.mode))
+            a329sFilters.selectedChannels = Set(a329sScan.clips.map(\.channel))
+            let a329sProfile = a329sScan.selectedProfile ?? .genericNewDashcam
+            let allA329sPlan = CopyPlanner().makePlan(
+                sourceRoot: a329sSource,
+                destinationRoot: destination,
+                profile: a329sProfile,
+                clips: a329sScan.clips,
+                filters: a329sFilters
+            )
+            guard allA329sPlan.items.count == 7 else {
+                print("VERIFY FAIL: A329S plan should include all fixtures before filtering: \(allA329sPlan.items.count)")
+                return false
+            }
+            a329sFilters.selectedModes.remove("parking")
+            let noParkingA329sPlan = CopyPlanner().makePlan(
+                sourceRoot: a329sSource,
+                destinationRoot: destination,
+                profile: a329sProfile,
+                clips: a329sScan.clips,
+                filters: a329sFilters
+            )
+            guard noParkingA329sPlan.items.count == 3,
+                  noParkingA329sPlan.items.allSatisfy({ !$0.clip.isParkingFootage }) else {
+                print("VERIFY FAIL: deselecting parking did not remove all A329S parking footage: \(noParkingA329sPlan.items.map { $0.clip.relativePath })")
+                return false
+            }
+
             var filters = FilterState()
             filters.selectedModes = Set(scan.clips.map(\.mode))
             filters.selectedChannels = Set(scan.clips.map(\.channel))

@@ -222,6 +222,27 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         return "Other"
     }
 
+    var isParkingFootage: Bool {
+        if Self.isParkingMode(mode) { return true }
+
+        let normalizedChannel = channel.lowercased()
+        if normalizedChannel.contains("parking") { return true }
+
+        let normalizedPath = relativePath.lowercased()
+        if normalizedPath.contains("/parking/") ||
+            normalizedPath.hasPrefix("parking/") ||
+            normalizedPath.contains("/park/") ||
+            normalizedPath.hasPrefix("park/") {
+            return true
+        }
+
+        let stem = URL(fileURLWithPath: filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        return ["PF", "PI", "PR", "PT"].contains { stem.hasSuffix($0) }
+    }
+
     var displayMode: String {
         if let inferredParkingPattern {
             return inferredParkingPattern.displayName
@@ -273,6 +294,15 @@ struct ClipItem: Identifiable, Hashable, Sendable {
                 return lower.prefix(1).uppercased() + lower.dropFirst()
             }
             .joined(separator: " ")
+    }
+
+    static func isParkingMode(_ value: String) -> Bool {
+        let normalized = value.lowercased()
+        return normalized.contains("parking") ||
+            normalized.contains("motion") ||
+            normalized.contains("lapse") ||
+            normalized == "p" ||
+            normalized == "t"
     }
 }
 
