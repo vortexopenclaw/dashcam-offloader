@@ -257,6 +257,36 @@ enum SmokeTest {
                 print("SMOKE FAIL: unsupported card generic diagnostic missing")
                 return false
             }
+            let unknownFallbackSource = temp.appendingPathComponent("unsupported-fallback-card", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknownFallbackSource.appendingPathComponent("Camera/DCIM", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 15, count: 1024).write(to: unknownFallbackSource.appendingPathComponent("Camera/DCIM/CLIP0001.AVI"))
+            try Data(repeating: 16, count: 1024).write(to: unknownFallbackSource.appendingPathComponent("Camera/DCIM/CLIP0002.TS"))
+
+            let unknownFallbackScan = try scanner.scan(sourceURL: unknownFallbackSource, profiles: profiles)
+            guard unknownFallbackScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("SMOKE FAIL: weak unsupported card did not fall back to generic profile")
+                return false
+            }
+            guard unknownFallbackScan.clips.count == 2,
+                  unknownFallbackScan.clips.allSatisfy({ $0.timestamp == nil && $0.mode == "continuous" && $0.channel == "unknown" }) else {
+                print("SMOKE FAIL: weak unsupported card generic clips wrong")
+                return false
+            }
+            var fallbackFilters = FilterState()
+            fallbackFilters.selectedModes = Set(unknownFallbackScan.clips.map(\.mode))
+            fallbackFilters.selectedChannels = Set(unknownFallbackScan.clips.map(\.channel))
+            let fallbackPlan = CopyPlanner().makePlan(
+                sourceRoot: unknownFallbackSource,
+                destinationRoot: destination,
+                profile: unknownFallbackScan.selectedProfile ?? .genericNewDashcam,
+                clips: unknownFallbackScan.clips,
+                filters: fallbackFilters
+            )
+            guard fallbackPlan.items.count == 2,
+                  fallbackPlan.items.allSatisfy({ $0.destinationURL.path.contains("/undated/unknown/") }) else {
+                print("SMOKE FAIL: weak unsupported card copy fallback missing")
+                return false
+            }
 
             let scan = try scanner.scanWithOSD(sourceURL: source, profiles: profiles)
             guard scan.candidates.first?.profile.id == "vantrue-e1-pro" else {
