@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var isCardLearningPresented = false
     @State private var showDownloadOptions = false
     @State private var showDownloadFilters = false
+    @State private var selectedProfileBrand: String?
 
     var body: some View {
         NavigationSplitView {
@@ -310,26 +311,27 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Menu {
-                        ForEach(viewModel.profilesByBrand, id: \.brand) { group in
-                            Menu(group.brand) {
-                                ForEach(group.profiles) { profile in
-                                    Button(profile.model) {
-                                        viewModel.selectProfile(profile)
-                                    }
-                                }
-                            }
+                    HStack(spacing: 8) {
+                        compactProfileMenu(
+                            title: activeProfileBrand ?? "Brand",
+                            placeholder: "Brand",
+                            options: viewModel.profilesByBrand.map(\.brand)
+                        ) { brand in
+                            selectedProfileBrand = brand
                         }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(viewModel.selectedProfile?.displayName ?? "Choose Profile")
-                                .lineLimit(1)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption)
+
+                        compactProfileMenu(
+                            title: activeProfileModelTitle,
+                            placeholder: "Model",
+                            options: profilesForActiveBrand.map(\.model)
+                        ) { model in
+                            guard let profile = profilesForActiveBrand.first(where: { $0.model == model }) else { return }
+                            selectedProfileBrand = profile.displayManufacturer
+                            viewModel.selectProfile(profile)
                         }
-                        .fixedSize(horizontal: true, vertical: false)
+                        .disabled(activeProfileBrand == nil)
                     }
-                    .menuStyle(.borderlessButton)
+                    .fixedSize(horizontal: true, vertical: false)
 
                     if shouldShowLearnCardPrompt {
                         Divider()
@@ -380,6 +382,54 @@ struct ContentView: View {
             return "The app will organize footage using the detected camera profile. Learning data is optional if this setup has modes, channels, or settings we have not seen yet."
         }
         return "You can choose a profile manually, but the priority is still getting your footage copied."
+    }
+
+    private var activeProfileBrand: String? {
+        if let selectedProfileBrand,
+           viewModel.profilesByBrand.contains(where: { $0.brand == selectedProfileBrand }) {
+            return selectedProfileBrand
+        }
+        if let selectedProfile = viewModel.selectedProfile {
+            return selectedProfile.displayManufacturer
+        }
+        return viewModel.profilesByBrand.first?.brand
+    }
+
+    private var profilesForActiveBrand: [DashcamProfile] {
+        guard let activeProfileBrand else { return [] }
+        return viewModel.profilesByBrand.first(where: { $0.brand == activeProfileBrand })?.profiles ?? []
+    }
+
+    private var activeProfileModelTitle: String? {
+        guard let selectedProfile = viewModel.selectedProfile,
+              selectedProfile.displayManufacturer == activeProfileBrand else {
+            return nil
+        }
+        return selectedProfile.model
+    }
+
+    private func compactProfileMenu(
+        title: String?,
+        placeholder: String,
+        options: [String],
+        action: @escaping (String) -> Void
+    ) -> some View {
+        Menu {
+            ForEach(options, id: \.self) { option in
+                Button(option) {
+                    action(option)
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(title ?? placeholder)
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+        }
+        .menuStyle(.borderlessButton)
     }
 
     private var shouldShowLearnCardPrompt: Bool {
