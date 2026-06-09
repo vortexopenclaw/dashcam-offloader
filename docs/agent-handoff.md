@@ -6,7 +6,7 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 ## Current Build
 
-- Latest known published commit at handoff time: `16cd0f7`
+- Latest known published commit at handoff time: `de144d8`
 - Direct Cloudflare download: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest>
 - GitHub releases carry the packaged ZIP artifacts.
 
@@ -49,6 +49,7 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - Volume labels are weak evidence only.
 - App submissions should get close to what a direct mounted-card read can gather, without uploading video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, device IDs, full config dumps, or other private identifiers.
 - Generic/unknown dashcam import must stay useful for transfer even when exact model detection is not safe.
+- Recording type and channel checkboxes rebuild the download plan immediately, so deselecting all recording types or all channels clears the review/download queue instead of leaving stale rows visible.
 
 ## Recent Camera Notes
 
@@ -85,3 +86,4 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - Source cards should disappear after eject without restarting, and Refresh Sources should rescan mounted cards.
 - The main app window should appear before mounted-card scans and permission prompts block the user.
 - Improve Camera Support should be draggable. Camera channel examples should be placeholder text, not prefilled white text.
+- Filter changes should not leave stale items in Review and Download when the selected modes/channels become empty.
