@@ -1,0 +1,90 @@
+id: blackvue-dr770x-box
+manufacturer: BlackVue
+model: DR770X Box
+status: seeded
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: remote_learn_card_scan
+sampled_variant:
+  channels: 1
+  roles:
+    - front
+source_notes:
+  - docs/card-profiles/blackvue-dr770x-box.md
+detection:
+  high_confidence:
+    - path: BlackVue/Config/version.bin
+      contains: "model = DR770X Box"
+    - path: BlackVue/Config/micom_version.bin
+      contains: "model = DR770X Box"
+  supporting:
+    - folder: BlackVue/Record
+    - volume_label: BLACKVUE
+      strength: weak
+folders:
+  - path: BlackVue/Record
+    mode: mixed_recordings
+    validation: remote_learn_card_scan
+  - path: BlackVue/Config
+    mode: model_and_settings
+    validation: remote_learn_card_scan
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([NEMP])([FR])\\.mp4$"
+    applies_to:
+      - BlackVue/Record
+    case_sensitive: true
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+modes:
+  N: normal
+  E: event
+  M: manual
+  P: parking
+channels:
+  F: front
+  R: rear
+grouping:
+  keys:
+    - date
+    - time
+    - mode
+  expected_sets:
+    one_channel:
+      - F
+    two_channel:
+      - F
+      - R
+privacy:
+  do_not_read:
+    - BlackVue/Config/config.ini
+    - BlackVue/Config/bt_ssid.bin
+    - BlackVue/Config/eb-1.bin
+  do_not_log:
+    - WiFi SSIDs
+    - WiFi passwords
+    - Cloud credentials
+    - Bluetooth identifiers
+    - Serial numbers
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - BlackVue/Config/config.ini
+  - BlackVue/Config/bt_ssid.bin
+  - BlackVue/Config/eb-1.bin
+  - BlackVue/System/**
+notes:
+  - "Seeded from remote Learn Card submission feedback/2026-06-09/33413829-0ada-445d-91a0-91238dffbcaf.json."
+  - "Remote scan selected New Dashcam, then exact BlackVue metadata identified unsupported model DR770X Box."
+  - "Observed sample paths included four front driving clips with NF suffix plus version.bin, micom_version.bin, config.ini, eb-1.bin, and bt_ssid.bin."
+  - "Remote scan did not upload raw video, so bitrate/resolution remain unmeasured."
+  - "Only F clips were observed in the remote scan. R is included because the BlackVue Box filename family uses the same front/rear suffix convention, but rear evidence still needs a remote or local sample."
+  - "AP/BT SSID values are user-changeable and must not be used as model evidence."

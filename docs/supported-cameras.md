@@ -7,6 +7,7 @@
 - Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
+- BlackVue DR770X Box - profile drafted from one remote Learn Card scan. Exact model detected from BlackVue `version.bin` / `micom_version.bin`; only front driving clips observed so far.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
 - BlackVue DR970X LTE Plus - profile drafted from one real card. Built-in LTE variant detected via `model = DR970X LTE Plus` in BlackVue config/version files. Sample had mostly 4K front-only clips plus a few F/R pairs.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
