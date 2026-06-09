@@ -242,33 +242,50 @@ final class TransferViewModel: ObservableObject {
     }
 
     func probeVideoSpecs() {
+        Task { [weak self] in
+            await self?.probeVideoSpecsIfNeeded(announce: true)
+        }
+    }
+
+    @discardableResult
+    private func probeVideoSpecsIfNeeded(announce: Bool) async -> [VideoSpecSnapshot] {
+        if !lastVideoSpecSamples.isEmpty {
+            return lastVideoSpecSamples
+        }
+
         guard let selectedSource else {
-            statusMessage = "Choose a source first"
-            return
+            if announce {
+                statusMessage = "Choose a source first"
+            }
+            return []
         }
 
         let clipsForProbe = eligibleClips.filter(\.isVideo)
         guard !clipsForProbe.isEmpty else {
-            statusMessage = "No video clips available to probe"
-            return
+            if announce {
+                statusMessage = "No video clips available to probe"
+            }
+            return []
         }
 
         isProbingVideoSpecs = true
-        statusMessage = "Probing video specs..."
+        if announce {
+            statusMessage = "Probing video specs..."
+        }
 
-        Task { [weak self, clipsForProbe, selectedSource] in
-            let samples = await Task.detached {
-                await VideoMetadataProbe().probe(clips: clipsForProbe, sourceRoot: selectedSource.url)
-            }.value
+        let samples = await Task.detached {
+            await VideoMetadataProbe().probe(clips: clipsForProbe, sourceRoot: selectedSource.url)
+        }.value
 
-            guard let self else { return }
-            self.lastVideoSpecSamples = samples
-            self.scanSummary.videoSpecSamples = samples
+        lastVideoSpecSamples = samples
+        scanSummary.videoSpecSamples = samples
+        isProbingVideoSpecs = false
+        if announce {
             self.statusMessage = samples.isEmpty ?
                 "No video specs found from representative clips" :
                 "Probed \(samples.count) video spec samples"
-            self.isProbingVideoSpecs = false
         }
+        return samples
     }
 
     func selectProfile(_ profile: DashcamProfile) {
@@ -455,28 +472,32 @@ final class TransferViewModel: ObservableObject {
         }
 
         isSubmittingFeedback = true
-        feedbackMessage = "Submitting feedback..."
+        feedbackMessage = kind == .training ? "Preparing learning package..." : "Submitting feedback..."
 
-        let scanSnapshot = includeScan ? makeFeedbackScanSnapshot() : nil
-
-        let submission = FeedbackSubmission(
-            kind: kind,
-            message: trimmedMessage,
-            contact: contact.trimmingCharacters(in: .whitespacesAndNewlines),
-            appVersion: appVersionString(),
-            createdAt: ISO8601DateFormatter().string(from: Date()),
-            training: training,
-            scan: scanSnapshot
-        )
-
-        Task { [weak self, feedbackService] in
+        Task { [weak self, feedbackService, kind, trimmedMessage, contact, includeScan, training] in
+            guard let self else { return }
             do {
+                if kind == .training, includeScan, self.lastVideoSpecSamples.isEmpty {
+                    self.feedbackMessage = "Sampling representative video specs..."
+                    _ = await self.probeVideoSpecsIfNeeded(announce: false)
+                }
+
+                let submission = FeedbackSubmission(
+                    kind: kind,
+                    message: trimmedMessage,
+                    contact: contact.trimmingCharacters(in: .whitespacesAndNewlines),
+                    appVersion: appVersionString(),
+                    createdAt: ISO8601DateFormatter().string(from: Date()),
+                    training: training,
+                    scan: includeScan ? self.makeFeedbackScanSnapshot() : nil
+                )
+                self.feedbackMessage = kind == .training ? "Submitting learning package..." : "Submitting feedback..."
                 let id = try await feedbackService.submit(submission)
-                self?.feedbackMessage = "Feedback submitted: \(id)"
+                self.feedbackMessage = "Feedback submitted: \(id)"
             } catch {
-                self?.feedbackMessage = "Feedback failed: \(error.localizedDescription)"
+                self.feedbackMessage = "Feedback failed: \(error.localizedDescription)"
             }
-            self?.isSubmittingFeedback = false
+            self.isSubmittingFeedback = false
         }
     }
 
