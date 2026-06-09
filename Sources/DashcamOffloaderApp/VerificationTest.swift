@@ -364,6 +364,27 @@ enum VerificationTest {
                 return false
             }
 
+            let unknownVueroidSource = temp.appendingPathComponent("unknown-vueroid-family", isDirectory: true)
+            for folder in ["EVENT", "INF", "PARK", "PEVENT", "USER"] {
+                try FileManager.default.createDirectory(
+                    at: unknownVueroidSource.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            try Data(repeating: 41, count: 1024).write(to: unknownVueroidSource.appendingPathComponent("INF/20260101-120000-INF-N.mp4"))
+            try Data(repeating: 42, count: 1024).write(to: unknownVueroidSource.appendingPathComponent("PARK/20260101-121000-PRK-N.mp4"))
+            try Data(repeating: 43, count: 1024).write(to: unknownVueroidSource.appendingPathComponent("PEVENT/20260101-122000-PVT-N.mp4"))
+
+            let unknownVueroidScan = try scanner.scan(sourceURL: unknownVueroidSource, profiles: profiles)
+            guard unknownVueroidScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: unknown Vueroid-style card should use generic fallback, got \(unknownVueroidScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard unknownVueroidScan.diagnostics.contains(where: { $0.stage == "profile_selection_guard" && $0.outcome == "selected_generic_new_card" }) else {
+                print("VERIFY FAIL: unknown Vueroid-style card did not record profile selection guard")
+                return false
+            }
+
             let modes = Set(vueroidScan.clips.map(\.mode))
             guard modes.contains("parking"), modes.contains("parking_event") else {
                 print("VERIFY FAIL: Vueroid parking modes not split: \(modes.sorted())")
@@ -433,7 +454,7 @@ enum VerificationTest {
             }
             let h1DownloadableClips = vueroidH1Scan.clips.filter { $0.excludedReason == nil }
             guard Set(h1DownloadableClips.map(\.channel)) == ["front"] else {
-                print("VERIFY FAIL: Vueroid H1 should be front-only: \(Set(h1DownloadableClips.map(\.channel)).sorted())")
+                print("VERIFY FAIL: Vueroid H1 should be front-only: selected \(vueroidH1Scan.selectedProfile?.id ?? "nil"), candidates \(vueroidH1Scan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" }), channels \(Set(h1DownloadableClips.map(\.channel)).sorted())")
                 return false
             }
             let h1CategoryCounts = Dictionary(grouping: h1DownloadableClips, by: \.outputCategory).mapValues(\.count)

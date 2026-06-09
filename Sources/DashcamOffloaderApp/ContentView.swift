@@ -1054,6 +1054,7 @@ struct CardLearningSheet: View {
         let message = [
             "Camera: \(training.manufacturer) \(training.model)",
             "Camera channels: \(training.channelSetup)",
+            learningScanSummary(),
             training.notes.isEmpty ? "" : "User notes: \(training.notes)"
         ]
         .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -1070,6 +1071,26 @@ struct CardLearningSheet: View {
                 dismiss()
             }
         )
+    }
+
+    private func learningScanSummary() -> String {
+        guard viewModel.scanSummary.hasScan else {
+            return "App scan: No card scan available"
+        }
+
+        let selectedName = viewModel.selectedProfile?.displayName ?? "No profile selected"
+        let selectedID = viewModel.selectedProfile?.id ?? "none"
+        guard let topCandidate = viewModel.detectionCandidates.first else {
+            return "App scan: \(selectedName) (\(selectedID)); no profile candidates"
+        }
+
+        let topEvidence = topCandidate.evidence.prefix(3).joined(separator: "; ")
+        let topLine = "top candidate \(topCandidate.profile.displayName), \(topCandidate.confidence.rawValue), score \(topCandidate.score)"
+        if selectedID == DashcamProfile.genericNewDashcam.id {
+            return "App scan: New/unrecognized card; \(topLine); evidence: \(topEvidence)"
+        }
+
+        return "App scan: \(selectedName) (\(selectedID)); \(topLine); evidence: \(topEvidence)"
     }
 }
 

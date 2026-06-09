@@ -58,6 +58,8 @@ filename_patterns:
       date_group: 1
       time_group: 2
       format: YYYYMMDD_HHMMSS
+    channels:
+      N: front
 channels:
   F: front
 observed_flags:

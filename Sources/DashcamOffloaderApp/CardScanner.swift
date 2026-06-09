@@ -52,7 +52,15 @@ struct CardScanner {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
-        let selectedProfile = topCandidate?.confidence == .low ? DashcamProfile.genericNewDashcam : topCandidate?.profile
+        let selectionIssue = topCandidate.flatMap(profileSelectionIssue)
+        let selectedProfile: DashcamProfile?
+        if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
+            selectedProfile = topCandidate.profile
+        } else if topCandidate != nil {
+            selectedProfile = DashcamProfile.genericNewDashcam
+        } else {
+            selectedProfile = nil
+        }
         let rawClips: [ClipItem]
         if let selectedProfile, selectedProfile.id != DashcamProfile.genericNewDashcam.id {
             rawClips = classify(files: allFiles, sourceURL: sourceURL, profile: selectedProfile)
@@ -81,6 +89,15 @@ struct CardScanner {
                 detail: "No profile scored above zero"
             )
         ]
+        if let selectionIssue, let topCandidate {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "profile_selection_guard",
+                profileID: topCandidate.profile.id,
+                profileName: topCandidate.profile.displayName,
+                outcome: "selected_generic_new_card",
+                detail: selectionIssue
+            ))
+        }
         if selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             diagnostics.append(ScanDiagnosticEntry(
                 stage: "generic_fallback",
@@ -100,6 +117,22 @@ struct CardScanner {
             clips: clips,
             diagnostics: diagnostics
         )
+    }
+
+    private func profileSelectionIssue(_ candidate: DetectionCandidate) -> String? {
+        if candidate.confidence == .low {
+            return "Top candidate scored only low confidence, so the card was treated as unrecognized"
+        }
+
+        let hasModelEvidence = candidate.evidence.contains { evidence in
+            evidence.hasPrefix("model text ") || evidence.hasPrefix("model evidence ")
+        }
+        let hasFilenameEvidence = candidate.evidence.contains { $0.hasPrefix("filename pattern match ") }
+        if hasModelEvidence || hasFilenameEvidence {
+            return nil
+        }
+
+        return "Top candidate matched only shared folder/volume structure, with no model text or filename-pattern verification. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
     }
 
     /// Async scan that augments folder/filename detection with OSD OCR to
@@ -345,6 +378,9 @@ struct CardScanner {
                 }
                 if let mappedChannel = firstMappedValue(in: groups.sorted { $0.count > $1.count }, map: mergedChannelMap(profile: profile, pattern: pattern)) {
                     channel = physicalChannelLabel(from: mappedChannel)
+                }
+                if channel == "unknown", profile.channels.count == 1, let onlyChannel = profile.channels.values.first {
+                    channel = physicalChannelLabel(from: onlyChannel)
                 }
                 timestamp = parseTimestamp(groups: groups, format: pattern.timestampFormat)
                 break
@@ -679,15 +715,6 @@ struct CardScanner {
                 return nil
             }
 
-            for folder in profile.folders {
-                let folderURL = sourceURL.appendingPathComponent(folder.path)
-                var isDirectory: ObjCBool = false
-                if fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
-                    score += folder.importable ? 8 : 3
-                    evidence.append("folder \(folder.path)")
-                }
-            }
-
             for rule in profile.detectionRules {
                 if detectionRuleMatches(rule, sourceURL: sourceURL) {
                     score += rule.score
@@ -698,6 +725,15 @@ struct CardScanner {
                     } else if let volumeLabel = rule.volumeLabel {
                         evidence.append("volume label \(volumeLabel)")
                     }
+                }
+            }
+
+            for folder in profile.folders {
+                let folderURL = sourceURL.appendingPathComponent(folder.path)
+                var isDirectory: ObjCBool = false
+                if fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                    score += folder.importable ? 8 : 3
+                    evidence.append("folder \(folder.path)")
                 }
             }
 
