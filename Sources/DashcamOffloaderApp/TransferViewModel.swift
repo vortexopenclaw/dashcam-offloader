@@ -128,6 +128,7 @@ final class TransferViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
+        panel.directoryURL = selectedSource?.url ?? URL(fileURLWithPath: "/Volumes", isDirectory: true)
 
         if panel.runModal() == .OK, let url = panel.url {
             let source = MountedSource(url: url, name: url.lastPathComponent)
@@ -291,14 +292,14 @@ final class TransferViewModel: ObservableObject {
     }
 
     func rebuildPlan() {
-        guard let selectedSource, let destinationURL, let selectedProfile else {
+        guard let selectedSource, let selectedProfile else {
             copyPlan = nil
             return
         }
 
         copyPlan = planner.makePlan(
             sourceRoot: selectedSource.url,
-            destinationRoot: destinationURL,
+            destinationRoot: destinationURL ?? Self.previewDestinationRoot,
             profile: selectedProfile,
             clips: clips,
             filters: filters,
@@ -312,6 +313,10 @@ final class TransferViewModel: ObservableObject {
     }
 
     func startCopy() {
+        guard destinationURL != nil else {
+            statusMessage = "Choose an output directory before copying"
+            return
+        }
         guard let copyPlan, !copyPlan.items.isEmpty else {
             statusMessage = "Nothing selected to copy"
             return
@@ -346,6 +351,8 @@ final class TransferViewModel: ObservableObject {
             statusMessage = finalMessage
         }
     }
+
+    private static let previewDestinationRoot = URL(fileURLWithPath: "/Dashcam Offloader Preview", isDirectory: true)
 
     func openOutputDirectory() {
         if let lastOutputDirectory {

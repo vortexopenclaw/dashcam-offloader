@@ -420,7 +420,7 @@ struct ContentView: View {
                     } label: {
                         Label("Preview", systemImage: "doc.text.magnifyingglass")
                     }
-                    .disabled(viewModel.destinationURL == nil || viewModel.selectedProfile == nil)
+                    .disabled(viewModel.selectedSource == nil || viewModel.selectedProfile == nil)
                 }
 
                 Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? []) {
@@ -443,7 +443,7 @@ struct ContentView: View {
                         Text(item.clip.displayChannel)
                     }
                     TableColumn("Destination") { item in
-                        Text(item.destinationURL.path)
+                        Text(viewModel.destinationURL == nil ? "Choose an output directory to preview final path" : item.destinationURL.path)
                             .font(.caption)
                             .lineLimit(1)
                     }
@@ -523,7 +523,7 @@ struct ContentView: View {
                         .frame(minWidth: 140)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(viewModel.copyPlan?.items.isEmpty ?? true || viewModel.copyProgress.isRunning)
+                .disabled(viewModel.destinationURL == nil || viewModel.copyPlan?.items.isEmpty ?? true || viewModel.copyProgress.isRunning)
             }
         }
         .padding()
