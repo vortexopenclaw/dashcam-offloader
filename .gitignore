@@ -9,6 +9,7 @@ node_modules/
 .env
 .env.*
 .firecrawl/
+.brv/
 .openclaw-backups/
 *.zip
 build-latest/
