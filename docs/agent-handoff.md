@@ -10,6 +10,17 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 - Direct Cloudflare download: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest>
 - GitHub releases carry the packaged ZIP artifacts.
 
+## GitHub Publishing
+
+Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
+
+The workflow uses encrypted GitHub secrets:
+
+- `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN`
+- `CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID`
+
+These were refreshed from the local OpenClaw Cloudflare credentials on 2026-06-09. Do not commit Cloudflare credentials to the repo or print them in logs.
+
 ## Verify Before Publishing
 
 Run these from the repo root:
@@ -24,7 +35,7 @@ python3 -m py_compile scripts/review-feedback-submissions.py
 git diff --check
 ```
 
-When publishing, upload to GitHub/Cloudflare and report the direct Cloudflare link plus a short status summary of what changed and what was verified.
+When publishing, push to `main` and let GitHub Actions upload to GitHub/Cloudflare. After the workflow succeeds, report the direct Cloudflare link plus a short status summary of what changed and what was verified.
 
 ## Submission Review
 
