@@ -25,6 +25,7 @@ final class TransferViewModel: ObservableObject {
     @Published var ejectSourceWhenComplete = false
     @Published var outputNamingOptions = OutputNamingOptions()
     @Published var isSubmittingFeedback = false
+    @Published var isProbingVideoSpecs = false
     @Published var feedbackMessage = ""
 
     private let scanner = CardScanner()
@@ -33,6 +34,7 @@ final class TransferViewModel: ObservableObject {
     private var workspaceNotificationTokens: [NSObjectProtocol] = []
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
+    private var lastVideoSpecSamples: [VideoSpecSnapshot] = []
 
     init() {
         refreshSources()
@@ -149,6 +151,7 @@ final class TransferViewModel: ObservableObject {
         clips = []
         lastScannedFiles = []
         lastScanDiagnostics = []
+        lastVideoSpecSamples = []
         copyPlan = nil
         copyResults = []
         supportFileResults = []
@@ -195,6 +198,7 @@ final class TransferViewModel: ObservableObject {
         supportFileResults = []
         identifiedCamera = nil
         selectedProfile = nil
+        lastVideoSpecSamples = []
         scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
 
         Task { [weak self, profiles, selectedSource] in
@@ -221,7 +225,8 @@ final class TransferViewModel: ObservableObject {
                         .mapValues(\.count),
                     modeCounts: Dictionary(grouping: footageClips, by: \.displayMode)
                         .mapValues(\.count),
-                    identifiedCamera: scanResult.identifiedCamera
+                    identifiedCamera: scanResult.identifiedCamera,
+                    videoSpecSamples: self.lastVideoSpecSamples
                 )
                 if let identified = scanResult.identifiedCamera, !identified.isSupported {
                     self.statusMessage = "Identified unsupported dashcam: \(identified.displayName). Submit a learning package to add it."
@@ -233,6 +238,36 @@ final class TransferViewModel: ObservableObject {
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
             }
             self.isScanning = false
+        }
+    }
+
+    func probeVideoSpecs() {
+        guard let selectedSource else {
+            statusMessage = "Choose a source first"
+            return
+        }
+
+        let clipsForProbe = eligibleClips.filter(\.isVideo)
+        guard !clipsForProbe.isEmpty else {
+            statusMessage = "No video clips available to probe"
+            return
+        }
+
+        isProbingVideoSpecs = true
+        statusMessage = "Probing video specs..."
+
+        Task { [weak self, clipsForProbe, selectedSource] in
+            let samples = await Task.detached {
+                await VideoMetadataProbe().probe(clips: clipsForProbe, sourceRoot: selectedSource.url)
+            }.value
+
+            guard let self else { return }
+            self.lastVideoSpecSamples = samples
+            self.scanSummary.videoSpecSamples = samples
+            self.statusMessage = samples.isEmpty ?
+                "No video specs found from representative clips" :
+                "Probed \(samples.count) video spec samples"
+            self.isProbingVideoSpecs = false
         }
     }
 
@@ -516,6 +551,7 @@ final class TransferViewModel: ObservableObject {
             filenameSamples: Array(filenameSamples),
             supportFileSamples: Array(supportFileSamples),
             settingSnapshots: Array(settingSnapshots),
+            videoSpecSamples: Array(lastVideoSpecSamples.prefix(20)),
             candidates: Array(candidates),
             scanDiagnostics: Array(lastScanDiagnostics.prefix(40))
         )

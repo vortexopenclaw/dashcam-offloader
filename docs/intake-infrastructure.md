@@ -4,7 +4,7 @@ Documentation for the server-side infrastructure that receives sanitized card in
 
 ## Overview
 
-When a user encounters a camera model that is not yet in the profile library, the app guides them through a sanitized card scan and packages the results into a Learn Card submission. The submission is sent to the feedback Cloudflare Worker, which validates, sanitizes, and stores it for maintainer review.
+When a user encounters a camera model that is not yet in the profile library, the app guides them through a sanitized card scan and packages the results into a Learn Card submission. The user can optionally run a light in-app video-spec probe before submitting so the package includes sampled codec, resolution, frame-rate, bitrate, and duration data from representative clips. The submission is sent to the feedback Cloudflare Worker, which validates, sanitizes, and stores it for maintainer review.
 
 The maintainer can then review remote submissions and generate new YAML profiles, card-profile docs, and research docs without needing the physical card locally.
 
@@ -47,7 +47,21 @@ The Mac app sends a JSON body structured roughly as:
       "20260601_0001_CAM.map"
     ],
     "extensionCounts": { "mp4": 12, "map": 12 },
-    "samplePaths": ["Normal/20260601_0001_CAM.MP4"]
+    "samplePaths": ["Normal/20260601_0001_CAM.MP4"],
+    "videoSpecSamples": [
+      {
+        "relativePath": "Normal/20260601_0001_CAM.MP4",
+        "mode": "Driving",
+        "channel": "Front",
+        "codec": "H.264",
+        "width": 3840,
+        "height": 2160,
+        "frameRate": 30,
+        "bitrateMbps": 60,
+        "durationSeconds": 60,
+        "fileSize": 450000000
+      }
+    ]
   }
 }
 ```

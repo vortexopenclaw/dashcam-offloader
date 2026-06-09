@@ -152,7 +152,7 @@ struct ClipItem: Identifiable, Hashable, Sendable {
     var excludedReason: String?
 
     var isVideo: Bool {
-        ["mp4", "mov"].contains(extensionLowercased)
+        ["mp4", "mov", "avi", "mkv", "ts", "m2ts", "mts", "3gp"].contains(extensionLowercased)
     }
 
     var isPhoto: Bool {
@@ -413,6 +413,7 @@ struct ScanSummary: Hashable, Sendable {
     var categoryCounts: [String: Int] = [:]
     var modeCounts: [String: Int] = [:]
     var identifiedCamera: IdentifiedCamera?
+    var videoSpecSamples: [VideoSpecSnapshot] = []
 
     var hasScan: Bool {
         !sourcePath.isEmpty
@@ -494,8 +495,48 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var filenameSamples: [String]
     var supportFileSamples: [String]
     var settingSnapshots: [FeedbackSettingSnapshot]
+    var videoSpecSamples: [VideoSpecSnapshot]
     var candidates: [FeedbackCandidateSnapshot]
     var scanDiagnostics: [ScanDiagnosticEntry]
+}
+
+struct VideoSpecSnapshot: Codable, Hashable, Sendable, Identifiable {
+    var id: String { relativePath }
+    var relativePath: String
+    var mode: String
+    var channel: String
+    var codec: String
+    var width: Int?
+    var height: Int?
+    var frameRate: Double?
+    var bitrateMbps: Double?
+    var durationSeconds: Double?
+    var fileSize: Int64
+
+    var dimensionsText: String {
+        guard let width, let height else { return "unknown" }
+        return "\(width)x\(height)"
+    }
+
+    var frameRateText: String {
+        guard let frameRate else { return "unknown" }
+        return String(format: "%.2g fps", frameRate)
+    }
+
+    var bitrateText: String {
+        guard let bitrateMbps else { return "unknown" }
+        return String(format: "%.1f Mbps", bitrateMbps)
+    }
+
+    var durationText: String {
+        guard let durationSeconds else { return "unknown" }
+        if durationSeconds < 60 {
+            return String(format: "%.0fs", durationSeconds)
+        }
+        let minutes = Int(durationSeconds) / 60
+        let seconds = Int(durationSeconds) % 60
+        return "\(minutes)m \(seconds)s"
+    }
 }
 
 struct FeedbackSettingSnapshot: Codable, Hashable, Sendable {

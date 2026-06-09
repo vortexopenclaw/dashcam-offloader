@@ -11,6 +11,10 @@ struct DashcamOffloaderApp: App {
             let result = ScanDiagnostic.run(arguments: CommandLine.arguments)
             Foundation.exit(result ? 0 : 1)
         }
+        if CommandLine.arguments.contains("--probe-video-specs") {
+            let result = VideoSpecDiagnostic.run(arguments: CommandLine.arguments)
+            Foundation.exit(result ? 0 : 1)
+        }
         if CommandLine.arguments.contains("--smoke-test") {
             let result = SmokeTest.run()
             Foundation.exit(result ? 0 : 1)
@@ -73,6 +77,57 @@ enum ScanDiagnostic {
             return false
         }
     }
+}
+
+enum VideoSpecDiagnostic {
+    static func run(arguments: [String]) -> Bool {
+        let semaphore = DispatchSemaphore(value: 0)
+        let state = VideoSpecDiagnosticState()
+        Task.detached {
+            state.result = await runAsync(arguments: arguments)
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return state.result
+    }
+
+    private static func runAsync(arguments: [String]) async -> Bool {
+        guard let commandIndex = arguments.firstIndex(of: "--probe-video-specs"),
+              arguments.count > commandIndex + 1 else {
+            print("VIDEO SPECS FAIL: usage --probe-video-specs <source-path>")
+            return false
+        }
+
+        let sourceURL = URL(fileURLWithPath: arguments[commandIndex + 1], isDirectory: true)
+        guard let profilesDirectory = ProfileStore.defaultProfilesDirectory() else {
+            print("VIDEO SPECS FAIL: profiles directory unavailable")
+            return false
+        }
+
+        do {
+            let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
+            let scan = try CardScanner().scanWithOSD(sourceURL: sourceURL, profiles: profiles)
+            let clips = scan.clips.filter { $0.excludedReason == nil && $0.isVideo }
+            let samples = await VideoMetadataProbe().probe(clips: clips, sourceRoot: sourceURL)
+            guard !samples.isEmpty else {
+                print("VIDEO SPECS FAIL: no video specs found")
+                return false
+            }
+
+            print("VIDEO SPECS PASS: \(samples.count) samples")
+            for sample in samples {
+                print("VIDEO SPECS SAMPLE: \(sample.channel) \(sample.mode) \(sample.codec) \(sample.dimensionsText) \(sample.frameRateText) \(sample.bitrateText) \(sample.relativePath)")
+            }
+            return true
+        } catch {
+            print("VIDEO SPECS FAIL: \(error.localizedDescription)")
+            return false
+        }
+    }
+}
+
+private final class VideoSpecDiagnosticState: @unchecked Sendable {
+    var result = false
 }
 
 enum OSDDiagnostic {
