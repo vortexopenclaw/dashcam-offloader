@@ -590,12 +590,20 @@ struct ContentView: View {
 
                         Divider()
 
-                        checkboxGrid(title: "Recording Types", values: viewModel.availableModes, selected: $viewModel.filters.selectedModes) {
-                            ClipItem.displayLabel(for: $0)
-                        }
-                        checkboxGrid(title: "Channels", values: viewModel.availableChannels, selected: $viewModel.filters.selectedChannels) {
-                            ClipItem.displayLabel(for: $0)
-                        }
+                        checkboxGrid(
+                            title: "Recording Types",
+                            values: viewModel.availableModes,
+                            selected: $viewModel.filters.selectedModes,
+                            display: { ClipItem.displayLabel(for: $0) },
+                            onChange: { viewModel.rebuildPlan() }
+                        )
+                        checkboxGrid(
+                            title: "Channels",
+                            values: viewModel.availableChannels,
+                            selected: $viewModel.filters.selectedChannels,
+                            display: { ClipItem.displayLabel(for: $0) },
+                            onChange: { viewModel.rebuildPlan() }
+                        )
 
                         Divider()
 
@@ -629,8 +637,6 @@ struct ContentView: View {
                 }
             }
             .padding(8)
-            .onChange(of: viewModel.filters.selectedModes) { _, _ in viewModel.rebuildPlan() }
-            .onChange(of: viewModel.filters.selectedChannels) { _, _ in viewModel.rebuildPlan() }
         }
     }
 
@@ -660,7 +666,13 @@ struct ContentView: View {
         }
     }
 
-    private func checkboxGrid(title: String, values: [String], selected: Binding<Set<String>>, display: @escaping (String) -> String) -> some View {
+    private func checkboxGrid(
+        title: String,
+        values: [String],
+        selected: Binding<Set<String>>,
+        display: @escaping (String) -> String,
+        onChange: @escaping () -> Void
+    ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
@@ -679,6 +691,7 @@ struct ContentView: View {
                                 } else {
                                     selected.wrappedValue.remove(value)
                                 }
+                                onChange()
                             }
                         ))
                     }
