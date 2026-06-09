@@ -118,6 +118,10 @@ def summary_for(record: dict[str, Any], key: str) -> dict[str, Any]:
         "message": payload.get("message"),
         "scanResult": scan.get("detectedProfileName") or scan.get("selectedProfileName"),
         "confidence": scan.get("confidence"),
+        "videoSpecSamples": len(scan.get("videoSpecSamples") or []),
+        "videoSpecSummaries": len(scan.get("videoSpecSummaries") or []),
+        "folderSummaries": len(scan.get("folderSummaries") or []),
+        "settingSnapshots": len(scan.get("settingSnapshots") or []),
     }
 
 

@@ -1,11 +1,12 @@
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
-const MAX_VIDEO_SPEC_SAMPLES = 32;
+const MAX_VIDEO_SPEC_SAMPLES = 64;
+const MAX_VIDEO_SPEC_SUMMARIES = 120;
 const MAX_SETTING_SNAPSHOTS = 20;
 const MAX_SETTING_VALUES = 40;
 const MAX_TRAINING_FIELD_LENGTH = 1000;
-const MAX_BODY_BYTES = 256 * 1024;
+const MAX_BODY_BYTES = 1024 * 1024;
 
 export default {
   async fetch(request, env) {
@@ -165,6 +166,9 @@ function sanitizeScan(scan) {
     videoSpecSamples: Array.isArray(scan.videoSpecSamples)
       ? scan.videoSpecSamples.slice(0, MAX_VIDEO_SPEC_SAMPLES).map(sanitizeVideoSpecSample).filter(Boolean)
       : [],
+    videoSpecSummaries: Array.isArray(scan.videoSpecSummaries)
+      ? scan.videoSpecSummaries.slice(0, MAX_VIDEO_SPEC_SUMMARIES).map(sanitizeVideoSpecSummary).filter(Boolean)
+      : [],
     settingSnapshots: Array.isArray(scan.settingSnapshots)
       ? scan.settingSnapshots.slice(0, MAX_SETTING_SNAPSHOTS).map(sanitizeSettingSnapshot).filter(Boolean)
       : [],
@@ -221,6 +225,39 @@ function sanitizeVideoSpecSample(sample) {
     nominalFrameRate: nullableNumber(sample.nominalFrameRate),
     estimatedBitrate: nullableNumber(sample.estimatedBitrate),
     durationSeconds: nullableNumber(sample.durationSeconds),
+  };
+}
+
+function sanitizeVideoSpecSummary(summary) {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return null;
+  }
+
+  const folder = sanitizePath(summary.folder || ".");
+  if (!folder) {
+    return null;
+  }
+
+  return {
+    folder,
+    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    mode: optionalString(summary.mode),
+    displayMode: optionalString(summary.displayMode),
+    outputCategory: optionalString(summary.outputCategory),
+    channel: optionalString(summary.channel),
+    inferredParkingPattern: optionalString(summary.inferredParkingPattern),
+    fileCount: numberValue(summary.fileCount),
+    totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
+    minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
+    maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
+    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 6),
+    sampleCodecs: stringList(summary.sampleCodecs, 6),
+    sampleResolutions: stringList(summary.sampleResolutions, 6),
+    sampleFrameRates: numberList(summary.sampleFrameRates, 6),
+    sampleBitrateMin: nullableNumber(summary.sampleBitrateMin),
+    sampleBitrateMax: nullableNumber(summary.sampleBitrateMax),
+    sampleDurationMin: nullableNumber(summary.sampleDurationMin),
+    sampleDurationMax: nullableNumber(summary.sampleDurationMax),
   };
 }
 
@@ -320,6 +357,26 @@ function safePathList(value, limit) {
     }
   }
   return result;
+}
+
+function stringList(value, limit) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .slice(0, limit)
+    .map(stringValue)
+    .filter((item) => item.length > 0);
+}
+
+function numberList(value, limit) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .slice(0, limit)
+    .map(nullableNumber)
+    .filter((item) => item !== null);
 }
 
 function optionalString(value) {

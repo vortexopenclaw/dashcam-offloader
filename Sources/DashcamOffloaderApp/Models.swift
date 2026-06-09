@@ -602,6 +602,7 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var supportFileSamples: [String]
     var ignoredSupportFileSamples: [String]
     var videoSpecSamples: [FeedbackVideoSpecSample]
+    var videoSpecSummaries: [FeedbackVideoSpecSummary]
     var settingSnapshots: [FeedbackSettingSnapshot]
     var candidates: [FeedbackCandidateSnapshot]
     var scanDiagnostics: [ScanDiagnosticEntry]
@@ -630,6 +631,28 @@ struct FeedbackVideoSpecSample: Codable, Hashable, Sendable {
     var nominalFrameRate: Double?
     var estimatedBitrate: Int?
     var durationSeconds: Double?
+}
+
+struct FeedbackVideoSpecSummary: Codable, Hashable, Sendable {
+    var folder: String
+    var extensionLowercased: String
+    var mode: String?
+    var displayMode: String?
+    var outputCategory: String?
+    var channel: String?
+    var inferredParkingPattern: String?
+    var fileCount: Int
+    var totalFileSizeBytes: Int64
+    var minFileSizeBytes: Int64?
+    var maxFileSizeBytes: Int64?
+    var sampleRelativePaths: [String]
+    var sampleCodecs: [String]
+    var sampleResolutions: [String]
+    var sampleFrameRates: [Double]
+    var sampleBitrateMin: Int?
+    var sampleBitrateMax: Int?
+    var sampleDurationMin: Double?
+    var sampleDurationMax: Double?
 }
 
 struct FeedbackSettingSnapshot: Codable, Hashable, Sendable {

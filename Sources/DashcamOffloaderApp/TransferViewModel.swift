@@ -729,6 +729,13 @@ final class TransferViewModel: ObservableObject {
             }),
             sourceRoot: sourceRoot
         )
+        let videoSpecSummaries = makeVideoSpecSummaries(
+            from: eligibleClips.filter { clip in
+                clip.isVideo && safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
+            },
+            samples: videoSpecSamples,
+            sourceRoot: sourceRoot
+        )
         let settingSnapshots = safeFiles
             .filter { isPotentialSettingsFile($0, sourceRoot: sourceRoot) }
             .prefix(20)
@@ -767,6 +774,7 @@ final class TransferViewModel: ObservableObject {
             supportFileSamples: Array(supportFileSamples),
             ignoredSupportFileSamples: Array(ignoredSupportFileSamples),
             videoSpecSamples: videoSpecSamples,
+            videoSpecSummaries: videoSpecSummaries,
             settingSnapshots: Array(settingSnapshots),
             candidates: Array(candidates),
             scanDiagnostics: Array(lastScanDiagnostics.prefix(40))
@@ -913,15 +921,15 @@ final class TransferViewModel: ObservableObject {
             for sample in bucketSamples.compactMap({ $0 }) {
                 guard seenKeys.insert(sample.id).inserted else { continue }
                 selected.append(sample)
-                if selected.count >= 32 { break }
+                if selected.count >= 64 { break }
             }
-            if selected.count >= 32 { break }
+            if selected.count >= 64 { break }
         }
 
         if selected.count < 8 {
             for clip in videoClips where !selected.contains(clip) {
                 selected.append(clip)
-                if selected.count >= 32 { break }
+                if selected.count >= 64 { break }
             }
         }
 
@@ -960,6 +968,77 @@ final class TransferViewModel: ObservableObject {
                 durationSeconds: duration
             )
         }
+    }
+
+    private func makeVideoSpecSummaries(
+        from clips: [ClipItem],
+        samples: [FeedbackVideoSpecSample],
+        sourceRoot: URL?
+    ) -> [FeedbackVideoSpecSummary] {
+        let samplesByPath = Dictionary(uniqueKeysWithValues: samples.map { ($0.relativePath, $0) })
+        let grouped = Dictionary(grouping: clips) { clip in
+            videoSpecBucketKey(for: clip)
+        }
+
+        return grouped.keys
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .prefix(120)
+            .compactMap { key in
+                guard let bucket = grouped[key], let first = bucket.first else { return nil }
+                let paths = bucket
+                    .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
+                    .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+                let sizes = bucket.map(\.size)
+                let bucketSamples = paths.compactMap { samplesByPath[$0] }
+                let bitrates = bucketSamples.compactMap(\.estimatedBitrate)
+                let durations = bucketSamples.compactMap(\.durationSeconds)
+                let resolutions = bucketSamples.compactMap { sample -> String? in
+                    guard let width = sample.width, let height = sample.height else { return nil }
+                    return "\(width)x\(height)"
+                }
+                let frameRates = bucketSamples.compactMap(\.nominalFrameRate)
+
+                return FeedbackVideoSpecSummary(
+                    folder: videoSpecFolder(for: first.relativePath),
+                    extensionLowercased: first.extensionLowercased,
+                    mode: first.mode,
+                    displayMode: first.displayMode,
+                    outputCategory: first.outputCategory,
+                    channel: first.channel,
+                    inferredParkingPattern: first.inferredParkingPattern?.rawValue,
+                    fileCount: bucket.count,
+                    totalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    minFileSizeBytes: sizes.min(),
+                    maxFileSizeBytes: sizes.max(),
+                    sampleRelativePaths: Array(paths.prefix(6)),
+                    sampleCodecs: Array(bucketSamples.compactMap(\.codec).uniquedPreservingOrder().prefix(6)),
+                    sampleResolutions: Array(resolutions.uniquedPreservingOrder().prefix(6)),
+                    sampleFrameRates: Array(frameRates.uniquedPreservingOrder().prefix(6)),
+                    sampleBitrateMin: bitrates.min(),
+                    sampleBitrateMax: bitrates.max(),
+                    sampleDurationMin: durations.min(),
+                    sampleDurationMax: durations.max()
+                )
+            }
+    }
+
+    private func videoSpecBucketKey(for clip: ClipItem) -> String {
+        [
+            videoSpecFolder(for: clip.relativePath),
+            clip.extensionLowercased,
+            clip.mode,
+            clip.displayMode,
+            clip.outputCategory,
+            clip.channel,
+            clip.inferredParkingPattern?.rawValue ?? "none"
+        ].joined(separator: "\u{1f}")
+    }
+
+    private func videoSpecFolder(for relativePath: String) -> String {
+        guard let slashIndex = relativePath.lastIndex(of: "/") else {
+            return "."
+        }
+        return String(relativePath[..<slashIndex])
     }
 
     private func fileSizeBytes(for fileURL: URL) -> Int64? {
