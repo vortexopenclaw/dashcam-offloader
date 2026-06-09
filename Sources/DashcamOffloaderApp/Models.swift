@@ -583,6 +583,11 @@ struct FeedbackFolderSummary: Codable, Hashable, Sendable {
 struct FeedbackVideoSpecSample: Codable, Hashable, Sendable {
     var relativePath: String
     var extensionLowercased: String
+    var mode: String?
+    var displayMode: String?
+    var outputCategory: String?
+    var channel: String?
+    var inferredParkingPattern: String?
     var codec: String?
     var width: Int?
     var height: Int?

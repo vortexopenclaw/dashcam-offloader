@@ -722,8 +722,11 @@ final class TransferViewModel: ObservableObject {
             .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
             .uniquedPreservingOrder()
             .prefix(60)
+        let safeClipSourcePaths = Set(safeFiles.map(\.standardizedFileURL.path))
         let videoSpecSamples = makeVideoSpecSamples(
-            from: representativeVideoFiles(safeFiles, sourceRoot: sourceRoot),
+            from: representativeVideoClips(eligibleClips.filter { clip in
+                safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
+            }),
             sourceRoot: sourceRoot
         )
         let settingSnapshots = safeFiles
@@ -888,34 +891,34 @@ final class TransferViewModel: ObservableObject {
             }
     }
 
-    private func representativeVideoFiles(_ files: [URL], sourceRoot: URL?) -> [URL] {
-        let videoFiles = files.filter { ClipItem.videoExtensions.contains($0.pathExtension.lowercased()) }
-        guard !videoFiles.isEmpty else { return [] }
+    private func representativeVideoClips(_ clips: [ClipItem]) -> [ClipItem] {
+        let videoClips = clips.filter(\.isVideo)
+        guard !videoClips.isEmpty else { return [] }
 
-        var selected: [URL] = []
+        var selected: [ClipItem] = []
         var seenKeys: Set<String> = []
-        for fileURL in videoFiles {
-            let relativePath = sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot)
-            let folder = relativePath.split(separator: "/").dropLast().joined(separator: "/")
-            let ext = fileURL.pathExtension.lowercased()
-            let key = "\(folder)|\(ext)"
+        for clip in videoClips {
+            let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
+            let pattern = clip.inferredParkingPattern?.rawValue ?? "none"
+            let key = "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)|\(pattern)|\(folder)|\(clip.extensionLowercased)"
             guard seenKeys.insert(key).inserted else { continue }
-            selected.append(fileURL)
-            if selected.count >= 16 { break }
+            selected.append(clip)
+            if selected.count >= 24 { break }
         }
 
         if selected.count < 8 {
-            for fileURL in videoFiles where !selected.contains(fileURL) {
-                selected.append(fileURL)
-                if selected.count >= 16 { break }
+            for clip in videoClips where !selected.contains(clip) {
+                selected.append(clip)
+                if selected.count >= 24 { break }
             }
         }
 
         return selected
     }
 
-    private func makeVideoSpecSamples(from files: [URL], sourceRoot: URL?) -> [FeedbackVideoSpecSample] {
-        files.compactMap { fileURL in
+    private func makeVideoSpecSamples(from clips: [ClipItem], sourceRoot: URL?) -> [FeedbackVideoSpecSample] {
+        clips.compactMap { clip in
+            let fileURL = clip.sourceURL
             let asset = AVURLAsset(url: fileURL)
             guard let videoTrack = asset.tracks(withMediaType: .video).first else {
                 return nil
@@ -931,6 +934,11 @@ final class TransferViewModel: ObservableObject {
             return FeedbackVideoSpecSample(
                 relativePath: sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot),
                 extensionLowercased: fileURL.pathExtension.lowercased(),
+                mode: clip.mode,
+                displayMode: clip.displayMode,
+                outputCategory: clip.outputCategory,
+                channel: clip.channel,
+                inferredParkingPattern: clip.inferredParkingPattern?.rawValue,
                 codec: codecName(for: videoTrack),
                 width: width > 0 ? width : nil,
                 height: height > 0 ? height : nil,
