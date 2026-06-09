@@ -196,9 +196,9 @@ enum VerificationTest {
 
             let parkingPatternSource = temp.appendingPathComponent("parking-patterns", isDirectory: true)
             let parkingSamples: [(String, [String])] = [
-                ("Parking/LowBitrate", ["20260608_100000_F.MP4", "20260608_100100_F.MP4", "20260608_100200_F.MP4", "20260608_100300_F.MP4"]),
+                ("Parking/Mixed", ["20260608_100000_F.MP4", "20260608_100100_F.MP4", "20260608_100200_F.MP4", "20260608_100300_F.MP4", "20260608_101900_F.MP4", "20260608_124400_F.MP4"]),
                 ("Parking/Lapse", ["20260608_110000_F.MP4", "20260608_111000_F.MP4", "20260608_112000_F.MP4", "20260608_113000_F.MP4"]),
-                ("Parking/Motion", ["20260608_120000_F.MP4", "20260608_120700_F.MP4", "20260608_124400_F.MP4", "20260608_140200_F.MP4"])
+                ("Movie/RO", ["20260608_130000_000100PF.MP4"])
             ]
             for (folder, filenames) in parkingSamples {
                 try FileManager.default.createDirectory(at: parkingPatternSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
@@ -208,13 +208,18 @@ enum VerificationTest {
             }
             let parkingPatternScan = try scanner.scan(sourceURL: parkingPatternSource, profiles: profiles)
             let inferredPatterns = Set(parkingPatternScan.clips.compactMap(\.inferredParkingPattern))
-            guard inferredPatterns == [.continuousLowBitrate, .timelapse, .motionOrImpact] else {
+            guard inferredPatterns == [.continuousLowBitrate, .timelapse, .motionDetection, .impactDetection] else {
                 print("VERIFY FAIL: parking pattern inference wrong: \(inferredPatterns.map(\.rawValue).sorted())")
                 return false
             }
             let inferredDisplayModes = Set(parkingPatternScan.clips.map(\.displayMode))
-            guard inferredDisplayModes == ["Parking Continuous / Low Bitrate", "Parking Motion / Impact", "Parking Timelapse"] else {
+            guard inferredDisplayModes == ["Parking Continuous / Low Bitrate", "Parking Impact Detection", "Parking Motion Detection", "Parking Timelapse"] else {
                 print("VERIFY FAIL: parking pattern display modes wrong: \(inferredDisplayModes.sorted())")
+                return false
+            }
+            let inferredRawModes = Set(parkingPatternScan.clips.map(\.mode))
+            guard inferredRawModes == ["parking_continuous_low_bitrate", "parking_impact_detection", "parking_motion_detection", "parking_timelapse"] else {
+                print("VERIFY FAIL: parking pattern raw modes wrong: \(inferredRawModes.sorted())")
                 return false
             }
 
@@ -267,7 +272,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: A329S plan should include all fixtures before filtering: \(allA329sPlan.items.count)")
                 return false
             }
-            a329sFilters.selectedModes.remove("parking")
+            a329sFilters.selectedModes = a329sFilters.selectedModes.filter { !ClipItem.isParkingMode($0) }
             let noParkingA329sPlan = CopyPlanner().makePlan(
                 sourceRoot: a329sSource,
                 destinationRoot: destination,
@@ -386,11 +391,11 @@ enum VerificationTest {
             }
 
             let modes = Set(vueroidScan.clips.map(\.mode))
-            guard modes.contains("parking"), modes.contains("parking_event") else {
+            guard modes.contains("parking"), modes.contains("parking_impact_detection") else {
                 print("VERIFY FAIL: Vueroid parking modes not split: \(modes.sorted())")
                 return false
             }
-            guard vueroidScan.clips.contains(where: { $0.mode == "parking_event" && $0.outputCategory == "Parking Events" }) else {
+            guard vueroidScan.clips.contains(where: { $0.mode == "parking_impact_detection" && $0.outputCategory == "Parking Events" }) else {
                 print("VERIFY FAIL: Vueroid parking event category missing")
                 return false
             }

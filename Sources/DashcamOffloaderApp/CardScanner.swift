@@ -281,7 +281,7 @@ struct CardScanner {
            newTop.confidence != .low,
            newTop.profile.id != result.selectedProfile?.id {
             result.selectedProfile = newTop.profile
-            result.clips = classify(files: result.allFiles, sourceURL: sourceURL, profile: newTop.profile)
+            result.clips = classifyWithParkingPatterns(files: result.allFiles, sourceURL: sourceURL, profile: newTop.profile).clips
         } else if result.selectedProfile == nil {
             if let newTop = updatedCandidates.first, newTop.confidence != .low {
                 result.selectedProfile = newTop.profile
@@ -419,6 +419,10 @@ struct CardScanner {
         }
     }
 
+    func classifyWithParkingPatterns(files: [URL], sourceURL: URL, profile: DashcamProfile) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
+        inferParkingPatterns(in: classify(files: files, sourceURL: sourceURL, profile: profile))
+    }
+
     func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {
         files.compactMap { fileURL in
             let relativePath = fileURL.relativePath(from: sourceURL)
@@ -467,59 +471,50 @@ struct CardScanner {
     }
 
     private func inferParkingPatterns(in clips: [ClipItem]) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
+        var inferredByRelativePath: [String: ParkingPattern] = [:]
+        var diagnostics: [ScanDiagnosticEntry] = []
+
+        for clip in clips {
+            if let explicitPattern = explicitParkingPattern(for: clip) {
+                inferredByRelativePath[clip.relativePath] = explicitPattern
+            }
+        }
+
         let parkingClips = clips.filter { clip in
             clip.excludedReason == nil &&
                 clip.isVideo &&
                 clip.outputCategory == "Parking" &&
                 clip.timestamp != nil &&
-                !clip.hasSuspiciousTimestamp
-        }
-
-        guard parkingClips.count >= 4 else {
-            return (clips, [])
+                !clip.hasSuspiciousTimestamp &&
+                inferredByRelativePath[clip.relativePath] == nil
         }
 
         let groupedByFolder = Dictionary(grouping: parkingClips) { clip in
             URL(fileURLWithPath: clip.relativePath).deletingLastPathComponent().path
         }
 
-        var inferredByRelativePath: [String: ParkingPattern] = [:]
-        var diagnostics: [ScanDiagnosticEntry] = []
-
         for (folder, folderClips) in groupedByFolder {
             let moments = groupedRecordingMoments(folderClips)
             guard moments.count >= 4 else { continue }
 
-            let intervals = zip(moments, moments.dropFirst()).map { lhs, rhs in
-                rhs.timestamp.timeIntervalSince(lhs.timestamp)
-            }
-            guard let medianInterval = median(intervals), medianInterval > 0 else { continue }
-
-            let consistentIntervalCount = intervals.filter { interval in
-                abs(interval - medianInterval) <= max(30, medianInterval * 0.25)
-            }.count
-            let consistency = intervals.isEmpty ? 0 : Double(consistentIntervalCount) / Double(intervals.count)
-            let medianMomentSize = median(moments.map(\.totalBytes).map(Double.init)) ?? 0
-
-            let pattern: ParkingPattern
-            if medianInterval <= 210, consistency >= 0.6 {
-                pattern = .continuousLowBitrate
-            } else if medianInterval >= 300, medianInterval <= 7_200, consistency >= 0.55, medianMomentSize <= 300_000_000 {
-                pattern = .timelapse
-            } else {
-                pattern = .motionOrImpact
-            }
+            let momentPatterns = inferParkingPatternsByMoment(moments)
+            let patternCounts = Dictionary(grouping: momentPatterns.values, by: { $0 })
+                .mapValues(\.count)
 
             for clip in folderClips {
-                inferredByRelativePath[clip.relativePath] = pattern
+                guard let timestamp = clip.timestamp else { continue }
+                let key = recordingMomentKey(for: timestamp)
+                if let pattern = momentPatterns[key] {
+                    inferredByRelativePath[clip.relativePath] = pattern
+                }
             }
 
             diagnostics.append(ScanDiagnosticEntry(
                 stage: "parking_pattern_inference",
                 profileID: nil,
                 profileName: nil,
-                outcome: pattern.rawValue,
-                detail: "\(folder.isEmpty ? "." : folder): \(moments.count) recording moments, median gap \(Int(medianInterval))s, interval consistency \(Int(consistency * 100))%, median bytes per moment \(Int64(medianMomentSize))"
+                outcome: "classified",
+                detail: "\(folder.isEmpty ? "." : folder): \(moments.count) recording moments, \(patternCounts.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ", "))"
             ))
         }
 
@@ -531,21 +526,110 @@ struct CardScanner {
             guard let inferred = inferredByRelativePath[clip.relativePath] else { return clip }
             var copy = clip
             copy.inferredParkingPattern = inferred
+            copy.mode = inferred.modeValue
             return copy
         }
         return (annotated, diagnostics)
     }
 
-    private func groupedRecordingMoments(_ clips: [ClipItem]) -> [(timestamp: Date, totalBytes: Int64)] {
+    private func explicitParkingPattern(for clip: ClipItem) -> ParkingPattern? {
+        guard clip.excludedReason == nil, clip.isVideo else { return nil }
+
+        let lowerPath = clip.relativePath.lowercased()
+        let isProtectedFolder = lowerPath.contains("/ro/") ||
+            lowerPath.hasPrefix("ro/") ||
+            lowerPath.contains("/event/") ||
+            lowerPath.hasPrefix("event/") ||
+            lowerPath.contains("/pevent/") ||
+            lowerPath.hasPrefix("pevent/")
+
+        if isProtectedFolder && hasParkingChannelSuffix(clip.filename) {
+            return .impactDetection
+        }
+
+        if clip.mode.lowercased().contains("parking_event") {
+            return .impactDetection
+        }
+
+        return nil
+    }
+
+    private func hasParkingChannelSuffix(_ filename: String) -> Bool {
+        let stem = URL(fileURLWithPath: filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        return ["PF", "PI", "PR", "PT"].contains { stem.hasSuffix($0) }
+    }
+
+    private func inferParkingPatternsByMoment(_ moments: [(key: Int, timestamp: Date, totalBytes: Int64)]) -> [Int: ParkingPattern] {
+        var inferred: [Int: ParkingPattern] = [:]
+
+        var runStart = 0
+        while runStart < moments.count {
+            var runEnd = runStart
+            while runEnd + 1 < moments.count {
+                let gap = moments[runEnd + 1].timestamp.timeIntervalSince(moments[runEnd].timestamp)
+                guard gap > 0, gap <= 210 else { break }
+                runEnd += 1
+            }
+
+            if runEnd - runStart + 1 >= 4 {
+                for index in runStart...runEnd {
+                    inferred[moments[index].key] = .continuousLowBitrate
+                }
+            }
+
+            runStart = max(runEnd + 1, runStart + 1)
+        }
+
+        let remainingMoments = moments.filter { inferred[$0.key] == nil }
+        if remainingMoments.count >= 4,
+           let timelapsePattern = regularTimelapsePattern(for: remainingMoments) {
+            for moment in remainingMoments {
+                inferred[moment.key] = timelapsePattern
+            }
+        }
+
+        for moment in moments where inferred[moment.key] == nil {
+            inferred[moment.key] = .motionDetection
+        }
+
+        return inferred
+    }
+
+    private func regularTimelapsePattern(for moments: [(key: Int, timestamp: Date, totalBytes: Int64)]) -> ParkingPattern? {
+        let intervals = zip(moments, moments.dropFirst()).map { lhs, rhs in
+            rhs.timestamp.timeIntervalSince(lhs.timestamp)
+        }
+        guard let medianInterval = median(intervals), medianInterval > 0 else { return nil }
+
+        let consistentIntervalCount = intervals.filter { interval in
+            abs(interval - medianInterval) <= max(30, medianInterval * 0.25)
+        }.count
+        let consistency = intervals.isEmpty ? 0 : Double(consistentIntervalCount) / Double(intervals.count)
+        let medianMomentSize = median(moments.map(\.totalBytes).map(Double.init)) ?? 0
+
+        if medianInterval >= 300, medianInterval <= 7_200, consistency >= 0.55, medianMomentSize <= 300_000_000 {
+            return .timelapse
+        }
+        return nil
+    }
+
+    private func groupedRecordingMoments(_ clips: [ClipItem]) -> [(key: Int, timestamp: Date, totalBytes: Int64)] {
         let grouped = Dictionary(grouping: clips) { clip -> Int in
             guard let timestamp = clip.timestamp else { return 0 }
-            return Int((timestamp.timeIntervalSince1970 / 2).rounded())
+            return recordingMomentKey(for: timestamp)
         }
-        return grouped.compactMap { _, clips -> (timestamp: Date, totalBytes: Int64)? in
+        return grouped.compactMap { key, clips -> (key: Int, timestamp: Date, totalBytes: Int64)? in
             guard let timestamp = clips.compactMap(\.timestamp).min() else { return nil }
-            return (timestamp, clips.reduce(Int64(0)) { $0 + $1.size })
+            return (key, timestamp, clips.reduce(Int64(0)) { $0 + $1.size })
         }
         .sorted { $0.timestamp < $1.timestamp }
+    }
+
+    private func recordingMomentKey(for timestamp: Date) -> Int {
+        Int((timestamp.timeIntervalSince1970 / 2).rounded())
     }
 
     private func median(_ values: [Double]) -> Double? {

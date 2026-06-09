@@ -430,7 +430,7 @@ final class TransferViewModel: ObservableObject {
     func selectProfile(_ profile: DashcamProfile) {
         selectedProfile = profile
         guard let selectedSource else { return }
-        clips = scanner.classify(files: lastScannedFiles, sourceURL: selectedSource.url, profile: profile)
+        clips = scanner.classifyWithParkingPatterns(files: lastScannedFiles, sourceURL: selectedSource.url, profile: profile).clips
         resetFiltersForCurrentClips()
         rebuildPlan()
     }

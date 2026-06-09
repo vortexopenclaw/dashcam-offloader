@@ -16,24 +16,65 @@ channel_variants:
       - rear
       - telephoto
     validation: official_reference
-sampled_variant: null
+sampled_variant:
+  channels: 3
+  roles:
+    - front
+    - rear
+    - telephoto
+  validation: app_submission_sampled
 source_notes:
   - docs/card-profiles/viofo-a329t.md
   - docs/research/viofo-a329t.md
 detection:
   supporting:
     - folder: DCIM/Movie
-      validation: inferred_from_related_profile
+      validation: app_submission_sampled
+    - folder: DCIM/Movie/Parking
+      validation: app_submission_sampled
+    - folder: DCIM/Movie/RO
+      validation: app_submission_sampled
+    - folder: DCIM/Photo
+      validation: app_submission_sampled
     - volume_label: A329T
       strength: weak
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: app_submission_sampled
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: app_submission_sampled
+    notes: Contains parking clips that may include low-bitrate continuous recording and motion-triggered auto-event recording. The app infers subtypes from timing and video specs when folder names do not distinguish them.
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: app_submission_sampled
+    notes: Protected parking-channel suffixes are treated as parking impact-detection recordings.
+  - path: DCIM/Photo
+    mode: still_image
+    validation: app_submission_sampled
 filename_patterns:
-  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|R|T)\\.MP4$"
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|R|T|PF|PR|PT)\\.MP4$"
     applies_to:
       - DCIM/Movie
+      - DCIM/Movie/Parking
       - DCIM/Movie/RO
     case_sensitive: true
-    validation: user_provided_example
-    notes: User-provided evidence confirms T as telephoto. F/R are expected from A329-series similarity and official channel roles.
+    validation: app_submission_sampled
+    notes: Real app scan confirms T/PT as telephoto and PF/PR/PT as parking-channel variants.
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|R|T|PF|PR|PT)\\.JPG$"
+    applies_to:
+      - DCIM/Photo
+    case_sensitive: true
+    validation: app_submission_sampled
+    notes: Still photos can use the same channel suffix family as videos.
     timestamp:
       year_group: 1
       month_day_group: 2
@@ -45,6 +86,9 @@ channels:
   F: front
   R: rear
   T: telephoto
+  PF: parking_front
+  PR: parking_rear
+  PT: parking_telephoto
 grouping:
   keys:
     - year
@@ -58,6 +102,10 @@ grouping:
       - F
       - R
       - T
+    parking_three_channel:
+      - PF
+      - PR
+      - PT
 multiplexed_video:
   support: supported
   validation: official_reference

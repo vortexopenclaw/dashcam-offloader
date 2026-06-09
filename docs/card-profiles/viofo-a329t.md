@@ -2,7 +2,7 @@
 
 ## Status
 
-Experimental profile, based on official VIOFO product-family references and user-provided filename/channel evidence. No real A329T card has been inspected yet.
+Experimental profile, based on official VIOFO product-family references, user-provided filename/channel evidence, and a 2026-06-09 app learning scan.
 
 Use `VIOFO A329T` as the public app model name. Treat channel count as variant metadata behind the scenes.
 
@@ -24,22 +24,29 @@ User-provided example:
 
 - `2025_0612_055737_000103T.MP4`
 
+The 2026-06-09 app scan showed the same suffix family for parking clips and photos:
+
+- `F` - front
+- `R` - rear
+- `T` - telephoto
+- `PF` - parking front
+- `PR` - parking rear
+- `PT` - parking telephoto
+
 ## Filename Pattern
 
 Expected MP4 filename family:
 
 `YYYY_MMDD_HHMMSS_SEQUENCECHANNEL.MP4`
 
-Observed from user-provided evidence:
+Observed from submitted evidence:
 
 - `T` - telephoto
-
-Expected from A329S similarity, pending real-card validation:
-
 - `F` - front
 - `R` - rear
+- `PF/PT/PR` - parking channel variants
 
-Do not assume parking or protected suffix behavior until a real A329T card is inspected.
+The app scanner should treat parking subtypes as inferred labels, not physical channels. `PF`, `PR`, and `PT` still map to front, rear, and telephoto channels while the recording type carries the parking subtype.
 
 ## Channel Variants
 
@@ -70,9 +77,7 @@ Importer behavior:
 
 ## Open Questions
 
-- Confirm folder layout with a real A329T card.
-- Confirm whether normal front/rear/telephoto files use `F/R/T`.
-- Confirm whether parking files use `PF/PR/PT` or another suffix family.
-- Confirm whether protected files live under `DCIM/Movie/RO` like A329S.
+- Confirm folder layout with a direct full-card inspection, because the current evidence comes from an app learning scan.
+- Confirm whether protected files in `DCIM/Movie/RO` are always impact-triggered when the suffix is `PF/PR/PT`.
 - Identify safe model-detection evidence, such as firmware filename or non-unique model strings.
 - Capture a real A329T multiplexed file to validate path, filename suffix, and whether it appears in the primary recording folders or only via `.dashcamexport`.

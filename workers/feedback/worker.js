@@ -208,6 +208,11 @@ function sanitizeVideoSpecSample(sample) {
   return {
     relativePath,
     extensionLowercased: stringValue(sample.extensionLowercased).toLowerCase(),
+    mode: optionalString(sample.mode),
+    displayMode: optionalString(sample.displayMode),
+    outputCategory: optionalString(sample.outputCategory),
+    channel: optionalString(sample.channel),
+    inferredParkingPattern: optionalString(sample.inferredParkingPattern),
     codec: optionalString(sample.codec),
     width: nullableNumber(sample.width),
     height: nullableNumber(sample.height),

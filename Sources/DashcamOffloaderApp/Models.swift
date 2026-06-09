@@ -112,6 +112,8 @@ enum TimestampSource: String, Hashable, Sendable {
 enum ParkingPattern: String, Codable, Hashable, Sendable {
     case continuousLowBitrate = "continuous_low_bitrate"
     case timelapse = "timelapse"
+    case motionDetection = "motion_detection"
+    case impactDetection = "impact_detection"
     case motionOrImpact = "motion_or_impact"
 
     var displayName: String {
@@ -120,8 +122,27 @@ enum ParkingPattern: String, Codable, Hashable, Sendable {
             return "Parking Continuous / Low Bitrate"
         case .timelapse:
             return "Parking Timelapse"
+        case .motionDetection:
+            return "Parking Motion Detection"
+        case .impactDetection:
+            return "Parking Impact Detection"
         case .motionOrImpact:
             return "Parking Motion / Impact"
+        }
+    }
+
+    var modeValue: String {
+        switch self {
+        case .continuousLowBitrate:
+            return "parking_continuous_low_bitrate"
+        case .timelapse:
+            return "parking_timelapse"
+        case .motionDetection:
+            return "parking_motion_detection"
+        case .impactDetection:
+            return "parking_impact_detection"
+        case .motionOrImpact:
+            return "parking_motion_or_impact"
         }
     }
 }
@@ -208,7 +229,9 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         let normalized = mode.lowercased()
         if normalized.contains("parking_event") ||
             normalized.contains("parking event") ||
-            normalized.contains("pevent") {
+            normalized.contains("pevent") ||
+            normalized.contains("parking_impact") ||
+            normalized.contains("parking impact") {
             return "Parking Events"
         }
         if normalized.contains("event") ||
@@ -272,6 +295,16 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             return "Driving"
         case "driving_event":
             return "Driving Event"
+        case "parking_continuous_low_bitrate":
+            return "Parking Continuous / Low Bitrate"
+        case "parking_timelapse":
+            return "Parking Timelapse"
+        case "parking_motion_detection":
+            return "Parking Motion Detection"
+        case "parking_impact_detection":
+            return "Parking Impact Detection"
+        case "parking_motion_or_impact":
+            return "Parking Motion / Impact"
         case "parking_event":
             return "Parking Event"
         case "parking_event_secondary":
