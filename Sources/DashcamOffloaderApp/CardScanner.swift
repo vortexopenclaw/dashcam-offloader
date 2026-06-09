@@ -34,9 +34,11 @@ struct CardScanner {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let identifiedCamera = identifyCamera(sourceURL: sourceURL, profiles: profiles)
-        let selectedProfile = selectedProfile(from: candidates, identifiedCamera: identifiedCamera)
-        let clips = selectedProfile.map { classify(files: allFiles, sourceURL: sourceURL, profile: $0) } ?? []
-        let diagnostics = candidates.first.map {
+        let profileMatch = selectedProfile(from: candidates, identifiedCamera: identifiedCamera)
+        let genericClips = profileMatch == nil ? classifyGenerically(files: allFiles, sourceURL: sourceURL) : []
+        let selectedProfile = profileMatch ?? (genericClips.contains(where: { $0.excludedReason == nil }) ? DashcamProfile.genericNewDashcam : nil)
+        let clips = profileMatch.map { classify(files: allFiles, sourceURL: sourceURL, profile: $0) } ?? genericClips
+        var diagnostics = candidates.first.map {
             [
                 ScanDiagnosticEntry(
                     stage: "profile_scoring",
@@ -63,6 +65,15 @@ struct CardScanner {
                 selectedProfile: selectedProfile
             )
         ]
+        if selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "generic_fallback",
+                profileID: DashcamProfile.genericNewDashcam.id,
+                profileName: DashcamProfile.genericNewDashcam.displayName,
+                outcome: "classified_generic_clips",
+                detail: "Used filename dates and folder semantics because no reliable supported profile was selected"
+            ))
+        }
 
         return ScanResult(
             sourceURL: sourceURL,
@@ -218,7 +229,8 @@ struct CardScanner {
 
         // Re-select and re-classify if the winner changed.
         if let newTop = selectedProfile(from: updatedCandidates, identifiedCamera: result.identifiedCamera),
-           newTop.id != result.selectedProfile?.id {
+           newTop.id != result.selectedProfile?.id,
+           newTop.id != DashcamProfile.genericNewDashcam.id {
             result.selectedProfile = newTop
             result.clips = classify(files: result.allFiles, sourceURL: sourceURL, profile: newTop)
         } else if result.selectedProfile == nil {
@@ -337,6 +349,50 @@ struct CardScanner {
                 mode: mode,
                 channel: channel,
                 timestamp: timestamp,
+                size: size,
+                extensionLowercased: ext,
+                excludedReason: excludedReason
+            )
+        }
+        .sorted { lhs, rhs in
+            if lhs.timestamp != rhs.timestamp {
+                return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
+            }
+            return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
+        }
+    }
+
+    func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {
+        files.compactMap { fileURL in
+            let relativePath = fileURL.relativePath(from: sourceURL)
+            let filename = fileURL.lastPathComponent
+            let ext = fileURL.pathExtension.lowercased()
+            guard isCandidateExtension(ext) else { return nil }
+
+            var mode = genericMode(relativePath: relativePath, filename: filename, extensionLowercased: ext)
+            var channel = genericChannel(relativePath: relativePath, filename: filename)
+            var excludedReason: String?
+
+            if shouldExclude(relativePath: relativePath, extensionLowercased: ext) {
+                excludedReason = "Excluded by safety rules"
+            }
+
+            if ext == "dat" || relativePath.localizedCaseInsensitiveContains("/gps/") || relativePath.lowercased().hasPrefix("gps/") {
+                mode = "gps"
+                channel = "gps"
+                if ext != "dat" {
+                    excludedReason = "GPS/settings sidecar excluded by default"
+                }
+            }
+
+            let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+            return ClipItem(
+                sourceURL: fileURL,
+                relativePath: relativePath,
+                filename: filename,
+                mode: mode,
+                channel: channel,
+                timestamp: parseGenericTimestamp(filename: filename),
                 size: size,
                 extensionLowercased: ext,
                 excludedReason: excludedReason
@@ -576,7 +632,10 @@ struct CardScanner {
             }
             return nil
         }
-        return candidates.first?.profile
+        guard let top = candidates.first, top.confidence != .low else {
+            return nil
+        }
+        return top.profile
     }
 
     private var metadataIdentificationRules: [MetadataIdentificationRule] {
@@ -740,6 +799,156 @@ struct CardScanner {
         return nil
     }
 
+    private func genericMode(relativePath: String, filename: String, extensionLowercased: String) -> String {
+        if ["jpg", "jpeg"].contains(extensionLowercased) {
+            return "photo"
+        }
+
+        let tokens = genericTokens(from: relativePath) + genericTokens(from: filenameCandidates(for: filename).last ?? filename)
+
+        if tokens.contains("pevent") ||
+            tokens.contains("parkingevent") ||
+            containsOrdered(tokens, first: "parking", second: "event") ||
+            containsOrdered(tokens, first: "park", second: "event") {
+            return "parking_event"
+        }
+
+        if tokens.contains("evt") ||
+            tokens.contains("event") ||
+            tokens.contains("sos") ||
+            tokens.contains("emergency") ||
+            tokens.contains("locked") ||
+            tokens.contains("protected") ||
+            tokens.contains("ro") ||
+            tokens.contains("manual") ||
+            tokens.contains("impact") ||
+            filenameModeToken(filename).map(["e", "i"].contains) == true {
+            return "driving_event"
+        }
+
+        if tokens.contains("parking") ||
+            tokens.contains("park") ||
+            tokens.contains("prk") ||
+            tokens.contains("motion") ||
+            tokens.contains("timelapse") ||
+            tokens.contains("lapse") ||
+            tokens.contains("mot") ||
+            filenameModeToken(filename).map(["p", "t"].contains) == true {
+            return "parking"
+        }
+
+        return "continuous"
+    }
+
+    private func genericChannel(relativePath: String, filename: String) -> String {
+        let tokens = genericTokens(from: relativePath) + genericTokens(from: filenameCandidates(for: filename).last ?? filename)
+
+        if tokens.contains("front") || tokens.contains("frontcam") || tokens.contains("frontcamera") {
+            return "front"
+        }
+        if tokens.contains("rear") || tokens.contains("back") || tokens.contains("rearcam") || tokens.contains("rearcamera") {
+            return "rear"
+        }
+        if tokens.contains("interior") || tokens.contains("inside") || tokens.contains("cabin") || tokens.contains("incabin") {
+            return "interior"
+        }
+
+        let stem = URL(fileURLWithPath: filenameCandidates(for: filename).last ?? filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        let compactStem = stem.replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: " ", with: "")
+
+        if let last = compactStem.last {
+            switch last {
+            case "F":
+                return "front"
+            case "R":
+                return "rear"
+            case "I":
+                return "interior"
+            default:
+                break
+            }
+        }
+
+        return "unknown"
+    }
+
+    private func genericTokens(from value: String) -> [String] {
+        value
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+    }
+
+    private func containsOrdered(_ tokens: [String], first: String, second: String) -> Bool {
+        guard let firstIndex = tokens.firstIndex(of: first) else { return false }
+        return tokens[(firstIndex + 1)...].contains(second)
+    }
+
+    private func filenameModeToken(_ filename: String) -> String? {
+        let stem = URL(fileURLWithPath: filenameCandidates(for: filename).last ?? filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        let compactStem = stem.replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: " ", with: "")
+
+        if compactStem.count >= 2 {
+            let suffix = String(compactStem.suffix(2))
+            if ["NF", "NR", "NI", "EF", "ER", "EI", "IF", "IR", "II", "PF", "PR", "PI", "TF", "TR", "TI"].contains(suffix),
+               let first = suffix.first {
+                return String(first).lowercased()
+            }
+        }
+
+        let tokens = genericTokens(from: stem)
+        return tokens.reversed().first { ["n", "e", "i", "p", "t", "vid", "sos"].contains($0) }
+    }
+
+    private func parseGenericTimestamp(filename: String) -> Date? {
+        let stem = URL(fileURLWithPath: filenameCandidates(for: filename).last ?? filename)
+            .deletingPathExtension()
+            .lastPathComponent
+
+        let patterns: [(String, String)] = [
+            ("(20\\d{6})[^0-9]?(\\d{6})", "yyyyMMddHHmmss"),
+            ("(20\\d{2})[^0-9]?(\\d{4})[^0-9]?(\\d{6})", "yyyyMMddHHmmss"),
+            ("(20\\d{2})[^0-9]?(\\d{2})[^0-9]?(\\d{2})[^0-9]+(\\d{2})[^0-9]?(\\d{2})[^0-9]?(\\d{2})", "yyyyMMddHHmmss")
+        ]
+
+        for (pattern, format) in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let nsStem = stem as NSString
+            let range = NSRange(location: 0, length: nsStem.length)
+            guard let match = regex.firstMatch(in: stem, range: range) else { continue }
+            let value = (1..<match.numberOfRanges).compactMap { index -> String? in
+                let matchRange = match.range(at: index)
+                guard matchRange.location != NSNotFound else { return nil }
+                return nsStem.substring(with: matchRange)
+            }
+            .joined()
+            if let date = parseDate(value, format: format) {
+                return date
+            }
+        }
+
+        if let regex = try? NSRegularExpression(pattern: "(20\\d{6})") {
+            let nsStem = stem as NSString
+            let range = NSRange(location: 0, length: nsStem.length)
+            if let match = regex.firstMatch(in: stem, range: range),
+               match.range(at: 1).location != NSNotFound {
+                return parseDate(nsStem.substring(with: match.range(at: 1)), format: "yyyyMMdd")
+            }
+        }
+
+        return nil
+    }
+
     private func parseTimestamp(groups: [String], format: TimestampFormat) -> Date? {
         switch format {
         case .yyyymmddHhmmss:
@@ -772,6 +981,7 @@ struct CardScanner {
     private func parseDate(_ value: String, format: String) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.isLenient = false
         formatter.dateFormat = format
         return formatter.date(from: value)
     }

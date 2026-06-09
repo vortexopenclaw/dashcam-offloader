@@ -24,10 +24,25 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
             return "Blackvue"
         case "70mai":
             return "70mai"
+        case "new":
+            return "New"
         default:
             return manufacturer.capitalized
         }
     }
+
+    static let genericNewDashcam = DashcamProfile(
+        id: "generic-new-dashcam",
+        manufacturer: "New",
+        model: "Dashcam",
+        status: "generic",
+        confidence: "low",
+        folders: [],
+        filenamePatterns: [],
+        channels: [:],
+        highConfidenceEvidence: [],
+        osdSpec: nil
+    )
 }
 
 struct ProfileEvidence: Hashable, Sendable {
