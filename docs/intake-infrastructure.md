@@ -4,66 +4,50 @@ Documentation for the server-side infrastructure that receives sanitized card in
 
 ## Overview
 
-When a user encounters a camera model that is not yet in the profile library, the app guides them through a sanitized card scan and packages the results into an intake submission. The submission is sent to a Cloudflare Worker that validates, sanitizes, and stores it in an R2 bucket for maintainer review.
+When a user encounters a camera model that is not yet in the profile library, the app guides them through a sanitized card scan and packages the results into a Learn Card submission. The submission is sent to the feedback Cloudflare Worker, which validates, sanitizes, and stores it for maintainer review.
 
-The maintainer (or an AI assistant with Cloudflare MCP access) can then review submissions and generate new YAML profiles, card-profile docs, and research docs.
+The maintainer can then review remote submissions and generate new YAML profiles, card-profile docs, and research docs without needing the physical card locally.
 
 ## Components
 
-### Cloudflare Worker — `dashcam-offloader-intake`
+### Cloudflare Worker — `dashcam-offloader-feedback`
 
-- **Endpoint**: `https://dashcam-offloader-intake.<account>.workers.dev`
+- **Endpoint**: `https://dashcam-offloader-feedback.vortexradar.workers.dev/feedback`
 - **Routes**:
-  - `POST /submit` — accepts a new intake package. Requires `X-Intake-Token` header.
-  - `GET /list` — lists recent submissions with metadata. Requires `X-Intake-Token` header.
-  - `GET /submission/:id` — retrieves a single submission by UUID. Requires `X-Intake-Token` header.
-- **Validation**: server-side second-pass strips payloads that match private-field patterns (passwords, SSIDs, GPS coordinates, serial numbers).
-- **Rate limit**: 20 submissions per IP per hour.
-- **Size limit**: 512 KB per submission.
+  - `POST /feedback` — accepts feedback and Learn Card submissions.
+- **Validation**: server-side second-pass strips payloads that match private-field patterns such as passwords, SSIDs, GPS coordinates, serial numbers, tokens, device IDs, and raw full settings dumps.
+- **Size limit**: 256 KB per submission.
 
-### R2 Bucket — `dashcam-offloader-submissions`
+### Storage — `FEEDBACK_KV` / `FEEDBACK_BUCKET`
 
-- Stores intake packages as JSON blobs.
-- Key format: `YYYY-MM-DD/<submission-uuid>.json`
-- Custom metadata per object: `manufacturer`, `model`, `app_version`, `channels`.
-- Private bucket — not publicly accessible. Only accessible via the Worker (with valid token) or the Cloudflare dashboard.
-
-### Secrets
-
-- `INTAKE_TOKEN` — set as a Cloudflare Worker Secret (encrypted, never in source code). The Mac app includes this token as a build-time constant (not in the open-source repo). Users who self-host create their own Worker with their own token.
+- Stores submission packages as JSON records.
+- Current key format: `feedback/YYYY-MM-DD/<submission-uuid>.json`
+- Storage is private and not publicly browsable.
+- The Worker must have either a `FEEDBACK_KV` namespace binding or a `FEEDBACK_BUCKET` R2 binding. If neither is bound, production submissions fail instead of being silently lost.
 
 ## Submission Schema
 
-The Mac app sends a JSON body structured as:
+The Mac app sends a JSON body structured roughly as:
 
 ```json
 {
-  "app_version": "0.1.0",
-  "submission_id": "<client-generated-uuid>",
-  "user_provided": {
+  "kind": "training",
+  "message": "BlackVue DR770X Box",
+  "appVersion": "0.1.0",
+  "training": {
     "manufacturer": "Escort",
-    "model": "M3"
+    "model": "M3",
+    "channelSetup": "1CH front"
   },
-  "card_scan": {
-    "volume_label": "ESCORT M3",
-    "folder_tree": ["Normal/", "Event/", "Photo/", "DATA/"],
-    "filename_samples": [
+  "scan": {
+    "volumeName": "ESCORT M3",
+    "rootFolders": ["Normal", "Event", "Photo", "DATA"],
+    "filenameSamples": [
       "20260601_0001_CAM.MP4",
       "20260601_0001_CAM.map"
     ],
-    "file_extensions": [".MP4", ".map", ".JPG"],
-    "sidecar_metadata": {},
-    "video_streams": [
-      {
-        "codec": "h264",
-        "width": 1920,
-        "height": 1080,
-        "fps": 30,
-        "bitrate_kbps": 16000,
-        "container": "mp4"
-      }
-    ],
-    "channels": "1"
+    "extensionCounts": { "mp4": 12, "map": 12 },
+    "samplePaths": ["Normal/20260601_0001_CAM.MP4"]
   }
 }
 ```
@@ -84,25 +68,18 @@ The app is responsible for sanitizing the intake package before transmission. Th
 
 ## Open Source Considerations
 
-The Worker source code is safe to publish. The `INTAKE_TOKEN` is stored exclusively in Cloudflare's encrypted Worker Secrets and is never in the repository. Anyone who forks the project to self-host creates their own Worker, R2 bucket, and token via:
+The Worker source code is safe to publish. The Mac app posts sanitized feedback directly to the public Worker endpoint; it does not contain Cloudflare credentials or storage tokens. Anyone who forks the project can self-host by creating their own Worker and binding a private KV namespace or R2 bucket.
+
+## Reviewing Remote Submissions
+
+Use the repository helper to list and review stored feedback records:
 
 ```bash
-wrangler secret put INTAKE_TOKEN
+python3 scripts/review-feedback-submissions.py list --kind training
+python3 scripts/review-feedback-submissions.py get <feedback-id-or-kv-key>
 ```
 
-The Mac app ships with the token as a build-time constant injected from a `.env` file that is listed in `.gitignore`.
-
-## Reviewing Submissions
-
-Use the Cloudflare MCP (connected to the same Cloudflare account) to list and review submissions:
-
-```
-GET /list                     # all recent submissions (metadata only)
-GET /list?date=2026-06        # filter by date prefix
-GET /submission/<uuid>        # full JSON for one submission
-```
-
-Or browse directly in the Cloudflare dashboard under R2 → `dashcam-offloader-submissions`.
+This helper maps `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN` to Wrangler's `CLOUDFLARE_API_TOKEN` at runtime and does not print credentials. Use `--json` only when a full sanitized payload is needed for profile work.
 
 ## Deployment
 
@@ -112,4 +89,4 @@ The Worker and bucket were created and deployed via Cloudflare MCP. To redeploy 
 wrangler deploy
 ```
 
-Worker source is in `workers/dashcam-offloader-intake.js` (to be added when the Mac app intake feature is built).
+Worker source is in `workers/feedback/worker.js`.
