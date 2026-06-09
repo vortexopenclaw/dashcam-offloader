@@ -36,6 +36,7 @@ final class TransferViewModel: ObservableObject {
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
     private var copyTask: Task<Void, Never>?
+    private var customSourceNames: [MountedSource.ID: String] = [:]
 
     init() {
         refreshSources()
@@ -170,8 +171,10 @@ final class TransferViewModel: ObservableObject {
     func refreshSources() {
         let previousSource = selectedSource
         mountedSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
-        if let previousSource, mountedSources.contains(previousSource) {
-            selectedSource = previousSource
+            .map(sourceWithCustomName)
+        if let previousSource,
+           let refreshedSource = mountedSources.first(where: { $0.id == previousSource.id }) {
+            selectedSource = refreshedSource
         } else {
             selectedSource = mountedSources.first
         }
@@ -226,7 +229,7 @@ final class TransferViewModel: ObservableObject {
         panel.directoryURL = selectedSource?.url ?? URL(fileURLWithPath: "/Volumes", isDirectory: true)
 
         if panel.runModal() == .OK, let url = panel.url {
-            let source = scanner.mountedSource(forUserSelectedURL: url)
+            let source = sourceWithCustomName(scanner.mountedSource(forUserSelectedURL: url))
             upsertMountedSource(source)
             selectSource(source, scanImmediately: true)
         }
@@ -253,11 +256,96 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func upsertMountedSource(_ source: MountedSource) {
-        if let existingIndex = mountedSources.firstIndex(where: { $0.id == source.id }) {
-            mountedSources[existingIndex] = source
+        let namedSource = sourceWithCustomName(source)
+        if let existingIndex = mountedSources.firstIndex(where: { $0.id == namedSource.id }) {
+            mountedSources[existingIndex] = namedSource
         } else {
-            mountedSources.insert(source, at: 0)
+            mountedSources.insert(namedSource, at: 0)
         }
+    }
+
+    private func sourceWithCustomName(_ source: MountedSource) -> MountedSource {
+        guard let customName = customSourceNames[source.id] else { return source }
+        var renamedSource = source
+        renamedSource.name = customName
+        return renamedSource
+    }
+
+    func renameSource(_ source: MountedSource) {
+        let alert = NSAlert()
+        alert.messageText = "Rename Source"
+        alert.informativeText = "This changes the name shown in Dashcam Offloader. It does not rename the memory card."
+        alert.addButton(withTitle: "Rename")
+        alert.addButton(withTitle: "Cancel")
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
+        textField.stringValue = source.name
+        alert.accessoryView = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let trimmedName = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+
+        customSourceNames[source.id] = trimmedName
+        var renamedSource = source
+        renamedSource.name = trimmedName
+
+        if let index = mountedSources.firstIndex(where: { $0.id == source.id }) {
+            mountedSources[index] = renamedSource
+        }
+        if selectedSource?.id == source.id {
+            selectedSource = renamedSource
+        }
+        statusMessage = "Renamed source to \(trimmedName)"
+    }
+
+    func ejectSource(_ source: MountedSource) {
+        guard !copyProgress.isRunning else {
+            statusMessage = "Stop the download before ejecting a source"
+            return
+        }
+
+        let volumeURL = sourceVolumeURL(for: source.url)
+        if volumeURL.path.hasPrefix("/Volumes/") {
+            statusMessage = "Ejecting \(source.name)..."
+            Task { [weak self, source, volumeURL] in
+                do {
+                    try NSWorkspace.shared.unmountAndEjectDevice(at: volumeURL)
+                    await MainActor.run {
+                        self?.removeSourceFromList(source, status: "Ejected \(source.name)")
+                    }
+                } catch {
+                    await MainActor.run {
+                        self?.statusMessage = "Eject failed: \(error.localizedDescription)"
+                    }
+                }
+            }
+        } else {
+            removeSourceFromList(source, status: "Removed \(source.name)")
+        }
+    }
+
+    private func removeSourceFromList(_ source: MountedSource, status: String) {
+        mountedSources.removeAll { $0.id == source.id }
+        customSourceNames.removeValue(forKey: source.id)
+
+        if selectedSource?.id == source.id {
+            selectedSource = mountedSources.first
+            detectionCandidates = []
+            selectedProfile = nil
+            clips = []
+            lastScannedFiles = []
+            lastScanDiagnostics = []
+            excludedQueueClipIDs = []
+            selectedQueueItemIDs = []
+            copyPlan = nil
+            copyResults = []
+            supportFileResults = []
+            scanSummary = selectedSource.map { ScanSummary(sourcePath: $0.url.path) } ?? ScanSummary()
+        }
+
+        statusMessage = status
     }
 
     func chooseDestinationFolder() {

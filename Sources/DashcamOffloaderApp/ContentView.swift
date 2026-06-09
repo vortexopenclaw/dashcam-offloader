@@ -97,7 +97,7 @@ struct ContentView: View {
     }
 
     private func sourceRow(_ source: MountedSource) -> some View {
-        let isSelected = viewModel.selectedSource == source
+        let isSelected = viewModel.selectedSource?.id == source.id
         let iconName = isSelected ? "checkmark.circle.fill" : "externaldrive"
         let iconColor = isSelected ? Color.accentColor : Color.secondary
         let backgroundColor = isSelected ? Color.accentColor.opacity(0.12) : Color.clear
@@ -126,6 +126,20 @@ struct ContentView: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .contextMenu {
+            Button {
+                viewModel.renameSource(source)
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+
+            Button {
+                viewModel.ejectSource(source)
+            } label: {
+                Label("Eject", systemImage: "eject")
+            }
+            .disabled(viewModel.copyProgress.isRunning)
+        }
     }
 
     private var mainPanel: some View {
