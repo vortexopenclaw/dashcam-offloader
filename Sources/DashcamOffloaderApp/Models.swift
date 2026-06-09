@@ -167,6 +167,38 @@ struct DetectionCandidate: Identifiable, Hashable, Sendable {
     var evidence: [String]
 }
 
+struct IdentifiedCamera: Codable, Hashable, Sendable {
+    var manufacturer: String
+    var model: String
+    var evidence: [String]
+    var isSupported: Bool
+
+    var displayName: String {
+        "\(displayManufacturer) \(model)"
+    }
+
+    var displayManufacturer: String {
+        switch manufacturer.lowercased() {
+        case "blackvue":
+            return "BlackVue"
+        case "viofo":
+            return "Viofo"
+        case "dji":
+            return "DJI"
+        case "thinkware":
+            return "Thinkware"
+        case "cansonic":
+            return "Cansonic"
+        case "70mai":
+            return "70mai"
+        case "new":
+            return "New"
+        default:
+            return manufacturer.capitalized
+        }
+    }
+}
+
 struct ScanDiagnosticEntry: Codable, Hashable, Sendable {
     var stage: String
     var profileID: String?
@@ -583,6 +615,7 @@ struct CardTrainingDetails: Codable, Hashable, Sendable {
 
 struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var volumeName: String
+    var identifiedCamera: IdentifiedCamera?
     var selectedProfileID: String?
     var selectedProfileName: String?
     var scannedFiles: Int

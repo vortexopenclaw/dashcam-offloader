@@ -53,6 +53,7 @@ struct CardScanner {
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap(profileSelectionIssue)
+        let identifiedCamera = identifyCamera(from: candidates, selectedProfile: nil)
         let selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
             selectedProfile = topCandidate.profile
@@ -113,6 +114,7 @@ struct CardScanner {
             sourceURL: sourceURL,
             allFiles: allFiles,
             candidates: candidates,
+            identifiedCamera: identifiedCamera,
             selectedProfile: selectedProfile,
             clips: clips,
             diagnostics: diagnostics
@@ -275,6 +277,7 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
+        result.identifiedCamera = identifyCamera(from: updatedCandidates, selectedProfile: result.selectedProfile)
 
         // Re-select and re-classify if the winner changed.
         if let newTop = updatedCandidates.first,
@@ -320,6 +323,28 @@ struct CardScanner {
         } else {
             return .low
         }
+    }
+
+    private func identifyCamera(from candidates: [DetectionCandidate], selectedProfile: DashcamProfile?) -> IdentifiedCamera? {
+        guard let top = candidates.first else { return nil }
+        guard top.confidence != .low else { return nil }
+
+        let hasExplicitModelEvidence = top.evidence.contains { evidence in
+            evidence.hasPrefix("model text ") ||
+            evidence.hasPrefix("model evidence ") ||
+            evidence.hasPrefix("filename pattern match ")
+        }
+        guard hasExplicitModelEvidence else { return nil }
+
+        let profile = selectedProfile ?? top.profile
+        guard profile.id != DashcamProfile.genericNewDashcam.id else { return nil }
+
+        return IdentifiedCamera(
+            manufacturer: profile.manufacturer,
+            model: profile.model,
+            evidence: Array(top.evidence.prefix(5)),
+            isSupported: true
+        )
     }
 
     func classify(files: [URL], sourceURL: URL, profile: DashcamProfile) -> [ClipItem] {
@@ -1282,6 +1307,7 @@ struct ScanResult {
     var sourceURL: URL
     var allFiles: [URL]
     var candidates: [DetectionCandidate]
+    var identifiedCamera: IdentifiedCamera?
     var selectedProfile: DashcamProfile?
     var clips: [ClipItem]
     var diagnostics: [ScanDiagnosticEntry]

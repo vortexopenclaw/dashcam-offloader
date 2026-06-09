@@ -134,15 +134,17 @@ video:
         B: 2560x1440
       fps: 30
       bitrate_mbps:
-        L: 31.1
-        R: 31.1
+        L: 31.1-41.0
+        R: 31.1-41.0
         B: 11.7-11.9
       durations_seconds:
         observed: [33.2, 41.0, 60.0]
       notes: >
         Follow-up timelapse parking card used regular one-minute P-prefixed
         protected moments at 11:45-11:48 and an isolated protected parking
-        moment at 12:59.
+        moment at 12:59. Direct ffprobe found the isolated 12:59 L/R clips are
+        short but high bitrate, around 41 Mbps, so file-size-only representative
+        sampling can miss a useful bitrate difference.
 validation:
   app_submission_sampled: true
   card_sampled: true

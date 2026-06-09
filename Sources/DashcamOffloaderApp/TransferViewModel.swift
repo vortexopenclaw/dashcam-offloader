@@ -9,6 +9,7 @@ final class TransferViewModel: ObservableObject {
     @Published var selectedSource: MountedSource?
     @Published var destinationURL: URL?
     @Published var detectionCandidates: [DetectionCandidate] = []
+    @Published var identifiedCamera: IdentifiedCamera?
     @Published var selectedProfile: DashcamProfile?
     @Published var clips: [ClipItem] = []
     @Published var filters = FilterState()
@@ -363,6 +364,7 @@ final class TransferViewModel: ObservableObject {
 
     private func clearSourceDerivedState(for source: MountedSource?) {
         detectionCandidates = []
+        identifiedCamera = nil
         selectedProfile = nil
         clips = []
         lastScannedFiles = []
@@ -411,6 +413,7 @@ final class TransferViewModel: ObservableObject {
                     try CardScanner().scanWithOSD(sourceURL: selectedSource.url, profiles: profiles)
                 }.value
                 self.detectionCandidates = scanResult.candidates
+                self.identifiedCamera = scanResult.identifiedCamera
                 self.selectedProfile = scanResult.selectedProfile
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
@@ -763,6 +766,7 @@ final class TransferViewModel: ObservableObject {
 
         return FeedbackScanSnapshot(
             volumeName: selectedSource?.name ?? "Unknown",
+            identifiedCamera: identifiedCamera,
             selectedProfileID: selectedProfile?.id,
             selectedProfileName: selectedProfile?.displayName,
             scannedFiles: scanSummary.scannedFiles,
@@ -912,6 +916,15 @@ final class TransferViewModel: ObservableObject {
     private func representativeVideoClips(_ clips: [ClipItem]) -> [ClipItem] {
         let videoClips = clips.filter(\.isVideo)
         guard !videoClips.isEmpty else { return [] }
+
+        if videoClips.count <= 64 {
+            return videoClips.sorted { lhs, rhs in
+                if lhs.timestamp != rhs.timestamp {
+                    return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
+                }
+                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
+            }
+        }
 
         var selected: [ClipItem] = []
         var seenKeys: Set<String> = []

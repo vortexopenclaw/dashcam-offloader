@@ -108,6 +108,7 @@ def summary_for(record: dict[str, Any], key: str) -> dict[str, Any]:
     scan = payload.get("scanSummary") or {}
     if not scan and isinstance(payload.get("scan"), dict):
         scan = payload["scan"]
+    identified = scan.get("identifiedCamera") or {}
     return {
         "key": key,
         "receivedAt": record.get("receivedAt"),
@@ -116,6 +117,7 @@ def summary_for(record: dict[str, Any], key: str) -> dict[str, Any]:
         "manufacturer": learning.get("manufacturer"),
         "model": learning.get("model"),
         "message": payload.get("message"),
+        "identifiedCamera": identified.get("displayName") or identified.get("model"),
         "scanResult": scan.get("detectedProfileName") or scan.get("selectedProfileName"),
         "confidence": scan.get("confidence"),
         "videoSpecSamples": len(scan.get("videoSpecSamples") or []),
