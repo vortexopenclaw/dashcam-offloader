@@ -45,6 +45,9 @@ sampled_variants:
 source_notes:
   - docs/card-profiles/vueroid-s1-4k-infinite.md
 detection:
+  disqualifying:
+    - path: CONFIG/config.bin
+      must_not_contain: H1-QHD-INFINITE
   supporting:
     - folder: INF
     - folder: EVENT

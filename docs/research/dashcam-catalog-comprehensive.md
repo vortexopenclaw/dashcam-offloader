@@ -18,6 +18,7 @@ The current Vueroid dashcam page lists these selector candidates.
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
+| H1 | 1CH | QHD class | app-submitted 2026 sample | Tracked profile exists; detected on card as `H1-QHD-INFINITE`, front-only 1CH layout. |
 | S1 4K Infinite | 1/2/3CH | 4K front class | 2025 to current | Tracked profile exists; S1 family with rear/interior variants, Wi-Fi, GPS, and parking modes. |
 | S1 QHD Infinite | 2/3CH | QHD front class | 2026 current | S1 family, Sony STARVIS 2, 5 GHz Wi-Fi, GPS, front/rear and front/rear/interior bundles. |
 | D40-Q2 | 2CH | QHD class | 2026 current listing | D40 series model listed in Vueroid dashcam page/category navigation. |

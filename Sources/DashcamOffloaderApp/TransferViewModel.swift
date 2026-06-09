@@ -68,17 +68,17 @@ final class TransferViewModel: ObservableObject {
     }
 
     var inferredLearningChannelSetup: (count: Int, description: String) {
+        let scannedLabels = orderedChannelLabels(from: footageClips.map(\.channel))
+        if !scannedLabels.isEmpty {
+            return (min(max(scannedLabels.count, 1), 4), scannedLabels.joined(separator: " / "))
+        }
+
         let profileChannels = selectedProfile?.channels ?? [:]
         if selectedProfile?.id != DashcamProfile.genericNewDashcam.id, !profileChannels.isEmpty {
             let labels = orderedChannelLabels(from: profileChannels.values)
             if !labels.isEmpty {
                 return (min(max(labels.count, 1), 4), labels.joined(separator: " / "))
             }
-        }
-
-        let labels = orderedChannelLabels(from: footageClips.map(\.channel))
-        if !labels.isEmpty {
-            return (min(max(labels.count, 1), 4), labels.joined(separator: " / "))
         }
 
         let groupedCount = inferredSynchronizedChannelCount()
@@ -834,7 +834,7 @@ final class TransferViewModel: ObservableObject {
         let lowerPath = relativePath.lowercased()
         let ext = fileURL.pathExtension.lowercased()
 
-        guard !isMediaLikeFile(fileURL), !["gpx", "nmea", "bin", "exe"].contains(ext) else {
+        guard !isMediaLikeFile(fileURL), !["gpx", "nmea", "exe"].contains(ext) else {
             return false
         }
 
@@ -844,6 +844,10 @@ final class TransferViewModel: ObservableObject {
             lowerPath.hasSuffix(".boot.log") ||
             lowerPath.hasSuffix("/boot.log") {
             return true
+        }
+
+        if ext == "bin" {
+            return false
         }
 
         return ["ini", "cfg", "conf", "json", "txt", "log"].contains(ext)
@@ -961,22 +965,27 @@ final class TransferViewModel: ObservableObject {
     private func makeSettingSnapshot(for fileURL: URL, sourceRoot: URL?) -> FeedbackSettingSnapshot? {
         guard let text = readSmallTextFile(fileURL) else { return nil }
         let parsedSettings = extractSettings(from: text)
-        guard !parsedSettings.isEmpty else { return nil }
-
         let safePairs = parsedSettings
             .filter { isUsefulSettingKey($0.key) && !isSensitiveSetting(key: $0.key, value: $0.value) }
             .prefix(40)
-
-        guard !safePairs.isEmpty else { return nil }
 
         var safeValues: [String: String] = [:]
         for pair in safePairs.prefix(20) {
             safeValues[pair.key] = sanitizedSettingValue(pair.value)
         }
 
+        if safeValues.isEmpty {
+            let fragments = extractSafeModelFragments(from: text)
+            for (index, fragment) in fragments.prefix(8).enumerated() {
+                safeValues["modelEvidence\(index + 1)"] = sanitizedSettingValue(fragment)
+            }
+        }
+
+        guard !safeValues.isEmpty else { return nil }
+
         return FeedbackSettingSnapshot(
             relativePath: sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot),
-            keys: safePairs.map(\.key),
+            keys: Array(safeValues.keys).sorted(),
             safeValues: safeValues
         )
     }
@@ -1017,9 +1026,64 @@ final class TransferViewModel: ObservableObject {
         .uniquedByKey()
     }
 
+    private func extractSafeModelFragments(from text: String) -> [String] {
+        let printableRuns = text
+            .unicodeScalars
+            .reduce(into: [String]()) { runs, scalar in
+                let isPrintableASCII = scalar.value >= 32 && scalar.value <= 126
+                if isPrintableASCII {
+                    if runs.isEmpty {
+                        runs.append(String(scalar))
+                    } else {
+                        runs[runs.count - 1].append(String(scalar))
+                    }
+                } else if runs.last?.isEmpty == false {
+                    runs.append("")
+                }
+            }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 4 && $0.count <= 120 }
+
+        let usefulFragments = [
+            "model",
+            "firmware",
+            "version",
+            "fw",
+            "qhd",
+            "uhd",
+            "fhd",
+            "4k",
+            "2k",
+            "1ch",
+            "2ch",
+            "3ch",
+            "4ch",
+            "infinite",
+            "vueroid",
+            "thinkware",
+            "viofo",
+            "blackvue",
+            "vantrue",
+            "rove",
+            "70mai"
+        ]
+
+        return printableRuns
+            .filter { fragment in
+                let lower = fragment.lowercased()
+                return usefulFragments.contains { lower.contains($0) } &&
+                    !isSensitiveSetting(key: "modelEvidence", value: fragment)
+            }
+            .uniquedPreservingOrder()
+    }
+
     private func isUsefulSettingKey(_ key: String) -> Bool {
         let lowerKey = key.lowercased()
         let usefulFragments = [
+            "model",
+            "firmware",
+            "version",
+            "fw",
             "resolution",
             "quality",
             "bitrate",

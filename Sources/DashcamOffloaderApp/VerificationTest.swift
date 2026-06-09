@@ -17,6 +17,10 @@ enum VerificationTest {
                 print("VERIFY FAIL: missing Vueroid S1 4K Infinite profile")
                 return false
             }
+            guard profiles.contains(where: { $0.id == "vueroid-h1" }) else {
+                print("VERIFY FAIL: missing Vueroid H1 profile")
+                return false
+            }
             let requiredDisplayNames = [
                 "BlackVue Elite 9",
                 "70mai M310",
@@ -401,6 +405,45 @@ enum VerificationTest {
                     print("VERIFY FAIL: Vueroid boot log was not planned")
                     return false
                 }
+            }
+
+            let vueroidH1Source = temp.appendingPathComponent("H1-QHD-INF", isDirectory: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("EVENT", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("PARK", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("USER", isDirectory: true), withIntermediateDirectories: true)
+            try Data("H1-QHD-INFINITE V0.5.9\u{0}May 13 2026, 12:23:13\u{0}H1-QHD-INFINITE".utf8).write(to: vueroidH1Source.appendingPathComponent("CONFIG/config.bin"))
+            try Data("[2026/06/09-16:31:03] BOOT 12.6V 030`C 1CH".utf8).write(to: vueroidH1Source.appendingPathComponent("CONFIG/.boot.log"))
+            try Data(repeating: 31, count: 1024).write(to: vueroidH1Source.appendingPathComponent("INF/20260515_214744_INF_N.mp4"))
+            try Data(repeating: 32, count: 1024).write(to: vueroidH1Source.appendingPathComponent("EVENT/20260515_215208_EVT_N.mp4"))
+            try Data(repeating: 33, count: 1024).write(to: vueroidH1Source.appendingPathComponent("PARK/20260609_163241_PRK_N.mp4"))
+            try Data(repeating: 34, count: 1024).write(to: vueroidH1Source.appendingPathComponent("PEVENT/20260609_163325_PVT_N.mp4"))
+            try Data(repeating: 35, count: 1024).write(to: vueroidH1Source.appendingPathComponent("USER/20260609_163354_USR_N.mp4"))
+
+            let vueroidH1Scan = try scanner.scan(sourceURL: vueroidH1Source, profiles: profiles)
+            guard vueroidH1Scan.candidates.first?.profile.id == "vueroid-h1" else {
+                print("VERIFY FAIL: Vueroid H1 was not top candidate: \(vueroidH1Scan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score)" })")
+                return false
+            }
+            guard vueroidH1Scan.candidates.first?.confidence == .high else {
+                print("VERIFY FAIL: Vueroid H1 did not score high confidence")
+                return false
+            }
+            let h1DownloadableClips = vueroidH1Scan.clips.filter { $0.excludedReason == nil }
+            guard Set(h1DownloadableClips.map(\.channel)) == ["front"] else {
+                print("VERIFY FAIL: Vueroid H1 should be front-only: \(Set(h1DownloadableClips.map(\.channel)).sorted())")
+                return false
+            }
+            let h1CategoryCounts = Dictionary(grouping: h1DownloadableClips, by: \.outputCategory).mapValues(\.count)
+            guard h1CategoryCounts["Driving"] == 1,
+                  h1CategoryCounts["Protected"] == 1,
+                  h1CategoryCounts["Parking"] == 1,
+                  h1CategoryCounts["Parking Events"] == 1,
+                  h1CategoryCounts["Other"] == 1 else {
+                print("VERIFY FAIL: Vueroid H1 output groups wrong: \(h1CategoryCounts)")
+                return false
             }
 
             let thinkwareSource = temp.appendingPathComponent("thinkware-u3000-pro", isDirectory: true)

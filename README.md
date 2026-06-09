@@ -115,6 +115,7 @@ swift run DashcamOffloader --verify
 - VIOFO A329T — telephoto variant, official references only
 
 **Vueroid**
+- Vueroid H1 — 1CH front variant, confirmed from app submission and real card sample
 - Vueroid S1 4K Infinite — 1CH/2CH/3CH variants, all confirmed from real card samples
 
 ## Repository Layout

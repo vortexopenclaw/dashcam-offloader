@@ -1,0 +1,81 @@
+id: vueroid-h1
+manufacturer: Vueroid
+model: H1
+status: seed
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: app_submission_and_real_card_sampled
+    notes: >
+      Confirmed from an app-submitted learning sample and mounted card
+      `/Volumes/H1-QHD-INF`. The card's boot log reports 1CH and all visible
+      MP4 filenames omit physical camera suffixes, matching a front-only card.
+sampled_variants:
+  - channels: 1
+    roles:
+      - front
+source_notes:
+  - docs/card-profiles/vueroid-h1.md
+detection:
+  high_confidence:
+    - path: CONFIG/config.bin
+      contains: H1-QHD-INFINITE
+    - path: CONFIG/.boot.log
+      contains: 1CH
+  supporting:
+    - volume_label: H1-QHD-INF
+      strength: weak
+    - folder: INF
+    - folder: EVENT
+    - folder: PARK
+    - folder: PEVENT
+    - folder: USER
+folders:
+  - path: INF
+    mode: continuous
+    validation: app_submission_and_real_card_sampled
+  - path: EVENT
+    mode: driving_event
+    validation: app_submission_and_real_card_sampled
+  - path: PARK
+    mode: parking
+    validation: app_submission_and_real_card_sampled
+  - path: PEVENT
+    mode: parking_event
+    validation: app_submission_and_real_card_sampled
+  - path: USER
+    mode: manual
+    validation: app_submission_and_real_card_sampled
+  - path: BOOKMARK
+    mode: bookmark_image
+    validation: real_card_sampled
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([A-Z]+)_([A-Z])\\.mp4$"
+    case_sensitive: false
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+channels:
+  F: front
+observed_flags:
+  N: unknown_observed_on_visible_samples
+grouping:
+  keys:
+    - date
+    - time
+    - prefix
+  channel_sets:
+    1ch:
+      channels: [F]
+      validation: app_submission_and_real_card_sampled
+exclude:
+  - CONFIG/**
+  - .TFF_REC_RESERVE*
+  - "*.SYS"
+  - "*.NFF"
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"
