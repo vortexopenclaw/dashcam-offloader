@@ -15,10 +15,12 @@
 ## Findings
 
 - The official product page confirms the sampled A329S 3CH configuration as a 4K front, 2K cabin, and 2K rear three-channel dash cam.
+- Ariel confirmed the 3CH resolution layout more specifically as 3840x2160 front, 2560x1440 interior, and 2560x1440 rear.
 - The official VIOFO collection page lists A329S 1CH, A329S 2CH, A329S 2CH IR, and A329S 3CH variants.
 - The official product page also links to VIOFO's firmware and manual hub.
 - During this pass, the official manual index and support folder did not expose a clean A329S PDF manual link in scraped content.
 - The profile rules in `docs/card-profiles/viofo-a329s.md` are based primarily on the real card sample, with official pages used for model confirmation.
+- A329S can share the A229-style folder and filename family, but it should not inherit A229 codec, bitrate, or internal-platform assumptions. Ariel confirmed it uses a different processor/internal platform.
 - VIOFO documents Multiplex Video for A329S as multiple views in one video, and the A329S blog describes exporting either a single perspective or a multi-angle view without manual editing.
 - Vortex Radar's A329S/T multiplexing walkthrough describes the default mode as separate per-camera files, plus selectable multiplex modes for two-camera and three-camera combinations.
 - The walkthrough describes two-camera multiplex output as side-by-side 7680x2160, and three-camera multiplex output as a front view above two secondary views at 3840x3240.

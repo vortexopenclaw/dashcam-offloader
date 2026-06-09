@@ -2,21 +2,23 @@
 
 ## Camera Overview
 
-The VIOFO A229 Plus is a 3-channel dashcam (front, interior, rear) with 2K QHD (2560×1440) front and rear cameras and a 1080P interior camera. It shares the VIOFO Novatek platform with the A229 Pro, A229 Ultra, and A329S, using identical filename conventions, folder layout, and MP4 metadata.
+The VIOFO A229 Plus is a 3-channel dashcam (front, interior, rear) with 2K QHD (2560×1440) front and rear cameras and a 1080P interior camera. It shares the VIOFO A229-series filename and folder family with A229 Pro and A229 Ultra.
+
+A329S may look similar at the folder/filename level, but it uses a different processor/internal platform. Do not inherit A229 codec, bitrate, or metadata assumptions for A329S without direct A329S clip validation.
 
 ### A229 Lineup Resolution Comparison
 
 | Model | Front | Interior | Rear |
 |-------|-------|----------|------|
 | A229 Ultra | 4K (3840×2160) | 1080P (1920×1080) | 4K (3840×2160) |
-| A229 Pro | 4K (3840×2160) | 2K (2560×1440) | 2K (2560×1440) |
+| A229 Pro | 4K (3840×2160) | 1080P (1920×1080) | 2K (2560×1440) |
 | A229 Plus | 2K (2560×1440) | 1080P (1920×1080) | 2K (2560×1440) |
 
 The A229 Plus is the entry model in the 3CH A229 lineup.
 
 ## Filename and Folder Structure
 
-Confirmed identical to VIOFO A229 Pro and A329S:
+Confirmed identical to VIOFO A229 Pro and similar to A329S at the visible filename/folder level:
 - Pattern: `YYYY_MMDD_HHMMSS_SEQUENCECHANNEL.EXT`
 - Folders: `DCIM/Movie/`, `DCIM/Movie/Parking/`, `DCIM/Movie/RO/`, `DCIM/Photo/`
 - Global monotonic sequence counter across all channels and modes
@@ -24,7 +26,7 @@ Confirmed identical to VIOFO A229 Pro and A329S:
 
 ## MP4 Metadata
 
-`©fmt=NOVATEK` and `©inf=DEMO1` confirmed on real-card sample. Identical to A229 Pro and A329S. Not useful for model discrimination.
+`©fmt=NOVATEK` and `©inf=DEMO1` confirmed on the A229 Plus real-card sample. Similar metadata must be rechecked on A329S because that model should not be treated as the same internal platform.
 
 ## OSD Stamp
 

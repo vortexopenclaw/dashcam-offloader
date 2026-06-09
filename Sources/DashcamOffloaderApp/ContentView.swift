@@ -2,6 +2,10 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var viewModel: TransferViewModel
+    @State private var isFeedbackPresented = false
+    @State private var isCardLearningPresented = false
+    @State private var showDownloadOptions = false
+    @State private var showDownloadFilters = false
 
     var body: some View {
         NavigationSplitView {
@@ -19,8 +23,19 @@ struct ContentView: View {
             Button {
                 viewModel.chooseDestinationFolder()
             } label: {
-                Label("Destination", systemImage: "folder")
+                Label("Download Folder", systemImage: "folder")
             }
+            Button {
+                isFeedbackPresented = true
+            } label: {
+                Label("Feedback", systemImage: "bubble.left.and.bubble.right")
+            }
+        }
+        .sheet(isPresented: $isFeedbackPresented) {
+            FeedbackSheet(viewModel: viewModel)
+        }
+        .sheet(isPresented: $isCardLearningPresented) {
+            CardLearningSheet(viewModel: viewModel)
         }
     }
 
@@ -34,7 +49,7 @@ struct ContentView: View {
             Button {
                 viewModel.chooseSourceFolder()
             } label: {
-                Label("Choose MicroSD Card...", systemImage: "externaldrive")
+                Label("Choose Memory Card...", systemImage: "externaldrive")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -47,7 +62,7 @@ struct ContentView: View {
             .font(.caption)
             .padding(.horizontal)
 
-            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Hiding Time Machine, backups, system volumes, and folders without dashcam-like media.")
+            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Only showing locations that look like dashcam footage sources.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal)
@@ -71,7 +86,7 @@ struct ContentView: View {
             Button {
                 viewModel.scanSelectedSource()
             } label: {
-                Label(viewModel.isScanning ? "Scanning" : "Rescan Source", systemImage: "waveform.path.ecg")
+                Label(viewModel.isScanning ? "Scanning" : "Rescan Card", systemImage: "waveform.path.ecg")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -114,6 +129,7 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
+                    workflowSection
                     sourceSection
                     detectionSection
                     destinationSection
@@ -129,7 +145,7 @@ struct ContentView: View {
     }
 
     private var sourceSection: some View {
-        GroupBox("Source Scan") {
+        GroupBox("1. Pick Your Memory Card") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -137,7 +153,7 @@ struct ContentView: View {
                             .font(.subheadline)
                             .textSelection(.enabled)
                             .lineLimit(2)
-                        Text("Choosing a source scans it automatically.")
+                        Text("Choose the card from your dashcam. The app only reads from the card and never changes it.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -153,7 +169,7 @@ struct ContentView: View {
                     Divider()
                     HStack(spacing: 16) {
                         Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
-                        Label("\(viewModel.scanSummary.copyableItems) copyable", systemImage: "checkmark.circle")
+                        Label("\(viewModel.scanSummary.copyableItems) downloadable", systemImage: "checkmark.circle")
                         Label("\(viewModel.scanSummary.excludedItems) excluded", systemImage: "nosign")
                     }
                     .font(.caption)
@@ -177,7 +193,10 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Dashcam Offloader")
                     .font(.largeTitle.bold())
+                Text("Download dashcam footage from a memory card to a folder on your computer.")
+                    .foregroundStyle(.secondary)
                 Text(viewModel.statusMessage)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -188,16 +207,76 @@ struct ContentView: View {
         }
     }
 
+    private var workflowSection: some View {
+        HStack(spacing: 12) {
+            workflowStep(
+                number: 1,
+                title: "Pick card",
+                detail: viewModel.selectedSource?.name ?? "Choose the memory card",
+                complete: viewModel.selectedSource != nil
+            )
+            workflowStep(
+                number: 2,
+                title: "Choose folder",
+                detail: viewModel.destinationURL?.lastPathComponent ?? "Where downloads go",
+                complete: viewModel.destinationURL != nil
+            )
+            workflowStep(
+                number: 3,
+                title: "Download",
+                detail: "\(viewModel.copyPlan?.selectedFileCount ?? 0) files ready",
+                complete: !(viewModel.copyPlan?.items.isEmpty ?? true)
+            )
+        }
+    }
+
+    private func workflowStep(number: Int, title: String, detail: String, complete: Bool) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(complete ? Color.accentColor : Color.secondary.opacity(0.18))
+                    .frame(width: 28, height: 28)
+                if complete {
+                    Image(systemName: "checkmark")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                } else {
+                    Text("\(number)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.headline)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(Color.secondary.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
     private var detectionSection: some View {
-        GroupBox("Camera Profile") {
+        GroupBox("Camera Detection") {
             VStack(alignment: .leading, spacing: 12) {
                 if viewModel.profiles.isEmpty {
                     Text("No profiles loaded")
                         .foregroundStyle(.secondary)
                 } else {
-                    HStack {
-                        Text("Selected Profile")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(cameraDetectionTitle)
                             .font(.headline)
+                        Text(cameraDetectionDetail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
                         Spacer()
                         Menu {
                             ForEach(viewModel.profilesByBrand, id: \.brand) { group in
@@ -220,36 +299,126 @@ struct ContentView: View {
                         }
                         .menuStyle(.borderlessButton)
                     }
+
+                    if shouldShowLearnCardPrompt {
+                        Divider()
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(learnCardPromptTitle)
+                                    .font(.subheadline.bold())
+                                Text(learnCardPromptDetail)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button {
+                                isCardLearningPresented = true
+                            } label: {
+                                Label("Submit Learning Data", systemImage: "graduationcap")
+                            }
+                            .disabled(!viewModel.scanSummary.hasScan)
+                        }
+                    }
                 }
             }
             .padding(8)
         }
     }
 
-    private var destinationSection: some View {
-        GroupBox("Destination") {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(viewModel.destinationURL?.path ?? "No output directory selected")
-                        .lineLimit(1)
-                    Text("Source cards are never modified. Copies go only to this folder.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                HStack {
-                    Button {
-                        viewModel.openOutputDirectory()
-                    } label: {
-                        Label("Open Directory", systemImage: "folder.fill")
-                    }
-                    .disabled(viewModel.destinationURL == nil)
+    private var cameraDetectionTitle: String {
+        guard viewModel.scanSummary.hasScan else {
+            return "Waiting for a card scan"
+        }
+        if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            return "Unrecognized dashcam, generic download ready"
+        }
+        if let profile = viewModel.selectedProfile {
+            return "Detected \(profile.displayName)"
+        }
+        return "No camera profile selected"
+    }
 
-                    Button {
-                        viewModel.chooseDestinationFolder()
-                    } label: {
-                        Label("Choose", systemImage: "folder")
+    private var cameraDetectionDetail: String {
+        guard viewModel.scanSummary.hasScan else {
+            return "Choose a memory card and the app will look for videos and photos automatically."
+        }
+        if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            return "The app can still download common dashcam videos and photos. Teaching the card is optional."
+        }
+        if viewModel.selectedProfile != nil {
+            return "The app will organize footage using the detected camera profile. Learning data is optional if this setup has modes, channels, or settings we have not seen yet."
+        }
+        return "You can choose a profile manually, but the priority is still getting your footage copied."
+    }
+
+    private var shouldShowLearnCardPrompt: Bool {
+        viewModel.scanSummary.hasScan
+    }
+
+    private var learnCardPromptTitle: String {
+        if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
+            return "Help add support for this card"
+        }
+        return "Help improve this camera profile"
+    }
+
+    private var learnCardPromptDetail: String {
+        if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
+            return "Optional. Downloading your footage still works first."
+        }
+        return "Optional. Share sanitized setup details for different channels, parking modes, resolutions, or bitrate settings."
+    }
+
+    private var destinationSection: some View {
+        GroupBox("2. Choose Download Folder") {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewModel.destinationURL?.path ?? "No download folder selected")
+                            .lineLimit(1)
+                        Text("Source cards are never modified. Copies go only to this folder.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                    HStack {
+                        Button {
+                            viewModel.openOutputDirectory()
+                        } label: {
+                            Label("Open Folder", systemImage: "folder.fill")
+                        }
+                        .disabled(viewModel.destinationURL == nil)
+
+                        Button {
+                            viewModel.chooseDestinationFolder()
+                        } label: {
+                            Label("Choose Folder", systemImage: "folder")
+                        }
+                    }
+                }
+
+                DisclosureGroup("Download options", isExpanded: $showDownloadOptions) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Text("Video filename suffix")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            TextField(
+                                "Optional text appended before the extension",
+                                text: Binding(
+                                    get: { viewModel.outputNamingOptions.videoFilenameSuffix },
+                                    set: { viewModel.setVideoFilenameSuffix($0) }
+                                )
+                            )
+                            .textFieldStyle(.roundedBorder)
+                        }
+                        Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
+                            .disabled(viewModel.destinationURL == nil)
+                        Toggle("Eject card when complete", isOn: $viewModel.ejectSourceWhenComplete)
+                            .disabled(viewModel.selectedSource == nil)
+                    }
+                    .font(.caption)
+                    .padding(.top, 6)
                 }
             }
             .padding(8)
@@ -257,56 +426,71 @@ struct ContentView: View {
     }
 
     private var filtersSection: some View {
-        GroupBox("Filters") {
-            VStack(alignment: .leading, spacing: 14) {
-                Toggle("Start date", isOn: Binding(
-                    get: { viewModel.filters.useStartDate },
-                    set: { viewModel.filters.useStartDate = $0; viewModel.rebuildPlan() }
-                ))
-                if viewModel.filters.useStartDate {
-                    DatePicker("From", selection: Binding(
-                        get: { viewModel.filters.startDate },
-                        set: { viewModel.filters.startDate = $0; viewModel.rebuildPlan() }
-                    ), displayedComponents: .date)
-                }
-
-                Toggle("End date", isOn: Binding(
-                    get: { viewModel.filters.useEndDate },
-                    set: { viewModel.filters.useEndDate = $0; viewModel.rebuildPlan() }
-                ))
-                if viewModel.filters.useEndDate {
-                    DatePicker("Through", selection: Binding(
-                        get: { viewModel.filters.endDate },
-                        set: { viewModel.filters.endDate = $0; viewModel.rebuildPlan() }
-                    ), displayedComponents: .date)
-                }
-
-                Divider()
-
-                checkboxGrid(title: "Recording Types", values: viewModel.availableModes, selected: $viewModel.filters.selectedModes) {
-                    ClipItem.displayLabel(for: $0)
-                }
-                checkboxGrid(title: "Channels", values: viewModel.availableChannels, selected: $viewModel.filters.selectedChannels) {
-                    ClipItem.displayLabel(for: $0)
-                }
-
-                Divider()
-
-                Toggle("Include photos", isOn: Binding(
-                    get: { viewModel.filters.includePhotos },
-                    set: { viewModel.filters.includePhotos = $0; viewModel.rebuildPlan() }
-                ))
-                Toggle("Include GPS logs", isOn: Binding(
-                    get: { viewModel.filters.includeGPS },
-                    set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
-                ))
-                Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
+        GroupBox("What to Download") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("All detected videos are selected by default. Photos and extra logs stay off unless you choose them.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Toggle("Separate output folders for driving, parking, protected, photos, and GPS", isOn: Binding(
-                    get: { viewModel.filters.separateCategoryFolders },
-                    set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
-                ))
+
+                DisclosureGroup("Filters and extras", isExpanded: $showDownloadFilters) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Picker("Date range", selection: Binding(
+                            get: { viewModel.filters.datePreset },
+                            set: { viewModel.setDatePreset($0) }
+                        )) {
+                            ForEach(DateFilterPreset.allCases) { preset in
+                                Text(preset.label).tag(preset)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        if viewModel.filters.datePreset == .custom {
+                            DatePicker("From", selection: Binding(
+                                get: { viewModel.filters.startDate },
+                                set: { viewModel.setCustomStartDate($0) }
+                            ), displayedComponents: .date)
+                            DatePicker("Through", selection: Binding(
+                                get: { viewModel.filters.endDate },
+                                set: { viewModel.setCustomEndDate($0) }
+                            ), displayedComponents: .date)
+                        }
+
+                        Divider()
+
+                        checkboxGrid(title: "Recording Types", values: viewModel.availableModes, selected: $viewModel.filters.selectedModes) {
+                            ClipItem.displayLabel(for: $0)
+                        }
+                        checkboxGrid(title: "Channels", values: viewModel.availableChannels, selected: $viewModel.filters.selectedChannels) {
+                            ClipItem.displayLabel(for: $0)
+                        }
+
+                        Divider()
+
+                        Toggle("Include photos", isOn: Binding(
+                            get: { viewModel.filters.includePhotos },
+                            set: { viewModel.filters.includePhotos = $0; viewModel.rebuildPlan() }
+                        ))
+                        Toggle("Include GPS logs", isOn: Binding(
+                            get: { viewModel.filters.includeGPS },
+                            set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
+                        ))
+                        Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Toggle("Copy camera settings and boot logs", isOn: Binding(
+                            get: { viewModel.filters.includeCameraSettings },
+                            set: { viewModel.filters.includeCameraSettings = $0; viewModel.rebuildPlan() }
+                        ))
+                        Text("Copies Config/Settings folders and boot logs into a separate Camera Settings folder for troubleshooting.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Toggle("Separate folders for driving, parking, protected, photos, and GPS", isOn: Binding(
+                            get: { viewModel.filters.separateCategoryFolders },
+                            set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
+                        ))
+                    }
+                    .padding(.top, 6)
+                }
             }
             .padding(8)
             .onChange(of: viewModel.filters.selectedModes) { _, _ in viewModel.rebuildPlan() }
@@ -342,17 +526,17 @@ struct ContentView: View {
     }
 
     private var planSection: some View {
-        GroupBox("Copy Plan") {
+        GroupBox("3. Review and Download") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("\(viewModel.copyPlan?.items.count ?? 0) files")
+                    Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files")
                     Text(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button {
                         viewModel.rebuildPlan()
                     } label: {
-                        Label("Preview", systemImage: "doc.text.magnifyingglass")
+                        Label("Refresh Preview", systemImage: "doc.text.magnifyingglass")
                     }
                     .disabled(viewModel.destinationURL == nil || viewModel.selectedProfile == nil)
                 }
@@ -376,8 +560,8 @@ struct ContentView: View {
                     TableColumn("Channel") { item in
                         Text(item.clip.displayChannel)
                     }
-                    TableColumn("Destination") { item in
-                        Text(item.destinationURL.deletingLastPathComponent().path)
+                    TableColumn("Download Folder") { item in
+                        Text(item.destinationURL.path)
                             .font(.caption)
                             .lineLimit(1)
                     }
@@ -404,6 +588,12 @@ struct ContentView: View {
                                     .foregroundStyle(item.status == .failed ? .red : .secondary)
                             }
                         }
+                        if !viewModel.supportFileResults.isEmpty {
+                            Divider()
+                            Text("\(viewModel.supportFileResults.count) settings/log files processed")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .padding(8)
                 }
@@ -423,6 +613,16 @@ struct ContentView: View {
                     .font(.headline.monospacedDigit())
                 Text(viewModel.copyProgress.filesText)
                     .foregroundStyle(.secondary)
+                if !viewModel.copyProgress.speedText.isEmpty {
+                    Text(viewModel.copyProgress.speedText)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                if !viewModel.copyProgress.estimatedRemainingText.isEmpty {
+                    Text(viewModel.copyProgress.estimatedRemainingText)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
                 Text(viewModel.copyProgress.currentFile)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -430,14 +630,14 @@ struct ContentView: View {
                 Button {
                     viewModel.openOutputDirectory()
                 } label: {
-                    Label("Open Directory", systemImage: "folder.fill")
+                    Label("Open Folder", systemImage: "folder.fill")
                 }
                 .disabled(viewModel.destinationURL == nil)
 
                 Button {
                     viewModel.startCopy()
                 } label: {
-                    Label("Copy Selected", systemImage: "arrow.down.doc")
+                    Label("Download Footage", systemImage: "arrow.down.doc")
                         .frame(minWidth: 140)
                 }
                 .buttonStyle(.borderedProminent)
@@ -472,6 +672,321 @@ struct ContentView: View {
         case .low: return .yellow
         case .none: return .secondary
         }
+    }
+}
+
+struct FeedbackSheet: View {
+    @ObservedObject var viewModel: TransferViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var kind: FeedbackKind = .bug
+    @State private var message = ""
+    @State private var contact = ""
+    @State private var includeScan = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Submit Feedback")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Picker("Type", selection: $kind) {
+                ForEach(FeedbackKind.allCases, id: \.self) { kind in
+                    Text(kind.displayName).tag(kind)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            TextEditor(text: $message)
+                .font(.body)
+                .frame(minHeight: 150)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.secondary.opacity(0.25))
+                }
+
+            TextField("Contact email or handle (optional)", text: $contact)
+                .textFieldStyle(.roundedBorder)
+
+            Toggle("Include sanitized scan summary", isOn: $includeScan)
+                .disabled(!viewModel.scanSummary.hasScan)
+
+            if viewModel.scanSummary.hasScan {
+                HStack(spacing: 14) {
+                    Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
+                    Label("\(viewModel.scanSummary.copyableItems) downloadable", systemImage: "checkmark.circle")
+                    Label(viewModel.selectedProfile?.displayName ?? "No profile selected", systemImage: "camera")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            if !viewModel.feedbackMessage.isEmpty {
+                Text(viewModel.feedbackMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.feedbackMessage.contains("failed") ? .red : .secondary)
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    dismiss()
+                }
+                Button {
+                    viewModel.submitFeedback(
+                        kind: kind,
+                        message: message,
+                        contact: contact,
+                        includeScan: includeScan && viewModel.scanSummary.hasScan
+                    )
+                } label: {
+                    Label(viewModel.isSubmittingFeedback ? "Submitting" : "Submit", systemImage: "paperplane")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(viewModel.isSubmittingFeedback || message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
+        .onAppear {
+            includeScan = viewModel.scanSummary.hasScan
+            viewModel.feedbackMessage = ""
+        }
+    }
+}
+
+struct CardLearningSheet: View {
+    @ObservedObject var viewModel: TransferViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var manufacturer = ""
+    @State private var model = ""
+    @State private var selectedChannelCount: Int?
+    @State private var channelDescription = ""
+    @State private var notes = ""
+    @State private var contact = ""
+
+    private var canSubmit: Bool {
+        viewModel.scanSummary.hasScan &&
+            !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            selectedChannelCount != nil &&
+            !channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+            !viewModel.isSubmittingFeedback
+    }
+
+    private var channelSetup: String {
+        guard let selectedChannelCount else {
+            return ""
+        }
+        return "\(selectedChannelCount)CH: \(channelDescription.trimmingCharacters(in: .whitespacesAndNewlines))"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Improve Camera Support")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+            }
+
+            if viewModel.scanSummary.hasScan {
+                HStack(spacing: 14) {
+                    Label("Card scan ready", systemImage: "checkmark.circle")
+                    Label(viewModel.selectedProfile?.displayName ?? "No profile match", systemImage: "camera")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            } else {
+                Text("Scan the card first, then submit the learning package.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Use this for a new camera, or for a known camera with a setup we have not seen yet, like different channels, parking modes, resolution options, or bitrate settings.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                TextField("Manufacturer", text: $manufacturer)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Model", text: $model)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Camera channels")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 10) {
+                    Picker("Camera channels", selection: $selectedChannelCount) {
+                        Text("Select").tag(nil as Int?)
+                        ForEach(1...4, id: \.self) { count in
+                            Text("\(count)CH").tag(Optional(count))
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 120, alignment: .leading)
+                    .onChange(of: selectedChannelCount) { _, newValue in
+                        updateChannelDescription(for: newValue)
+                    }
+
+                    TextField("Front / rear", text: $channelDescription)
+                        .textFieldStyle(.roundedBorder)
+                }
+                Text("Choose the number of camera views, then describe them however the camera uses them.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Examples: front / rear, front / cabin / telephoto, front / front interior / rear / rear interior, 360 exterior.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Anything else we should know? (optional)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $notes)
+                        .font(.body)
+                        .frame(minHeight: 92)
+                    if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("Examples: parking mode is enabled, one camera is disconnected, or the camera clock is wrong.")
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.secondary.opacity(0.25))
+                }
+            }
+
+            TextField("Contact email or handle (optional)", text: $contact)
+                .textFieldStyle(.roundedBorder)
+
+            Text("This sends only a sanitized description of the card structure so we can add support for your camera. It does not upload your videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, or other personally identifying information.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if !viewModel.feedbackMessage.isEmpty {
+                Text(viewModel.feedbackMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.feedbackMessage.contains("failed") ? .red : .secondary)
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    dismiss()
+                }
+                Button {
+                    submitLearningPackage()
+                } label: {
+                    Label(viewModel.isSubmittingFeedback ? "Submitting" : "Submit Learning Package", systemImage: "paperplane")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!canSubmit)
+            }
+        }
+        .padding(24)
+        .frame(width: 620)
+        .onAppear {
+            viewModel.feedbackMessage = ""
+            prefillFromDetectedProfileIfNeeded()
+        }
+    }
+
+    private func prefillFromDetectedProfileIfNeeded() {
+        guard let profile = viewModel.selectedProfile,
+              profile.id != DashcamProfile.genericNewDashcam.id else {
+            return
+        }
+        if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            manufacturer = profile.manufacturer
+        }
+        if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            model = profile.model
+        }
+        if selectedChannelCount == nil {
+            selectedChannelCount = min(max(profile.channels.count, 1), 4)
+        }
+        if channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let labels = profile.channels
+                .sorted { $0.key < $1.key }
+                .map(\.value)
+            if !labels.isEmpty {
+                channelDescription = labels.joined(separator: " / ")
+            } else {
+                updateChannelDescription(for: selectedChannelCount)
+            }
+        }
+    }
+
+    private func updateChannelDescription(for count: Int?) {
+        guard let count else {
+            channelDescription = ""
+            return
+        }
+
+        guard channelDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        switch count {
+        case 1:
+            channelDescription = "Front"
+        case 2:
+            channelDescription = "Front / rear"
+        case 3:
+            channelDescription = "Front / cabin / rear"
+        case 4:
+            channelDescription = "Front / front interior / rear / rear interior"
+        default:
+            channelDescription = ""
+        }
+    }
+
+    private func submitLearningPackage() {
+        let training = CardTrainingDetails(
+            manufacturer: manufacturer.trimmingCharacters(in: .whitespacesAndNewlines),
+            model: model.trimmingCharacters(in: .whitespacesAndNewlines),
+            channelSetup: channelSetup,
+            notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        let message = [
+            "\(training.manufacturer) \(training.model)",
+            "Channels: \(training.channelSetup)",
+            training.notes
+        ]
+        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        .joined(separator: "\n")
+
+        viewModel.submitFeedback(
+            kind: .training,
+            message: message,
+            contact: contact,
+            includeScan: true,
+            training: training,
+            successMessage: "Learning package submitted successfully.",
+            onSuccess: {
+                dismiss()
+            }
+        )
     }
 }
 

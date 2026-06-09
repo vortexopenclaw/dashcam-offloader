@@ -1,0 +1,120 @@
+id: blackvue-dr770x-box
+manufacturer: BlackVue
+model: DR770X Box
+status: seed
+confidence: medium
+channel_variants:
+  - channels: 3
+    roles:
+      - front
+      - interior
+      - rear
+    validation: private_archive_sampled
+  - channels: 1
+    roles:
+      - front
+    validation: app_submission_sampled
+sampled_variant:
+  channels: 3
+  roles:
+    - front
+    - interior
+    - rear
+source_notes:
+  - docs/card-profiles/blackvue-dr770x-box.md
+  - docs/research/blackvue-dr770x-box.md
+detection:
+  high_confidence:
+    - path: BlackVue/Config/version.bin
+      contains:
+        - "DR770X Box"
+    - path: BlackVue/Config/micom_version.bin
+      contains:
+        - "DR770X Box"
+  supporting:
+    - folder: BlackVue/Record
+    - volume_label: BLACKVUE
+      strength: weak
+folders:
+  - path: BlackVue/Record
+    mode: mixed_recordings
+    validation: app_submission_sampled
+  - path: BlackVue/Config
+    mode: model_and_settings
+    validation: app_submission_sampled
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([MNPI])([FOR])\\.mp4$"
+    applies_to:
+      - BlackVue/Record
+    case_sensitive: true
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+    modes:
+      M: manual_or_marked_driving
+      N: normal
+      P: parking
+      I: impact_event
+    channels:
+      F: front
+      O: interior
+      R: rear
+modes:
+  M: manual_or_marked_driving
+  N: normal
+  P: parking
+  I: impact_event
+channels:
+  F: front
+  O: interior
+  R: rear
+grouping:
+  keys:
+    - date
+    - time
+    - mode
+  expected_sets:
+    three_channel:
+      - F
+      - O
+      - R
+observed_counts:
+  app_submission:
+    source: cloudflare_feedback_training
+    files:
+      NF: 4
+    support_files:
+      - BlackVue/Config/version.bin
+      - BlackVue/Config/micom_version.bin
+      - BlackVue/Config/config.ini
+    timestamp_note: filename dates showed an unset camera clock
+  private_archive_direct_camera_clips:
+    files:
+      MF: 4
+      MO: 4
+      MR: 4
+      NF: 3
+      NO: 3
+      NR: 3
+      PF: 4
+      PO: 6
+      PR: 4
+      IF: 1
+      IO: 1
+      IR: 1
+    groups:
+      total: 14
+      complete_triplets: 12
+      interior_only: 2
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - BlackVue/Config/config.ini
+  - BlackVue/Config/bt_ssid.bin
+  - BlackVue/System/**

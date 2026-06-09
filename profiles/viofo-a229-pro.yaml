@@ -5,6 +5,19 @@ status: seed
 source_notes:
   - docs/card-profiles/viofo-a229-pro.md
   - docs/research/viofo-a229-pro.md
+sampled_variant:
+  channels: 3
+  roles:
+    - front
+    - interior
+    - rear
+  latest_sample:
+    path: /Volumes/Untitled
+    scanned_at: 2026-06-08
+    normal_triplets: 210
+    parking_triplets: 1866
+    protected_triplets: 1
+    photo_triplets: 1
 detection:
   high_confidence:
     - method: osd_ocr
@@ -47,8 +60,9 @@ folders:
     mode: parking
     validation: real_card_sampled
     notes: >
-      Contains all parking recording subtypes: auto event detection, time-lapse, and
-      low bitrate. Subtypes are not distinguishable by folder or filename on this sample.
+      Manual-defined parking folder for auto event detection, time-lapse, and low bitrate.
+      The latest sampled card's PF/PI/PR clips were user-confirmed auto event detection
+      triggered by motion/impact, not time-lapse or low-bitrate samples.
   - path: DCIM/Photo
     mode: still_image
     validation: real_card_sampled
@@ -68,7 +82,7 @@ filename_patterns:
     channel_group: 5
     notes: >
       Sequence number is a global monotonic counter across all channels and modes.
-      Observed as 6 digits (000511-006759) on the real-card sample; manual example shows
+      Observed as 6 digits (000511-006759) on real-card samples; manual example shows
       5 digits. Treat as variable-length.
   - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|T|PF|PI|PR|PT)\\.JPG$"
     applies_to:
@@ -107,6 +121,20 @@ grouping:
   notes: >
     T and PT channels appear when a telephoto camera is attached. Grouping key is
     timestamp (year + month_day + time), not sequence number.
+resolutions:
+  F: 3840x2160
+  I: 1920x1080
+  R: 2560x1440
+  PF: 3840x2160
+  PI: 1920x1080
+  PR: 2560x1440
+  validation: real_card_sampled
+  notes: >
+    Latest temporary 3CH card measured H.264 at 30 fps. Driving stream bitrates were
+    about 36.0 Mbps front, 15.6 Mbps interior, and 24.0 Mbps rear. Parking stream
+    bitrates were about 4.1 Mbps front, 3.9 Mbps interior, and 4.1 Mbps rear for
+    auto event detection clips. Treat the ~4 Mbps PF/PI/PR measurements as low-bitrate
+    parking-mode evidence, not normal driving bitrate.
 exclude:
   - .Trashes/**
   - .fseventsd/**

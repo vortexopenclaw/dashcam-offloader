@@ -35,6 +35,16 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The mounted archive exposed only a small `C####` sample set in this pass, so the clip mix is not yet a full channel map. Treat this as a measured sample baseline, not a complete profile validation.
 
+## BlackVue DR770X Box
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / parking / impact | H.264 | 1920x1080 | 60 / 59.94 | ~16.0 Mbps | MP4 | `ffprobe` |
+| O (interior) | driving / parking / impact | H.264 | 1920x1080 | 30 / 29.97 | ~10.0 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving / parking / impact | H.264 | 1920x1080 | 30 / 29.97 | ~10.0 Mbps | MP4 | `ffprobe` |
+
+**Notes:** The real app-submitted Learn Card package confirmed `BlackVue/Record`, `BlackVue/Config`, exact DR770X Box model metadata, and four `NF` clips with an unset-camera-clock style `19991231` date. The NAS archive at `/Volumes/Dashcams/Blackvue DR770X Box` adds 38 direct camera clips in `Driving Clips` and `Parking Clips` for media measurements and 3-channel examples. Observed mode letters are `M`, `N`, `P`, and `I`; observed channel letters are `F`, `O`, and `R`.
+
 ## BlackVue DR900S-2CH
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
@@ -155,7 +165,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | PI | parking | H.264 | 1920x1080 | 30 | ~3.9 Mbps | MP4 | `ffprobe` |
 | PR | parking | H.264 | 2560x1440 | 30 | ~4.1 Mbps | MP4 | `ffprobe` |
 
-**Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet.
+**Notes:** The temporary 3CH card at `/Volumes/Untitled` confirmed 210 complete normal F/I/R triplets, 1866 complete parking PF/PI/PR triplets, 1 locked F/I/R triplet, and 1 photo F/I/R triplet. Treat the ~4 Mbps PF/PI/PR rows as low-bitrate parking-mode evidence, not normal driving bitrate.
 
 ## VIOFO A229 Plus
 
@@ -442,7 +452,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 |---|---|---|---|---|---|---|---|
 | F (front) | driving | HEVC | 3840x2160 | 30 | ~36.9 Mbps | MP4 | `ffprobe` |
 
-**Notes:** The driving clips use `YYYY_MMDD_HHMMSS_SEQ`.
+**Notes:** The driving clips use `YYYY_MMDD_HHMMSS_SEQ`. A real app-submitted Learn Card package for R2-4K Pro also confirmed a root `Video/` folder with 25 MP4 clips using this filename pattern.
 
 ## Not Found In This Pass
 

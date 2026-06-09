@@ -1,0 +1,44 @@
+id: viofo-t130
+manufacturer: VIOFO
+model: T130
+status: seed
+confidence: high
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      matches: "VIOFO T130"
+      notes: Confirmed on private archive footage via scanner OSD OCR.
+  supporting:
+    - method: filename_pattern
+      pattern: "YYYY_MMDD_HHMMSS_CHANNEL.MP4"
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: inferred
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: inferred
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: inferred
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_([FIR])\\.MP4$"
+    timestamp:
+      format: YYYY_MMDD_HHMMSS
+    channels:
+      F: front
+      I: interior
+      R: rear
+channels:
+  F: front
+  I: interior
+  R: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

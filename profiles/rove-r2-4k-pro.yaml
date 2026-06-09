@@ -1,0 +1,78 @@
+id: rove-r2-4k-pro
+manufacturer: Rove
+model: R2-4K Pro
+status: seed
+confidence: medium
+confidence_note: "Real app-submitted Learn Card package confirmed Video/ folder and filename pattern; Rove docs confirm MP4/H.264 or H.265 recording."
+
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: app_submission_sampled
+
+sampled_variant:
+  channels: 1
+  roles:
+    - front
+
+detection:
+  high_confidence:
+    - filename_pattern:
+        regex: '^\\d{4}_\\d{4}_\\d{6}_\\d+\\.MP4$'
+        note: "Submitted R2-4K Pro card had 25 matching MP4 files in Video/."
+    - folders:
+        required_all:
+          - Video
+        note: "Submitted card used a root Video folder."
+  not_reliable:
+    - resolution:
+        note: "Resolution and bitrate are user-configurable settings."
+    - gps_coordinates:
+        note: "Private GPS data must never be used or stored for public model detection."
+
+folders:
+  - path: Video
+    mode: normal
+    validation: app_submission_sampled
+    note: "Submitted card contained 25 downloadable MP4 clips here. Parking/event/photo folders were not present in this submitted scan."
+
+filename_patterns:
+  - pattern: '^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)\\.(MP4)$'
+    timestamp:
+      date_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    seq_group: 4
+    extension_group: 5
+
+channels:
+  front:
+    position: front
+    validation: app_submission_sampled
+    note: "R2-4K Pro is a 1CH camera and filenames do not include a channel token."
+
+sampled_recording_settings:
+  video:
+    codec: h265
+    resolution: 3840x2160
+    fps: 30
+    bitrate: "~36.9 Mbps"
+    note: "NAS archive measurement for Rove R2-4K Pro; not used for model identification."
+
+exclude:
+  - '^\\._'
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - 'unique_device_ids'
+  - 'real_gps_coordinates'
+  - 'real_gps_trails'
+
+manual_reference:
+  - url: https://hc1.gorgias.help/en-US/what-file-format-and-codec-does-the-dashcam-use-for-video-recordings-3564147
+    notes:
+      - "Rove support says R2-4K Pro records MP4 using H.264 or H.265 depending on model/settings."
+  - url: https://www.manualslib.com/manual/3130610/Rove-R2-4k-Pro.html
+    notes:
+      - "Manual specs list 3840x2160 at 30 fps for the R2-4K Pro."

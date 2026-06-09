@@ -9,3 +9,7 @@ node_modules/
 .env
 .env.*
 .firecrawl/
+.openclaw-backups/
+*.zip
+build-latest/
+workers/**/.wrangler/

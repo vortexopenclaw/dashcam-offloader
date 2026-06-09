@@ -1,0 +1,40 @@
+id: viofo-wm1
+manufacturer: VIOFO
+model: WM1
+status: seed
+confidence: high
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_8pct
+      matches: "VIOFO WM1"
+      notes: >
+        Confirmed on private archive footage via scanner OSD OCR. Filename-only
+        evidence overlaps other single-channel VIOFO models, so OCR or user
+        selection is still preferred for exact model certainty.
+  notes: >
+    Private archive sample only; no full card structure inspected. Filename pattern
+    and OSD OCR model stamp were observed on WM1 clips.
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: inferred
+  - path: DCIM/Parking
+    mode: parking
+    validation: inferred
+filename_patterns:
+  - pattern: "^(\\d{4})(\\d{2})(\\d{2})(\\d{6})_(\\d+)(P?)\\.MP4$"
+    timestamp:
+      format: YYYYMMDDHHMMSS
+    modes:
+      P: parking
+channels:
+  F: front
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

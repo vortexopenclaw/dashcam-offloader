@@ -4,12 +4,17 @@
 
 Build a Mac-first open-source tool that automates and simplifies offloading dashcam footage from one or more microSD cards into a user-selected destination. The app should understand each dashcam's folder structure and filename conventions well enough to classify clips by camera model, recording mode, channel, and date/time before planning and verifying the copy.
 
-The main workflow is offload first: insert card or cards, choose the destination, review what will be copied, then run a verified transfer. The app should also make it practical to learn unsupported dashcams. Users should be able to select a known model, select a known but not-yet-supported model, or select `Other`, then describe their camera/channel setup and generate a sanitized card profile submission.
+The main workflow is offload first: insert card or cards, choose the destination, review what will be downloaded, then run a verified transfer. The app should also make it practical to learn unsupported dashcams and expand existing profiles, but learning is secondary to helping the user get their footage. If a card is unrecognized, the app should still offer a simple generic dashcam download path first, then optionally ask the user to teach the card.
 
 ## Design Principles
 
 - Never modify the source card.
 - Let the user choose the destination for every offload job.
+- Optimize the first-run UX for the simplest path: pick card, choose download folder, download footage.
+- Keep advanced filters, settings/log copying, filename options, and learning flows out of the user's way until needed.
+- For unsupported cameras, generic downloading must still work; learning the card is optional and should not block transfer.
+- For supported cameras, learning submissions must still be available because users may have different channel layouts, parking modes, resolution settings, bitrate settings, firmware, or recording options than the original profile evidence.
+- Treat app-submitted card data as the start of intake, not the whole intake. Verify new camera names, spelling, channel counts, channel layouts, recording modes, resolution options, codec/bitrate options, and parking behavior against manufacturer documentation, real samples, and reliable references before calling a profile complete.
 - Treat multiple mounted dashcam cards as a normal workflow, not an edge case.
 - Prefer deterministic profile rules over guessing.
 - Treat official manuals as useful but incomplete.
@@ -51,10 +56,11 @@ The eventual implementation should split into these layers:
    - Allows multiple cards and copy jobs at once.
 
 7. **Profile intake assistant**
-   - Lets users choose from supported, known unsupported, and `Other` camera models.
-   - Captures user-provided model name, firmware if visible, camera count, and channel labels.
+   - Works for new cameras and known cameras with unobserved settings.
+   - Captures user-provided model name, firmware if visible, camera count, and flexible channel labels.
    - Scans card structure without uploading videos by default.
    - Builds a redacted submission bundle for review and test-fixture creation.
+   - Requires follow-up research against manufacturer docs and reliable references before adding a complete public profile.
 
 ## Safety Rules
 

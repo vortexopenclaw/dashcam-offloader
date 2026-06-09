@@ -8,7 +8,7 @@ Learning new dashcams supports that main offload workflow. A user should be able
 
 ## Current Status
 
-This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date, preview selected files and size, copy to a chosen destination, show progress, skip matching duplicates, and write a local manifest.
+This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview selected files and size, copy to a chosen destination, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, skip matching duplicates, write a local manifest, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
@@ -29,6 +29,13 @@ scripts/build-macos-app.sh
 open "build/Dashcam Offloader.app"
 ```
 
+Build the latest version from `origin/main` in a clean detached worktree:
+
+```bash
+scripts/build-latest-macos-app.sh
+open "build-latest/Dashcam Offloader.app"
+```
+
 Internal test builds can be packaged without a paid Apple Developer ID. These builds should be treated as local/internal prototypes:
 
 - Build Apple Silicon arm64.
@@ -38,10 +45,10 @@ Internal test builds can be packaged without a paid Apple Developer ID. These bu
 
 For public distribution without security warnings, use Developer ID signing and Apple notarization later.
 
-Run the built-in scanner/planner smoke test:
+Run the built-in scanner/planner verification test:
 
 ```bash
-swift run DashcamOffloader --smoke-test
+swift run DashcamOffloader --verify
 ```
 
 ## Initial Scope
@@ -57,8 +64,11 @@ swift run DashcamOffloader --smoke-test
 - Date/time parsing from filenames and metadata
 - Event/protected/manual/emergency clip handling
 - Copy manifest with source path, destination path, detected mode, detected channel, timestamp, size, and checksum status
+- Optional video filename suffix inserted before the original extension
+- Optional camera settings/log copy for troubleshooting, stored separately from copied footage
 - Clear progress and verification per card/job
-- Sanitized profile-submission bundle for unsupported models, excluding private identifiers and video content by default
+- Learn Card workflow for new models and alternate known-camera setups, excluding private identifiers and video content by default
+- Feedback submission for bug reports, feature requests, card learning, and optional sanitized scan summaries
 
 ## Seed Profiles
 
@@ -121,3 +131,14 @@ swift run DashcamOffloader --smoke-test
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles
+- `workers/feedback/` - Cloudflare Worker endpoint for feedback submissions
+
+## Feedback And Card Learning Endpoint
+
+The app includes Feedback and Learn Card buttons in the toolbar. Users can submit bug reports, feature requests, or other feedback. When a source has already been scanned, they can choose to include a sanitized scan summary.
+
+Learn Card submissions ask for manufacturer, model, camera channel count, what each channel records, optional notes, and optional contact. They attach a sanitized description of the card structure so new camera support can be added or existing camera support can be expanded for different channel layouts, parking modes, resolutions, bitrates, firmware, and recording settings.
+
+The scan summary includes safe structure and fingerprinting details such as root folders, folder summaries, extension counts, representative filenames, safe support-file names, timestamp-source counts, inferred parking-pattern counts, and representative video specs when the app can read them locally. It does not upload videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, full settings dumps, or other personally identifying information.
+
+The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.

@@ -1,0 +1,17 @@
+name = "dashcam-offloader-feedback"
+main = "worker.js"
+compatibility_date = "2026-06-08"
+
+# Optional. Comma-separated origins if browser clients are added later.
+# The Mac app is not browser-CORS constrained.
+# ALLOWED_ORIGINS = "https://example.com"
+
+# Pick at least one storage backend before deploying.
+#
+# [[r2_buckets]]
+# binding = "FEEDBACK_BUCKET"
+# bucket_name = "dashcam-offloader-feedback"
+#
+# [[kv_namespaces]]
+# binding = "FEEDBACK_KV"
+# id = "replace-with-kv-namespace-id"

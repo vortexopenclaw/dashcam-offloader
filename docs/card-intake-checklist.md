@@ -8,6 +8,7 @@ Use this checklist when a new dashcam SD card is mounted.
 - User-entered brand and model when `Other` is selected.
 - Number of camera channels in use.
 - Channel roles, such as front, rear, interior, telephoto, left, or right.
+- Any unusual channel layout, such as 360 exterior, front/cabin/telephoto, front/front interior/rear/rear interior, side cameras, or disconnected cameras.
 - Whether the card may contain GPS/audio/private location data.
 - Whether the user is willing to share sample video files separately. Default is no.
 
@@ -47,6 +48,11 @@ For each folder and filename pattern:
 - Timestamp format.
 - Extra suffixes or variants.
 - Whether files appear protected by folder, filename, filesystem flags, or unknown.
+- Parking timing pattern when enough parking clips are present:
+  - Continuous low-bitrate style: regular clips about every 1, 2, or 3 minutes.
+  - Time-lapse style: repeating larger timestamp gaps with modest file sizes.
+  - Motion/impact style: sporadic clips with irregular timestamp gaps.
+  - Treat these as inferred review signals, not proof of the camera's exact parking setting.
 
 ## Model Detection
 
@@ -56,6 +62,14 @@ Look for:
 - Model-specific executables or config references.
 - Folder structure unique to the model family.
 - Filename prefixes unique to the model family.
+
+After receiving an app-submitted package for a new model, verify and expand the intake with outside references before treating the profile as complete:
+
+- Confirm official model name and spelling.
+- Confirm possible channel counts and camera layouts.
+- Confirm resolution, frame-rate, codec, and bitrate options for each camera where documented.
+- Confirm driving, event, parking, motion, buffered, time-lapse, low-bitrate, photo, and protected-file behavior where documented.
+- Compare references against the submitted card evidence and keep unobserved options documented as reference-only until a real card confirms them.
 
 Do not use:
 
@@ -71,6 +85,8 @@ The default intake package should include:
 - Counts by extension and folder.
 - File size ranges by folder.
 - Oldest/newest modified times by folder.
+- Safe support/config filenames that can help fingerprint the card.
+- Representative codec, resolution, frame-rate, bitrate, and duration samples when they can be read locally without uploading video bytes.
 - Non-unique model strings when available.
 - User-provided model and channel mapping.
 - Scanner version and profile-schema version.

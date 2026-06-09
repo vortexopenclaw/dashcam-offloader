@@ -1,0 +1,42 @@
+id: 70mai-4k-omni
+manufacturer: 70mai
+model: 4K Omni
+status: seed
+confidence: medium
+source_notes:
+  - docs/research/nas-dashcam-pattern-sampling-2026-06-06.md
+detection:
+  supporting:
+    - method: filename_pattern
+      pattern: "(NO|PA)YYYYMMDD-HHMMSS-SEQ(F|R).MP4"
+folders:
+  - path: Normal
+    mode: normal
+    prefix: NO
+  - path: Parking
+    mode: parking
+    prefix: PA
+  - path: Event
+    mode: event
+    prefix: EV
+  - path: Photo
+    mode: photo
+filename_patterns:
+  - pattern: "^(NO|PA|EV)(\\d{8})-(\\d{6})-(\\d+)(F|R)\\.MP4$"
+    timestamp:
+      format: YYYYMMDD-HHMMSS
+    modes:
+      NO: normal
+      PA: parking
+      EV: event
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
