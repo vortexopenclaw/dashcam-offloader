@@ -556,16 +556,16 @@ struct ContentView: View {
 
     private var learnCardPromptTitle: String {
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
-            return "Help add support for this card"
+            return "Help add support for this dashcam"
         }
         return "Help improve this camera profile"
     }
 
     private var learnCardPromptDetail: String {
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
-            return "Optional. Downloading your footage still works first."
+            return "Optional. Downloading still works. Sharing this helps the app better understand this dashcam, including its recording modes, channels, and clip types."
         }
-        return "Optional. Share sanitized setup details for different channels, parking modes, resolutions, or bitrate settings."
+        return "Optional. Sharing this setup helps improve compatibility for this dashcam, including its channels, parking modes, resolutions, and clip types."
     }
 
     private var destinationSection: some View {
