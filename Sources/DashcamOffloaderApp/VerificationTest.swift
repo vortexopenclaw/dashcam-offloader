@@ -544,6 +544,12 @@ enum VerificationTest {
                 return false
             }
 
+            let selectableVideoClips = scan.clips.filter { $0.excludedReason == nil && $0.isVideo }
+            guard selectableVideoClips.allSatisfy({ filters.selectedModes.contains($0.mode) && filters.selectedChannels.contains($0.channel) }) else {
+                print("VERIFY FAIL: some downloadable videos are not represented by recording type/channel selections")
+                return false
+            }
+
             let plan = CopyPlanner().makePlan(
                 sourceRoot: source,
                 destinationRoot: destination,
@@ -555,6 +561,10 @@ enum VerificationTest {
 
             guard plan.items.count == 2, plan.selectedBytes == 3072 else {
                 print("VERIFY FAIL: unexpected plan \(plan.items.count) files \(plan.selectedBytes) bytes")
+                return false
+            }
+            guard Set(plan.items.map(\.clip.id)) == Set(selectableVideoClips.map(\.id)) else {
+                print("VERIFY FAIL: fully selected recording type/channel filters did not plan exactly all downloadable videos")
                 return false
             }
             var emptyModeFilters = filters
