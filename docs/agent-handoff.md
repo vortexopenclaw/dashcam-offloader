@@ -15,7 +15,7 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
 
-Before publishing, update `docs/releases/latest.md` with one consolidated, user-facing note for the build. The release workflow uses that file for the GitHub `latest` release body and embeds the same text in the Cloudflare update manifest as `releaseNotes`, so the in-app Release Notes/What's New UI has real content.
+Before publishing, update `docs/releases/latest.md` with one short, user-facing note for the current build. Keep it relative to the latest build, not a rolling changelog: one main change plus a few skimmable bullets is enough. Put older context in docs or memory, not in the GitHub `latest` release body. The release workflow uses this file for the GitHub `latest` release body and embeds the same text in the Cloudflare update manifest as `releaseNotes`, so the in-app Release Notes/What's New UI has real content.
 
 The workflow uses encrypted GitHub secrets:
 

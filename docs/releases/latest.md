@@ -1,9 +1,11 @@
-- The download ZIP includes `open-dashcam-offloader.command`, a launcher that clears macOS quarantine from the app beside it and opens Dashcam Offloader.
-- App updates now install in place, reopen automatically, and replace the app bundle that launched the update.
-- Update prompts and the App Updates section show concise release notes for the current build.
-- Release Notes opens the GitHub latest release, which now contains the same consolidated notes instead of a bare auto-build message.
-- Source cards now scan automatically at startup so mounted GoPro cards identify as HERO9 Black without needing a manual click/rescan.
-- GoPro, Sony mirrorless, and DJI drone cards use non-dashcam recording terminology such as Regular Recording instead of Driving.
-- GoPro single-primary media hides the channel filter; single-channel dashcam profiles can still show Front.
-- GoPro looping chunks with the same prefix and adjacent sequence numbers are grouped into one download item and copied with passthrough concatenation.
-- Learning submissions now include sanitized filename sequence summaries so GoPro loop groups can be audited without sending media bytes or private device identifiers.
+## Latest Build
+
+Main change:
+- The ZIP now includes `open-dashcam-offloader.command` to clear macOS quarantine and open the app without repeated warning prompts.
+
+Also included:
+- App updates replace the app that launched the updater and reopen automatically.
+- Release Notes and What's New now show this short current-build summary instead of a long running history.
+- Mounted cards auto-scan at startup so GoPro HERO9 cards identify without clicking the source first.
+- GoPro/Sony/DJI-style cards use Regular Recording terminology and hide channel filters when they are single-stream cameras.
+- GoPro loop chunks with matching prefixes are grouped into one downloadable loop.
