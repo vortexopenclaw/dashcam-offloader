@@ -1,4 +1,4 @@
-- Cleaner update notes.
-- The update popup now shows one simple What's new section.
-- Release notes are shorter and easier to scan.
+- Cleaner update popup.
+- Release notes stay one click away instead of crowding the update prompt.
+- The Release Notes button still opens the full latest notes.
 - Includes bug fixes and small improvements.
