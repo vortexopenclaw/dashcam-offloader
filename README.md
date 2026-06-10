@@ -8,7 +8,7 @@ Learning new dashcams supports that main offload workflow. A user should be able
 
 ## Current Status
 
-This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
+This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, check/install app updates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
@@ -35,6 +35,8 @@ Build the latest version from `origin/main` in a clean detached worktree:
 scripts/build-latest-macos-app.sh
 open "build-latest/Dashcam Offloader.app"
 ```
+
+The app checks the Cloudflare update manifest on launch when automatic update checks are enabled. Users can also choose **Check for Updates** in the toolbar, then install an available ZIP update directly from the prompt.
 
 Internal test builds can be packaged without a paid Apple Developer ID. These builds should be treated as local/internal prototypes:
 

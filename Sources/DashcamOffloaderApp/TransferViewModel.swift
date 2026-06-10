@@ -28,20 +28,35 @@ final class TransferViewModel: ObservableObject {
     @Published var isSubmittingFeedback = false
     @Published var feedbackMessage = ""
     @Published var selectedQueueItemIDs: Set<CopyPlanItem.ID> = []
+    @Published var automaticUpdateChecksEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(automaticUpdateChecksEnabled, forKey: Self.automaticUpdateChecksKey)
+        }
+    }
+    @Published var updateStatusMessage = ""
+    @Published var isCheckingForUpdates = false
+    @Published var availableUpdate: AppUpdateManifest?
 
     private let scanner = CardScanner()
     private let planner = CopyPlanner()
     private let feedbackService = FeedbackService.production
+    private let updateService = UpdateService.production
     private var workspaceNotificationTokens: [NSObjectProtocol] = []
     private var didStartInitialSourceDiscovery = false
+    private var didStartInitialUpdateCheck = false
     private var canRunAutomaticSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
     private var copyTask: Task<Void, Never>?
     private var customSourceNames: [MountedSource.ID: String] = [:]
+    private static let automaticUpdateChecksKey = "DashcamOffloaderAutomaticUpdateChecksEnabled"
 
     init() {
+        if UserDefaults.standard.object(forKey: Self.automaticUpdateChecksKey) == nil {
+            UserDefaults.standard.set(true, forKey: Self.automaticUpdateChecksKey)
+        }
+        automaticUpdateChecksEnabled = UserDefaults.standard.bool(forKey: Self.automaticUpdateChecksKey)
         loadProfiles()
         startVolumeObservation()
         statusMessage = "Ready. Looking for mounted cards..."
@@ -217,6 +232,114 @@ final class TransferViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             self?.canRunAutomaticSourceDiscovery = true
             self?.refreshSources()
+        }
+    }
+
+    func startInitialUpdateCheck() {
+        guard automaticUpdateChecksEnabled, !didStartInitialUpdateCheck else { return }
+        didStartInitialUpdateCheck = true
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            self?.checkForUpdates(userInitiated: false)
+        }
+    }
+
+    func checkForUpdates(userInitiated: Bool = true) {
+        guard !isCheckingForUpdates else { return }
+        isCheckingForUpdates = true
+        if userInitiated {
+            updateStatusMessage = "Checking for updates..."
+        }
+
+        Task { [weak self, updateService] in
+            do {
+                let manifest = try await updateService.fetchManifest()
+                await MainActor.run {
+                    self?.handleUpdateManifest(manifest, userInitiated: userInitiated)
+                }
+            } catch {
+                await MainActor.run {
+                    if userInitiated {
+                        self?.updateStatusMessage = "Update check failed: \(error.localizedDescription)"
+                    }
+                    self?.isCheckingForUpdates = false
+                }
+            }
+        }
+    }
+
+    private func handleUpdateManifest(_ manifest: AppUpdateManifest, userInitiated: Bool) {
+        isCheckingForUpdates = false
+        guard updateService.isUpdateAvailable(manifest) else {
+            availableUpdate = nil
+            if userInitiated {
+                updateStatusMessage = "Dashcam Offloader is up to date."
+            }
+            return
+        }
+
+        availableUpdate = manifest
+        updateStatusMessage = "Update available: \(manifest.displayName)"
+        presentUpdatePrompt(for: manifest)
+    }
+
+    private func presentUpdatePrompt(for manifest: AppUpdateManifest) {
+        let alert = NSAlert()
+        alert.messageText = "Update Available"
+        alert.informativeText = "\(manifest.displayName) is ready to install. The app will quit, replace itself, and reopen."
+        alert.addButton(withTitle: "Install Update")
+        alert.addButton(withTitle: "Later")
+        if manifest.releaseNotesURL != nil {
+            alert.addButton(withTitle: "Release Notes")
+        }
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            installUpdate(manifest)
+        case .alertThirdButtonReturn:
+            if let releaseNotesURL = manifest.releaseNotesURL {
+                NSWorkspace.shared.open(releaseNotesURL)
+            }
+        default:
+            break
+        }
+    }
+
+    func installAvailableUpdate() {
+        guard let availableUpdate else {
+            checkForUpdates(userInitiated: true)
+            return
+        }
+        installUpdate(availableUpdate)
+    }
+
+    private func installUpdate(_ manifest: AppUpdateManifest) {
+        guard !isCheckingForUpdates else { return }
+        isCheckingForUpdates = true
+        updateStatusMessage = "Downloading \(manifest.displayName)..."
+
+        Task { [weak self, updateService] in
+            do {
+                let stagedAppURL = try await updateService.downloadAndStageUpdate(manifest)
+                let installMode = try await MainActor.run {
+                    try updateService.installStagedUpdate(stagedAppURL)
+                }
+                await MainActor.run {
+                    self?.isCheckingForUpdates = false
+                    switch installMode {
+                    case .installAndRelaunch:
+                        self?.updateStatusMessage = "Installing update and relaunching..."
+                        NSApplication.shared.terminate(nil)
+                    case .revealDownloadedApp:
+                        self?.updateStatusMessage = "Update downloaded. Install it from the Finder window."
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self?.isCheckingForUpdates = false
+                    self?.updateStatusMessage = "Update failed: \(error.localizedDescription)"
+                }
+            }
         }
     }
 
@@ -1450,14 +1573,7 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func appVersionString() -> String {
-        let bundle = Bundle.main
-        let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
-        let commit = bundle.object(forInfoDictionaryKey: "DashcamOffloaderBuildCommit") as? String
-        return [version, build, commit].compactMap { value in
-            guard let value, !value.isEmpty else { return nil }
-            return value
-        }.joined(separator: " ")
+        AppBuildInfo.current().displayString
     }
 }
 

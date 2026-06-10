@@ -21,6 +21,27 @@ enum VerificationTest {
                 print("VERIFY FAIL: missing Vueroid H1 profile")
                 return false
             }
+            let currentBuild = AppBuildInfo(version: "0.1.0", build: "1", commit: "abc1234")
+            let matchingManifest = AppUpdateManifest(
+                version: "0.1.0",
+                build: "abc1234",
+                releaseName: nil,
+                releaseNotesURL: nil,
+                assetName: "Dashcam-Offloader-abc1234.zip",
+                assetKey: "dashcam-offloader/releases/Dashcam-Offloader-abc1234.zip",
+                downloadURL: URL(string: "https://example.com/download/latest")!,
+                sha256: nil,
+                minimumMacOSVersion: "14.0",
+                publishedAt: nil,
+                channel: "latest"
+            )
+            var newerManifest = matchingManifest
+            newerManifest.build = "def5678"
+            guard !UpdateService.isUpdateAvailable(manifest: matchingManifest, currentBuild: currentBuild),
+                  UpdateService.isUpdateAvailable(manifest: newerManifest, currentBuild: currentBuild) else {
+                print("VERIFY FAIL: update availability comparison is wrong")
+                return false
+            }
             let requiredDisplayNames = [
                 "BlackVue Elite 9",
                 "70mai M310",

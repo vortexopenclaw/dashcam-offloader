@@ -33,6 +33,12 @@ struct ContentView: View {
             } label: {
                 Label("Feedback", systemImage: "bubble.left.and.bubble.right")
             }
+            Button {
+                viewModel.checkForUpdates(userInitiated: true)
+            } label: {
+                Label("Check for Updates", systemImage: "arrow.down.circle")
+            }
+            .disabled(viewModel.isCheckingForUpdates)
         }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
@@ -44,6 +50,7 @@ struct ContentView: View {
         }
         .task {
             viewModel.startInitialSourceDiscovery()
+            viewModel.startInitialUpdateCheck()
         }
     }
 
@@ -166,6 +173,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     workflowSection
+                    updateSection
                     sourceSection
                     detectionSection
                     destinationSection
@@ -263,6 +271,44 @@ struct ContentView: View {
                 detail: viewModel.destinationURL == nil ? "Choose folder first" : "\(viewModel.copyPlan?.selectedFileCount ?? 0) files ready",
                 complete: !(viewModel.copyPlan?.items.isEmpty ?? true)
             )
+        }
+    }
+
+    private var updateSection: some View {
+        GroupBox("App Updates") {
+            HStack(alignment: .center, spacing: 12) {
+                Toggle("Check for updates automatically", isOn: $viewModel.automaticUpdateChecksEnabled)
+                    .toggleStyle(.checkbox)
+                Spacer()
+                if viewModel.isCheckingForUpdates {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                if viewModel.availableUpdate != nil {
+                    Button {
+                        viewModel.installAvailableUpdate()
+                    } label: {
+                        Label("Install Update", systemImage: "square.and.arrow.down")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(viewModel.isCheckingForUpdates)
+                }
+                Button {
+                    viewModel.checkForUpdates(userInitiated: true)
+                } label: {
+                    Label("Check Now", systemImage: "arrow.clockwise")
+                }
+                .disabled(viewModel.isCheckingForUpdates)
+            }
+            .padding(8)
+
+            if !viewModel.updateStatusMessage.isEmpty {
+                Text(viewModel.updateStatusMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.updateStatusMessage.localizedCaseInsensitiveContains("failed") ? .red : .secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 8)
+            }
         }
     }
 
