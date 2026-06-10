@@ -42,6 +42,8 @@ When the user says "build", "publish", "push a release", "new build", or similar
 
 When fixing the updater, verify it replaces the launched `.app` in place and relaunches. If the launched bundle path is not writable, the updater should reveal the downloaded replacement instead of silently staging a mystery app.
 
+Do not ship a `.command` file as the quarantine-clearing helper. macOS can quarantine that helper too and show a scary "Apple could not verify" warning. Use the AppleScript launcher source at `scripts/open-dashcam-offloader.applescript`; release ZIPs should include `Open Dashcam Offloader.applescript` and a compiled `Open Dashcam Offloader.app` beside `Dashcam Offloader.app`.
+
 ## Submission Review
 
 Use `scripts/review-feedback-submissions.py` to inspect Cloudflare KV submissions. It loads credentials through the workspace env loader and checks `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN` first, then `CLOUDFLARE_WORKERS_API_TOKEN`.

@@ -47,7 +47,7 @@ Internal test builds can be packaged without a paid Apple Developer ID. These bu
 - Zip the `.app` for sharing.
 - On the receiving Mac, Gatekeeper may still require right-click Open or quarantine removal because the app is not Developer ID signed or notarized.
 
-For public distribution without security warnings, use Developer ID signing and Apple notarization later.
+For public distribution without security warnings, use Developer ID signing and Apple notarization later. Internal ZIP builds include `Open Dashcam Offloader.applescript` and `Open Dashcam Offloader.app` next to the main app; both clear quarantine from `Dashcam Offloader.app` in that same folder, then open it.
 
 Run the built-in scanner/planner verification test:
 
@@ -131,7 +131,7 @@ swift run DashcamOffloader --verify
 - `Package.swift` - Swift Package definition for the macOS prototype
 - `Sources/DashcamOffloaderApp/` - SwiftUI app, scanner, detector, planner, and copy engine
 - `scripts/build-macos-app.sh` - builds `build/Dashcam Offloader.app`
-- `scripts/open-dashcam-offloader.command` - clears macOS quarantine on a downloaded app in the same folder and opens it
+- `scripts/open-dashcam-offloader.applescript` - clears macOS quarantine on a downloaded app in the same folder and opens it
 - `DESIGN.md` - product and technical design baseline
 - `docs/agent-handoff.md` - cross-machine handoff notes for future agents
 - `docs/project-plan.md` - phased build plan
