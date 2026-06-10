@@ -120,6 +120,11 @@ final class TransferViewModel: ObservableObject {
             return (volumeMatchedCandidate.profile.manufacturer, volumeMatchedCandidate.profile.model)
         }
 
+        if let selectedSource,
+           let catalogMatch = KnownDashcamCatalog.exactVolumeLabelMatch(selectedSource.name) {
+            return (catalogMatch.manufacturer, catalogMatch.model)
+        }
+
         return nil
     }
 
@@ -896,6 +901,18 @@ final class TransferViewModel: ObservableObject {
             clip.timestampSource.rawValue
         }
             .mapValues(\.count)
+        let displayModeCounts = Dictionary(grouping: eligibleClips) { clip in
+            clip.displayMode
+        }
+            .mapValues(\.count)
+        let outputCategoryCounts = Dictionary(grouping: eligibleClips) { clip in
+            clip.outputCategory
+        }
+            .mapValues(\.count)
+        let channelCounts = Dictionary(grouping: eligibleClips) { clip in
+            clip.channel
+        }
+            .mapValues(\.count)
         let inferredParkingPatternCounts = Dictionary(grouping: eligibleClips.compactMap(\.inferredParkingPattern)) { pattern in
             pattern.rawValue
         }
@@ -933,16 +950,15 @@ final class TransferViewModel: ObservableObject {
             .uniquedPreservingOrder()
             .prefix(60)
         let safeClipSourcePaths = Set(safeFiles.map(\.standardizedFileURL.path))
+        let safeEligibleClips = eligibleClips.filter { clip in
+            safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
+        }
         let videoSpecSamples = makeVideoSpecSamples(
-            from: representativeVideoClips(eligibleClips.filter { clip in
-                safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
-            }),
+            from: representativeVideoClips(safeEligibleClips),
             sourceRoot: sourceRoot
         )
         let videoSpecSummaries = makeVideoSpecSummaries(
-            from: eligibleClips.filter { clip in
-                clip.isVideo && safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
-            },
+            from: safeEligibleClips.filter(\.isVideo),
             samples: videoSpecSamples,
             sourceRoot: sourceRoot
         )
@@ -971,6 +987,9 @@ final class TransferViewModel: ObservableObject {
             excludedItems: scanSummary.excludedItems,
             categoryCounts: scanSummary.categoryCounts,
             modeCounts: scanSummary.modeCounts,
+            displayModeCounts: displayModeCounts,
+            outputCategoryCounts: outputCategoryCounts,
+            channelCounts: channelCounts,
             extensionCounts: extensionCounts,
             mediaExtensionCounts: mediaExtensionCounts,
             unrecognizedExtensionCounts: unrecognizedExtensionCounts,
@@ -982,8 +1001,10 @@ final class TransferViewModel: ObservableObject {
             folderSamples: Array(folderSamples),
             folderSummaries: makeFolderSummaries(from: safeFiles, sourceRoot: sourceRoot),
             filenameSamples: Array(filenameSamples),
+            filenamePatternSummaries: makeFilenamePatternSummaries(from: safeFiles, sourceRoot: sourceRoot),
             supportFileSamples: Array(supportFileSamples),
             ignoredSupportFileSamples: Array(ignoredSupportFileSamples),
+            clipGroupSummaries: makeClipGroupSummaries(from: safeEligibleClips, sourceRoot: sourceRoot),
             videoSpecSamples: videoSpecSamples,
             videoSpecSummaries: videoSpecSummaries,
             settingSnapshots: Array(settingSnapshots),
@@ -1094,6 +1115,7 @@ final class TransferViewModel: ObservableObject {
             .map { folderPath in
                 let folderFiles = grouped[folderPath, default: []]
                 let mediaFiles = folderFiles.filter(isMediaLikeFile)
+                let sizes = folderFiles.compactMap(fileSizeBytes)
                 let extensionCounts = Dictionary(grouping: folderFiles) { fileURL in
                     let ext = fileURL.pathExtension.lowercased()
                     return ext.isEmpty ? "[none]" : ext
@@ -1105,9 +1127,113 @@ final class TransferViewModel: ObservableObject {
                     fileCount: folderFiles.count,
                     mediaFileCount: mediaFiles.count,
                     supportFileCount: folderFiles.count - mediaFiles.count,
+                    totalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    minFileSizeBytes: sizes.min(),
+                    maxFileSizeBytes: sizes.max(),
                     extensionCounts: extensionCounts
                 )
             }
+    }
+
+    private func makeFilenamePatternSummaries(from files: [URL], sourceRoot: URL?) -> [FeedbackFilenamePatternSummary] {
+        let grouped = Dictionary(grouping: files) { fileURL in
+            let relativePath = sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot)
+            let folder = videoSpecFolder(for: relativePath)
+            let ext = fileURL.pathExtension.lowercased()
+            let redactedPattern = redactedFilenamePattern(fileURL.lastPathComponent)
+            return [folder, ext.isEmpty ? "[none]" : ext, redactedPattern].joined(separator: "\u{1f}")
+        }
+
+        return grouped.keys
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .prefix(160)
+            .compactMap { key in
+                guard let bucket = grouped[key], let first = bucket.first else { return nil }
+                let firstRelativePath = sanitizedRelativePath(for: first, sourceRoot: sourceRoot)
+                let folder = videoSpecFolder(for: firstRelativePath)
+                let ext = first.pathExtension.lowercased()
+                let sizes = bucket.compactMap(fileSizeBytes)
+                let paths = bucket
+                    .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
+                    .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+
+                return FeedbackFilenamePatternSummary(
+                    folder: folder,
+                    extensionLowercased: ext.isEmpty ? "[none]" : ext,
+                    redactedPattern: redactedFilenamePattern(first.lastPathComponent),
+                    fileCount: bucket.count,
+                    totalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    sampleRelativePaths: representativePathStrings(from: paths)
+                )
+            }
+    }
+
+    private func redactedFilenamePattern(_ filename: String) -> String {
+        filename.map { character in
+            character.isNumber ? "0" : String(character)
+        }
+        .joined()
+    }
+
+    private func makeClipGroupSummaries(from clips: [ClipItem], sourceRoot: URL?) -> [FeedbackClipGroupSummary] {
+        let grouped = Dictionary(grouping: clips) { clip in
+            [
+                videoSpecFolder(for: clip.relativePath),
+                clip.extensionLowercased,
+                clip.mode,
+                clip.displayMode,
+                clip.outputCategory,
+                clip.channel,
+                clip.inferredParkingPattern?.rawValue ?? "none"
+            ].joined(separator: "\u{1f}")
+        }
+
+        return grouped.keys
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .prefix(160)
+            .compactMap { key in
+                guard let bucket = grouped[key], let first = bucket.first else { return nil }
+                let paths = bucket
+                    .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
+                    .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+                let sizes = bucket.map(\.size)
+
+                return FeedbackClipGroupSummary(
+                    folder: videoSpecFolder(for: first.relativePath),
+                    extensionLowercased: first.extensionLowercased,
+                    mode: first.mode,
+                    displayMode: first.displayMode,
+                    outputCategory: first.outputCategory,
+                    channel: first.channel,
+                    displayChannel: first.displayChannel,
+                    inferredParkingPattern: first.inferredParkingPattern?.rawValue,
+                    fileCount: bucket.count,
+                    totalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    minFileSizeBytes: sizes.min(),
+                    maxFileSizeBytes: sizes.max(),
+                    firstTimestamp: feedbackTimestamp(bucket.compactMap(\.timestamp).min()),
+                    lastTimestamp: feedbackTimestamp(bucket.compactMap(\.timestamp).max()),
+                    timestampSourceCounts: Dictionary(grouping: bucket, by: { $0.timestampSource.rawValue })
+                        .mapValues(\.count),
+                    sampleRelativePaths: representativePathStrings(from: paths)
+                )
+            }
+    }
+
+    private func representativePathStrings(from sortedPaths: [String]) -> [String] {
+        var selected: [String] = []
+        func append(_ path: String?) {
+            guard let path, !selected.contains(path) else { return }
+            selected.append(path)
+        }
+
+        append(sortedPaths.first)
+        append(sortedPaths[safe: sortedPaths.count / 2])
+        append(sortedPaths.last)
+        for path in sortedPaths where selected.count < 8 {
+            append(path)
+        }
+        return Array(selected.prefix(8))
     }
 
     private func representativeVideoClips(_ clips: [ClipItem]) -> [ClipItem] {

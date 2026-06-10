@@ -271,7 +271,7 @@ enum ProfileParser {
 
         func sectionScore(_ section: String?, for rule: DetectionRule) -> Int {
             if rule.volumeLabel != nil {
-                return section == "supporting" ? 8 : 20
+                return section == "supporting" ? 3 : 5
             }
             return section == "supporting" ? 18 : 60
         }

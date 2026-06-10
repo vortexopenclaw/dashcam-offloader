@@ -62,6 +62,30 @@ enum VerificationTest {
                 print("VERIFY FAIL: Vantrue N4 Pro S profile did not load A/B/C channel labels")
                 return false
             }
+            guard KnownDashcamCatalog.models.count >= 140,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("N4 Pro S")?.model == "N4 Pro S",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("Nexus 4 Pro S")?.model == "N4 Pro S",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("E360 ACE")?.channelRoles == ["panoramic_front", "rear"],
+                  KnownDashcamCatalog.exactVolumeLabelMatch("ELITE 10")?.model == "Elite 10",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F17 Plus")?.channels == 4,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F17 Plus")?.channelSensors["front"] == "Sony IMX675",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F17 Elite")?.channelSensors["interior"] == "Sony IMX307 STARVIS",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("VC70")?.channelSensors["rear"] == "OmniVision OS04J10",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F77")?.channelSensors["front"] == "Sony IMX678",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F77")?.sensorNotes.contains("eMMC") == true,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("VS10 4G LTE")?.channelResolutions["front"] == "2K",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("F7NT")?.model == "F7NT",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("VP40")?.channelResolutions["left"] == "1080p",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("G900 TriPro Bumper")?.channelRoles == ["front", "rear", "bumper"],
+                  KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.model == "G850 Pro",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.channelResolutions["rear"] == "2K",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("G840H")?.parkingModes.contains("reverse parking guide lines") == true else {
+                print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
+                return false
+            }
 
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-verify-\(UUID().uuidString)", isDirectory: true)
@@ -119,6 +143,17 @@ enum VerificationTest {
             let emptyScan = try scanner.scan(sourceURL: emptySource, profiles: profiles)
             guard emptyScan.selectedProfile == nil, emptyScan.candidates.isEmpty else {
                 print("VERIFY FAIL: empty source selected a profile")
+                return false
+            }
+
+            let unsupportedKnownSource = temp.appendingPathComponent("E360 ACE", isDirectory: true)
+            try FileManager.default.createDirectory(at: unsupportedKnownSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 31, count: 1024).write(to: unsupportedKnownSource.appendingPathComponent("Normal/20260610_101112_00001_N_A.MP4"))
+            let unsupportedKnownScan = try scanner.scan(sourceURL: unsupportedKnownSource, profiles: [])
+            guard unsupportedKnownScan.selectedProfile?.id == "generic-new-dashcam",
+                  unsupportedKnownScan.identifiedCamera == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch(unsupportedKnownSource.lastPathComponent)?.model == "E360 ACE" else {
+                print("VERIFY FAIL: internal catalog label should stay a private hint, not a detected camera")
                 return false
             }
 

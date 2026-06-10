@@ -1,6 +1,8 @@
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
+const MAX_FILENAME_PATTERN_SUMMARIES = 160;
+const MAX_CLIP_GROUP_SUMMARIES = 160;
 const MAX_VIDEO_SPEC_SAMPLES = 64;
 const MAX_VIDEO_SPEC_SUMMARIES = 120;
 const MAX_SETTING_SNAPSHOTS = 20;
@@ -149,6 +151,9 @@ function sanitizeScan(scan) {
     excludedItems: numberValue(scan.excludedItems),
     categoryCounts: countMap(scan.categoryCounts),
     modeCounts: countMap(scan.modeCounts),
+    displayModeCounts: countMap(scan.displayModeCounts),
+    outputCategoryCounts: countMap(scan.outputCategoryCounts),
+    channelCounts: countMap(scan.channelCounts),
     extensionCounts: countMap(scan.extensionCounts),
     mediaExtensionCounts: countMap(scan.mediaExtensionCounts),
     unrecognizedExtensionCounts: countMap(scan.unrecognizedExtensionCounts),
@@ -162,8 +167,14 @@ function sanitizeScan(scan) {
       ? scan.folderSummaries.slice(0, 80).map(sanitizeFolderSummary).filter(Boolean)
       : [],
     filenameSamples: safePathList(scan.filenameSamples, MAX_SAMPLE_PATHS),
+    filenamePatternSummaries: Array.isArray(scan.filenamePatternSummaries)
+      ? scan.filenamePatternSummaries.slice(0, MAX_FILENAME_PATTERN_SUMMARIES).map(sanitizeFilenamePatternSummary).filter(Boolean)
+      : [],
     supportFileSamples: safePathList(scan.supportFileSamples, 40),
     ignoredSupportFileSamples: safePathList(scan.ignoredSupportFileSamples, 60),
+    clipGroupSummaries: Array.isArray(scan.clipGroupSummaries)
+      ? scan.clipGroupSummaries.slice(0, MAX_CLIP_GROUP_SUMMARIES).map(sanitizeClipGroupSummary).filter(Boolean)
+      : [],
     videoSpecSamples: Array.isArray(scan.videoSpecSamples)
       ? scan.videoSpecSamples.slice(0, MAX_VIDEO_SPEC_SAMPLES).map(sanitizeVideoSpecSample).filter(Boolean)
       : [],
@@ -216,7 +227,61 @@ function sanitizeFolderSummary(summary) {
     fileCount: numberValue(summary.fileCount),
     mediaFileCount: numberValue(summary.mediaFileCount),
     supportFileCount: numberValue(summary.supportFileCount),
+    totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
+    minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
+    maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
     extensionCounts: countMap(summary.extensionCounts),
+  };
+}
+
+function sanitizeFilenamePatternSummary(summary) {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return null;
+  }
+
+  const folder = sanitizePath(summary.folder || ".");
+  const redactedPattern = stringValue(summary.redactedPattern);
+  if (!folder || !redactedPattern || isSensitiveSettingPair(redactedPattern, "")) {
+    return null;
+  }
+
+  return {
+    folder,
+    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    redactedPattern,
+    fileCount: numberValue(summary.fileCount),
+    totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
+    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 8),
+  };
+}
+
+function sanitizeClipGroupSummary(summary) {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return null;
+  }
+
+  const folder = sanitizePath(summary.folder || ".");
+  if (!folder) {
+    return null;
+  }
+
+  return {
+    folder,
+    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    mode: optionalString(summary.mode),
+    displayMode: optionalString(summary.displayMode),
+    outputCategory: optionalString(summary.outputCategory),
+    channel: optionalString(summary.channel),
+    displayChannel: optionalString(summary.displayChannel),
+    inferredParkingPattern: optionalString(summary.inferredParkingPattern),
+    fileCount: numberValue(summary.fileCount),
+    totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
+    minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
+    maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
+    firstTimestamp: optionalString(summary.firstTimestamp),
+    lastTimestamp: optionalString(summary.lastTimestamp),
+    timestampSourceCounts: countMap(summary.timestampSourceCounts),
+    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 8),
   };
 }
 

@@ -650,6 +650,9 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var excludedItems: Int
     var categoryCounts: [String: Int]
     var modeCounts: [String: Int]
+    var displayModeCounts: [String: Int]
+    var outputCategoryCounts: [String: Int]
+    var channelCounts: [String: Int]
     var extensionCounts: [String: Int]
     var mediaExtensionCounts: [String: Int]
     var unrecognizedExtensionCounts: [String: Int]
@@ -661,8 +664,10 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var folderSamples: [String]
     var folderSummaries: [FeedbackFolderSummary]
     var filenameSamples: [String]
+    var filenamePatternSummaries: [FeedbackFilenamePatternSummary]
     var supportFileSamples: [String]
     var ignoredSupportFileSamples: [String]
+    var clipGroupSummaries: [FeedbackClipGroupSummary]
     var videoSpecSamples: [FeedbackVideoSpecSample]
     var videoSpecSummaries: [FeedbackVideoSpecSummary]
     var settingSnapshots: [FeedbackSettingSnapshot]
@@ -675,7 +680,38 @@ struct FeedbackFolderSummary: Codable, Hashable, Sendable {
     var fileCount: Int
     var mediaFileCount: Int
     var supportFileCount: Int
+    var totalFileSizeBytes: Int64
+    var minFileSizeBytes: Int64?
+    var maxFileSizeBytes: Int64?
     var extensionCounts: [String: Int]
+}
+
+struct FeedbackFilenamePatternSummary: Codable, Hashable, Sendable {
+    var folder: String
+    var extensionLowercased: String
+    var redactedPattern: String
+    var fileCount: Int
+    var totalFileSizeBytes: Int64
+    var sampleRelativePaths: [String]
+}
+
+struct FeedbackClipGroupSummary: Codable, Hashable, Sendable {
+    var folder: String
+    var extensionLowercased: String
+    var mode: String?
+    var displayMode: String?
+    var outputCategory: String?
+    var channel: String?
+    var displayChannel: String?
+    var inferredParkingPattern: String?
+    var fileCount: Int
+    var totalFileSizeBytes: Int64
+    var minFileSizeBytes: Int64?
+    var maxFileSizeBytes: Int64?
+    var firstTimestamp: String?
+    var lastTimestamp: String?
+    var timestampSourceCounts: [String: Int]?
+    var sampleRelativePaths: [String]
 }
 
 struct FeedbackVideoSpecSample: Codable, Hashable, Sendable {

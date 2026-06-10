@@ -4,6 +4,8 @@ Running log of codec, resolution, frame rate, and bitrate data across the profil
 
 Bitrates vary with scene complexity, firmware version, HDR mode, and camera settings. Values here are representative baselines from the sampled clips.
 
+For cross-camera comparisons and parking-mode bitrate drops, see [Video Quality Master Chart](video-quality-master-chart.md).
+
 Validation rule: use files copied straight from the dashcam whenever possible, such as `Driving Clips`, `Parking Clips`, `Sample clips`, or raw card folders. Exclude produced YouTube exports, review videos, b-roll of the camera, app screen recordings, IR camera clips, website screenshots, thumbnails, and phone/camera footage.
 
 ## Source Key

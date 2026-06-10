@@ -1,0 +1,288 @@
+import Foundation
+
+struct KnownDashcamModel: Hashable, Sendable {
+    var manufacturer: String
+    var model: String
+    var aliases: [String]
+    var channels: Int?
+    var channelRoles: [String]
+    var channelResolutions: [String: String]
+    var channelSensors: [String: String]
+    var sensorNotes: [String]
+    var parkingModes: [String]
+    var notes: String
+
+    var displayName: String {
+        "\(manufacturer) \(model)"
+    }
+
+    var searchNames: [String] {
+        [model, displayName] + aliases
+    }
+}
+
+/// Internal model knowledge used for learning prefill and future candidate
+/// hints. Entries here are not supported camera profiles.
+enum KnownDashcamCatalog {
+    private static let genericVolumeLabels: Set<String> = [
+        "blackvue",
+        "dashcam",
+        "dcim",
+        "disk",
+        "external",
+        "no name",
+        "noname",
+        "sd",
+        "sdcard",
+        "tfcard",
+        "untitled",
+        "usb",
+        "usbdisk",
+        "volume"
+    ].map { compact($0) }.reduce(into: Set<String>()) { $0.insert($1) }
+
+    static let models: [KnownDashcamModel] = [
+        // Vueroid
+        model("Vueroid", "H1", channels: 1, roles: ["front"], notes: "Observed card signature H1-QHD-INFINITE."),
+        model("Vueroid", "S1 4K Infinite", channels: 1, roles: ["front"]),
+        model("Vueroid", "S1 QHD Infinite", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D40-Q2", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D21 4K", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D21 LTE FHD", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D20-Q2 Plus", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D20-F2/F2E", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "ZERO", channels: 2, roles: ["front", "rear"]),
+        model("Vueroid", "D10-F2W", channels: 2, roles: ["front", "rear"]),
+
+        // VIOFO
+        model("VIOFO", "A329S", channels: 3, roles: ["front", "rear", "interior"], notes: "Multiplex video capable."),
+        model("VIOFO", "A329T", channels: 3, roles: ["front", "rear", "telephoto"], notes: "Telephoto channel token T observed."),
+        model("VIOFO", "A229 Pro", channels: 3, roles: ["front", "rear", "interior"]),
+        model("VIOFO", "A229 Plus", channels: 3, roles: ["front", "rear", "interior"]),
+        model("VIOFO", "A229 Ultra", channels: 3, roles: ["front", "rear", "interior"]),
+        model("VIOFO", "A139 Pro", channels: 3, roles: ["front", "rear", "interior"]),
+        model("VIOFO", "T130", channels: 3, roles: ["front", "rear", "interior"]),
+        model("VIOFO", "A129 Pro", channels: 2, roles: ["front", "rear"]),
+        model("VIOFO", "A129 Plus Duo", channels: 2, roles: ["front", "rear"]),
+        model("VIOFO", "A129 Duo", channels: 2, roles: ["front", "rear"]),
+        model("VIOFO", "A119M Pro", channels: 1, roles: ["front"]),
+        model("VIOFO", "A119 Mini 2", channels: 1, roles: ["front"]),
+        model("VIOFO", "VS1", channels: 1, roles: ["front"]),
+        model("VIOFO", "WM1", channels: 1, roles: ["front"]),
+
+        // Thinkware
+        model("Thinkware", "U3000 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "U3000", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "U1000 Plus", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "U1000", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "Q1000", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "Q850", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "Q800 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "Q200", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "ARC", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "T700", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "F790", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "F70 Pro", channels: 1, roles: ["front"]),
+        model("Thinkware", "F70", channels: 1, roles: ["front"]),
+        model("Thinkware", "F200 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "F800 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "X1000", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "X800", channels: 1, roles: ["front"]),
+        model("Thinkware", "M1", channels: 2, roles: ["front", "rear"]),
+
+        // BlackVue
+        model("BlackVue", "Elite 10", aliases: ["ELITE 10", "ELITE10"], channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "Elite 9", aliases: ["ELITE 9", "ELITE9"], channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "Elite 8", aliases: ["ELITE 8", "ELITE8"], channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "K970X Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "K770X", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR970X Plus II", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR970X Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR970X LTE Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR970X Box Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR970X", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR770X Series II", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR770X", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR770X Box", channels: 3, roles: ["front", "interior", "rear"]),
+        model("BlackVue", "DR900X Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR900X", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR900S", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR750X Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR750X", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR750S", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR650S", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR590X Plus", channels: 2, roles: ["front", "rear"]),
+        model("BlackVue", "DR590X", channels: 2, roles: ["front", "rear"]),
+
+        // Vantrue
+        model("Vantrue", "Nexus 5S", aliases: ["N5S"], channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Vantrue", "Nexus 5", aliases: ["N5"], channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Vantrue", "N4 Pro S", aliases: ["Nexus 4 Pro S", "N4PROS", "N4 ProS"], channels: 3, roles: ["front", "interior", "rear"], resolutions: ["front": "4K", "interior": "1080p", "rear": "2.5K"], parkingModes: ["collision detection", "motion detection", "low bitrate recording", "low frame rate recording"], notes: "Official page lists 4K front, 1080p cabin, 2.5K rear."),
+        model("Vantrue", "Nexus 4 Pro", aliases: ["N4 Pro"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "N4 S", aliases: ["N4S"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "OnDash N4", aliases: ["N4"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "Nexus 2X", aliases: ["N2X"], channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "N2 Pro", channels: 2, roles: ["front", "interior"]),
+        model("Vantrue", "N2S", channels: 2, roles: ["front", "interior"]),
+        model("Vantrue", "E360 ACE", aliases: ["E360 Ace"], channels: 2, roles: ["panoramic_front", "rear"], notes: "E360 family variants: E360, E360 Plus, E360 ACE. Front/cabin panoramic stream plus optional rear camera."),
+        model("Vantrue", "E360 Plus", channels: 2, roles: ["panoramic_front", "rear"]),
+        model("Vantrue", "E360", channels: 2, roles: ["panoramic_front", "rear"]),
+        model("Vantrue", "Element 3", aliases: ["E3"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "Element 2", aliases: ["E2"], channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "Element 1 Pro", aliases: ["E1 Pro", "E1PRO"], channels: 1, roles: ["front"]),
+        model("Vantrue", "Element 1", aliases: ["E1"], channels: 1, roles: ["front"]),
+        model("Vantrue", "E1 Lite", channels: 1, roles: ["front"]),
+        model("Vantrue", "S1 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "S1", channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "S2", channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "Falcon 1", aliases: ["F1"], channels: 2, roles: ["front", "rear"]),
+
+        // 70mai
+        model("70mai", "T800", channels: 3, roles: ["front", "rear", "interior"]),
+        model("70mai", "X800", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "X200", channels: 1, roles: ["rotating_front"]),
+        model("70mai", "A810S", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A810", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A810 Lite", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A800SE", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A800S", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A510", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "Pro Plus+", aliases: ["A500S"], channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A410", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A400", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A200", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "M310 Plus 4K", channels: 1, roles: ["front"]),
+        model("70mai", "M310", channels: 1, roles: ["front"]),
+        model("70mai", "M500", channels: 1, roles: ["front"]),
+        model("70mai", "M300", channels: 1, roles: ["front"]),
+        model("70mai", "T400", channels: 2, roles: ["front", "rear"]),
+
+        // Other manufacturers already researched for selector/profile candidates.
+        model("Redtiger", "F77", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "4K"], sensors: ["front": "Sony IMX678", "rear": "Sony IMX678"], sensorNotes: ["eMMC", "Long Parking Mode Wakeup Times"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 2CH product, 4K+4K dual IMX678, voice control, 5.8 GHz Wi-Fi. Sensor notes imported from Ariel's tracking sheet."),
+        model("Redtiger", "F7NP", aliases: ["F7N Plus", "F7NP Plus"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2.5K"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 2CH front/rear 4K dash cam family. Resolution note imported from Ariel's tracking sheet."),
+        model("Redtiger", "F7NA", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current/new 2CH Sony STARVIS 2 front/rear model."),
+        model("Redtiger", "F7NT", aliases: ["F7N Touch"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "1080p"], sensors: ["front": "Sony STARVIS 2"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 2CH touch-screen 4K dual dash cam. Sensor note imported from Ariel's tracking sheet."),
+        model("Redtiger", "F7N Elite", aliases: ["F7NElite"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "1080p"], sensors: ["front": "Sony STARVIS 2"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Ariel's tracking sheet lists this as a 4K/1080p STARVIS 2 front-sensor model."),
+        model("Redtiger", "VC70", aliases: ["ViewClear 70"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2.5K"], sensors: ["front": "Sony IMX678", "rear": "OmniVision OS04J10"], parkingModes: ["Super Night Vision parking mode", "24/7 parking protection", "hardwire parking monitor"], notes: "Official current 2CH 4K dual HDR/Super Night Vision model. Sensor notes imported from Ariel's tracking sheet."),
+        model("Redtiger", "F17 Elite", aliases: ["F17Elite"], channels: 3, roles: ["front", "interior", "rear"], resolutions: ["front": "4K", "rear": "2.5K", "interior": "1080p"], sensors: ["front": "Sony IMX678", "rear": "Sony IMX675", "interior": "Sony IMX307 STARVIS"], parkingModes: ["NiteGuard parking mode", "24/7 parking protection", "hardwire parking monitor"], notes: "Official current 3CH 4K full-night-color Wi-Fi 6 model. Sensor notes imported from Ariel's tracking sheet."),
+        model("Redtiger", "F17", channels: 3, roles: ["front", "interior", "rear"], resolutions: ["front": "4K", "interior": "1080p", "rear": "1080p"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official 3CH 4K / 5 GHz Wi-Fi model."),
+        model("Redtiger", "A6", channels: 3, roles: ["front", "interior", "rear"], resolutions: ["front": "4K"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 3CH model."),
+        model("Redtiger", "VP20", channels: 3, roles: ["front", "interior", "rear"], notes: "Official current 3CH IR night-view model."),
+        model("Redtiger", "F17 Plus", channels: 4, roles: ["front", "rear", "left", "right"], resolutions: ["front": "4K", "rear": "1080p", "left": "1080p", "right": "1080p"], sensors: ["front": "Sony IMX675"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 4CH STARVIS 2 touch-screen model. Ariel's sheet tracks this as 4K / 1080p / 1080p / 1080p with IMX675 front."),
+        model("Redtiger", "VP40", aliases: ["VisionPano 40"], channels: 4, roles: ["front", "rear", "left", "right"], resolutions: ["front": "2.5K", "rear": "2.5K", "left": "1080p", "right": "1080p"], parkingModes: ["parking monitor", "24/7 parking protection", "hardwire parking monitor"], notes: "Official current 4CH VisionPano model with dual STARVIS 2 HDR."),
+        model("Redtiger", "F7N", aliases: ["F7NS"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Legacy/current F7N family; firmware archives are model-coded but internal files are generic/chipset-style."),
+        model("Redtiger", "F9", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "1080p"], sensors: ["front": "Sony STARVIS 2"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Mirror dashcam family. Sensor note imported from Ariel's tracking sheet."),
+        model("Redtiger", "F8", channels: 1, roles: ["front"], resolutions: ["front": "4K"], notes: "Firmware archive observed in official Redtiger firmware research; internal firmware filename is chipset-style."),
+        model("Redtiger", "F5", channels: 1, roles: ["front"]),
+        model("Redtiger", "F4", channels: 1, roles: ["front"]),
+        model("Redtiger", "F4 Pro", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "1080p"], notes: "Ariel's tracking sheet lists this as a 4K/1080p model."),
+        model("Redtiger", "F9 Lite", channels: 1, roles: ["front"], resolutions: ["front": "4K"], notes: "Ariel's tracking sheet lists this as a 4K model."),
+        model("Redtiger", "T700 RVM", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "1080p"], notes: "Ariel's tracking sheet lists this as a 4K/1080p rear-view-mirror model."),
+        model("Redtiger", "VS10 4G LTE", channels: 2, roles: ["front", "rear"], resolutions: ["front": "2K", "rear": "1080p"], notes: "Ariel's tracking sheet lists this as a 2K/1080p 4G LTE model."),
+        model("Redtiger", "F3", channels: 1, roles: ["front"]),
+        model("Rove", "R2-4K Dual Pro", channels: 2, roles: ["front", "rear"]),
+        model("Rove", "R2-4K Dual", channels: 2, roles: ["front", "rear"]),
+        model("Rove", "R2-4K Pro", channels: 1, roles: ["front"]),
+        model("Rove", "R3", channels: 3, roles: ["front", "interior", "rear"]),
+        model("Wolfbox", "G900 Pro", aliases: ["G900Pro"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2.5K"], parkingModes: ["parking monitoring with hardwire kit", "loop recording"], notes: "Official comparison lists 4K Sony STARVIS IMX678 front and 2.5K Sony STARVIS IMX335 rear mirror dash cam."),
+        model("Wolfbox", "G900", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "G900 family mirror dashcam with front/rear camera support."),
+        model("Wolfbox", "G900 Tripro", aliases: ["G900 TriPro", "G900TriPro"], channels: 3, roles: ["front", "rear", "interior"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official FAQ says 3CH mode uses Front / Rear / Cabin ports; third camera can be cabin or bumper."),
+        model("Wolfbox", "G900 Tripro Bumper", aliases: ["G900 TriPro Bumper"], channels: 3, roles: ["front", "rear", "bumper"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official product nav has a bumper-version 3CH G900 TriPro."),
+        model("Wolfbox", "G900 Tripro Cabin", aliases: ["G900 TriPro Cabin"], channels: 3, roles: ["front", "rear", "interior"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official product nav has a cabin-version 3CH G900 TriPro."),
+        model("Wolfbox", "G850 Pro", aliases: ["G850Pro"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2K"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official comparison lists 4K front and 2K rear mirror dash cam with Wi-Fi/app, voice control, and ADAS."),
+        model("Wolfbox", "G850", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "G850/G850 Pro family; FAQ mentions external GPS module and anti-flicker settings."),
+        model("Wolfbox", "G840S", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "reverse parking guide lines"], notes: "Mirror family. FAQ references G840S/G840H rear camera via Rear IN port."),
+        model("Wolfbox", "G840H", channels: 2, roles: ["front", "rear"], resolutions: ["front": "2.5K", "rear": "1080p"], parkingModes: ["parking monitoring", "parking assistance", "reverse parking guide lines"], notes: "Official comparison lists 2.5K front and 1080p rear, Wi-Fi/app, 12-inch mirror display."),
+        model("Wolfbox", "G840H Mini", channels: 2, roles: ["front", "rear"]),
+        model("Wolfbox", "G930", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "FAQ groups G890/G910/G930 series with rear camera and parking monitor behavior."),
+        model("Wolfbox", "G910", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "FAQ groups G890/G910/G930 series."),
+        model("Wolfbox", "G890", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "FAQ groups G890/G910/G930 series."),
+        model("Wolfbox", "G880", channels: 2, roles: ["front", "rear"]),
+        model("Wolfbox", "T10", channels: 2, roles: ["front", "rear"]),
+        model("Wolfbox", "X5", channels: 2, roles: ["front", "rear"]),
+        model("Wolfbox", "i07", channels: 2, roles: ["front", "rear"]),
+        model("Wolfbox", "G700", channels: 2, roles: ["front", "rear"]),
+        model("Cansonic", "UltraDash Z4 Standard", aliases: ["UD_Z4"], channels: 3, roles: ["front", "telephoto", "rear"]),
+        model("Cansonic", "UltraDash Z4 Commercial", aliases: ["UD_Z4C"], channels: 3, roles: ["front", "telephoto", "rear"]),
+        model("Cansonic", "UltraDash Z3+ Standard", aliases: ["UD_Z3+"], channels: 3, roles: ["wide", "telephoto", "rear"]),
+        model("Cansonic", "UltraDash Z3+ Commercial", aliases: ["UD_Z3+C"], channels: 3, roles: ["wide", "telephoto", "rear"]),
+        model("FineVu", "GX4K", channels: 2, roles: ["front", "rear"]),
+        model("FineVu", "GX1000", channels: 2, roles: ["front", "rear"]),
+        model("Nextbase", "Piqo", channels: 1, roles: ["front"]),
+        model("Nextbase", "iQ", channels: 3, roles: ["front", "interior", "rear"]),
+        model("Nextbase", "622GW", channels: 2, roles: ["front", "rear"]),
+        model("Garmin", "Dash Cam X310", channels: 1, roles: ["front"]),
+        model("Garmin", "Dash Cam Mini 3", channels: 1, roles: ["front"]),
+        model("Momento", "M8 Max", channels: 2, roles: ["front", "rear"]),
+        model("Momento", "M7", channels: 3, roles: ["front", "rear", "interior"]),
+        model("Rexing", "V55", channels: 3, roles: ["front", "rear", "interior"]),
+        model("Rexing", "R4", channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Escort", "MAXcam 360c", channels: 1, roles: ["front"]),
+        model("Escort", "M2", channels: 1, roles: ["front"]),
+        model("Escort", "M1", channels: 1, roles: ["front"]),
+        model("Cobra", "SC 400D", channels: 3, roles: ["front", "rear", "interior"]),
+        model("Cobra", "SC 250R", channels: 2, roles: ["front", "rear"]),
+        model("Cobra", "Road Scout", channels: 1, roles: ["front"]),
+        model("Nexar", "Beam2 Pro", channels: 2, roles: ["front", "interior"]),
+        model("Nexar", "Beam2", channels: 2, roles: ["front", "interior"]),
+        model("Pelsee", "P12 Pro Max", channels: 2, roles: ["front", "rear"]),
+        model("Pelsee", "P1 Duo", channels: 2, roles: ["front", "rear"]),
+        model("Miofive", "S1 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Miofive", "S1 Ultra", channels: 2, roles: ["front", "rear"]),
+        model("iiwey", "N9", channels: 5, roles: ["front", "rear", "left", "right", "interior"]),
+        model("iiwey", "N5 Pro", channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Coolcrazy", "N8 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Pruveeo", "D90-4CH-RGW", channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Pruveeo", "RD316", channels: 2, roles: ["front", "rear"]),
+        model("Terunsoul", "D016 4K+4K", channels: 2, roles: ["front", "rear"]),
+        model("Terunsoul", "4K 3-Channel", channels: 3, roles: ["front", "interior", "rear"]),
+        model("Botslab", "G980H", channels: 4, roles: ["front", "rear", "left", "right"])
+    ]
+
+    static func exactVolumeLabelMatch(_ label: String) -> KnownDashcamModel? {
+        let normalized = compact(label)
+        guard isSpecificVolumeLabel(label) else { return nil }
+
+        return models.first { model in
+            model.searchNames.contains { compact($0) == normalized }
+        }
+    }
+
+    static func isSpecificVolumeLabel(_ label: String) -> Bool {
+        let normalized = compact(label)
+        guard !normalized.isEmpty else { return false }
+        return !genericVolumeLabels.contains(normalized)
+    }
+
+    private static func model(
+        _ manufacturer: String,
+        _ model: String,
+        aliases: [String] = [],
+        channels: Int? = nil,
+        roles: [String] = [],
+        resolutions: [String: String] = [:],
+        sensors: [String: String] = [:],
+        sensorNotes: [String] = [],
+        parkingModes: [String] = [],
+        notes: String = ""
+    ) -> KnownDashcamModel {
+        KnownDashcamModel(
+            manufacturer: manufacturer,
+            model: model,
+            aliases: aliases,
+            channels: channels,
+            channelRoles: roles,
+            channelResolutions: resolutions,
+            channelSensors: sensors,
+            sensorNotes: sensorNotes,
+            parkingModes: parkingModes,
+            notes: notes
+        )
+    }
+
+    private static func compact(_ value: String) -> String {
+        value
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+    }
+}

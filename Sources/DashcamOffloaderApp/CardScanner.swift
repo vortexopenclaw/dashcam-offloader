@@ -55,7 +55,10 @@ struct CardScanner {
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap { profileSelectionIssue($0, allCandidates: candidates) }
-        let identifiedCamera = identifyCamera(from: candidates, selectedProfile: nil)
+        let identifiedCamera = identifyCamera(
+            from: candidates,
+            selectedProfile: nil
+        )
         var selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
             selectedProfile = topCandidate.profile
@@ -329,8 +332,8 @@ struct CardScanner {
             if let matched = matchedString {
                 updatedCandidates[index].score += 80
                 var evidence = updatedCandidates[index].evidence
-                evidence.append("OSD OCR match \"\(matched)\"")
-                updatedCandidates[index].evidence = Array(evidence.prefix(6))
+                evidence.insert("OSD OCR match \"\(matched)\"", at: 0)
+                updatedCandidates[index].evidence = Array(evidence.prefix(8))
                 updatedCandidates[index].confidence = confidenceLevel(for: updatedCandidates[index].score)
                 result.diagnostics.append(ScanDiagnosticEntry(
                     stage: "osd_ocr_probe",
@@ -356,7 +359,10 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
-        result.identifiedCamera = identifyCamera(from: updatedCandidates, selectedProfile: result.selectedProfile)
+        result.identifiedCamera = identifyCamera(
+            from: updatedCandidates,
+            selectedProfile: result.selectedProfile
+        )
 
         // Re-select and re-classify if the winner changed.
         let updatedSelectionIssue = updatedCandidates.first.flatMap { profileSelectionIssue($0, allCandidates: updatedCandidates) }
@@ -425,15 +431,24 @@ struct CardScanner {
         }
     }
 
-    private func identifyCamera(from candidates: [DetectionCandidate], selectedProfile: DashcamProfile?) -> IdentifiedCamera? {
-        guard let top = candidates.first else { return nil }
-        guard top.confidence != .low else { return nil }
+    private func identifyCamera(
+        from candidates: [DetectionCandidate],
+        selectedProfile: DashcamProfile?
+    ) -> IdentifiedCamera? {
+        guard let top = candidates.first else {
+            return nil
+        }
+        guard top.confidence != .low else {
+            return nil
+        }
 
         let hasExplicitModelEvidence = hasExplicitModelEvidence(top) ||
             (top.evidence.contains { $0.hasPrefix("filename pattern match ") } &&
                 (!hasSameManufacturerAmbiguity(top, allCandidates: candidates) ||
                     hasDistinctiveFilenameEvidence(top, allCandidates: candidates)))
-        guard hasExplicitModelEvidence else { return nil }
+        guard hasExplicitModelEvidence else {
+            return nil
+        }
 
         let profile = selectedProfile ?? top.profile
         guard profile.id != DashcamProfile.genericNewDashcam.id else { return nil }
@@ -999,7 +1014,7 @@ struct CardScanner {
             }
 
             if volumeLabel(sourceURL.lastPathComponent, matchesProfile: profile) {
-                score += 10
+                score += 3
                 evidence.append("volume label \(sourceURL.lastPathComponent)")
             }
 
@@ -1043,7 +1058,7 @@ struct CardScanner {
             guard score > 0 else { return nil }
             let confidence = confidenceLevel(for: score)
 
-            return DetectionCandidate(profile: profile, score: score, confidence: confidence, evidence: Array(evidence.prefix(8)))
+            return DetectionCandidate(profile: profile, score: score, confidence: confidence, evidence: Array(evidence.prefix(12)))
         }
         .sorted { lhs, rhs in
             if lhs.score != rhs.score { return lhs.score > rhs.score }
@@ -1137,6 +1152,10 @@ struct CardScanner {
 
     private func detectionRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {
         if let volumeLabel = rule.volumeLabel {
+            guard KnownDashcamCatalog.isSpecificVolumeLabel(sourceURL.lastPathComponent),
+                  KnownDashcamCatalog.isSpecificVolumeLabel(volumeLabel) else {
+                return false
+            }
             return compactModelToken(sourceURL.lastPathComponent) == compactModelToken(volumeLabel)
         }
 
@@ -1254,6 +1273,7 @@ struct CardScanner {
     }
 
     private func volumeLabel(_ label: String, matchesProfile profile: DashcamProfile) -> Bool {
+        guard KnownDashcamCatalog.isSpecificVolumeLabel(label) else { return false }
         let normalizedLabel = compactModelToken(label)
         guard !normalizedLabel.isEmpty else { return false }
         return normalizedLabel == compactModelToken(profile.model) ||
