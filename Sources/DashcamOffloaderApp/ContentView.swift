@@ -675,9 +675,6 @@ struct ContentView: View {
                             get: { viewModel.filters.separateCategoryFolders },
                             set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
                         ))
-                        Text("When off, files copy directly into the chosen download folder. The app no longer creates model, date, or channel folders by default.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                     .padding(.top, 6)
                 }
@@ -891,7 +888,7 @@ struct ContentView: View {
                     Button {
                         viewModel.startCopy()
                     } label: {
-                        Label(viewModel.destinationURL == nil ? "Choose Folder First" : "Download Footage", systemImage: "arrow.down.doc")
+                        Label(downloadButtonTitle, systemImage: "arrow.down.doc")
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.borderedProminent)
@@ -901,6 +898,16 @@ struct ContentView: View {
         }
         .padding()
         .background(.bar)
+    }
+
+    private var downloadButtonTitle: String {
+        if viewModel.destinationURL == nil {
+            return "Choose Folder First"
+        }
+        if viewModel.selectedQueueItemIDs.isEmpty {
+            return "Download Footage"
+        }
+        return "Download Selected"
     }
 
     private func countChips(title: String, counts: [(String, Int)]) -> some View {
@@ -1175,6 +1182,15 @@ struct CardLearningSheet: View {
         selectedChannelCount = inferred.count
 
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            if let identity = viewModel.inferredLearningCameraIdentity {
+                if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    manufacturer = identity.manufacturer
+                }
+                if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    model = identity.model
+                }
+                return
+            }
             if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                let selectedBrand,
                selectedBrand != DashcamProfile.genericNewDashcam.displayManufacturer {

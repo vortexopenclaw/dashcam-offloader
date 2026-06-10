@@ -55,6 +55,13 @@ enum VerificationTest {
                     return false
                 }
             }
+            guard let n4ProSProfile = profiles.first(where: { $0.id == "vantrue-n4-pro-s" }),
+                  n4ProSProfile.channels["A"] == "front",
+                  n4ProSProfile.channels["B"] == "interior",
+                  n4ProSProfile.channels["C"] == "rear" else {
+                print("VERIFY FAIL: Vantrue N4 Pro S profile did not load A/B/C channel labels")
+                return false
+            }
 
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-verify-\(UUID().uuidString)", isDirectory: true)
@@ -172,6 +179,49 @@ enum VerificationTest {
             }
             guard unknownScan.diagnostics.contains(where: { $0.stage == "generic_fallback" }) else {
                 print("VERIFY FAIL: unsupported card generic diagnostic missing")
+                return false
+            }
+
+            let unknownVantrueSource = temp.appendingPathComponent("unknown-vantrue-family", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknownVantrueSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: unknownVantrueSource.appendingPathComponent("Parking", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 21, count: 1024).write(to: unknownVantrueSource.appendingPathComponent("Normal/20260610_101112_00001_N_A.MP4"))
+            try Data(repeating: 22, count: 1024).write(to: unknownVantrueSource.appendingPathComponent("Normal/20260610_101112_00001_N_B.MP4"))
+            try Data(repeating: 23, count: 1024).write(to: unknownVantrueSource.appendingPathComponent("Normal/20260610_101112_00001_N_C.MP4"))
+            try Data(repeating: 24, count: 1024).write(to: unknownVantrueSource.appendingPathComponent("Parking/20260610_111213_00002_P_A.MP4"))
+            let unknownVantrueScan = try scanner.scan(sourceURL: unknownVantrueSource, profiles: profiles)
+            guard unknownVantrueScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: unknown Vantrue-style card should stay generic, got \(unknownVantrueScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard Set(unknownVantrueScan.clips.map(\.channel)) == ["channel_a", "channel_b", "channel_c"] else {
+                print("VERIFY FAIL: unknown Vantrue-style channels wrong: \(Set(unknownVantrueScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            guard Set(unknownVantrueScan.clips.map(\.displayChannel)) == ["Channel A", "Channel B", "Channel C"] else {
+                print("VERIFY FAIL: unknown Vantrue-style channel labels wrong: \(Set(unknownVantrueScan.clips.map(\.displayChannel)).sorted())")
+                return false
+            }
+
+            let n4ProSSource = temp.appendingPathComponent("N4 Pro S", isDirectory: true)
+            try FileManager.default.createDirectory(at: n4ProSSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: n4ProSSource.appendingPathComponent("Event", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: n4ProSSource.appendingPathComponent("Parking", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 31, count: 1024).write(to: n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_A.MP4"))
+            try Data(repeating: 32, count: 1024).write(to: n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_B.MP4"))
+            try Data(repeating: 33, count: 1024).write(to: n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_C.MP4"))
+            let n4ProSClips = scanner.classifyWithParkingPatterns(
+                files: [
+                    n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_A.MP4"),
+                    n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_B.MP4"),
+                    n4ProSSource.appendingPathComponent("Normal/20260610_101112_00001_N_C.MP4")
+                ],
+                sourceURL: n4ProSSource,
+                profile: n4ProSProfile
+            ).clips
+            let n4ProSDisplayChannels = Set(n4ProSClips.map { $0.displayChannel })
+            guard n4ProSDisplayChannels == ["Front", "Interior", "Rear"] else {
+                print("VERIFY FAIL: N4 Pro S channel labels wrong: \(n4ProSDisplayChannels.sorted())")
                 return false
             }
 
@@ -586,6 +636,17 @@ enum VerificationTest {
             }
             guard Set(plan.items.map(\.clip.id)) == Set(selectableVideoClips.map(\.id)) else {
                 print("VERIFY FAIL: fully selected recording type/channel filters did not plan exactly all downloadable videos")
+                return false
+            }
+            guard let firstQueueItem = plan.items.first else {
+                print("VERIFY FAIL: copy plan had no selectable queue item")
+                return false
+            }
+            let selectedRunPlan = plan.limitedToMediaItemIDs([firstQueueItem.id])
+            guard selectedRunPlan.items.map(\.id) == [firstQueueItem.id],
+                  selectedRunPlan.selectedFileCount == 1,
+                  selectedRunPlan.selectedBytes == firstQueueItem.clip.size else {
+                print("VERIFY FAIL: selected queue rows did not limit the run plan")
                 return false
             }
             var emptyModeFilters = filters

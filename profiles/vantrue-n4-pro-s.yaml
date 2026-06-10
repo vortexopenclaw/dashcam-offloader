@@ -2,6 +2,13 @@
 # Generated: 2026-06-05
 # Evidence: Real SD card inspection at /Volumes/N4 Pro S
 
+id: vantrue-n4-pro-s
+manufacturer: Vantrue
+model: N4 Pro S
+status: seeded
+confidence: medium
+confidence_note: "Real card sampled. No explicit model metadata file was found, so exact automatic selection should rely on strong supporting evidence such as volume/model label plus N4-series filename and video-spec evidence."
+
 camera:
   brand: Vantrue
   model: N4 Pro S
@@ -58,6 +65,38 @@ filename_pattern:
         B: Interior (medium bitrate)
         C: Rear (medium bitrate)
       example: "A"
+
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_(\\d{5})_([NEP])_([ABC])\\.(MP4|JPG)$"
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    seq_group: 3
+    mode_group: 4
+    channel_group: 5
+    modes:
+      N: normal
+      E: event
+      P: parking
+    channels:
+      A: front
+      B: interior
+      C: rear
+
+channels:
+  A:
+    position: front
+    observed_resolution: 3840x2160
+    note: "Front channel on the sampled card."
+  B:
+    position: interior
+    observed_resolution: 1920x1080
+    note: "Interior channel on the sampled card."
+  C:
+    position: rear
+    observed_resolution: 2560x1440
+    note: "Rear channel on the sampled card."
 
 gps_format:
   location: GPS/YYYYMMDD.dat

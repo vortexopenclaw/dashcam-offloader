@@ -361,6 +361,14 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             return "Right"
         case "front_telephoto":
             return "Front Telephoto"
+        case "channel_a":
+            return "Channel A"
+        case "channel_b":
+            return "Channel B"
+        case "channel_c":
+            return "Channel C"
+        case "channel_d":
+            return "Channel D"
         default:
             break
         }
@@ -407,6 +415,19 @@ struct CopyPlan: Hashable, Sendable {
 
     var selectedFileCount: Int {
         items.count + supportItems.count
+    }
+
+    func limitedToMediaItemIDs(_ ids: Set<CopyPlanItem.ID>) -> CopyPlan {
+        guard !ids.isEmpty else { return self }
+        let limitedItems = items.filter { ids.contains($0.id) }
+        return CopyPlan(
+            sourceRoot: sourceRoot,
+            destinationRoot: destinationRoot,
+            profile: profile,
+            clips: limitedItems.map(\.clip),
+            items: limitedItems,
+            supportItems: supportItems
+        )
     }
 }
 

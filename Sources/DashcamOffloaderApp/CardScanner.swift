@@ -1,10 +1,11 @@
+@preconcurrency import AVFoundation
 import Foundation
 
 struct CardScanner {
     private let fileManager = FileManager.default
 
     func discoverMountedSources(showAllVolumes: Bool = false) -> [MountedSource] {
-        let resourceKeys: [URLResourceKey] = [.isDirectoryKey, .volumeIsBrowsableKey]
+        let resourceKeys: [URLResourceKey] = [.isDirectoryKey, .volumeIsBrowsableKey, .volumeIsLocalKey]
         let urls = fileManager.mountedVolumeURLs(
             includingResourceValuesForKeys: resourceKeys,
             options: [.skipHiddenVolumes]
@@ -44,6 +45,7 @@ struct CardScanner {
     func shouldShowMountedSource(_ url: URL, showAllVolumes: Bool) -> Bool {
         if isSystemVolume(url) { return false }
         if showAllVolumes { return true }
+        if isNetworkMountedVolume(url) { return false }
         if isObviousNonDashcamVolume(url) { return false }
         return hasDashcamLikeEvidence(url)
     }
@@ -158,6 +160,7 @@ struct CardScanner {
         candidate.evidence.contains { evidence in
             evidence.hasPrefix("model text ") ||
                 evidence.hasPrefix("model evidence ") ||
+                evidence.hasPrefix("media fingerprint ") ||
                 evidence.hasPrefix("OSD OCR match ")
         }
     }
@@ -880,6 +883,11 @@ struct CardScanner {
         }
     }
 
+    private func isNetworkMountedVolume(_ url: URL) -> Bool {
+        let values = try? url.resourceValues(forKeys: [.volumeIsLocalKey])
+        return values?.volumeIsLocal == false
+    }
+
     private func hasDashcamLikeEvidence(_ url: URL) -> Bool {
         let rootIndicators: Set<String> = [
             "blackvue",
@@ -1028,6 +1036,10 @@ struct CardScanner {
                 }
             }
 
+            let mediaEvidence = mediaFingerprintEvidence(profile: profile, allFiles: allFiles)
+            score += mediaEvidence.score
+            evidence.append(contentsOf: mediaEvidence.evidence)
+
             guard score > 0 else { return nil }
             let confidence = confidenceLevel(for: score)
 
@@ -1060,6 +1072,67 @@ struct CardScanner {
         }
 
         return Array(result.prefix(5_000))
+    }
+
+    private func mediaFingerprintEvidence(profile: DashcamProfile, allFiles: [URL]) -> (score: Int, evidence: [String]) {
+        guard profile.id == "vantrue-n4-pro-s" else { return (0, []) }
+
+        let sampleDimensions = vantrueABCVideoDimensions(from: allFiles)
+        guard let a = sampleDimensions["A"], let b = sampleDimensions["B"], let c = sampleDimensions["C"] else {
+            return (0, [])
+        }
+
+        let hasN4ProSShape =
+            a.width >= 3800 && a.height >= 2100 &&
+            b.width >= 1900 && b.width <= 1940 && b.height >= 1060 && b.height <= 1100 &&
+            c.width >= 2500 && c.width <= 2600 && c.height >= 1400 && c.height <= 1480
+
+        guard hasN4ProSShape else { return (0, []) }
+
+        return (
+            100,
+            ["media fingerprint A=\(a.width)x\(a.height), B=\(b.width)x\(b.height), C=\(c.width)x\(c.height)"]
+        )
+    }
+
+    private func vantrueABCVideoDimensions(from allFiles: [URL]) -> [String: (width: Int, height: Int)] {
+        guard let regex = try? NSRegularExpression(pattern: #"^\d{8}_\d{6}_\d{5}_[NEP]_([ABC])\.MP4$"#) else {
+            return [:]
+        }
+
+        var dimensions: [String: (width: Int, height: Int)] = [:]
+        for fileURL in allFiles where dimensions.count < 3 {
+            guard fileURL.pathExtension.lowercased() == "mp4",
+                  !fileURL.lastPathComponent.hasPrefix("._") else {
+                continue
+            }
+
+            let filename = fileURL.lastPathComponent
+            let nsFilename = filename as NSString
+            let range = NSRange(location: 0, length: nsFilename.length)
+            guard let match = regex.firstMatch(in: filename, range: range),
+                  match.range(at: 1).location != NSNotFound else {
+                continue
+            }
+
+            let channel = nsFilename.substring(with: match.range(at: 1))
+            guard dimensions[channel] == nil,
+                  let size = videoDimensions(for: fileURL) else {
+                continue
+            }
+            dimensions[channel] = size
+        }
+        return dimensions
+    }
+
+    private func videoDimensions(for fileURL: URL) -> (width: Int, height: Int)? {
+        let asset = AVURLAsset(url: fileURL)
+        guard let videoTrack = asset.tracks(withMediaType: .video).first else { return nil }
+        let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+        let width = Int(abs(naturalSize.width).rounded())
+        let height = Int(abs(naturalSize.height).rounded())
+        guard width > 0, height > 0 else { return nil }
+        return (width, height)
     }
 
     private func detectionRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {
@@ -1318,6 +1391,11 @@ struct CardScanner {
             default:
                 break
             }
+        }
+
+        if let match = compactStem.range(of: #"20\d{17}[NEPT][A-D]$"#, options: .regularExpression) {
+            let suffix = String(compactStem[match].suffix(1))
+            return "channel_\(suffix.lowercased())"
         }
 
         return "unknown"

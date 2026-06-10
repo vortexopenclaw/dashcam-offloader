@@ -198,6 +198,8 @@ enum ProfileParser {
             channels.merge(pattern.channelMap) { current, _ in current }
         }
 
+        channels.merge(parseCameraChannelLabels(lines)) { current, _ in current }
+
         guard let range = topLevelBlock(named: "channels", in: lines) else {
             return channels
         }
@@ -240,6 +242,24 @@ enum ProfileParser {
         }
 
         return channels
+    }
+
+    private static func parseCameraChannelLabels(_ lines: [String]) -> [String: String] {
+        guard let cameraRange = topLevelBlock(named: "camera", in: lines),
+              let labelsStart = lines[cameraRange].firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == "channel_labels:" }) else {
+            return [:]
+        }
+
+        var labels: [String: String] = [:]
+        for line in lines[(labelsStart + 1)..<cameraRange.upperBound] {
+            guard line.hasPrefix("    ") else { break }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard let pair = parseMapPair(trimmed), !pair.key.isEmpty, !pair.value.isEmpty else {
+                continue
+            }
+            labels[pair.key] = pair.value
+        }
+        return labels
     }
 
     private static func parseDetectionRules(_ lines: [String]) -> [DetectionRule] {

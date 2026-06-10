@@ -107,6 +107,22 @@ final class TransferViewModel: ObservableObject {
         return (1, defaultChannelDescription(for: 1))
     }
 
+    var inferredLearningCameraIdentity: (manufacturer: String, model: String)? {
+        if let selectedProfile, selectedProfile.id != DashcamProfile.genericNewDashcam.id {
+            return (selectedProfile.manufacturer, selectedProfile.model)
+        }
+
+        if let volumeMatchedCandidate = detectionCandidates.first(where: { candidate in
+            candidate.confidence != .low &&
+                candidate.profile.id != DashcamProfile.genericNewDashcam.id &&
+                candidate.evidence.contains { $0.hasPrefix("volume label ") }
+        }) {
+            return (volumeMatchedCandidate.profile.manufacturer, volumeMatchedCandidate.profile.model)
+        }
+
+        return nil
+    }
+
     var profilesByBrand: [(brand: String, profiles: [DashcamProfile])] {
         let grouped = Dictionary(grouping: profiles, by: \.displayManufacturer)
         return grouped.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
@@ -159,6 +175,14 @@ final class TransferViewModel: ObservableObject {
             return "right"
         case "t", "telephoto", "parking_telephoto", "pt":
             return "telephoto"
+        case "channel_a", "channela":
+            return "channel_a"
+        case "channel_b", "channelb":
+            return "channel_b"
+        case "channel_c", "channelc":
+            return "channel_c"
+        case "channel_d", "channeld":
+            return "channel_d"
         default:
             return normalized
         }
@@ -197,10 +221,12 @@ final class TransferViewModel: ObservableObject {
     func refreshSources(userInitiated: Bool = false) {
         let previousSource = selectedSource
         let discoveredSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
+            .filter { !isOutputDirectorySource($0) }
             .map(sourceWithCustomName)
         let discoveredIDs = Set(discoveredSources.map(\.id))
         let manualSources = mountedSources
             .filter { !isMountedVolumeSource($0) }
+            .filter { !isOutputDirectorySource($0) }
             .filter { FileManager.default.fileExists(atPath: $0.url.path) }
             .filter { !discoveredIDs.contains($0.id) }
             .map(sourceWithCustomName)
@@ -405,6 +431,10 @@ final class TransferViewModel: ObservableObject {
 
         if panel.runModal() == .OK, let url = panel.url {
             let source = sourceWithCustomName(scanner.mountedSource(forUserSelectedURL: url))
+            guard !isOutputDirectorySource(source) else {
+                statusMessage = "Choose a different source. The download folder is not shown as a card source."
+                return
+            }
             upsertMountedSource(source)
             selectSource(source, scanImmediately: true)
         }
@@ -504,6 +534,7 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func clearSourceDerivedState(for source: MountedSource?) {
+        copyProgress = CopyProgress()
         detectionCandidates = []
         identifiedCamera = nil
         selectedProfile = nil
@@ -527,7 +558,8 @@ final class TransferViewModel: ObservableObject {
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
-            destinationURL = url
+            destinationURL = url.standardizedFileURL
+            removeOutputDirectorySources()
             rebuildPlan()
         }
     }
@@ -541,6 +573,7 @@ final class TransferViewModel: ObservableObject {
         isScanning = true
         statusMessage = "Scanning \(selectedSource.name)..."
         copyPlan = nil
+        copyProgress = CopyProgress()
         copyResults = []
         supportFileResults = []
         excludedQueueClipIDs = []
@@ -678,13 +711,18 @@ final class TransferViewModel: ObservableObject {
             statusMessage = "Choose a download folder first"
             return
         }
-        guard let copyPlan, !copyPlan.items.isEmpty else {
+        guard let copyPlan else {
             statusMessage = "Nothing selected to download"
+            return
+        }
+        let runPlan = copyPlan.limitedToMediaItemIDs(selectedQueueItemIDs)
+        guard !runPlan.items.isEmpty else {
+            statusMessage = selectedQueueItemIDs.isEmpty ? "Nothing selected to download" : "Selected files are no longer in the queue"
             return
         }
         guard !copyProgress.isRunning else { return }
 
-        statusMessage = "Downloading..."
+        statusMessage = selectedQueueItemIDs.isEmpty ? "Downloading..." : "Downloading \(runPlan.items.count) selected files..."
         copyResults = []
         supportFileResults = []
         let executor = CopyExecutor { [weak self] progress in
@@ -695,18 +733,18 @@ final class TransferViewModel: ObservableObject {
         }
 
         copyTask = Task { [weak self] in
-            let result = await executor.copy(plan: copyPlan)
+            let result = await executor.copy(plan: runPlan)
             guard let self else { return }
             copyResults = result.mediaItems
             supportFileResults = result.supportItems
-            lastOutputDirectory = copyPlan.destinationRoot
+            lastOutputDirectory = runPlan.destinationRoot
             let baseMessage = copyProgress.summary.isEmpty ? "Download complete" : copyProgress.summary
             var finalMessage = baseMessage
             if !Task.isCancelled && openDestinationWhenComplete {
                 openOutputDirectory()
             }
             if !Task.isCancelled && ejectSourceWhenComplete {
-                let ejectMessage = await ejectCopiedSource(copyPlan.sourceRoot, failedCount: result.failedCount)
+                let ejectMessage = await ejectCopiedSource(runPlan.sourceRoot, failedCount: result.failedCount)
                 if !ejectMessage.isEmpty {
                     finalMessage = "\(baseMessage). \(ejectMessage)"
                 }
@@ -732,6 +770,9 @@ final class TransferViewModel: ObservableObject {
     func restoreQueuedFiles() {
         excludedQueueClipIDs = []
         selectedQueueItemIDs = []
+        copyProgress = CopyProgress()
+        copyResults = []
+        supportFileResults = []
         rebuildPlan()
     }
 
@@ -767,6 +808,21 @@ final class TransferViewModel: ObservableObject {
             return sourceURL
         }
         return URL(fileURLWithPath: "/Volumes/\(components[2])", isDirectory: true)
+    }
+
+    private func isOutputDirectorySource(_ source: MountedSource) -> Bool {
+        guard let destinationURL else { return false }
+        return source.url.standardizedFileURL.path == destinationURL.standardizedFileURL.path
+    }
+
+    private func removeOutputDirectorySources() {
+        guard destinationURL != nil else { return }
+        let removedSelectedSource = selectedSource.map(isOutputDirectorySource) == true
+        mountedSources.removeAll(where: isOutputDirectorySource)
+        if removedSelectedSource {
+            selectedSource = mountedSources.first
+            clearSourceDerivedState(for: selectedSource)
+        }
     }
 
     func submitFeedback(
