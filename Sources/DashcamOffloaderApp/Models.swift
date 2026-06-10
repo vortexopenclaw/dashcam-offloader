@@ -25,6 +25,8 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
             return "BlackVue"
         case "dji":
             return "DJI"
+        case "gopro":
+            return "GoPro"
         case "70mai":
             return "70mai"
         case "new":
@@ -185,6 +187,8 @@ struct IdentifiedCamera: Codable, Hashable, Sendable {
             return "Viofo"
         case "dji":
             return "DJI"
+        case "gopro":
+            return "GoPro"
         case "thinkware":
             return "Thinkware"
         case "cansonic":
@@ -216,7 +220,7 @@ enum DetectionConfidence: String, CaseIterable, Hashable, Sendable {
 
 struct ClipItem: Identifiable, Hashable, Sendable {
     static let videoExtensions: Set<String> = ["mp4", "mov", "avi", "mts", "m2ts", "ts", "mkv", "3gp"]
-    static let photoExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "bmp"]
+    static let photoExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "bmp", "gpr"]
     static let gpsExtensions: Set<String> = ["dat", "gpx", "nmea"]
 
     var id: String { sourceURL.path }
@@ -261,6 +265,18 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         if isPhoto { return "Photos" }
 
         let normalized = mode.lowercased()
+        if normalized == "looping" || normalized == "loop_video" {
+            return "Looping"
+        }
+        if normalized == "time_lapse" || normalized == "timelapse_video" {
+            return "Time Lapse"
+        }
+        if normalized == "time_warp" || normalized == "timewarp" {
+            return "TimeWarp"
+        }
+        if normalized == "time_lapse_or_timewarp" {
+            return "Time Lapse"
+        }
         if normalized.contains("parking_event") ||
             normalized.contains("parking event") ||
             normalized.contains("pevent") ||
@@ -329,6 +345,14 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         switch value.lowercased() {
         case "continuous":
             return "Driving"
+        case "looping", "loop_video":
+            return "Looping"
+        case "time_lapse", "timelapse_video":
+            return "Time Lapse"
+        case "time_warp", "timewarp":
+            return "TimeWarp"
+        case "time_lapse_or_timewarp":
+            return "Time Lapse / TimeWarp"
         case "driving_event":
             return "Driving Event"
         case "parking_continuous_low_bitrate":
@@ -393,6 +417,9 @@ struct ClipItem: Identifiable, Hashable, Sendable {
 
     static func isParkingMode(_ value: String) -> Bool {
         let normalized = value.lowercased()
+        if ["time_lapse", "timelapse_video", "time_warp", "timewarp", "time_lapse_or_timewarp", "looping", "loop_video"].contains(normalized) {
+            return false
+        }
         return normalized.contains("parking") ||
             normalized.contains("motion") ||
             normalized.contains("lapse") ||

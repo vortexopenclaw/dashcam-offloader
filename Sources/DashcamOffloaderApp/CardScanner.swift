@@ -55,10 +55,7 @@ struct CardScanner {
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap { profileSelectionIssue($0, allCandidates: candidates) }
-        let identifiedCamera = identifyCamera(
-            from: candidates,
-            selectedProfile: nil
-        )
+        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
         var selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
             selectedProfile = topCandidate.profile
@@ -71,6 +68,11 @@ struct CardScanner {
         if selectedProfile == nil, hasCandidateMedia(in: allFiles) {
             selectedProfile = DashcamProfile.genericNewDashcam
         }
+        let identifiedCamera = identifyCamera(
+            from: candidates,
+            selectedProfile: selectedProfile,
+            goProVersionInfo: goProVersionInfo
+        )
 
         let rawClips: [ClipItem]
         if let selectedProfile, selectedProfile.id != DashcamProfile.genericNewDashcam.id {
@@ -116,6 +118,15 @@ struct CardScanner {
                 profileName: DashcamProfile.genericNewDashcam.displayName,
                 outcome: "classified_generic_clips",
                 detail: "Used filename dates and folder semantics because no reliable supported profile was selected"
+            ))
+        }
+        if let goProVersionInfo {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "gopro_version_txt",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: "parsed_safe_fields",
+                detail: goProVersionInfo.diagnosticSummary
             ))
         }
         diagnostics.append(contentsOf: parkingPatternResult.diagnostics)
@@ -359,9 +370,11 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
+        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
-            selectedProfile: result.selectedProfile
+            selectedProfile: result.selectedProfile,
+            goProVersionInfo: goProVersionInfo
         )
 
         // Re-select and re-classify if the winner changed.
@@ -433,8 +446,24 @@ struct CardScanner {
 
     private func identifyCamera(
         from candidates: [DetectionCandidate],
-        selectedProfile: DashcamProfile?
+        selectedProfile: DashcamProfile?,
+        goProVersionInfo: GoProVersionInfo? = nil
     ) -> IdentifiedCamera? {
+        if let goProVersionInfo,
+           let matchedModel = KnownDashcamCatalog.exactModelMatch(
+               manufacturer: "GoPro",
+               modelText: goProVersionInfo.cameraType
+           ) {
+            let selectedSupportsExactModel = selectedProfile?.manufacturer.lowercased() == "gopro" &&
+                compactModelToken(selectedProfile?.model ?? "") == compactModelToken(matchedModel.model)
+            return IdentifiedCamera(
+                manufacturer: matchedModel.manufacturer,
+                model: matchedModel.model,
+                evidence: goProVersionInfo.safeEvidence,
+                isSupported: selectedSupportsExactModel
+            )
+        }
+
         guard let top = candidates.first else {
             return nil
         }
@@ -461,6 +490,73 @@ struct CardScanner {
         )
     }
 
+    private struct GoProVersionInfo {
+        var cameraType: String
+        var firmwareVersion: String?
+
+        var safeEvidence: [String] {
+            var result = ["MISC/version.txt camera type: \(cameraType)"]
+            if let firmwareVersion {
+                result.append("MISC/version.txt firmware version: \(firmwareVersion)")
+            }
+            return result
+        }
+
+        var diagnosticSummary: String {
+            safeEvidence.joined(separator: "; ")
+        }
+    }
+
+    private func safeGoProVersionInfo(sourceURL: URL) -> GoProVersionInfo? {
+        let versionURL = sourceURL.appendingPathComponent("MISC/version.txt")
+        guard fileManager.fileExists(atPath: versionURL.path) else { return nil }
+        guard let attributes = try? fileManager.attributesOfItem(atPath: versionURL.path),
+              let fileSize = attributes[.size] as? NSNumber,
+              fileSize.intValue <= 1_000_000 else {
+            return nil
+        }
+        guard let raw = try? String(contentsOf: versionURL, encoding: .utf8) else { return nil }
+        guard let cameraType = firstVersionValue(
+            in: raw,
+            keys: ["camera type", "camera_type", "cameraType"]
+        ) else {
+            return nil
+        }
+        let firmwareVersion = firstVersionValue(
+            in: raw,
+            keys: ["firmware version", "firmware_version", "firmwareVersion"]
+        )
+        return GoProVersionInfo(cameraType: cameraType, firmwareVersion: firmwareVersion)
+    }
+
+    private func firstVersionValue(in raw: String, keys: [String]) -> String? {
+        for key in keys {
+            let escapedKey = NSRegularExpression.escapedPattern(for: key)
+            let patterns = [
+                #""\#(escapedKey)"\s*:\s*"([^"]+)""#,
+                #"\#(escapedKey)"\s*[:=]\s*"?([^",\r\n}]+)"?"#
+            ]
+            for pattern in patterns {
+                guard let regex = try? NSRegularExpression(
+                    pattern: pattern,
+                    options: [.caseInsensitive]
+                ) else { continue }
+                let nsRaw = raw as NSString
+                let range = NSRange(location: 0, length: nsRaw.length)
+                guard let match = regex.firstMatch(in: raw, range: range),
+                      match.numberOfRanges > 1 else {
+                    continue
+                }
+                let value = nsRaw.substring(with: match.range(at: 1))
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "\" ,}\r\n\t"))
+                if !value.isEmpty {
+                    return value
+                }
+            }
+        }
+        return nil
+    }
+
     func classify(files: [URL], sourceURL: URL, profile: DashcamProfile) -> [ClipItem] {
         let folders = profile.folders.sorted { $0.path.count > $1.path.count }
         let compiledPatterns = profile.filenamePatterns.compactMap { pattern -> (FilenamePattern, NSRegularExpression)? in
@@ -468,7 +564,7 @@ struct CardScanner {
             return (pattern, regex)
         }
 
-        return files.compactMap { fileURL in
+        let classified: [ClipItem] = files.compactMap { fileURL in
             let relativePath = fileURL.relativePath(from: sourceURL)
             let filename = fileURL.lastPathComponent
             let ext = fileURL.pathExtension.lowercased()
@@ -483,7 +579,7 @@ struct CardScanner {
                 excludedReason = "Excluded by safety rules"
             }
 
-            if let folder = folders.first(where: { relativePath == $0.path || relativePath.hasPrefix($0.path + "/") }) {
+            if let folder = folders.first(where: { profileFolder($0.path, contains: relativePath) }) {
                 mode = folder.mode
                 if !folder.importable {
                     excludedReason = "Profile marks this folder as non-importable"
@@ -556,6 +652,11 @@ struct CardScanner {
             }
             return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
         }
+
+        guard profile.manufacturer.caseInsensitiveCompare("GoPro") == .orderedSame else {
+            return classified
+        }
+        return classifyGoProRecordingTypes(in: classified)
     }
 
     func classifyWithParkingPatterns(files: [URL], sourceURL: URL, profile: DashcamProfile) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
@@ -563,7 +664,7 @@ struct CardScanner {
     }
 
     func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {
-        files.compactMap { fileURL in
+        let classified: [ClipItem] = files.compactMap { fileURL in
             let relativePath = fileURL.relativePath(from: sourceURL)
             let filename = fileURL.lastPathComponent
             let ext = fileURL.pathExtension.lowercased()
@@ -607,6 +708,13 @@ struct CardScanner {
             }
             return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
         }
+
+        guard classified.contains(where: { clip in
+            clip.isVideo && parseGoProVideoFilename(clip.filename) != nil
+        }) else {
+            return classified
+        }
+        return classifyGoProRecordingTypes(in: classified)
     }
 
     private func inferParkingPatterns(in clips: [ClipItem]) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
@@ -930,6 +1038,9 @@ struct CardScanner {
             "settings",
             "sos_rec",
             "360cardvr",
+            "misc",
+            "private",
+            "video",
             "user"
         ]
 
@@ -942,7 +1053,7 @@ struct CardScanner {
             }
         }
 
-        return hasShallowMediaFile(in: url, depth: 0, maxDepth: 3, remainingBudget: 600)
+        return hasShallowMediaFile(in: url, depth: 0, maxDepth: 5, remainingBudget: 2_000)
     }
 
     private func hasShallowMediaFile(in url: URL, depth: Int, maxDepth: Int, remainingBudget: Int) -> Bool {
@@ -1005,9 +1116,7 @@ struct CardScanner {
             }
 
             for folder in profile.folders {
-                let folderURL = sourceURL.appendingPathComponent(folder.path)
-                var isDirectory: ObjCBool = false
-                if fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                if profileFolderExists(folder.path, sourceURL: sourceURL, allFiles: allFiles) {
                     score += folder.importable ? 8 : 3
                     evidence.append("folder \(folder.path)")
                 }
@@ -1110,6 +1219,47 @@ struct CardScanner {
         )
     }
 
+    private func profileFolderExists(_ folderPath: String, sourceURL: URL, allFiles: [URL]) -> Bool {
+        if folderPath.contains("*") {
+            return allFiles.contains { fileURL in
+                profileFolder(folderPath, contains: fileURL.relativePath(from: sourceURL))
+            }
+        }
+
+        let folderURL = sourceURL.appendingPathComponent(folderPath)
+        var isDirectory: ObjCBool = false
+        return fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory) && isDirectory.boolValue
+    }
+
+    private func profileFolder(_ folderPath: String, contains relativePath: String) -> Bool {
+        let normalizedFolder = folderPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let normalizedPath = relativePath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !normalizedFolder.isEmpty else { return false }
+
+        if !normalizedFolder.contains("*") {
+            return normalizedPath == normalizedFolder || normalizedPath.hasPrefix(normalizedFolder + "/")
+        }
+
+        let folderComponents = normalizedFolder.split(separator: "/").map(String.init)
+        let pathComponents = normalizedPath.split(separator: "/").map(String.init)
+        guard pathComponents.count >= folderComponents.count else { return false }
+
+        for index in folderComponents.indices where !wildcardComponent(folderComponents[index], matches: pathComponents[index]) {
+            return false
+        }
+        return true
+    }
+
+    private func wildcardComponent(_ pattern: String, matches value: String) -> Bool {
+        guard pattern.contains("*") else {
+            return pattern.caseInsensitiveCompare(value) == .orderedSame
+        }
+
+        let escaped = NSRegularExpression.escapedPattern(for: pattern)
+            .replacingOccurrences(of: "\\*", with: ".*")
+        return value.range(of: "^\(escaped)$", options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
     private func vantrueABCVideoDimensions(from allFiles: [URL]) -> [String: (width: Int, height: Int)] {
         guard let regex = try? NSRegularExpression(pattern: #"^\d{8}_\d{6}_\d{5}_[NEP]_([ABC])\.MP4$"#) else {
             return [:]
@@ -1148,6 +1298,162 @@ struct CardScanner {
         let height = Int(abs(naturalSize.height).rounded())
         guard width > 0, height > 0 else { return nil }
         return (width, height)
+    }
+
+    private struct GoProVideoInfo {
+        var chapterToken: String
+        var sequence: Int
+        var duration: Double?
+        var hasAudio: Bool?
+        var metadataMode: String?
+    }
+
+    private func classifyGoProRecordingTypes(in clips: [ClipItem]) -> [ClipItem] {
+        var infoByPath: [String: GoProVideoInfo] = [:]
+        for clip in clips where clip.excludedReason == nil && clip.isVideo {
+            guard let parsed = parseGoProVideoFilename(clip.filename) else { continue }
+            let media = goProMediaHints(for: clip.sourceURL)
+            infoByPath[clip.relativePath] = GoProVideoInfo(
+                chapterToken: parsed.chapterToken,
+                sequence: parsed.sequence,
+                duration: media.duration,
+                hasAudio: media.hasAudio,
+                metadataMode: media.metadataMode
+            )
+        }
+
+        guard !infoByPath.isEmpty else { return clips }
+
+        var modeByPath: [String: String] = [:]
+        for clip in clips where clip.isVideo {
+            guard let info = infoByPath[clip.relativePath] else { continue }
+            if let metadataMode = info.metadataMode {
+                modeByPath[clip.relativePath] = metadataMode
+            } else if info.hasAudio == false {
+                modeByPath[clip.relativePath] = "time_lapse_or_timewarp"
+            }
+        }
+
+        let clipsByFolder = Dictionary(grouping: clips.filter { $0.isVideo && infoByPath[$0.relativePath] != nil }) {
+            relativeFolderPath(for: $0.relativePath)
+        }
+
+        for (_, folderClips) in clipsByFolder {
+            let ordered = folderClips.sorted { lhs, rhs in
+                let left = infoByPath[lhs.relativePath]
+                let right = infoByPath[rhs.relativePath]
+                if left?.sequence != right?.sequence {
+                    return (left?.sequence ?? 0) < (right?.sequence ?? 0)
+                }
+                return (left?.chapterToken ?? "") < (right?.chapterToken ?? "")
+            }
+
+            var run: [ClipItem] = []
+            func flushRun() {
+                guard run.count >= 2, run.count <= 6 else {
+                    run.removeAll()
+                    return
+                }
+                guard run.allSatisfy({ clip in
+                    guard let info = infoByPath[clip.relativePath] else { return false }
+                    if let duration = info.duration {
+                        return duration >= 35 && duration <= 85
+                    }
+                    return false
+                }) else {
+                    run.removeAll()
+                    return
+                }
+                for clip in run where modeByPath[clip.relativePath] == nil {
+                    modeByPath[clip.relativePath] = "looping"
+                }
+                run.removeAll()
+            }
+
+            for clip in ordered {
+                guard modeByPath[clip.relativePath] == nil,
+                      let info = infoByPath[clip.relativePath] else {
+                    flushRun()
+                    continue
+                }
+
+                if let last = run.last,
+                   let lastInfo = infoByPath[last.relativePath],
+                   info.sequence == lastInfo.sequence + 1,
+                   let currentTime = clip.timestamp,
+                   let lastTime = last.timestamp,
+                   currentTime.timeIntervalSince(lastTime) > 0,
+                   currentTime.timeIntervalSince(lastTime) <= 90 {
+                    run.append(clip)
+                } else {
+                    flushRun()
+                    run = [clip]
+                }
+            }
+            flushRun()
+        }
+
+        return clips.map { clip in
+            guard let mode = modeByPath[clip.relativePath] else { return clip }
+            var copy = clip
+            copy.mode = mode
+            return copy
+        }
+    }
+
+    private func parseGoProVideoFilename(_ filename: String) -> (chapterToken: String, sequence: Int)? {
+        let stem = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent.uppercased()
+        guard stem.count == 8,
+              stem.hasPrefix("GH") || stem.hasPrefix("GX") || stem.hasPrefix("GP") else {
+            return nil
+        }
+        let chapterStart = stem.index(stem.startIndex, offsetBy: 2)
+        let sequenceStart = stem.index(stem.startIndex, offsetBy: 4)
+        let chapterToken = String(stem[chapterStart..<sequenceStart])
+        guard chapterToken.range(of: #"^[A-Z0-9]{2}$"#, options: .regularExpression) != nil,
+              let sequence = Int(stem[sequenceStart..<stem.endIndex]) else {
+            return nil
+        }
+        return (chapterToken, sequence)
+    }
+
+    private func goProMediaHints(for fileURL: URL) -> (duration: Double?, hasAudio: Bool?, metadataMode: String?) {
+        let asset = AVURLAsset(url: fileURL)
+        let duration = asset.duration.seconds.isFinite && asset.duration.seconds > 0 ? asset.duration.seconds : nil
+        let hasVideo = !asset.tracks(withMediaType: .video).isEmpty
+        let hasAudio = hasVideo ? !asset.tracks(withMediaType: .audio).isEmpty : nil
+        let metadataMode = goProMetadataModeHint(for: fileURL)
+        return (duration, hasAudio, metadataMode)
+    }
+
+    private func goProMetadataModeHint(for fileURL: URL) -> String? {
+        guard let text = sampleASCIIText(from: fileURL) else { return nil }
+        let lower = text.lowercased()
+        if lower.contains("timewarp") || lower.contains("time warp") {
+            return "time_warp"
+        }
+        if lower.contains("timelapse") || lower.contains("time lapse") {
+            return "time_lapse"
+        }
+        return nil
+    }
+
+    private func sampleASCIIText(from fileURL: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: fileURL) else { return nil }
+        defer { try? handle.close() }
+
+        let leading = (try? handle.read(upToCount: 1_048_576)) ?? Data()
+        let fileSize = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(UInt64.init) ?? 0
+        var trailing = Data()
+        if fileSize > 1_048_576 {
+            try? handle.seek(toOffset: max(0, fileSize - 1_048_576))
+            trailing = (try? handle.read(upToCount: 1_048_576)) ?? Data()
+        }
+        let data = leading + trailing
+        guard !data.isEmpty else { return nil }
+        return String(decoding: data.map { byte in
+            (byte >= 32 && byte <= 126) || byte == 10 || byte == 13 ? byte : 32
+        }, as: UTF8.self)
     }
 
     private func detectionRuleMatches(_ rule: DetectionRule, sourceURL: URL) -> Bool {
@@ -1384,6 +1690,10 @@ struct CardScanner {
             .replacingOccurrences(of: "-", with: "")
             .replacingOccurrences(of: " ", with: "")
 
+        if isGoProMediaFilename(stem) || tokens.contains(where: { $0.hasSuffix("gopro") }) {
+            return "primary"
+        }
+
         if let last = compactStem.last {
             switch last {
             case "F":
@@ -1419,6 +1729,12 @@ struct CardScanner {
         }
 
         return "unknown"
+    }
+
+    private func isGoProMediaFilename(_ stem: String) -> Bool {
+        stem.range(of: #"^G[HXP][A-Z0-9]{2}\d{4}$"#, options: .regularExpression) != nil ||
+            stem.range(of: #"^GOPR\d{4}$"#, options: .regularExpression) != nil ||
+            stem.range(of: #"^G\d{3}\d{4}$"#, options: .regularExpression) != nil
     }
 
     private func genericTokens(from value: String) -> [String] {

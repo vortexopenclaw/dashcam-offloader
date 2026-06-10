@@ -1,0 +1,70 @@
+id: gopro-hero-action-camera
+manufacturer: GoPro
+model: HERO / MAX Camera
+slug: gopro-hero-action-camera
+channels: 1
+type: action_camera
+status: generic
+confidence: medium
+source_notes:
+  - Generic GoPro profile. Exact model should come from safe MISC/version.txt camera type evidence when available.
+detection:
+  supporting:
+    - path: MISC/version.txt
+      contains: camera type
+      notes: GoPro writes camera type and firmware here. Private serial and Wi-Fi fields must never be submitted as evidence.
+    - method: folder
+      path: DCIM
+    - method: filename_pattern
+      pattern: '^(G[HXP])([A-Z0-9]{2})(\d{4})\.(MP4|MOV)$'
+folders:
+  - path: DCIM/*GOPRO
+    mode: primary_media
+    import: true
+  - path: MISC
+    mode: thumbnails_and_sidecars
+    import: false
+filename_patterns:
+  - pattern: '^(G[HXP])(\d{2})(\d{4})\.(MP4|MOV)$'
+    modes:
+      GH: continuous
+      GX: continuous
+      GP: continuous
+    channels:
+      GH: primary
+      GX: primary
+      GP: primary
+  - pattern: '^(G[HXP])([A-Z]{2})(\d{4})\.(MP4|MOV)$'
+    modes:
+      GH: continuous
+      GX: continuous
+      GP: continuous
+    channels:
+      GH: primary
+      GX: primary
+      GP: primary
+  - pattern: '^GOPR(\d{4})\.(JPG|JPEG|GPR)$'
+    modes:
+      JPG: photo
+      JPEG: photo
+      GPR: photo_raw
+    channels:
+      JPG: primary
+      JPEG: primary
+      GPR: primary
+  - pattern: '^G(\d{3})(\d{4})\.(JPG|JPEG|GPR)$'
+    modes:
+      JPG: photo_burst_or_timelapse
+      JPEG: photo_burst_or_timelapse
+      GPR: photo_raw_burst_or_timelapse
+    channels:
+      JPG: primary
+      JPEG: primary
+      GPR: primary
+channels:
+  primary: primary
+notes: >
+  Shared GoPro import profile for HERO and MAX-family cards that expose a
+  safe model string in MISC/version.txt but do not yet have a dedicated model
+  profile. Model identification must come from parsed safe fields, not the
+  card volume name.

@@ -46,6 +46,8 @@ enum VerificationTest {
                 "BlackVue Elite 9",
                 "70mai M310",
                 "Cansonic UltraDash Z3+ Standard Edition",
+                "GoPro HERO / MAX Camera",
+                "GoPro HERO9 Black",
                 "Rove R2-4K Pro",
                 "Vantrue N4 Pro S"
             ]
@@ -82,7 +84,19 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("G900 TriPro Bumper")?.channelRoles == ["front", "rear", "bumper"],
                   KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.model == "G850 Pro",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.channelResolutions["rear"] == "2K",
-                  KnownDashcamCatalog.exactVolumeLabelMatch("G840H")?.parkingModes.contains("reverse parking guide lines") == true else {
+                  KnownDashcamCatalog.exactVolumeLabelMatch("G840H")?.parkingModes.contains("reverse parking guide lines") == true,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("HERO9 Black")?.manufacturer == "GoPro",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("Hero 9 Black")?.parkingModes.contains("looping 5/20/60/120 minutes/max") == true,
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MISSION 1")?.channelSensors["primary"] == "1-inch",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MISSION 1 PRO")?.channelResolutions["primary"] == "8K60, 8K Open Gate 30, 4K240, 1080p480, 1440p480",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "Mission 1 Pro ILS")?.parkingModes.contains("endurance") == true,
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO13 Creator Edition")?.model == "HERO13 Black Creator Edition",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO13 Ultra Wide Edition")?.model == "HERO13 Black Ultra Wide Edition",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "LIT HERO")?.channelResolutions["primary"] == "4K60, 4:3 video, photo",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO12 Black")?.channelResolutions["primary"] == "5.3K60, 4K120, 2.7K240",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO")?.channelResolutions["primary"] == "4K30, 2.7K60, 1080p60",
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelRoles == ["360_primary"],
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false
             }
@@ -335,6 +349,123 @@ enum VerificationTest {
             }
             guard Set(unknown360Scan.clips.map(\.channel)) == ["front", "left"] else {
                 print("VERIFY FAIL: unknown 360CARDVR generic channels wrong: \(Set(unknown360Scan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
+            let goProSource = temp.appendingPathComponent("HERO9 Black", isDirectory: true)
+            try FileManager.default.createDirectory(at: goProSource.appendingPathComponent("DCIM/100GOPRO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: goProSource.appendingPathComponent("DCIM/101GOPRO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: goProSource.appendingPathComponent("MISC", isDirectory: true), withIntermediateDirectories: true)
+            try Data("""
+            {
+            "info version":"2.0",
+            "firmware version":"HD9.01.01.72.00",
+            "wifi mac":"001122334455",
+            "camera type":"HERO9 Black",
+            "camera serial number":"C0000000000000",
+            }
+            """.utf8).write(to: goProSource.appendingPathComponent("MISC/version.txt"))
+            try Data(repeating: 41, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX010273.MP4"))
+            try Data(repeating: 42, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX020273.MP4"))
+            try Data(repeating: 45, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GXAA0277.MP4"))
+            try Data(repeating: 43, count: 1024).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GOPR0274.JPG"))
+            try Data(repeating: 44, count: 1024).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/G0010275.JPG"))
+            try Data("GoPro TimeWarp sample metadata".utf8).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX010276.MP4"))
+            try Data(repeating: 46, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/101GOPRO/GX010278.MP4"))
+            guard scanner.shouldShowMountedSource(goProSource, showAllVolumes: false) else {
+                print("VERIFY FAIL: GoPro HERO9 fixture was filtered from sources")
+                return false
+            }
+            let goProScan = try scanner.scan(sourceURL: goProSource, profiles: profiles)
+            guard goProScan.selectedProfile?.id == "gopro-hero9-black" else {
+                print("VERIFY FAIL: GoPro HERO9 fixture selected \(goProScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard goProScan.candidates.first?.confidence == .high,
+                  goProScan.candidates.first?.evidence.contains(where: { $0.contains("MISC/version.txt") }) == true else {
+                print("VERIFY FAIL: GoPro HERO9 MISC/version.txt did not produce high-confidence model evidence")
+                return false
+            }
+            guard goProScan.identifiedCamera?.model == "HERO9 Black",
+                  goProScan.identifiedCamera?.isSupported == true,
+                  goProScan.identifiedCamera?.evidence.contains(where: { $0.lowercased().contains("serial") || $0.lowercased().contains("wifi") }) == false else {
+                print("VERIFY FAIL: GoPro HERO9 safe version.txt identification wrong: \(String(describing: goProScan.identifiedCamera))")
+                return false
+            }
+            guard goProScan.clips.count == 7,
+                  Set(goProScan.clips.map(\.channel)) == ["primary"],
+                  goProScan.clips.filter(\.isVideo).count == 5,
+                  goProScan.clips.filter(\.isPhoto).count == 2 else {
+                print("VERIFY FAIL: GoPro media classification wrong: clips=\(goProScan.clips.count), channels=\(Set(goProScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            guard goProScan.clips.contains(where: { $0.relativePath == "DCIM/101GOPRO/GX010278.MP4" && $0.mode == "continuous" }) else {
+                print("VERIFY FAIL: GoPro overflow folder DCIM/101GOPRO was not imported")
+                return false
+            }
+            guard goProScan.clips.contains(where: { $0.filename == "GXAA0277.MP4" && $0.mode == "continuous" && $0.outputCategory == "Driving" }) else {
+                print("VERIFY FAIL: GoPro letter-token MP4 was not classified as driving footage")
+                return false
+            }
+            guard goProScan.clips.contains(where: { $0.filename == "GX010276.MP4" && $0.mode == "time_warp" && $0.outputCategory == "TimeWarp" }) else {
+                print("VERIFY FAIL: GoPro TimeWarp hint was not classified separately")
+                return false
+            }
+            let goProDefaultModes = Set(goProScan.clips.filter { $0.isVideo }.map(\.mode)).filter { mode in
+                !["time_lapse", "timelapse_video", "time_warp", "timewarp", "time_lapse_or_timewarp"].contains(mode.lowercased())
+            }
+            var goProFilters = FilterState()
+            goProFilters.selectedModes = goProDefaultModes
+            goProFilters.selectedChannels = Set(goProScan.clips.filter { $0.isVideo }.map(\.channel))
+            let goProPlan = CopyPlanner().makePlan(
+                sourceRoot: goProSource,
+                destinationRoot: temp.appendingPathComponent("GoPro Output", isDirectory: true),
+                profile: goProScan.selectedProfile ?? .genericNewDashcam,
+                clips: goProScan.clips,
+                filters: goProFilters
+            )
+            guard goProPlan.items.map(\.clip.relativePath).sorted() == ["DCIM/100GOPRO/GX010273.MP4", "DCIM/100GOPRO/GX020273.MP4", "DCIM/100GOPRO/GXAA0277.MP4", "DCIM/101GOPRO/GX010278.MP4"] else {
+                print("VERIFY FAIL: GoPro default-style plan should exclude photos and TimeWarp, got \(goProPlan.items.map(\.clip.filename).sorted())")
+                return false
+            }
+
+            let goPro12Source = temp.appendingPathComponent("U3000PRO", isDirectory: true)
+            try FileManager.default.createDirectory(at: goPro12Source.appendingPathComponent("DCIM/100GOPRO", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: goPro12Source.appendingPathComponent("MISC", isDirectory: true), withIntermediateDirectories: true)
+            try Data("""
+            {
+            "firmware version":"H23.01.02.32.00",
+            "camera type":"HERO12 Black",
+            "wifi mac":"001122334455",
+            "camera serial number":"C9999999999999",
+            }
+            """.utf8).write(to: goPro12Source.appendingPathComponent("MISC/version.txt"))
+            try Data(repeating: 48, count: 2048).write(to: goPro12Source.appendingPathComponent("DCIM/100GOPRO/GX010001.MP4"))
+            let goPro12Scan = try scanner.scan(sourceURL: goPro12Source, profiles: profiles)
+            guard goPro12Scan.selectedProfile?.id == "gopro-hero-action-camera",
+                  goPro12Scan.identifiedCamera?.manufacturer == "GoPro",
+                  goPro12Scan.identifiedCamera?.model == "HERO12 Black",
+                  goPro12Scan.identifiedCamera?.isSupported == false,
+                  goPro12Scan.identifiedCamera?.evidence.contains(where: { $0.lowercased().contains("serial") || $0.lowercased().contains("wifi") }) == false,
+                  goPro12Scan.clips.count == 1,
+                  goPro12Scan.clips.first?.channel == "primary" else {
+                print("VERIFY FAIL: generic GoPro version.txt support wrong: selected=\(goPro12Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: goPro12Scan.identifiedCamera))")
+                return false
+            }
+
+            let unknownDeepSource = temp.appendingPathComponent("unknown-deep-camera", isDirectory: true)
+            try FileManager.default.createDirectory(at: unknownDeepSource.appendingPathComponent("MEDIA/CLIPS/SESSION001/FRONT", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 47, count: 2048).write(to: unknownDeepSource.appendingPathComponent("MEDIA/CLIPS/SESSION001/FRONT/20260610_103000_front.MP4"))
+            guard scanner.shouldShowMountedSource(unknownDeepSource, showAllVolumes: false) else {
+                print("VERIFY FAIL: deep unknown camera media tree was filtered from sources")
+                return false
+            }
+            let unknownDeepScan = try scanner.scan(sourceURL: unknownDeepSource, profiles: profiles)
+            guard unknownDeepScan.selectedProfile?.id == "generic-new-dashcam",
+                  unknownDeepScan.clips.count == 1,
+                  unknownDeepScan.clips.first?.channel == "front",
+                  unknownDeepScan.clips.first?.outputCategory == "Driving" else {
+                print("VERIFY FAIL: deep unknown camera generic scan lost media metadata")
                 return false
             }
 

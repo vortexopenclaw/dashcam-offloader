@@ -1,12 +1,12 @@
 # Agent Handoff
 
-Last updated: 2026-06-09
+Last updated: 2026-06-10
 
 This file is the cross-machine handoff source for agents working from GitHub. Do not rely on local OpenClaw memory as the only source of truth for important Dashcam Offloader state.
 
 ## Current Build
 
-- Latest known published commit at handoff time: `de144d8`
+- Latest known published commit at handoff time: `6cb8b75`
 - Direct Cloudflare download: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest>
 - GitHub releases carry the packaged ZIP artifacts.
 
@@ -35,7 +35,7 @@ python3 -m py_compile scripts/review-feedback-submissions.py
 git diff --check
 ```
 
-When publishing, push to `main` and let GitHub Actions upload to GitHub/Cloudflare. After the workflow succeeds, report the direct Cloudflare link plus a short status summary of what changed and what was verified.
+When the user says "build", "publish", "push a release", "new build", or similar for Dashcam Offloader, use the full standard release path unless they explicitly ask for a local-only build: verify, push the intended commit, publish through GitHub Actions, verify the GitHub `latest` release asset, and verify the Cloudflare latest manifest/download. If the Actions release step fails after the app package is built, repair GitHub with local authenticated `gh` and verify both GitHub and Cloudflare instead of leaving only one side published.
 
 ## Submission Review
 
@@ -61,6 +61,9 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - App submissions should get close to what a direct mounted-card read can gather, without uploading video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, device IDs, full config dumps, or other private identifiers.
 - Generic/unknown dashcam import must stay useful for transfer even when exact model detection is not safe.
 - Recording type and channel checkboxes rebuild the download plan immediately, so deselecting all recording types or all channels clears the review/download queue instead of leaving stale rows visible.
+- GoPro cards should be identified from safe `MISC/version.txt` model/firmware fields when present. Do not use stale/mutable volume labels as proof; user cards can be named after a previous camera.
+- GoPro media can span `DCIM/100GOPRO`, `DCIM/101GOPRO`, and later numbered folders. Scan every matching `DCIM/*GOPRO` folder.
+- Generic unknown-camera scanning should gather useful structure, filename patterns, mode/channel counts, file-size ranges, and sampled media metadata while excluding video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, and private identifiers.
 
 ## Recent Camera Notes
 
@@ -87,6 +90,14 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - **Vueroid H1**
   - Detects from `CONFIG/config.bin` model text like `H1-QHD-INFINITE`.
   - Treat as 1CH/front-only from H1 evidence.
+
+- **GoPro HERO / MAX / Mission family**
+  - Profiles: `profiles/gopro-hero9-black.yaml`, `profiles/gopro-hero-action-camera.yaml`
+  - Docs: `docs/card-profiles/gopro-hero9-black.md`, `docs/card-profiles/gopro-hero-action-camera.md`
+  - HERO9 Black was validated from two real cards that both had stale `U3000PRO` volume labels.
+  - Safe evidence: `MISC/version.txt` `camera type` and `firmware version`.
+  - Private fields in `version.txt` must not be submitted or documented.
+  - Default GoPro transfer categories should include regular/continuous and looping videos; Time Lapse, TimeWarp, and photos should be visible but unchecked by default.
 
 ## UX Preferences Captured In Repo
 

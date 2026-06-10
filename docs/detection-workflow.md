@@ -99,6 +99,21 @@ UI shows:
 **Distinguisher:** `BlackVue/Config/version.bin` → "model = DR970X Plus"
 **Confidence without model file:** MEDIUM (BlackVue family), LOW (specific model)
 
+### GoPro HERO / MAX / Mission Family
+**Folder pattern:** `DCIM/*GOPRO` plus optional `MISC/version.txt`
+**Filename pattern:** `G[HXP]######_MP4-style` GoPro chaptered video names, `GOPR####` photos, and grouped `G###` photo sets
+**Candidates:** HERO4-HERO13, HERO compact/LIT HERO, MAX/MAX2, Fusion, Mission cameras
+**Distinguisher:** safe `MISC/version.txt` fields, especially `camera type` and `firmware version`
+**Confidence without model file:** MEDIUM (GoPro family), LOW (specific model)
+
+Rules:
+
+- Import every numbered `DCIM/*GOPRO` media folder, including overflow folders such as `101GOPRO`.
+- Never trust mutable card volume labels for exact GoPro identity.
+- Never submit private `version.txt` fields such as serial or Wi-Fi identifiers.
+- Treat regular video and looping as selected-by-default transfer categories; time-lapse/time-warp/photos remain visible but can be unchecked by default.
+- Filename alone cannot reliably separate regular video from Time Lapse or TimeWarp, so prefer safe sampled metadata and duration/run evidence.
+
 ### VIOFO A Series
 **Folder pattern:** `DCIM/Movie/`, `DCIM/Parking/`, `DCIM/Normal/`
 **Filename pattern:** Varies by model (e.g., `YYYYMMDDHHMMSS_SEQ`)

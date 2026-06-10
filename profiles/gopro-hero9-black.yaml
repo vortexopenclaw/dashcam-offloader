@@ -1,0 +1,112 @@
+id: gopro-hero9-black
+manufacturer: GoPro
+model: HERO9 Black
+slug: gopro-hero9-black
+channels: 1
+type: action_camera
+status: seed
+confidence: medium
+source_notes:
+  - GoPro support: file chaptering, looping, and filename convention articles
+  - User-provided HERO9 Black cards validated from /Volumes/U3000PRO and /Volumes/U3000PRO 1 on 2026-06-10
+detection:
+  high_confidence:
+    - path: MISC/version.txt
+      contains: HERO9 Black
+      notes: GoPro writes camera type and firmware here. The same file also contains serial and Wi-Fi MAC fields, so submissions must keep only safe model/firmware values.
+  supporting:
+    - method: folder
+      path: DCIM
+      notes: GoPro HERO media root. Shared with many cameras, so not sufficient alone.
+    - method: filename_pattern
+      pattern: '^(G[HX])\d{6}\.MP4$'
+      notes: GoPro HERO Black chaptered video naming. H = AVC, X = HEVC per GoPro support.
+    - method: filename_pattern
+      pattern: '^GOPR\d{4}\.(JPG|JPEG|GPR)$'
+      notes: GoPro still photo naming. GPR is GoPro RAW photo.
+  negative:
+    - method: folder
+      path: PRIVATE/M4ROOT
+      notes: Sony XAVC S structure.
+    - method: filename_pattern
+      pattern: '^DJI_\d{4}\.'
+      notes: DJI drone naming.
+folders:
+  - path: DCIM/*GOPRO
+    mode: primary_media
+    import: true
+  - path: MISC
+    mode: thumbnails_and_sidecars
+    import: false
+filename_patterns:
+  - pattern: '^(G[HX])(\d{2})(\d{4})\.(MP4|MOV)$'
+    modes:
+      GH: continuous
+      GX: continuous
+    channels:
+      GH: primary
+      GX: primary
+  - pattern: '^(G[HX])([A-Z]{2})(\d{4})\.(MP4|MOV)$'
+    modes:
+      GH: continuous
+      GX: continuous
+    channels:
+      GH: primary
+      GX: primary
+  - pattern: '^GOPR(\d{4})\.(JPG|JPEG|GPR)$'
+    modes:
+      JPG: photo
+      JPEG: photo
+      GPR: photo_raw
+    channels:
+      JPG: primary
+      JPEG: primary
+      GPR: primary
+  - pattern: '^G(\d{3})(\d{4})\.(JPG|JPEG|GPR)$'
+    modes:
+      JPG: photo_burst_or_timelapse
+      JPEG: photo_burst_or_timelapse
+      GPR: photo_raw_burst_or_timelapse
+    channels:
+      JPG: primary
+      JPEG: primary
+      GPR: primary
+channels:
+  primary: primary
+video:
+  extension: '.MP4'
+  extension_case: uppercase
+  codec: h264_or_h265
+  resolution_common:
+    - '5120x2880@30fps'
+    - '3840x2160@30fps'
+    - '3840x2160@60fps'
+  max_bitrate_mbps: 100
+  chaptering:
+    continuous: 'approx. 4GB chapters; 5K30 High Bit Rate is approx. five minutes'
+    looping_5_min: 'one-minute chapters'
+    looping_20_min_or_longer: 'five-minute chapters'
+  mode_inference:
+    continuous: 'default for chaptered GH/GX MP4 files unless stronger loop/time-lapse metadata wins'
+    looping: 'inferred from short adjacent one-minute MP4 runs when real media duration is available'
+    time_lapse_or_timewarp: 'inferred when GoPro video has no audio track but no reliable TimeWarp tag'
+    time_warp: 'inferred only when safe sampled metadata exposes TimeWarp text'
+    time_lapse: 'inferred only when safe sampled metadata exposes Time Lapse text'
+photos:
+  formats:
+    - JPG
+    - GPR
+  modes:
+    - photo
+    - burst
+    - liveburst
+    - night
+notes: >
+  HERO9 Black support is seeded from official GoPro support/manual behavior.
+  Ariel's two HERO9 cards were labeled U3000PRO/U3000PRO 1 from previous use,
+  proving volume label should not be used as model proof. MISC/version.txt gave
+  explicit HERO9 Black model and firmware evidence, but also contained private
+  serial/Wi-Fi identifiers. GoPro media can span DCIM/100GOPRO, DCIM/101GOPRO,
+  and later numbered GOPRO folders; scan every matching numbered media folder.
+  Filename alone is not enough to distinguish normal video from time-lapse video
+  because GoPro reuses the same GH/GX MP4 naming family.

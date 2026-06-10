@@ -70,7 +70,27 @@ final class TransferViewModel: ObservableObject {
     }
 
     var availableModes: [String] {
-        Array(Set(footageClips.map(\.mode))).sorted()
+        Array(Set(footageClips.map(\.mode))).sorted { lhs, rhs in
+            let preferred = [
+                "continuous",
+                "looping",
+                "driving_event",
+                "time_lapse",
+                "time_warp",
+                "time_lapse_or_timewarp",
+                "parking",
+                "parking_continuous_low_bitrate",
+                "parking_timelapse",
+                "parking_motion_detection",
+                "parking_impact_detection",
+                "parking_motion_or_impact",
+                "parking_event"
+            ]
+            let lhsIndex = preferred.firstIndex(of: lhs) ?? preferred.count
+            let rhsIndex = preferred.firstIndex(of: rhs) ?? preferred.count
+            if lhsIndex != rhsIndex { return lhsIndex < rhsIndex }
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }
     }
 
     var availableChannels: [String] {
@@ -628,12 +648,23 @@ final class TransferViewModel: ObservableObject {
     }
 
     func resetFiltersForCurrentClips() {
-        filters.selectedModes = Set(footageClips.map(\.mode))
+        filters.selectedModes = Set(footageClips.map(\.mode)).filter { mode in
+            !Self.isDeselectedByDefaultMode(mode)
+        }
         filters.selectedChannels = Set(footageClips.map(\.channel))
         filters.includePhotos = false
         filters.includeGPS = false
         filters.includeCameraSettings = false
         filters.separateCategoryFolders = true
+    }
+
+    private static func isDeselectedByDefaultMode(_ mode: String) -> Bool {
+        switch mode.lowercased() {
+        case "time_lapse", "timelapse_video", "time_warp", "timewarp", "time_lapse_or_timewarp":
+            return true
+        default:
+            return false
+        }
     }
 
     func setDatePreset(_ preset: DateFilterPreset) {
