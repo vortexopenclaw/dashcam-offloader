@@ -1,5 +1,30 @@
 import Foundation
 
+enum ManufacturerDisplayFormatter {
+    static func displayName(for manufacturer: String) -> String {
+        switch manufacturer.lowercased() {
+        case "viofo":
+            return "Viofo"
+        case "blackvue":
+            return "Blackvue"
+        case "dji":
+            return "DJI"
+        case "gopro":
+            return "GoPro"
+        case "thinkware":
+            return "Thinkware"
+        case "cansonic":
+            return "Cansonic"
+        case "70mai":
+            return "70mai"
+        case "new":
+            return "New"
+        default:
+            return manufacturer.capitalized
+        }
+    }
+}
+
 struct DashcamProfile: Identifiable, Hashable, Sendable {
     var id: String
     var manufacturer: String
@@ -18,22 +43,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     }
 
     var displayManufacturer: String {
-        switch manufacturer.lowercased() {
-        case "viofo":
-            return "Viofo"
-        case "blackvue":
-            return "BlackVue"
-        case "dji":
-            return "DJI"
-        case "gopro":
-            return "GoPro"
-        case "70mai":
-            return "70mai"
-        case "new":
-            return "New"
-        default:
-            return manufacturer.capitalized
-        }
+        ManufacturerDisplayFormatter.displayName(for: manufacturer)
     }
 
     static let genericNewDashcam = DashcamProfile(
@@ -180,26 +190,7 @@ struct IdentifiedCamera: Codable, Hashable, Sendable {
     }
 
     var displayManufacturer: String {
-        switch manufacturer.lowercased() {
-        case "blackvue":
-            return "BlackVue"
-        case "viofo":
-            return "Viofo"
-        case "dji":
-            return "DJI"
-        case "gopro":
-            return "GoPro"
-        case "thinkware":
-            return "Thinkware"
-        case "cansonic":
-            return "Cansonic"
-        case "70mai":
-            return "70mai"
-        case "new":
-            return "New"
-        default:
-            return manufacturer.capitalized
-        }
+        ManufacturerDisplayFormatter.displayName(for: manufacturer)
     }
 }
 

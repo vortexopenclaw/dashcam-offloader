@@ -55,6 +55,7 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 
 ## Current Scanner Rules
 
+- UI-facing manufacturer display must use Ariel's preferred casing: `Blackvue`, `Viofo`, `DJI`, and `GoPro`. Do not show `BlackVue` in the model picker or identified-camera UI, even when source folders, docs, or official brand pages use that spelling.
 - Prefer explicit model evidence over folders: model strings, safe config fragments, OSD proof, distinctive filename/channel tokens, and known marker files.
 - Folder-only evidence can identify a family or brand, but should not force a specific sibling model.
 - Same-brand sibling guard: when multiple profiles match shared structure and there is no distinctive model clue, fall back to `generic-new-dashcam`.

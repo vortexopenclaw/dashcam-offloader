@@ -43,7 +43,7 @@ enum VerificationTest {
                 return false
             }
             let requiredDisplayNames = [
-                "BlackVue Elite 9",
+                "Blackvue Elite 9",
                 "70mai M310",
                 "Cansonic UltraDash Z3+ Standard Edition",
                 "GoPro HERO / MAX Camera",
@@ -56,6 +56,14 @@ enum VerificationTest {
                     print("VERIFY FAIL: missing display name \(displayName)")
                     return false
                 }
+            }
+            guard ManufacturerDisplayFormatter.displayName(for: "BlackVue") == "Blackvue",
+                  ManufacturerDisplayFormatter.displayName(for: "blackvue") == "Blackvue",
+                  ManufacturerDisplayFormatter.displayName(for: "VIOFO") == "Viofo",
+                  ManufacturerDisplayFormatter.displayName(for: "DJI") == "DJI",
+                  IdentifiedCamera(manufacturer: "BlackVue", model: "Elite 9", evidence: [], isSupported: true).displayName == "Blackvue Elite 9" else {
+                print("VERIFY FAIL: manufacturer display casing regression")
+                return false
             }
             guard let n4ProSProfile = profiles.first(where: { $0.id == "vantrue-n4-pro-s" }),
                   n4ProSProfile.channels["A"] == "front",
