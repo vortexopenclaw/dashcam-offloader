@@ -34,15 +34,12 @@ jobs:
 
       - name: Publish latest release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete latest --yes 2>/dev/null || true
-          git push --delete origin latest 2>/dev/null || true
-          gh release create latest \
-            --title "Latest Build" \
-            --notes "Auto-built from [$(git rev-parse --short HEAD)](https://github.com/${{ github.repository }}/commit/$(git rev-parse HEAD)) on main." \
-            --latest \
-            "${{ steps.package.outputs.zip_path }}#${{ steps.package.outputs.zip_name }}"
+          bash scripts/publish-github-latest-release.sh \
+            "${{ steps.package.outputs.zip_path }}" \
+            "${{ steps.package.outputs.zip_name }}" \
+            "${{ github.repository }}"
 
       - name: Publish public Cloudflare update
         env:
