@@ -1,4 +1,4 @@
-- Cleaner update popup.
-- Release notes stay one click away instead of crowding the update prompt.
-- The Release Notes button still opens the full latest notes.
+- Cleaner download package.
+- The ZIP now includes the app and launcher app only.
+- No extra AppleScript source file to sort through.
 - Includes bug fixes and small improvements.
