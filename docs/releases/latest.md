@@ -1,7 +1,4 @@
-## What's New
-
-- Easier toolbar help.
-
-- Hover over the top buttons to see what they do.
-- The Feedback button is clearer for bug reports and feature requests.
+- Cleaner update notes.
+- The update popup now shows one simple What's new section.
+- Release notes are shorter and easier to scan.
 - Includes bug fixes and small improvements.

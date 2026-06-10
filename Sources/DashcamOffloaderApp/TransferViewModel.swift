@@ -357,8 +357,7 @@ final class TransferViewModel: ObservableObject {
         let alert = NSAlert()
         alert.messageText = "Update Available"
         var informativeText = "\(manifest.displayName) is ready to install. The app will quit, replace itself, and reopen."
-        if let releaseNotes = manifest.releaseNotes?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !releaseNotes.isEmpty {
+        if let releaseNotes = manifest.releaseNotesSummary {
             informativeText += "\n\nWhat's new:\n\(releaseNotes)"
         }
         alert.informativeText = informativeText

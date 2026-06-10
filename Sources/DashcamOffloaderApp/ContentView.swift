@@ -315,8 +315,7 @@ struct ContentView: View {
             }
 
             if let update = viewModel.availableUpdate,
-               let releaseNotes = update.releaseNotes?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !releaseNotes.isEmpty {
+               let releaseNotes = update.releaseNotesSummary {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Label("What's New", systemImage: "doc.text")

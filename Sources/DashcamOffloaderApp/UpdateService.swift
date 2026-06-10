@@ -37,6 +37,25 @@ struct AppUpdateManifest: Codable, Equatable, Sendable {
     var displayName: String {
         releaseName ?? "Dashcam Offloader \(version) (\(build))"
     }
+
+    var releaseNotesSummary: String? {
+        guard let releaseNotes else { return nil }
+        let trimmedNotes = releaseNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedNotes.isEmpty else { return nil }
+
+        let lines = trimmedNotes.components(separatedBy: .newlines)
+        let cleanedLines = lines.drop { line in
+            let normalizedLine = line
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+                .replacingOccurrences(of: "’", with: "'")
+            return normalizedLine.isEmpty || normalizedLine == "what's new"
+        }
+        let cleanedNotes = cleanedLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleanedNotes.isEmpty ? nil : cleanedNotes
+    }
 }
 
 enum UpdateInstallMode: Sendable {

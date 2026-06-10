@@ -43,6 +43,17 @@ enum VerificationTest {
                 print("VERIFY FAIL: update availability comparison is wrong")
                 return false
             }
+            var headedReleaseNotesManifest = matchingManifest
+            headedReleaseNotesManifest.releaseNotes = """
+            ## What's New
+
+            - Easier update notes.
+            - Includes bug fixes.
+            """
+            guard headedReleaseNotesManifest.releaseNotesSummary == "- Easier update notes.\n- Includes bug fixes." else {
+                print("VERIFY FAIL: release notes summary did not strip duplicate What's New heading")
+                return false
+            }
             let installerScript = UpdateService.installerScript(
                 stagedAppPath: "/tmp/Dashcam Offloader.app",
                 currentAppPath: "/Users/example/Downloads/Dashcam Offloader.app",
