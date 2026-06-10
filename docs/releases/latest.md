@@ -1,8 +1,8 @@
-## Latest Build
+## What's New
 
-Main change:
-- The Learn Card prompt now says "Help add support for this dashcam" and explains why the optional scan improves compatibility.
+- Clearer help for adding support for your dashcam.
 
-Also included:
-- Clarifies that downloading still works without submitting learning data.
-- Explains that shared scan details help identify recording modes, channels, and clip types.
+- Downloading still works normally, even if you skip the optional support scan.
+- The support scan is easier to understand and explains how it helps improve compatibility.
+- The app can better learn how different cameras organize driving, parking, loop, and other clips.
+- Includes bug fixes and small improvements from recent testing.
