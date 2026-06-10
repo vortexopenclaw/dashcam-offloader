@@ -56,6 +56,7 @@ enum ProfileParser {
             id
         let status = scalar("status", in: lines) ?? "seed"
         let confidence = scalar("confidence", in: lines) ?? "medium"
+        let cameraType = scalar("type", in: lines)
         let folders = parseFolders(lines)
         let patterns = parseFilenamePatterns(lines)
         let channels = parseChannels(lines, patterns: patterns)
@@ -71,6 +72,7 @@ enum ProfileParser {
             model: model,
             status: status,
             confidence: confidence,
+            cameraType: cameraType,
             folders: folders,
             filenamePatterns: patterns,
             channels: channels,

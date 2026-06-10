@@ -112,6 +112,9 @@ Rules:
 - Never trust mutable card volume labels for exact GoPro identity.
 - Never submit private `version.txt` fields such as serial or Wi-Fi identifiers.
 - Treat regular video and looping as selected-by-default transfer categories; time-lapse/time-warp/photos remain visible but can be unchecked by default.
+- Use `Regular Recording`, not `Driving`, for GoPro and other non-dashcam camera profiles such as Sony mirrorless and DJI drone cards.
+- Hide the channel filter for single-lens action camera, mirrorless, and drone profiles. Keep it for actual dashcams, including 1-channel dashcams where the user-facing channel is `Front`.
+- Group GoPro loop chunks with the same folder, four-character prefix, and adjacent sequence numbers into one download item, then copy them via passthrough concatenation.
 - Filename alone cannot reliably separate regular video from Time Lapse or TimeWarp, so prefer safe sampled metadata and duration/run evidence.
 
 ### VIOFO A Series

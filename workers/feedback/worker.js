@@ -2,6 +2,7 @@ const MAX_MESSAGE_LENGTH = 12000;
 const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
 const MAX_FILENAME_PATTERN_SUMMARIES = 160;
+const MAX_FILENAME_SEQUENCE_SUMMARIES = 240;
 const MAX_CLIP_GROUP_SUMMARIES = 160;
 const MAX_VIDEO_SPEC_SAMPLES = 64;
 const MAX_VIDEO_SPEC_SUMMARIES = 120;
@@ -170,6 +171,9 @@ function sanitizeScan(scan) {
     filenamePatternSummaries: Array.isArray(scan.filenamePatternSummaries)
       ? scan.filenamePatternSummaries.slice(0, MAX_FILENAME_PATTERN_SUMMARIES).map(sanitizeFilenamePatternSummary).filter(Boolean)
       : [],
+    filenameSequenceSummaries: Array.isArray(scan.filenameSequenceSummaries)
+      ? scan.filenameSequenceSummaries.slice(0, MAX_FILENAME_SEQUENCE_SUMMARIES).map(sanitizeFilenameSequenceSummary).filter(Boolean)
+      : [],
     supportFileSamples: safePathList(scan.supportFileSamples, 40),
     ignoredSupportFileSamples: safePathList(scan.ignoredSupportFileSamples, 60),
     clipGroupSummaries: Array.isArray(scan.clipGroupSummaries)
@@ -250,6 +254,29 @@ function sanitizeFilenamePatternSummary(summary) {
     extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
     redactedPattern,
     fileCount: numberValue(summary.fileCount),
+    totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
+    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 8),
+  };
+}
+
+function sanitizeFilenameSequenceSummary(summary) {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return null;
+  }
+
+  const folder = sanitizePath(summary.folder || ".");
+  const prefix = stringValue(summary.prefix).trim();
+  if (!folder || !prefix || isSensitiveSettingPair(prefix, "")) {
+    return null;
+  }
+
+  return {
+    folder,
+    prefix,
+    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    fileCount: numberValue(summary.fileCount),
+    firstSequence: nullableNumber(summary.firstSequence),
+    lastSequence: nullableNumber(summary.lastSequence),
     totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
     sampleRelativePaths: safePathList(summary.sampleRelativePaths, 8),
   };

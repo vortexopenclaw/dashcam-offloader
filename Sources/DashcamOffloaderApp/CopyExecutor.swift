@@ -1,3 +1,4 @@
+@preconcurrency import AVFoundation
 import Foundation
 
 struct CopyExecutor {
@@ -20,22 +21,32 @@ struct CopyExecutor {
         for item in plan.items {
             guard !Task.isCancelled else { break }
             var result = item
-            progress.currentFile = item.clip.filename
+            progress.currentFile = item.displayFilename
             await update(progress)
 
             do {
-                let copied = try await copyOne(sourceURL: item.clip.sourceURL, destinationURL: item.destinationURL, expectedSize: item.clip.size) { copiedChunk in
-                    progress.copiedBytes += copiedChunk
-                    await update(progress)
-                }
-                progress.completedFiles += 1
-                if copied {
+                if item.sourceFileCount > 1 {
+                    try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
+                        progress.copiedBytes += copiedChunk
+                        await update(progress)
+                    }
+                    progress.completedFiles += 1
                     result.status = .copied
-                    result.message = "Copied"
+                    result.message = "Combined \(item.sourceFileCount) loop clips"
                 } else {
-                    result.status = .skipped
-                    result.message = "Existing file matched size"
-                    progress.copiedBytes += item.clip.size
+                    let copied = try await copyOne(sourceURL: item.clip.sourceURL, destinationURL: item.destinationURL, expectedSize: item.clip.size) { copiedChunk in
+                        progress.copiedBytes += copiedChunk
+                        await update(progress)
+                    }
+                    progress.completedFiles += 1
+                    if copied {
+                        result.status = .copied
+                        result.message = "Copied"
+                    } else {
+                        result.status = .skipped
+                        result.message = "Existing file matched size"
+                        progress.copiedBytes += item.clip.size
+                    }
                 }
             } catch is CancellationError {
                 result.status = .cancelled
@@ -160,6 +171,87 @@ struct CopyExecutor {
         didFinishWriting = true
         return true
     }
+
+    private func concatenateVideoItem(
+        _ item: CopyPlanItem,
+        destinationURL: URL,
+        progress: (Int64) async -> Void
+    ) async throws {
+        let fileManager = FileManager.default
+        let destinationDirectory = destinationURL.deletingLastPathComponent()
+        try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
+
+        if fileManager.fileExists(atPath: destinationURL.path) {
+            throw CopyError.conflictingDestination(destinationURL.path)
+        }
+
+        let composition = AVMutableComposition()
+        guard let videoTrack = composition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        ) else {
+            throw CopyError.videoConcatenationFailed("Could not create video track")
+        }
+        var audioTrack = composition.addMutableTrack(
+            withMediaType: .audio,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        )
+
+        var cursor = CMTime.zero
+        var preferredTransform = CGAffineTransform.identity
+        for clip in item.orderedSourceClips {
+            if Task.isCancelled { throw CancellationError() }
+            let asset = AVURLAsset(url: clip.sourceURL)
+            guard let sourceVideo = asset.tracks(withMediaType: .video).first else {
+                throw CopyError.videoConcatenationFailed("Missing video track in \(clip.filename)")
+            }
+            let duration = asset.duration
+            try videoTrack.insertTimeRange(
+                CMTimeRange(start: .zero, duration: duration),
+                of: sourceVideo,
+                at: cursor
+            )
+            if cursor == .zero {
+                preferredTransform = sourceVideo.preferredTransform
+            }
+
+            if let sourceAudio = asset.tracks(withMediaType: .audio).first {
+                if audioTrack == nil {
+                    audioTrack = composition.addMutableTrack(
+                        withMediaType: .audio,
+                        preferredTrackID: kCMPersistentTrackID_Invalid
+                    )
+                }
+                try audioTrack?.insertTimeRange(
+                    CMTimeRange(start: .zero, duration: duration),
+                    of: sourceAudio,
+                    at: cursor
+                )
+            }
+            cursor = cursor + duration
+        }
+        videoTrack.preferredTransform = preferredTransform
+
+        guard let exportSession = AVAssetExportSession(
+            asset: composition,
+            presetName: AVAssetExportPresetPassthrough
+        ) else {
+            throw CopyError.videoConcatenationFailed("Could not create export session")
+        }
+        exportSession.outputURL = destinationURL
+        exportSession.outputFileType = .mp4
+        exportSession.shouldOptimizeForNetworkUse = false
+
+        await exportSession.export()
+        switch exportSession.status {
+        case .completed:
+            await progress(item.totalSize)
+        case .cancelled:
+            throw CancellationError()
+        default:
+            throw CopyError.videoConcatenationFailed(exportSession.error?.localizedDescription ?? "Export failed")
+        }
+    }
 }
 
 struct CopyRunResult: Hashable, Sendable {
@@ -174,6 +266,7 @@ struct CopyRunResult: Hashable, Sendable {
 enum CopyError: LocalizedError {
     case conflictingDestination(String)
     case sizeVerificationFailed
+    case videoConcatenationFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -181,6 +274,8 @@ enum CopyError: LocalizedError {
             return "Destination exists with a different size: \(path)"
         case .sizeVerificationFailed:
             return "Copied file size did not match source"
+        case .videoConcatenationFailed(let message):
+            return "Could not combine video clips: \(message)"
         }
     }
 }

@@ -31,6 +31,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var model: String
     var status: String
     var confidence: String
+    var cameraType: String?
     var folders: [ProfileFolder]
     var filenamePatterns: [FilenamePattern]
     var channels: [String: String]
@@ -52,6 +53,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
         model: "Dashcam",
         status: "generic",
         confidence: "low",
+        cameraType: nil,
         folders: [],
         filenamePatterns: [],
         channels: [:],
@@ -259,6 +261,12 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         if normalized == "looping" || normalized == "loop_video" {
             return "Looping"
         }
+        if normalized == "regular_recording" ||
+            normalized == "regular recording" ||
+            normalized == "video" ||
+            normalized == "primary_media" {
+            return "Regular Recording"
+        }
         if normalized == "time_lapse" || normalized == "timelapse_video" {
             return "Time Lapse"
         }
@@ -336,6 +344,8 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         switch value.lowercased() {
         case "continuous":
             return "Driving"
+        case "regular_recording", "video", "primary_media":
+            return "Regular Recording"
         case "looping", "loop_video":
             return "Looping"
         case "time_lapse", "timelapse_video":
@@ -408,7 +418,7 @@ struct ClipItem: Identifiable, Hashable, Sendable {
 
     static func isParkingMode(_ value: String) -> Bool {
         let normalized = value.lowercased()
-        if ["time_lapse", "timelapse_video", "time_warp", "timewarp", "time_lapse_or_timewarp", "looping", "loop_video"].contains(normalized) {
+        if ["time_lapse", "timelapse_video", "time_warp", "timewarp", "time_lapse_or_timewarp", "looping", "loop_video", "regular_recording", "video", "primary_media"].contains(normalized) {
             return false
         }
         return normalized.contains("parking") ||
@@ -428,7 +438,7 @@ struct CopyPlan: Hashable, Sendable {
     var supportItems: [SupportFileItem] = []
 
     var selectedBytes: Int64 {
-        items.reduce(0) { $0 + $1.clip.size } + supportItems.reduce(0) { $0 + $1.size }
+        items.reduce(0) { $0 + $1.totalSize } + supportItems.reduce(0) { $0 + $1.size }
     }
 
     var selectedFileCount: Int {
@@ -450,11 +460,47 @@ struct CopyPlan: Hashable, Sendable {
 }
 
 struct CopyPlanItem: Identifiable, Hashable, Sendable {
-    var id: String { clip.id }
+    var id: String {
+        if sourceClips.count > 1 {
+            return sourceClips.map(\.id).joined(separator: "|")
+        }
+        return clip.id
+    }
     var clip: ClipItem
+    var sourceClips: [ClipItem] = []
     var destinationURL: URL
     var status: CopyStatus
     var message: String?
+
+    var orderedSourceClips: [ClipItem] {
+        sourceClips.isEmpty ? [clip] : sourceClips
+    }
+
+    var sourceFileCount: Int {
+        orderedSourceClips.count
+    }
+
+    var totalSize: Int64 {
+        orderedSourceClips.reduce(Int64(0)) { $0 + $1.size }
+    }
+
+    var displayFilename: String {
+        clip.filename
+    }
+
+    var displaySource: String {
+        guard sourceFileCount > 1,
+              let first = orderedSourceClips.first,
+              let last = orderedSourceClips.last else {
+            return clip.relativePath
+        }
+        let folder = first.relativePath.split(separator: "/").dropLast().joined(separator: "/")
+        return "\(folder)/\(first.filename) ... \(last.filename)"
+    }
+
+    var displaySize: Int64 {
+        totalSize
+    }
 }
 
 struct SupportFileItem: Identifiable, Hashable, Sendable {
@@ -604,7 +650,20 @@ struct ScanSummary: Hashable, Sendable {
     }
 
     var sortedCategoryCounts: [(String, Int)] {
-        let preferredOrder = ["Driving", "Parking", "Parking Events", "Protected", "Photos", "GPS Logs", "Other"]
+        let preferredOrder = [
+            "Regular Recording",
+            "Driving",
+            "Looping",
+            "Time Lapse",
+            "TimeWarp",
+            "Time Lapse / TimeWarp",
+            "Parking",
+            "Parking Events",
+            "Protected",
+            "Photos",
+            "GPS Logs",
+            "Other"
+        ]
         return categoryCounts.sorted { lhs, rhs in
             let lhsIndex = preferredOrder.firstIndex(of: lhs.0) ?? preferredOrder.count
             let rhsIndex = preferredOrder.firstIndex(of: rhs.0) ?? preferredOrder.count
@@ -683,6 +742,7 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var folderSummaries: [FeedbackFolderSummary]
     var filenameSamples: [String]
     var filenamePatternSummaries: [FeedbackFilenamePatternSummary]
+    var filenameSequenceSummaries: [FeedbackFilenameSequenceSummary]
     var supportFileSamples: [String]
     var ignoredSupportFileSamples: [String]
     var clipGroupSummaries: [FeedbackClipGroupSummary]
@@ -702,6 +762,17 @@ struct FeedbackFolderSummary: Codable, Hashable, Sendable {
     var minFileSizeBytes: Int64?
     var maxFileSizeBytes: Int64?
     var extensionCounts: [String: Int]
+}
+
+struct FeedbackFilenameSequenceSummary: Codable, Hashable, Sendable {
+    var folder: String
+    var prefix: String
+    var extensionLowercased: String
+    var fileCount: Int
+    var firstSequence: Int?
+    var lastSequence: Int?
+    var totalFileSizeBytes: Int64
+    var sampleRelativePaths: [String]
 }
 
 struct FeedbackFilenamePatternSummary: Codable, Hashable, Sendable {

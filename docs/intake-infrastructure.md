@@ -68,6 +68,16 @@ The Mac app sends a JSON body structured as:
 }
 ```
 
+Recent app builds also send sanitized aggregate learning fields:
+
+- `displayModeCounts`, `outputCategoryCounts`, and `channelCounts` for quick mode/channel review.
+- `filenamePatternSummaries` for redacted filename-shape learning.
+- `filenameSequenceSummaries` for preserving ordered runs such as GoPro `GXAB9555` through `GXAB9560` without sending every private filename context.
+- `clipGroupSummaries` for folder/mode/channel/category size and count ranges.
+- `folderSummaries` with file counts and size ranges.
+
+For GoPro support, `filenameSequenceSummaries` are the key field for validating whether all loop chunks were captured. They should retain folder, extension, prefix, first/last sequence, count, total size, and a few representative sanitized paths.
+
 ### What the App Must Strip Before Sending
 
 The app is responsible for sanitizing the intake package before transmission. The Worker performs a second-pass validation but the app should not send:

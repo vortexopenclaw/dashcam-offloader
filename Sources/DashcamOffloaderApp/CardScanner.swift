@@ -1334,63 +1334,30 @@ struct CardScanner {
             }
         }
 
-        let clipsByFolder = Dictionary(grouping: clips.filter { $0.isVideo && infoByPath[$0.relativePath] != nil }) {
-            relativeFolderPath(for: $0.relativePath)
+        let goProVideos = clips.filter { $0.isVideo && infoByPath[$0.relativePath] != nil }
+        let loopBuckets = Dictionary(grouping: goProVideos) { clip in
+            let info = infoByPath[clip.relativePath]
+            return [
+                relativeFolderPath(for: clip.relativePath),
+                info?.chapterToken ?? "",
+                String(clip.filename.uppercased().prefix(4))
+            ].joined(separator: "\u{1f}")
         }
 
-        for (_, folderClips) in clipsByFolder {
-            let ordered = folderClips.sorted { lhs, rhs in
-                let left = infoByPath[lhs.relativePath]
-                let right = infoByPath[rhs.relativePath]
-                if left?.sequence != right?.sequence {
-                    return (left?.sequence ?? 0) < (right?.sequence ?? 0)
-                }
-                return (left?.chapterToken ?? "") < (right?.chapterToken ?? "")
+        for (_, bucket) in loopBuckets {
+            let ordered = bucket.sorted { lhs, rhs in
+                let left = infoByPath[lhs.relativePath]?.sequence ?? 0
+                let right = infoByPath[rhs.relativePath]?.sequence ?? 0
+                if left != right { return left < right }
+                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
             }
+            guard ordered.count >= 2, ordered.count <= 6 else { continue }
+            guard hasMostlyAdjacentGoProSequences(ordered, infoByPath: infoByPath) else { continue }
+            guard hasLoopLikeGoProDurations(ordered, infoByPath: infoByPath) else { continue }
 
-            var run: [ClipItem] = []
-            func flushRun() {
-                guard run.count >= 2, run.count <= 6 else {
-                    run.removeAll()
-                    return
-                }
-                guard run.allSatisfy({ clip in
-                    guard let info = infoByPath[clip.relativePath] else { return false }
-                    if let duration = info.duration {
-                        return duration >= 35 && duration <= 85
-                    }
-                    return false
-                }) else {
-                    run.removeAll()
-                    return
-                }
-                for clip in run where modeByPath[clip.relativePath] == nil {
-                    modeByPath[clip.relativePath] = "looping"
-                }
-                run.removeAll()
+            for clip in ordered where modeByPath[clip.relativePath] == nil {
+                modeByPath[clip.relativePath] = "looping"
             }
-
-            for clip in ordered {
-                guard modeByPath[clip.relativePath] == nil,
-                      let info = infoByPath[clip.relativePath] else {
-                    flushRun()
-                    continue
-                }
-
-                if let last = run.last,
-                   let lastInfo = infoByPath[last.relativePath],
-                   info.sequence == lastInfo.sequence + 1,
-                   let currentTime = clip.timestamp,
-                   let lastTime = last.timestamp,
-                   currentTime.timeIntervalSince(lastTime) > 0,
-                   currentTime.timeIntervalSince(lastTime) <= 90 {
-                    run.append(clip)
-                } else {
-                    flushRun()
-                    run = [clip]
-                }
-            }
-            flushRun()
         }
 
         return clips.map { clip in
@@ -1399,6 +1366,35 @@ struct CardScanner {
             copy.mode = mode
             return copy
         }
+    }
+
+    private func hasMostlyAdjacentGoProSequences(
+        _ clips: [ClipItem],
+        infoByPath: [String: GoProVideoInfo]
+    ) -> Bool {
+        let sequences = clips.compactMap { infoByPath[$0.relativePath]?.sequence }.sorted()
+        guard sequences.count == clips.count else { return false }
+        let gaps = zip(sequences, sequences.dropFirst()).map { $1 - $0 }
+        guard gaps.allSatisfy({ $0 == 1 }) else { return false }
+
+        let timestamps = clips.compactMap(\.timestamp).sorted()
+        guard timestamps.count == clips.count else { return true }
+        let timeGaps = zip(timestamps, timestamps.dropFirst()).map { $1.timeIntervalSince($0) }
+        if timeGaps.allSatisfy({ $0 == 0 }) {
+            return true
+        }
+        return timeGaps.allSatisfy { $0 > 0 && $0 <= 120 }
+    }
+
+    private func hasLoopLikeGoProDurations(
+        _ clips: [ClipItem],
+        infoByPath: [String: GoProVideoInfo]
+    ) -> Bool {
+        let durations = clips.compactMap { infoByPath[$0.relativePath]?.duration }
+        guard durations.count == clips.count else {
+            return clips.count >= 4
+        }
+        return durations.allSatisfy { $0 >= 35 && $0 <= 85 }
     }
 
     private func parseGoProVideoFilename(_ filename: String) -> (chapterToken: String, sequence: Int)? {

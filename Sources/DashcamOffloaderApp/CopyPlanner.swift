@@ -33,11 +33,19 @@ struct CopyPlanner {
             return true
         }
 
-        let items = selected.map { clip in
-            CopyPlanItem(
-                clip: clip,
+        let items = groupedDownloadItems(
+            from: selected,
+            destinationRoot: destinationRoot,
+            profile: profile,
+            filters: filters,
+            namingOptions: namingOptions
+        ).map { itemClips in
+            let representative = representativeClip(for: itemClips)
+            return CopyPlanItem(
+                clip: representative,
+                sourceClips: itemClips.count > 1 ? itemClips : [],
                 destinationURL: destinationURL(
-                    for: clip,
+                    for: representative,
                     destinationRoot: destinationRoot,
                     filters: filters,
                     namingOptions: namingOptions
@@ -75,6 +83,78 @@ struct CopyPlanner {
         return destinationRoot
             .appendingPathComponent(safePathComponent(clip.outputCategory), isDirectory: true)
             .appendingPathComponent(outputFilename)
+    }
+
+    private func groupedDownloadItems(
+        from clips: [ClipItem],
+        destinationRoot: URL,
+        profile: DashcamProfile,
+        filters: FilterState,
+        namingOptions: OutputNamingOptions
+    ) -> [[ClipItem]] {
+        guard profile.manufacturer.caseInsensitiveCompare("GoPro") == .orderedSame else {
+            return clips.map { [$0] }
+        }
+
+        var groupedItems: [[ClipItem]] = []
+        let grouped = Dictionary(grouping: clips) { clip in
+            [
+                clip.relativePath.split(separator: "/").dropLast().joined(separator: "/"),
+                clip.mode,
+                clip.channel,
+                goProLoopGroupKey(for: clip.filename) ?? clip.id
+            ].joined(separator: "\u{1f}")
+        }
+
+        for key in grouped.keys.sorted() {
+            let bucket = grouped[key, default: []].sorted { lhs, rhs in
+                let left = goProSequenceNumber(for: lhs.filename) ?? Int.max
+                let right = goProSequenceNumber(for: rhs.filename) ?? Int.max
+                if left != right { return left < right }
+                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
+            }
+            guard bucket.count > 1,
+                  bucket.allSatisfy({ $0.mode == "looping" && $0.isVideo }) else {
+                groupedItems.append(contentsOf: bucket.map { [$0] })
+                continue
+            }
+            groupedItems.append(bucket)
+        }
+
+        return groupedItems
+    }
+
+    private func representativeClip(for clips: [ClipItem]) -> ClipItem {
+        guard clips.count > 1,
+              var first = clips.first,
+              let last = clips.last,
+              let groupKey = goProLoopGroupKey(for: first.filename) else {
+            return clips.first!
+        }
+
+        let ext = URL(fileURLWithPath: first.filename).pathExtension
+        let firstSequence = goProSequenceNumber(for: first.filename) ?? 0
+        let lastSequence = goProSequenceNumber(for: last.filename) ?? firstSequence
+        let outputName = String(format: "%@%04d-%04d.%@", groupKey, firstSequence, lastSequence, ext.isEmpty ? "MP4" : ext)
+        first.filename = outputName
+        first.size = clips.reduce(Int64(0)) { $0 + $1.size }
+        first.sourceURL = clips[0].sourceURL
+        first.relativePath = clips[0].relativePath
+        return first
+    }
+
+    private func goProLoopGroupKey(for filename: String) -> String? {
+        let stem = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent.uppercased()
+        guard stem.range(of: #"^G[HXP][A-Z0-9]{2}\d{4}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        return String(stem.prefix(4))
+    }
+
+    private func goProSequenceNumber(for filename: String) -> Int? {
+        let stem = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent.uppercased()
+        guard stem.count == 8 else { return nil }
+        return Int(stem.suffix(4))
     }
 
     private func filename(for clip: ClipItem, namingOptions: OutputNamingOptions) -> String {

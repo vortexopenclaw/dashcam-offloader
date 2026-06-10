@@ -47,3 +47,20 @@ The generic GoPro profile imports media from every matching `DCIM/*GOPRO` folder
 
 When exact recording mode is uncertain, keep the file transferable and label conservatively instead of hiding it.
 
+## Recording Types and Channels
+
+GoPro-family cards should use action-camera language:
+
+- Normal videos display as `Regular Recording`, not `Driving`.
+- Loop clips display as `Looping`.
+- Time Lapse and TimeWarp stay separate when metadata or strong heuristics can distinguish them.
+- Single-lens HERO and Mission media should not show a channel filter.
+- MAX/Fusion/MAX2 360 media may use an internal `360_primary` channel, but the app should still hide channel selection unless a future real card proves multiple independent media streams.
+
+## Loop Groups
+
+GoPro loop chunks can appear as adjacent one-minute files with the same four-character prefix, for example `GXAB9555.MP4` through `GXAB9560.MP4`. The app should group those as one loop item for download and use lossless/passthrough concatenation when copying.
+
+## Learning Submissions
+
+Learning submissions should include sanitized filename sequence summaries so maintainers can see complete GoPro prefix/sequence runs, overflow folders, and missing chunks without receiving media bytes or private device identifiers.

@@ -1,4 +1,8 @@
 - App updates now install in place, reopen automatically, and replace the app bundle that launched the update.
 - Update prompts and the App Updates section show concise release notes for the current build.
 - Release Notes opens the GitHub latest release, which now contains the same consolidated notes instead of a bare auto-build message.
-- GoPro HERO, MAX, and Mission camera catalog support from the previous build remains included.
+- Source cards now scan automatically at startup so mounted GoPro cards identify as HERO9 Black without needing a manual click/rescan.
+- GoPro, Sony mirrorless, and DJI drone cards use non-dashcam recording terminology such as Regular Recording instead of Driving.
+- GoPro single-primary media hides the channel filter; single-channel dashcam profiles can still show Front.
+- GoPro looping chunks with the same prefix and adjacent sequence numbers are grouped into one download item and copied with passthrough concatenation.
+- Learning submissions now include sanitized filename sequence summaries so GoPro loop groups can be audited without sending media bytes or private device identifiers.

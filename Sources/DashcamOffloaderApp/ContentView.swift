@@ -670,13 +670,15 @@ struct ContentView: View {
                             display: { ClipItem.displayLabel(for: $0) },
                             onChange: { viewModel.rebuildPlan() }
                         )
-                        checkboxGrid(
-                            title: "Channels",
-                            values: viewModel.availableChannels,
-                            selected: $viewModel.filters.selectedChannels,
-                            display: { ClipItem.displayLabel(for: $0) },
-                            onChange: { viewModel.rebuildPlan() }
-                        )
+                        if viewModel.shouldShowChannelFilter {
+                            checkboxGrid(
+                                title: "Channels",
+                                values: viewModel.availableChannels,
+                                selected: $viewModel.filters.selectedChannels,
+                                display: { ClipItem.displayLabel(for: $0) },
+                                onChange: { viewModel.rebuildPlan() }
+                            )
+                        }
 
                         Divider()
 
@@ -812,11 +814,11 @@ struct ContentView: View {
 
                 Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? [], selection: $viewModel.selectedQueueItemIDs) {
                     TableColumn("File") { item in
-                        Text(item.clip.filename)
+                        Text(item.displayFilename)
                             .lineLimit(1)
                     }
                     TableColumn("Source") { item in
-                        Text(item.clip.relativePath)
+                        Text(item.displaySource)
                             .font(.caption)
                             .lineLimit(1)
                     }
@@ -835,7 +837,7 @@ struct ContentView: View {
                             .lineLimit(1)
                     }
                     TableColumn("Size") { item in
-                        Text(item.clip.size.formattedBytes)
+                        Text(item.displaySize.formattedBytes)
                     }
                 }
                 .frame(minHeight: 220)
@@ -851,7 +853,7 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(viewModel.copyResults.prefix(10)) { item in
                             HStack {
-                                Text(item.clip.filename).lineLimit(1)
+                                Text(item.displayFilename).lineLimit(1)
                                 Spacer()
                                 Text(item.status.rawValue)
                                     .foregroundStyle(item.status == .failed ? .red : .secondary)

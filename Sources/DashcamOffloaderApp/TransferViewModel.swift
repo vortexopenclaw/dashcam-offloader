@@ -72,6 +72,7 @@ final class TransferViewModel: ObservableObject {
     var availableModes: [String] {
         Array(Set(footageClips.map(\.mode))).sorted { lhs, rhs in
             let preferred = [
+                "regular_recording",
                 "continuous",
                 "looping",
                 "driving_event",
@@ -95,6 +96,22 @@ final class TransferViewModel: ObservableObject {
 
     var availableChannels: [String] {
         Array(Set(footageClips.map(\.channel))).sorted()
+    }
+
+    var shouldShowChannelFilter: Bool {
+        guard !availableChannels.isEmpty else { return false }
+        guard !isSingleLensNonDashcamProfile else { return true }
+        return false
+    }
+
+    private var isSingleLensNonDashcamProfile: Bool {
+        guard let selectedProfile else { return false }
+        let nonDashcamTypes = ["action_camera", "drone", "mirrorless_camera", "camera"]
+        guard nonDashcamTypes.contains((selectedProfile.cameraType ?? "").lowercased()) else {
+            return false
+        }
+        let normalizedChannels = Set(footageClips.map { $0.channel.lowercased() })
+        return normalizedChannels.isSubset(of: ["primary", "front", "360_primary"])
     }
 
     var eligibleClips: [ClipItem] {
@@ -263,6 +280,7 @@ final class TransferViewModel: ObservableObject {
             return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
         }
 
+        let selectedSourceBeforeRefresh = selectedSource
         if let previousSource,
            let refreshedSource = mountedSources.first(where: { $0.id == previousSource.id }) {
             selectedSource = refreshedSource
@@ -274,6 +292,7 @@ final class TransferViewModel: ObservableObject {
         if userInitiated {
             statusMessage = "Sources refreshed. Found \(mountedSources.count) \(mountedSources.count == 1 ? "source" : "sources")"
         }
+        scanSelectedSourceIfNeeded(previousSource: selectedSourceBeforeRefresh, userInitiated: userInitiated)
     }
 
     func startInitialSourceDiscovery() {
@@ -405,6 +424,19 @@ final class TransferViewModel: ObservableObject {
             return
         }
         refreshSources()
+    }
+
+    private func scanSelectedSourceIfNeeded(previousSource: MountedSource?, userInitiated: Bool) {
+        guard !copyProgress.isRunning, !isScanning else { return }
+        guard let selectedSource else { return }
+
+        let sourceChanged = previousSource?.id != selectedSource.id
+        let scanMissing = !scanSummary.hasScan ||
+            scanSummary.sourcePath != selectedSource.url.path ||
+            selectedProfile == nil
+
+        guard sourceChanged || scanMissing || userInitiated else { return }
+        scanSelectedSource()
     }
 
     private func startVolumeObservation() {
@@ -1038,6 +1070,7 @@ final class TransferViewModel: ObservableObject {
             folderSummaries: makeFolderSummaries(from: safeFiles, sourceRoot: sourceRoot),
             filenameSamples: Array(filenameSamples),
             filenamePatternSummaries: makeFilenamePatternSummaries(from: safeFiles, sourceRoot: sourceRoot),
+            filenameSequenceSummaries: makeFilenameSequenceSummaries(from: safeFiles, sourceRoot: sourceRoot),
             supportFileSamples: Array(supportFileSamples),
             ignoredSupportFileSamples: Array(ignoredSupportFileSamples),
             clipGroupSummaries: makeClipGroupSummaries(from: safeEligibleClips, sourceRoot: sourceRoot),
@@ -1202,6 +1235,66 @@ final class TransferViewModel: ObservableObject {
                     sampleRelativePaths: representativePathStrings(from: paths)
                 )
             }
+    }
+
+    private func makeFilenameSequenceSummaries(from files: [URL], sourceRoot: URL?) -> [FeedbackFilenameSequenceSummary] {
+        let grouped = Dictionary(grouping: files.filter(isMediaLikeFile)) { fileURL in
+            let relativePath = sanitizedRelativePath(for: fileURL, sourceRoot: sourceRoot)
+            let folder = videoSpecFolder(for: relativePath)
+            let ext = fileURL.pathExtension.lowercased()
+            let prefix = filenameSequencePrefix(fileURL.lastPathComponent)
+            return [folder, ext.isEmpty ? "[none]" : ext, prefix].joined(separator: "\u{1f}")
+        }
+
+        return grouped.keys
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .prefix(240)
+            .compactMap { key in
+                guard let bucket = grouped[key], let first = bucket.first else { return nil }
+                let relativePath = sanitizedRelativePath(for: first, sourceRoot: sourceRoot)
+                let folder = videoSpecFolder(for: relativePath)
+                let ext = first.pathExtension.lowercased()
+                let prefix = filenameSequencePrefix(first.lastPathComponent)
+                let sizes = bucket.compactMap(fileSizeBytes)
+                let sequences = bucket.compactMap { filenameSequenceNumber($0.lastPathComponent) }
+                let paths = bucket
+                    .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
+                    .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+
+                return FeedbackFilenameSequenceSummary(
+                    folder: folder,
+                    prefix: prefix,
+                    extensionLowercased: ext.isEmpty ? "[none]" : ext,
+                    fileCount: bucket.count,
+                    firstSequence: sequences.min(),
+                    lastSequence: sequences.max(),
+                    totalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    sampleRelativePaths: representativePathStrings(from: paths)
+                )
+            }
+    }
+
+    private func filenameSequencePrefix(_ filename: String) -> String {
+        let stem = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent.uppercased()
+        if stem.range(of: #"^G[HXP][A-Z0-9]{2}\d{4}$"#, options: .regularExpression) != nil {
+            return String(stem.prefix(4))
+        }
+        let withoutDigits = stem.map { character in
+            character.isNumber ? "0" : character
+        }
+        .reduce(into: "") { $0.append($1) }
+        return withoutDigits
+    }
+
+    private func filenameSequenceNumber(_ filename: String) -> Int? {
+        let stem = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent.uppercased()
+        if stem.range(of: #"^G[HXP][A-Z0-9]{2}\d{4}$"#, options: .regularExpression) != nil {
+            return Int(stem.suffix(4))
+        }
+        guard let match = stem.range(of: #"\d+$"#, options: .regularExpression) else {
+            return nil
+        }
+        return Int(stem[match])
     }
 
     private func redactedFilenamePattern(_ filename: String) -> String {

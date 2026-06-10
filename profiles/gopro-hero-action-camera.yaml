@@ -27,18 +27,18 @@ folders:
 filename_patterns:
   - pattern: '^(G[HXP])(\d{2})(\d{4})\.(MP4|MOV)$'
     modes:
-      GH: continuous
-      GX: continuous
-      GP: continuous
+      GH: regular_recording
+      GX: regular_recording
+      GP: regular_recording
     channels:
       GH: primary
       GX: primary
       GP: primary
   - pattern: '^(G[HXP])([A-Z]{2})(\d{4})\.(MP4|MOV)$'
     modes:
-      GH: continuous
-      GX: continuous
-      GP: continuous
+      GH: regular_recording
+      GX: regular_recording
+      GP: regular_recording
     channels:
       GH: primary
       GX: primary

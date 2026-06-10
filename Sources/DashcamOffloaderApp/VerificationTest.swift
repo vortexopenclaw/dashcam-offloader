@@ -390,6 +390,9 @@ enum VerificationTest {
             try Data(repeating: 41, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX010273.MP4"))
             try Data(repeating: 42, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX020273.MP4"))
             try Data(repeating: 45, count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GXAA0277.MP4"))
+            for sequence in 9565...9570 {
+                try Data(repeating: UInt8(50 + (sequence - 9565)), count: 2048).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GXAD\(sequence).MP4"))
+            }
             try Data(repeating: 43, count: 1024).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GOPR0274.JPG"))
             try Data(repeating: 44, count: 1024).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/G0010275.JPG"))
             try Data("GoPro TimeWarp sample metadata".utf8).write(to: goProSource.appendingPathComponent("DCIM/100GOPRO/GX010276.MP4"))
@@ -414,19 +417,23 @@ enum VerificationTest {
                 print("VERIFY FAIL: GoPro HERO9 safe version.txt identification wrong: \(String(describing: goProScan.identifiedCamera))")
                 return false
             }
-            guard goProScan.clips.count == 7,
+            guard goProScan.clips.count == 13,
                   Set(goProScan.clips.map(\.channel)) == ["primary"],
-                  goProScan.clips.filter(\.isVideo).count == 5,
+                  goProScan.clips.filter(\.isVideo).count == 11,
                   goProScan.clips.filter(\.isPhoto).count == 2 else {
                 print("VERIFY FAIL: GoPro media classification wrong: clips=\(goProScan.clips.count), channels=\(Set(goProScan.clips.map(\.channel)).sorted())")
                 return false
             }
-            guard goProScan.clips.contains(where: { $0.relativePath == "DCIM/101GOPRO/GX010278.MP4" && $0.mode == "continuous" }) else {
+            guard goProScan.clips.contains(where: { $0.relativePath == "DCIM/101GOPRO/GX010278.MP4" && $0.mode == "regular_recording" }) else {
                 print("VERIFY FAIL: GoPro overflow folder DCIM/101GOPRO was not imported")
                 return false
             }
-            guard goProScan.clips.contains(where: { $0.filename == "GXAA0277.MP4" && $0.mode == "continuous" && $0.outputCategory == "Driving" }) else {
-                print("VERIFY FAIL: GoPro letter-token MP4 was not classified as driving footage")
+            guard goProScan.clips.contains(where: { $0.filename == "GXAA0277.MP4" && $0.mode == "regular_recording" && $0.outputCategory == "Regular Recording" }) else {
+                print("VERIFY FAIL: GoPro letter-token MP4 was not classified as regular recording")
+                return false
+            }
+            guard goProScan.clips.filter({ $0.filename.hasPrefix("GXAD") && $0.mode == "looping" }).count == 6 else {
+                print("VERIFY FAIL: GoPro same-prefix one-minute loop chunks were not classified as looping")
                 return false
             }
             guard goProScan.clips.contains(where: { $0.filename == "GX010276.MP4" && $0.mode == "time_warp" && $0.outputCategory == "TimeWarp" }) else {
@@ -446,7 +453,8 @@ enum VerificationTest {
                 clips: goProScan.clips,
                 filters: goProFilters
             )
-            guard goProPlan.items.map(\.clip.relativePath).sorted() == ["DCIM/100GOPRO/GX010273.MP4", "DCIM/100GOPRO/GX020273.MP4", "DCIM/100GOPRO/GXAA0277.MP4", "DCIM/101GOPRO/GX010278.MP4"] else {
+            guard goProPlan.items.map(\.clip.relativePath).sorted() == ["DCIM/100GOPRO/GX010273.MP4", "DCIM/100GOPRO/GX020273.MP4", "DCIM/100GOPRO/GXAA0277.MP4", "DCIM/100GOPRO/GXAD9565.MP4", "DCIM/101GOPRO/GX010278.MP4"],
+                  goProPlan.items.contains(where: { $0.displayFilename == "GXAD9565-9570.MP4" && $0.sourceFileCount == 6 && $0.displaySource.contains("GXAD9565.MP4 ... GXAD9570.MP4") }) else {
                 print("VERIFY FAIL: GoPro default-style plan should exclude photos and TimeWarp, got \(goProPlan.items.map(\.clip.filename).sorted())")
                 return false
             }
@@ -509,6 +517,7 @@ enum VerificationTest {
                     model: "Alpha",
                     status: "test",
                     confidence: "medium",
+                    cameraType: nil,
                     folders: [ProfileFolder(path: "VIDEO", mode: "continuous", importable: true)],
                     filenamePatterns: [siblingPattern],
                     channels: ["F": "front", "R": "rear"],
@@ -522,6 +531,7 @@ enum VerificationTest {
                     model: "Beta",
                     status: "test",
                     confidence: "medium",
+                    cameraType: nil,
                     folders: [ProfileFolder(path: "VIDEO", mode: "continuous", importable: true)],
                     filenamePatterns: [siblingPattern],
                     channels: ["F": "front", "R": "rear"],
