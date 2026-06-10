@@ -63,6 +63,7 @@ jobs:
           ASSET_KEY="dashcam-offloader/releases/$ZIP_NAME"
           DOWNLOAD_URL="$UPDATE_BASE_URL/dashcam-offloader/download/latest"
           RELEASE_NOTES_URL="https://github.com/${{ github.repository }}/releases/tag/latest"
+          RELEASE_NOTES_JSON="$(jq -Rs . docs/releases/latest.md)"
           PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           npx --yes wrangler@latest r2 bucket create "$BUCKET" || true
@@ -73,6 +74,7 @@ jobs:
             "version": "$VERSION",
             "build": "$SHORT_SHA",
             "releaseName": "Dashcam Offloader $VERSION ($SHORT_SHA)",
+            "releaseNotes": $RELEASE_NOTES_JSON,
             "releaseNotesURL": "$RELEASE_NOTES_URL",
             "assetName": "$ZIP_NAME",
             "assetKey": "$ASSET_KEY",

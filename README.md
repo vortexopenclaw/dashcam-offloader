@@ -38,6 +38,8 @@ open "build-latest/Dashcam Offloader.app"
 
 The app checks the Cloudflare update manifest on launch when automatic update checks are enabled. Users can also choose **Check for Updates** in the toolbar, then install an available ZIP update directly from the prompt.
 
+Update metadata is published through `docs/releases/latest.md`. That file becomes the GitHub `latest` release body and is also included in the Cloudflare update manifest so the app can show a concise What's New section before install.
+
 Internal test builds can be packaged without a paid Apple Developer ID. These builds should be treated as local/internal prototypes:
 
 - Build Apple Silicon arm64.

@@ -1,0 +1,4 @@
+- App updates now install in place, reopen automatically, and replace the app bundle that launched the update.
+- Update prompts and the App Updates section show concise release notes for the current build.
+- Release Notes opens the GitHub latest release, which now contains the same consolidated notes instead of a bare auto-build message.
+- GoPro HERO, MAX, and Mission camera catalog support from the previous build remains included.

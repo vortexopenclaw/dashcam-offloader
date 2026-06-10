@@ -337,7 +337,12 @@ final class TransferViewModel: ObservableObject {
     private func presentUpdatePrompt(for manifest: AppUpdateManifest) {
         let alert = NSAlert()
         alert.messageText = "Update Available"
-        alert.informativeText = "\(manifest.displayName) is ready to install. The app will quit, replace itself, and reopen."
+        var informativeText = "\(manifest.displayName) is ready to install. The app will quit, replace itself, and reopen."
+        if let releaseNotes = manifest.releaseNotes?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !releaseNotes.isEmpty {
+            informativeText += "\n\nWhat's new:\n\(releaseNotes)"
+        }
+        alert.informativeText = informativeText
         alert.addButton(withTitle: "Install Update")
         alert.addButton(withTitle: "Later")
         if manifest.releaseNotesURL != nil {

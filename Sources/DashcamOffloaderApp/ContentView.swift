@@ -309,6 +309,33 @@ struct ContentView: View {
                     .padding(.horizontal, 8)
                     .padding(.bottom, 8)
             }
+
+            if let update = viewModel.availableUpdate,
+               let releaseNotes = update.releaseNotes?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !releaseNotes.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Label("What's New", systemImage: "doc.text")
+                            .font(.caption.bold())
+                        Spacer()
+                        if let releaseNotesURL = update.releaseNotesURL {
+                            Button {
+                                NSWorkspace.shared.open(releaseNotesURL)
+                            } label: {
+                                Label("Open Release Notes", systemImage: "arrow.up.right.square")
+                            }
+                            .font(.caption)
+                            .buttonStyle(.link)
+                        }
+                    }
+                    Text(releaseNotes)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+            }
         }
     }
 

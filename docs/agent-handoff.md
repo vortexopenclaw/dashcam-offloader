@@ -15,6 +15,8 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
 
+Before publishing, update `docs/releases/latest.md` with one consolidated, user-facing note for the build. The release workflow uses that file for the GitHub `latest` release body and embeds the same text in the Cloudflare update manifest as `releaseNotes`, so the in-app Release Notes/What's New UI has real content.
+
 The workflow uses encrypted GitHub secrets:
 
 - `CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN`
@@ -37,6 +39,8 @@ git diff --check
 ```
 
 When the user says "build", "publish", "push a release", "new build", or similar for Dashcam Offloader, use the full standard release path unless they explicitly ask for a local-only build: verify, push the intended commit, publish through GitHub Actions, verify the GitHub `latest` release asset, and verify the Cloudflare latest manifest/download. If the Actions release step fails after the app package is built, repair GitHub with local authenticated `gh` and verify both GitHub and Cloudflare instead of leaving only one side published.
+
+When fixing the updater, verify it replaces the launched `.app` in place and relaunches. If the launched bundle path is not writable, the updater should reveal the downloaded replacement instead of silently staging a mystery app.
 
 ## Submission Review
 

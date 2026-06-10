@@ -26,6 +26,7 @@ enum VerificationTest {
                 version: "0.1.0",
                 build: "abc1234",
                 releaseName: nil,
+                releaseNotes: nil,
                 releaseNotesURL: nil,
                 assetName: "Dashcam-Offloader-abc1234.zip",
                 assetKey: "dashcam-offloader/releases/Dashcam-Offloader-abc1234.zip",
@@ -40,6 +41,19 @@ enum VerificationTest {
             guard !UpdateService.isUpdateAvailable(manifest: matchingManifest, currentBuild: currentBuild),
                   UpdateService.isUpdateAvailable(manifest: newerManifest, currentBuild: currentBuild) else {
                 print("VERIFY FAIL: update availability comparison is wrong")
+                return false
+            }
+            let installerScript = UpdateService.installerScript(
+                stagedAppPath: "/tmp/Dashcam Offloader.app",
+                currentAppPath: "/Users/example/Downloads/Dashcam Offloader.app",
+                stagingRootPath: "/tmp/dashcam update",
+                currentProcessID: 12345
+            )
+            guard installerScript.contains("while kill -0 \"$CURRENT_PID\""),
+                  installerScript.contains("mv \"$CURRENT_APP\" \"$BACKUP_APP\""),
+                  installerScript.contains("/usr/bin/ditto \"$STAGED_APP\" \"$CURRENT_APP\""),
+                  installerScript.contains("/usr/bin/open -n \"$CURRENT_APP\"") else {
+                print("VERIFY FAIL: update installer script does not replace and relaunch in place")
                 return false
             }
             let requiredDisplayNames = [

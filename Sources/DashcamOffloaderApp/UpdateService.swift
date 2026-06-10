@@ -24,6 +24,7 @@ struct AppUpdateManifest: Codable, Equatable, Sendable {
     var version: String
     var build: String
     var releaseName: String?
+    var releaseNotes: String?
     var releaseNotesURL: URL?
     var assetName: String?
     var assetKey: String?
@@ -150,15 +151,12 @@ struct UpdateService: @unchecked Sendable {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("install-update.sh")
-        let script = """
-        #!/bin/sh
-        set -eu
-        sleep 1
-        rm -rf "\(shellEscapedPath(currentBundleURL.path))"
-        /usr/bin/ditto "\(shellEscapedPath(stagedAppURL.path))" "\(shellEscapedPath(currentBundleURL.path))"
-        /usr/bin/open "\(shellEscapedPath(currentBundleURL.path))"
-        rm -rf "\(shellEscapedPath(stagedAppURL.deletingLastPathComponent().deletingLastPathComponent().path))"
-        """
+        let script = Self.installerScript(
+            stagedAppPath: stagedAppURL.path,
+            currentAppPath: currentBundleURL.path,
+            stagingRootPath: stagedAppURL.deletingLastPathComponent().deletingLastPathComponent().path,
+            currentProcessID: ProcessInfo.processInfo.processIdentifier
+        )
 
         try script.write(to: installerScript, atomically: true, encoding: .utf8)
         try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: installerScript.path)
@@ -172,6 +170,63 @@ struct UpdateService: @unchecked Sendable {
             throw UpdateServiceError.installerLaunchFailed
         }
         return .installAndRelaunch
+    }
+
+    static func installerScript(
+        stagedAppPath: String,
+        currentAppPath: String,
+        stagingRootPath: String,
+        currentProcessID: Int32
+    ) -> String {
+        let staged = shellSingleQuoted(stagedAppPath)
+        let current = shellSingleQuoted(currentAppPath)
+        let stagingRoot = shellSingleQuoted(stagingRootPath)
+        return """
+        #!/bin/sh
+        set -eu
+
+        STAGED_APP=\(staged)
+        CURRENT_APP=\(current)
+        STAGING_ROOT=\(stagingRoot)
+        CURRENT_PID=\(currentProcessID)
+
+        i=0
+        while kill -0 "$CURRENT_PID" 2>/dev/null && [ "$i" -lt 240 ]; do
+          i=$((i + 1))
+          sleep 0.25
+        done
+
+        if kill -0 "$CURRENT_PID" 2>/dev/null; then
+          /usr/bin/open -R "$STAGED_APP"
+          exit 70
+        fi
+
+        CURRENT_PARENT="$(/usr/bin/dirname "$CURRENT_APP")"
+        if [ ! -d "$CURRENT_PARENT" ] || [ ! -w "$CURRENT_PARENT" ]; then
+          /usr/bin/open -R "$STAGED_APP"
+          exit 71
+        fi
+
+        BACKUP_APP="$CURRENT_APP.previous-update"
+        rm -rf "$BACKUP_APP"
+        if [ -e "$CURRENT_APP" ]; then
+          mv "$CURRENT_APP" "$BACKUP_APP"
+        fi
+
+        if ! /usr/bin/ditto "$STAGED_APP" "$CURRENT_APP"; then
+          rm -rf "$CURRENT_APP"
+          if [ -e "$BACKUP_APP" ]; then
+            mv "$BACKUP_APP" "$CURRENT_APP"
+          fi
+          /usr/bin/open -R "$STAGED_APP"
+          exit 72
+        fi
+
+        /usr/bin/xattr -dr com.apple.quarantine "$CURRENT_APP" 2>/dev/null || true
+        /usr/bin/open -n "$CURRENT_APP"
+        rm -rf "$BACKUP_APP"
+        rm -rf "$STAGING_ROOT"
+        """
     }
 
     private func sha256Hex(for fileURL: URL) throws -> String {
@@ -191,7 +246,7 @@ struct UpdateService: @unchecked Sendable {
         }
     }
 
-    private func shellEscapedPath(_ path: String) -> String {
-        path.replacingOccurrences(of: "\"", with: "\\\"")
+    private static func shellSingleQuoted(_ value: String) -> String {
+        "'\(value.replacingOccurrences(of: "'", with: "'\"'\"'"))'"
     }
 }

@@ -11,7 +11,14 @@ ZIP_NAME="$2"
 REPOSITORY="$3"
 SHORT_SHA="$(git rev-parse --short HEAD)"
 FULL_SHA="$(git rev-parse HEAD)"
-NOTES="Auto-built from [$SHORT_SHA](https://github.com/$REPOSITORY/commit/$FULL_SHA) on main."
+RELEASE_NOTES_FILE="${RELEASE_NOTES_FILE:-docs/releases/latest.md}"
+if [[ -f "$RELEASE_NOTES_FILE" ]]; then
+  NOTES="$(cat "$RELEASE_NOTES_FILE")
+
+Build: [$SHORT_SHA](https://github.com/$REPOSITORY/commit/$FULL_SHA) on main."
+else
+  NOTES="Auto-built from [$SHORT_SHA](https://github.com/$REPOSITORY/commit/$FULL_SHA) on main."
+fi
 
 run_with_retries() {
   local attempt
