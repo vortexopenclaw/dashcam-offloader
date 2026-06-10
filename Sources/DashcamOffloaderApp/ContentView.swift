@@ -23,22 +23,26 @@ struct ContentView: View {
             } label: {
                 Label("Refresh Sources", systemImage: "arrow.clockwise")
             }
+            .help("Refresh the source list and rescan mounted cards.")
             Button {
                 viewModel.chooseDestinationFolder()
             } label: {
                 Label("Download Folder", systemImage: "folder")
             }
+            .help("Choose where downloaded footage should be saved.")
             Button {
                 isFeedbackPresented = true
             } label: {
                 Label("Feedback", systemImage: "bubble.left.and.bubble.right")
             }
+            .help("Send a bug report, feature request, or other feedback.")
             Button {
                 viewModel.checkForUpdates(userInitiated: true)
             } label: {
                 Label("Check for Updates", systemImage: "arrow.down.circle")
             }
             .disabled(viewModel.isCheckingForUpdates)
+            .help("Check for a newer Dashcam Offloader build.")
         }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
