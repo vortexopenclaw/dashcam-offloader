@@ -1,3 +1,4 @@
+- The download ZIP includes `open-dashcam-offloader.command`, a launcher that clears macOS quarantine from the app beside it and opens Dashcam Offloader.
 - App updates now install in place, reopen automatically, and replace the app bundle that launched the update.
 - Update prompts and the App Updates section show concise release notes for the current build.
 - Release Notes opens the GitHub latest release, which now contains the same consolidated notes instead of a bare auto-build message.

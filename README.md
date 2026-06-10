@@ -131,6 +131,7 @@ swift run DashcamOffloader --verify
 - `Package.swift` - Swift Package definition for the macOS prototype
 - `Sources/DashcamOffloaderApp/` - SwiftUI app, scanner, detector, planner, and copy engine
 - `scripts/build-macos-app.sh` - builds `build/Dashcam Offloader.app`
+- `scripts/open-dashcam-offloader.command` - clears macOS quarantine on a downloaded app in the same folder and opens it
 - `DESIGN.md` - product and technical design baseline
 - `docs/agent-handoff.md` - cross-machine handoff notes for future agents
 - `docs/project-plan.md` - phased build plan

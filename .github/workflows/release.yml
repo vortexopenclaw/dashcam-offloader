@@ -21,9 +21,11 @@ jobs:
         id: package
         run: |
           SHORT_SHA="$(git rev-parse --short HEAD)"
+          cp scripts/open-dashcam-offloader.command build/
+          chmod +x build/open-dashcam-offloader.command
           cd build
           ZIP_NAME="Dashcam-Offloader-${SHORT_SHA}.zip"
-          zip -r "$ZIP_NAME" "Dashcam Offloader.app"
+          zip -r "$ZIP_NAME" "Dashcam Offloader.app" "open-dashcam-offloader.command"
           SHA256="$(shasum -a 256 "$ZIP_NAME" | awk '{print $1}')"
           {
             echo "zip_name=$ZIP_NAME"
