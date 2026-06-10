@@ -42,7 +42,7 @@ When the user says "build", "publish", "push a release", "new build", or similar
 
 When fixing the updater, verify it replaces the launched `.app` in place and relaunches. If the launched bundle path is not writable, the updater should reveal the downloaded replacement instead of silently staging a mystery app.
 
-Do not ship a `.command` file as the quarantine-clearing helper. macOS can quarantine that helper too and show a scary "Apple could not verify" warning. Use the AppleScript launcher source at `scripts/open-dashcam-offloader.applescript`, but keep it in the repo only. Release ZIPs should include the compiled `Open Dashcam Offloader.app` beside `Dashcam Offloader.app`; do not include the raw `.applescript` source file.
+Do not ship quarantine-clearing helpers in release ZIPs. macOS can quarantine `.command` files, raw `.applescript` files, and compiled helper apps, then block the helper before it can clear quarantine from `Dashcam Offloader.app`. Release ZIPs should include only `Dashcam Offloader.app` until Developer ID signing and notarization are in place.
 
 ## Submission Review
 

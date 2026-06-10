@@ -1,4 +1,4 @@
 - Cleaner download package.
-- The ZIP now includes the app and launcher app only.
-- No extra AppleScript source file to sort through.
+- The ZIP now includes only the main app.
+- Removed the launcher helper that macOS could block too.
 - Includes bug fixes and small improvements.

@@ -22,11 +22,9 @@ jobs:
         run: |
           SHORT_SHA="$(git rev-parse --short HEAD)"
           rm -rf build/"Open Dashcam Offloader.app" build/"Open Dashcam Offloader.applescript"
-          osacompile -o build/"Open Dashcam Offloader.app" scripts/open-dashcam-offloader.applescript
-          codesign --force --deep --sign - build/"Open Dashcam Offloader.app"
           cd build
           ZIP_NAME="Dashcam-Offloader-${SHORT_SHA}.zip"
-          zip -r "$ZIP_NAME" "Dashcam Offloader.app" "Open Dashcam Offloader.app"
+          zip -r "$ZIP_NAME" "Dashcam Offloader.app"
           SHA256="$(shasum -a 256 "$ZIP_NAME" | awk '{print $1}')"
           {
             echo "zip_name=$ZIP_NAME"
