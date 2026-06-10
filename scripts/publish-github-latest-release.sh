@@ -58,3 +58,9 @@ else
     --target "$FULL_SHA" \
     "$ZIP_PATH#$ZIP_NAME"
 fi
+
+while IFS= read -r asset_name; do
+  if [[ "$asset_name" == Dashcam-Offloader-*.zip && "$asset_name" != "$ZIP_NAME" ]]; then
+    gh release delete-asset latest "$asset_name" --repo "$REPOSITORY" --yes >/dev/null
+  fi
+done < <(gh release view latest --repo "$REPOSITORY" --json assets --jq '.assets[].name')
