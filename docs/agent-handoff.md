@@ -4,9 +4,10 @@ Last updated: 2026-06-10
 
 This file is the cross-machine handoff source for agents working from GitHub. Do not rely on local OpenClaw memory as the only source of truth for important Dashcam Offloader state.
 
-## Current Build
+## Current Published Build
 
-- Latest known published commit at handoff time: `6cb8b75`
+- Source of truth: the public update manifest contains the current published build hash, asset name, SHA-256, and release timestamp.
+- Manifest: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/latest.json>
 - Direct Cloudflare download: <https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest>
 - GitHub releases carry the packaged ZIP artifacts.
 
