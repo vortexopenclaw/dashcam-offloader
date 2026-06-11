@@ -184,6 +184,12 @@ struct CopyExecutor {
         if fileManager.fileExists(atPath: destinationURL.path) {
             throw CopyError.conflictingDestination(destinationURL.path)
         }
+        var didFinishExport = false
+        defer {
+            if !didFinishExport {
+                try? fileManager.removeItem(at: destinationURL)
+            }
+        }
 
         let composition = AVMutableComposition()
         guard let videoTrack = composition.addMutableTrack(
@@ -242,15 +248,33 @@ struct CopyExecutor {
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = false
 
-        await exportSession.export()
+        let exportCancellation = ExportCancellationBox(exportSession)
+        await withTaskCancellationHandler {
+            await exportSession.export()
+        } onCancel: {
+            exportCancellation.cancel()
+        }
         switch exportSession.status {
         case .completed:
+            didFinishExport = true
             await progress(item.totalSize)
         case .cancelled:
             throw CancellationError()
         default:
             throw CopyError.videoConcatenationFailed(exportSession.error?.localizedDescription ?? "Export failed")
         }
+    }
+}
+
+private final class ExportCancellationBox: @unchecked Sendable {
+    private let session: AVAssetExportSession
+
+    init(_ session: AVAssetExportSession) {
+        self.session = session
+    }
+
+    func cancel() {
+        session.cancelExport()
     }
 }
 

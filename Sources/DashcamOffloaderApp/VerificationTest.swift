@@ -150,7 +150,12 @@ enum VerificationTest {
             try Data(repeating: 1, count: 2048).write(to: source.appendingPathComponent("Normal/20260101_120000_00001_N_A.MP4"))
             try Data(repeating: 2, count: 1024).write(to: source.appendingPathComponent("Parking/20260101_121000_00002_P_A.MP4"))
             try FileManager.default.createDirectory(at: source.appendingPathComponent("Config", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: source.appendingPathComponent("SETTING", isDirectory: true), withIntermediateDirectories: true)
             try Data("resolution=4k".utf8).write(to: source.appendingPathComponent("Config/settings.ini"))
+            try Data("private bluetooth id".utf8).write(to: source.appendingPathComponent("Config/bt_ssid.bin"))
+            try Data("password=secret".utf8).write(to: source.appendingPathComponent("Config/wifi_password.ini"))
+            try Data("unique-device-id".utf8).write(to: source.appendingPathComponent("SETTING/device.uid"))
+            try Data("not a settings file".utf8).write(to: source.appendingPathComponent("Config/helper.exe"))
 
             let backupSource = temp.appendingPathComponent("Time Machine Backups", isDirectory: true)
             let emptySource = temp.appendingPathComponent("Generic Storage", isDirectory: true)
@@ -923,6 +928,14 @@ enum VerificationTest {
             )
             guard settingsPlan.supportItems.contains(where: { $0.relativePath == "Config/settings.ini" }) else {
                 print("VERIFY FAIL: Config settings file was not planned")
+                return false
+            }
+            let sensitiveSupportPaths = Set(settingsPlan.supportItems.map(\.relativePath))
+            guard !sensitiveSupportPaths.contains("Config/bt_ssid.bin"),
+                  !sensitiveSupportPaths.contains("Config/wifi_password.ini"),
+                  !sensitiveSupportPaths.contains("SETTING/device.uid"),
+                  !sensitiveSupportPaths.contains("Config/helper.exe") else {
+                print("VERIFY FAIL: sensitive/private support files were planned: \(sensitiveSupportPaths.sorted())")
                 return false
             }
             guard settingsPlan.supportItems.first?.destinationURL.path.contains("/Camera Settings/") == true else {

@@ -44,7 +44,7 @@ The eventual implementation should split into these layers:
 4. **Copy planner**
    - Applies user filters such as date range, recording mode, and channel.
    - Computes destination paths under the user-selected location.
-   - Produces a dry-run manifest before copying.
+   - Produces a reviewable transfer preview before copying.
 
 5. **Copy executor**
    - Copies files without deleting or changing source files.
@@ -52,7 +52,7 @@ The eventual implementation should split into these layers:
    - Supports resume, duplicate detection, and per-card job progress.
 
 6. **Mac UI**
-   - Shows mounted cards, selected destination, detected profiles, selected filters, job progress, and completed manifests.
+   - Shows mounted cards, selected destination, detected profiles, selected filters, job progress, and completed transfer results.
    - Allows multiple cards and copy jobs at once.
 
 7. **Profile intake assistant**

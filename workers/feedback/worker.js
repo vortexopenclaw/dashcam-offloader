@@ -513,6 +513,11 @@ function isSafeSettingPair(key, value) {
 function isUsefulSettingKey(key) {
   const normalized = stringValue(key).toLowerCase();
   const usefulFragments = [
+    "model",
+    "firmware",
+    "version",
+    "fw",
+    "camera",
     "resolution",
     "quality",
     "bitrate",

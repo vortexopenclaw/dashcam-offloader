@@ -250,6 +250,10 @@ struct CopyPlanner {
         let lowerParts = parts.map { $0.lowercased() }
         let filename = fileURL.lastPathComponent.lowercased()
         let ext = fileURL.pathExtension.lowercased()
+        guard !isSensitiveSupportFile(relativePath: relativePath, filename: filename),
+              !["app", "dmg", "dll", "exe", "pkg"].contains(ext) else {
+            return false
+        }
 
         if lowerParts.contains("config") || lowerParts.contains("settings") || lowerParts.contains("setting") {
             return !isMediaOrGpsExtension(ext)
@@ -260,6 +264,31 @@ struct CopyPlanner {
         }
 
         return false
+    }
+
+    private func isSensitiveSupportFile(relativePath: String, filename: String) -> Bool {
+        let combined = "\(relativePath) \(filename)".lowercased()
+        let sensitiveFragments = [
+            "bt_ssid",
+            "ssid",
+            "wifi",
+            "wi-fi",
+            "password",
+            "passwd",
+            "pwd",
+            "cloud",
+            "account",
+            "serial",
+            "imei",
+            "uuid",
+            "uid",
+            "deviceid",
+            "device id",
+            "bluetooth",
+            "token",
+            "secret"
+        ]
+        return sensitiveFragments.contains { combined.contains($0) }
     }
 
     private func shouldSkipSettingsTraversal(relativePath: String) -> Bool {

@@ -1154,7 +1154,11 @@ final class TransferViewModel: ObservableObject {
         }
 
         if ext == "bin" {
-            return false
+            return lowerPath.contains("config") ||
+                lowerPath.contains("setting") ||
+                lowerPath.contains("settings") ||
+                lowerPath.contains("version") ||
+                lowerPath.contains("firmware")
         }
 
         return ["ini", "cfg", "conf", "json", "txt", "log"].contains(ext)

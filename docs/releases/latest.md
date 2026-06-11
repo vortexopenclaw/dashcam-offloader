@@ -1,4 +1,5 @@
-- Cleaner download package.
-- The ZIP now includes only the main app.
-- Removed the launcher helper that macOS could block too.
-- Includes bug fixes and small improvements.
+- More reliable stopped downloads.
+- Failed or canceled multi-clip exports now clean up partial files.
+- Safer optional settings/log copying skips private device, Wi-Fi, password, cloud, serial, and helper-app files.
+- Learn Card submissions keep useful safe model and firmware evidence while still filtering private fields.
+- The ZIP still includes only the main app.
