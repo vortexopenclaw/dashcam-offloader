@@ -1,6 +1,6 @@
 # Agent Handoff
 
-Last updated: 2026-06-10
+Last updated: 2026-06-12
 
 This file is the cross-machine handoff source for agents working from GitHub. Do not rely on local OpenClaw memory as the only source of truth for important Dashcam Offloader state.
 
@@ -37,6 +37,8 @@ node --check workers/feedback/worker.js
 python3 -m py_compile scripts/review-feedback-submissions.py
 git diff --check
 ```
+
+Feature branches run the same list automatically through `.github/workflows/verify.yml`, which posts a legacy commit status (context `verify`) so API clients that cannot read the Checks API can still see pass/fail.
 
 When the user says "build", "publish", "push a release", "new build", or similar for Dashcam Offloader, use the full standard release path unless they explicitly ask for a local-only build: verify, push the intended commit, publish through GitHub Actions, verify the GitHub `latest` release asset, and verify the Cloudflare latest manifest/download. If the Actions release step fails after the app package is built, repair GitHub with local authenticated `gh` and verify both GitHub and Cloudflare instead of leaving only one side published.
 
