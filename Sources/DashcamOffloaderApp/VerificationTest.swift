@@ -329,6 +329,14 @@ enum VerificationTest {
                 print("VERIFY FAIL: Sony ARW was not classified as a RAW photo")
                 return false
             }
+            guard let sonyVideoClip = sonyScan.clips.first(where: { $0.filename == "C0001.MP4" }),
+                  sonyVideoClip.isVideo,
+                  sonyVideoClip.mode == "video",
+                  sonyVideoClip.displayMode == "Video",
+                  sonyVideoClip.outputCategory == "Video" else {
+                print("VERIFY FAIL: Sony video should display as Video, got \(sonyScan.clips.first(where: { $0.filename == "C0001.MP4" })?.displayMode ?? "nil")")
+                return false
+            }
             guard let sonyJPEGClip = sonyScan.clips.first(where: { $0.filename == "A7307790.JPG" }),
                   sonyJPEGClip.isPhoto,
                   sonyJPEGClip.mode == "jpeg",
@@ -364,6 +372,15 @@ enum VerificationTest {
                   sonyPlan.items.contains(where: { $0.displayFilename == "A7307790.JPG" }),
                   !sonyPlan.items.contains(where: { $0.displayFilename == "C0001T01.JPG" }) else {
                 print("VERIFY FAIL: Sony Today filter plan should include full images but not thumbnails: \(sonyPlan.items.map(\.displayFilename).sorted())")
+                return false
+            }
+            let sonyPlanFilenames = sonyPlan.items.map(\.displayFilename)
+            guard let videoIndex = sonyPlanFilenames.firstIndex(of: "C0001.MP4"),
+                  let rawIndex = sonyPlanFilenames.firstIndex(of: "A7307789.ARW"),
+                  let jpegIndex = sonyPlanFilenames.firstIndex(of: "A7307790.JPG"),
+                  videoIndex < rawIndex,
+                  videoIndex < jpegIndex else {
+                print("VERIFY FAIL: Sony review plan should group videos before photos by default: \(sonyPlanFilenames)")
                 return false
             }
             let sonyCameraUI = MainActor.assumeIsolated { () -> (showChannelFilter: Bool, includePhotos: Bool) in

@@ -18,6 +18,10 @@ struct ContentView: View {
     @State private var showDownloadOptions = true
     @State private var showDownloadFilters = true
     @State private var selectedProfileBrand: String?
+    @State private var reviewSortOrder: [KeyPathComparator<CopyPlanItem>] = [
+        KeyPathComparator(\CopyPlanItem.mediaKindSortRank),
+        KeyPathComparator(\CopyPlanItem.displayFilename)
+    ]
     private let createdDateFormatter = DateFormatter.dashcamOffloaderCreatedColumn
 
     var body: some View {
@@ -846,71 +850,182 @@ struct ContentView: View {
 
     @ViewBuilder
     private var reviewTable: some View {
-        let items = viewModel.copyPlan?.items.prefix(250).map { $0 } ?? []
-        if viewModel.shouldShowChannelFilter {
-            Table(items, selection: $viewModel.selectedQueueItemIDs) {
-                TableColumn("File") { item in
+        let allItems = viewModel.copyPlan?.items ?? []
+        let items = Array(allItems.sorted(using: reviewSortOrder).prefix(250))
+        let shouldShowCreatedColumn = allItems.contains { $0.displayCreatedAt != nil }
+        if viewModel.shouldShowChannelFilter && shouldShowCreatedColumn {
+            Table(items, selection: $viewModel.selectedQueueItemIDs, sortOrder: $reviewSortOrder) {
+                TableColumn("File", value: \.displayFilename) { item in
                     Text(item.displayFilename)
                         .lineLimit(1)
                         .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
                 }
-                TableColumn("Source") { item in
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Source", value: \.displaySource) { item in
                     Text(item.displaySource)
                         .font(.caption)
                         .lineLimit(1)
                 }
-                TableColumn("Mode") { item in
-                    Text(item.clip.displayMode)
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Mode", value: \.displayModeLabel) { item in
+                    Text(item.displayModeLabel)
                 }
-                TableColumn("Folder") { item in
-                    Text(item.clip.outputCategory)
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Folder", value: \.displayFolderLabel) { item in
+                    Text(item.displayFolderLabel)
                 }
-                TableColumn("Channel") { item in
-                    Text(item.clip.displayChannel)
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Channel", value: \.displayChannelLabel) { item in
+                    Text(item.displayChannelLabel)
                 }
-                TableColumn("Created") { item in
-                    Text(item.createdAt.map(createdDateFormatter.string(from:)) ?? "-")
+                .width(min: 80, ideal: 110)
+
+                TableColumn("Created", value: \.createdAtSortValue) { item in
+                    Text(item.displayCreatedAt.map(createdDateFormatter.string(from:)) ?? "-")
                         .font(.caption)
                 }
-                TableColumn("Download Folder") { item in
-                    Text(item.destinationURL.path)
+                .width(min: 120, ideal: 150)
+
+                TableColumn("Download Folder", value: \.displayDownloadFolder) { item in
+                    Text(item.displayDownloadFolder)
                         .font(.caption)
                         .lineLimit(1)
                 }
-                TableColumn("Size") { item in
+                .width(min: 130, ideal: 180)
+
+                TableColumn("Size", value: \.displaySize) { item in
                     Text(item.displaySize.formattedBytes)
                 }
+                .width(min: 80, ideal: 95)
+            }
+        } else if viewModel.shouldShowChannelFilter {
+            Table(items, selection: $viewModel.selectedQueueItemIDs, sortOrder: $reviewSortOrder) {
+                TableColumn("File", value: \.displayFilename) { item in
+                    Text(item.displayFilename)
+                        .lineLimit(1)
+                        .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
+                }
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Source", value: \.displaySource) { item in
+                    Text(item.displaySource)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Mode", value: \.displayModeLabel) { item in
+                    Text(item.displayModeLabel)
+                }
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Folder", value: \.displayFolderLabel) { item in
+                    Text(item.displayFolderLabel)
+                }
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Channel", value: \.displayChannelLabel) { item in
+                    Text(item.displayChannelLabel)
+                }
+                .width(min: 80, ideal: 110)
+
+                TableColumn("Download Folder", value: \.displayDownloadFolder) { item in
+                    Text(item.displayDownloadFolder)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                .width(min: 130, ideal: 180)
+
+                TableColumn("Size", value: \.displaySize) { item in
+                    Text(item.displaySize.formattedBytes)
+                }
+                .width(min: 80, ideal: 95)
+            }
+        } else if shouldShowCreatedColumn {
+            Table(items, selection: $viewModel.selectedQueueItemIDs, sortOrder: $reviewSortOrder) {
+                TableColumn("File", value: \.displayFilename) { item in
+                    Text(item.displayFilename)
+                        .lineLimit(1)
+                        .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
+                }
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Source", value: \.displaySource) { item in
+                    Text(item.displaySource)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Mode", value: \.displayModeLabel) { item in
+                    Text(item.displayModeLabel)
+                }
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Folder", value: \.displayFolderLabel) { item in
+                    Text(item.displayFolderLabel)
+                }
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Created", value: \.createdAtSortValue) { item in
+                    Text(item.displayCreatedAt.map(createdDateFormatter.string(from:)) ?? "-")
+                        .font(.caption)
+                }
+                .width(min: 120, ideal: 150)
+
+                TableColumn("Download Folder", value: \.displayDownloadFolder) { item in
+                    Text(item.displayDownloadFolder)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                .width(min: 130, ideal: 180)
+
+                TableColumn("Size", value: \.displaySize) { item in
+                    Text(item.displaySize.formattedBytes)
+                }
+                .width(min: 80, ideal: 95)
             }
         } else {
-            Table(items, selection: $viewModel.selectedQueueItemIDs) {
-                TableColumn("File") { item in
+            Table(items, selection: $viewModel.selectedQueueItemIDs, sortOrder: $reviewSortOrder) {
+                TableColumn("File", value: \.displayFilename) { item in
                     Text(item.displayFilename)
                         .lineLimit(1)
                         .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
                 }
-                TableColumn("Source") { item in
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Source", value: \.displaySource) { item in
                     Text(item.displaySource)
                         .font(.caption)
                         .lineLimit(1)
                 }
-                TableColumn("Mode") { item in
-                    Text(item.clip.displayMode)
+                .width(min: 120, ideal: 170)
+
+                TableColumn("Mode", value: \.displayModeLabel) { item in
+                    Text(item.displayModeLabel)
                 }
-                TableColumn("Folder") { item in
-                    Text(item.clip.outputCategory)
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Folder", value: \.displayFolderLabel) { item in
+                    Text(item.displayFolderLabel)
                 }
-                TableColumn("Created") { item in
-                    Text(item.createdAt.map(createdDateFormatter.string(from:)) ?? "-")
-                        .font(.caption)
-                }
-                TableColumn("Download Folder") { item in
-                    Text(item.destinationURL.path)
+                .width(min: 90, ideal: 130)
+
+                TableColumn("Download Folder", value: \.displayDownloadFolder) { item in
+                    Text(item.displayDownloadFolder)
                         .font(.caption)
                         .lineLimit(1)
                 }
-                TableColumn("Size") { item in
+                .width(min: 130, ideal: 180)
+
+                TableColumn("Size", value: \.displaySize) { item in
                     Text(item.displaySize.formattedBytes)
                 }
+                .width(min: 80, ideal: 95)
             }
         }
     }

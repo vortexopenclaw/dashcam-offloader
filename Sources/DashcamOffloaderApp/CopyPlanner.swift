@@ -56,6 +56,7 @@ struct CopyPlanner {
                 alreadyExistsAtDestination: FileManager.default.fileExists(atPath: itemDestination.path)
             )
         }
+        .sorted(by: CopyPlanItem.defaultReviewOrder)
         let supportItems = filters.includeCameraSettings ? settingsItems(
             sourceRoot: sourceRoot,
             destinationRoot: destinationRoot,

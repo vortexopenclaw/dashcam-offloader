@@ -261,9 +261,11 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         if normalized == "looping" || normalized == "loop_video" {
             return "Looping"
         }
+        if normalized == "video" {
+            return "Video"
+        }
         if normalized == "regular_recording" ||
             normalized == "regular recording" ||
-            normalized == "video" ||
             normalized == "primary_media" {
             return "Regular Recording"
         }
@@ -344,7 +346,9 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         switch value.lowercased() {
         case "continuous":
             return "Driving"
-        case "regular_recording", "video", "primary_media":
+        case "video":
+            return "Video"
+        case "regular_recording", "primary_media":
             return "Regular Recording"
         case "looping", "loop_video":
             return "Looping"
@@ -513,6 +517,47 @@ struct CopyPlanItem: Identifiable, Hashable, Sendable {
         guard let firstURL = orderedSourceClips.first?.sourceURL else { return nil }
         let values = try? firstURL.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
         return values?.creationDate ?? values?.contentModificationDate
+    }
+
+    var displayCreatedAt: Date? {
+        createdAt ?? clip.timestamp
+    }
+
+    var displayModeLabel: String {
+        clip.displayMode
+    }
+
+    var displayFolderLabel: String {
+        clip.outputCategory
+    }
+
+    var displayChannelLabel: String {
+        clip.displayChannel
+    }
+
+    var displayDownloadFolder: String {
+        destinationURL.path
+    }
+
+    var mediaKindSortRank: Int {
+        if clip.isVideo { return 0 }
+        if clip.isPhoto { return 1 }
+        if clip.isGPS { return 2 }
+        return 3
+    }
+
+    var createdAtSortValue: Date {
+        displayCreatedAt ?? .distantPast
+    }
+
+    static func defaultReviewOrder(_ lhs: CopyPlanItem, _ rhs: CopyPlanItem) -> Bool {
+        if lhs.mediaKindSortRank != rhs.mediaKindSortRank {
+            return lhs.mediaKindSortRank < rhs.mediaKindSortRank
+        }
+        if lhs.displayCreatedAt != rhs.displayCreatedAt {
+            return (lhs.displayCreatedAt ?? .distantPast) < (rhs.displayCreatedAt ?? .distantPast)
+        }
+        return lhs.displayFilename.localizedStandardCompare(rhs.displayFilename) == .orderedAscending
     }
 }
 
