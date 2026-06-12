@@ -15,6 +15,8 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
 
+The GitHub `latest` release is intentionally deleted and recreated on each publish after the lightweight `latest` tag is moved. Do not change this back to `gh release edit` plus asset replacement: GitHub preserves the old `published_at` timestamp when editing a release, and Ariel uses the release page age as an at-a-glance freshness check.
+
 Before publishing, update `docs/releases/latest.md` with short, user-facing notes for the current build. Keep it relative to the latest build, not a rolling changelog. Write about new features and benefits, not implementation details; it is fine to say "bug fixes" instead of listing every fix. Put older context in docs or memory, not in the GitHub `latest` release body. The release workflow uses this file for the GitHub `latest` release body and embeds the same text in the Cloudflare update manifest as `releaseNotes`. The app should link to release notes from update UI instead of showing the notes inline in the update prompt.
 
 The workflow uses encrypted GitHub secrets:

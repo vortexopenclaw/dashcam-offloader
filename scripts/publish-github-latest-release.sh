@@ -40,34 +40,20 @@ fi
 
 test -f "$ZIP_PATH"
 
-# Move the lightweight latest tag first, but do not delete the release. If the
-# GitHub API has a transient auth/server failure, the previous release survives.
+# Move the lightweight latest tag first, then recreate the mutable latest
+# release. GitHub keeps the original published_at timestamp when a release is
+# edited, and Ariel relies on the release-page age as a quick freshness signal.
 git tag -f latest "$FULL_SHA"
 run_with_retries git push --force origin latest
 
 if gh release view latest --repo "$REPOSITORY" >/dev/null 2>&1; then
-  run_with_retries gh release edit latest \
-    --repo "$REPOSITORY" \
-    --title "Latest Build" \
-    --notes "$NOTES" \
-    --latest \
-    --target "$FULL_SHA"
-  run_with_retries gh release upload latest \
-    --repo "$REPOSITORY" \
-    --clobber \
-    "$ZIP_PATH#$ZIP_NAME"
-else
-  run_with_retries gh release create latest \
-    --repo "$REPOSITORY" \
-    --title "Latest Build" \
-    --notes "$NOTES" \
-    --latest \
-    --target "$FULL_SHA" \
-    "$ZIP_PATH#$ZIP_NAME"
+  run_with_retries gh release delete latest --repo "$REPOSITORY" --yes
 fi
 
-while IFS= read -r asset_name; do
-  if [[ "$asset_name" == Dashcam-Offloader-*.zip && "$asset_name" != "$ZIP_NAME" ]]; then
-    gh release delete-asset latest "$asset_name" --repo "$REPOSITORY" --yes >/dev/null
-  fi
-done < <(gh release view latest --repo "$REPOSITORY" --json assets --jq '.assets[].name')
+run_with_retries gh release create latest \
+  --repo "$REPOSITORY" \
+  --title "Latest Build" \
+  --notes "$NOTES" \
+  --latest \
+  --target "$FULL_SHA" \
+  "$ZIP_PATH#$ZIP_NAME"
