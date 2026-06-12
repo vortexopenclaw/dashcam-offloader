@@ -1,5 +1,2 @@
-- More reliable stopped downloads.
-- Failed or canceled multi-clip exports now clean up partial files.
-- Safer optional settings/log copying skips private device, Wi-Fi, password, cloud, serial, and helper-app files.
-- Learn Card submissions keep useful safe model and firmware evidence while still filtering private fields.
+- GoPro looping videos: choose original clips only, original clips plus a merged clip, or just the merged clip (the default). The option appears under What to Download when a card has looping chains.
 - The ZIP still includes only the main app.

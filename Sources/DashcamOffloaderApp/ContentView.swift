@@ -676,6 +676,21 @@ struct ContentView: View {
                             )
                         }
 
+                        if viewModel.shouldShowGoProLoopGroupOption {
+                            Picker("Looping videos", selection: Binding(
+                                get: { viewModel.filters.goProLoopGroupOutput },
+                                set: { viewModel.setGoProLoopGroupOutput($0) }
+                            )) {
+                                ForEach(GoProLoopGroupOutput.allCases) { option in
+                                    Text(option.label).tag(option)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            Text("GoPro records long looping videos as chained segments. The merged clip combines each chain into one video.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
                         Divider()
 
                         Toggle("Include photos", isOn: Binding(

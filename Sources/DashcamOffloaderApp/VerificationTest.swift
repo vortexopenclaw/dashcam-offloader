@@ -474,6 +474,48 @@ enum VerificationTest {
                 print("VERIFY FAIL: GoPro default-style plan should exclude photos and TimeWarp, got \(goProPlan.items.map(\.clip.filename).sorted())")
                 return false
             }
+            guard CopyPlanner().hasGoProLoopGroups(profile: goProScan.selectedProfile ?? .genericNewDashcam, clips: goProScan.clips),
+                  !CopyPlanner().hasGoProLoopGroups(profile: .genericNewDashcam, clips: goProScan.clips) else {
+                print("VERIFY FAIL: GoPro loop-group option visibility detection wrong")
+                return false
+            }
+
+            var goProOriginalsFilters = goProFilters
+            goProOriginalsFilters.goProLoopGroupOutput = .originalsOnly
+            let goProOriginalsPlan = CopyPlanner().makePlan(
+                sourceRoot: goProSource,
+                destinationRoot: temp.appendingPathComponent("GoPro Output", isDirectory: true),
+                profile: goProScan.selectedProfile ?? .genericNewDashcam,
+                clips: goProScan.clips,
+                filters: goProOriginalsFilters
+            )
+            guard goProOriginalsPlan.items.count == 10,
+                  goProOriginalsPlan.items.allSatisfy({ $0.sourceFileCount == 1 }),
+                  goProOriginalsPlan.items.filter({ $0.displayFilename.hasPrefix("GXAD") }).count == 6,
+                  !goProOriginalsPlan.items.contains(where: { $0.displayFilename == "GXAD9565-9570.MP4" }),
+                  goProOriginalsPlan.selectedBytes == 10 * 2048 else {
+                print("VERIFY FAIL: GoPro originals-only plan should keep each loop clip separate, got \(goProOriginalsPlan.items.map(\.displayFilename).sorted())")
+                return false
+            }
+
+            var goProBothFilters = goProFilters
+            goProBothFilters.goProLoopGroupOutput = .originalsAndMerged
+            let goProBothPlan = CopyPlanner().makePlan(
+                sourceRoot: goProSource,
+                destinationRoot: temp.appendingPathComponent("GoPro Output", isDirectory: true),
+                profile: goProScan.selectedProfile ?? .genericNewDashcam,
+                clips: goProScan.clips,
+                filters: goProBothFilters
+            )
+            guard goProBothPlan.items.count == 11,
+                  goProBothPlan.items.filter({ $0.sourceFileCount == 1 && $0.displayFilename.hasPrefix("GXAD") }).count == 6,
+                  goProBothPlan.items.contains(where: { $0.displayFilename == "GXAD9565-9570.MP4" && $0.sourceFileCount == 6 }),
+                  Set(goProBothPlan.items.map(\.id)).count == goProBothPlan.items.count,
+                  Set(goProBothPlan.items.map(\.destinationURL)).count == goProBothPlan.items.count,
+                  goProBothPlan.selectedBytes == 10 * 2048 + 6 * 2048 else {
+                print("VERIFY FAIL: GoPro originals+merged plan should include each loop clip plus the merged clip, got \(goProBothPlan.items.map(\.displayFilename).sorted())")
+                return false
+            }
 
             let goPro12Source = temp.appendingPathComponent("U3000PRO", isDirectory: true)
             try FileManager.default.createDirectory(at: goPro12Source.appendingPathComponent("DCIM/100GOPRO", isDirectory: true), withIntermediateDirectories: true)

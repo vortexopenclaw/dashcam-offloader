@@ -118,10 +118,30 @@ struct CopyPlanner {
                 groupedItems.append(contentsOf: bucket.map { [$0] })
                 continue
             }
-            groupedItems.append(bucket)
+            switch filters.goProLoopGroupOutput {
+            case .originalsOnly:
+                groupedItems.append(contentsOf: bucket.map { [$0] })
+            case .originalsAndMerged:
+                groupedItems.append(contentsOf: bucket.map { [$0] })
+                groupedItems.append(bucket)
+            case .mergedOnly:
+                groupedItems.append(bucket)
+            }
         }
 
         return groupedItems
+    }
+
+    func hasGoProLoopGroups(profile: DashcamProfile, clips: [ClipItem]) -> Bool {
+        var probeFilters = FilterState()
+        probeFilters.goProLoopGroupOutput = .mergedOnly
+        return groupedDownloadItems(
+            from: clips,
+            destinationRoot: URL(fileURLWithPath: "/", isDirectory: true),
+            profile: profile,
+            filters: probeFilters,
+            namingOptions: OutputNamingOptions()
+        ).contains { $0.count > 1 }
     }
 
     private func representativeClip(for clips: [ClipItem]) -> ClipItem {

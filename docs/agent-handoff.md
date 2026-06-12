@@ -106,6 +106,7 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
   - Safe evidence: `MISC/version.txt` `camera type` and `firmware version`.
   - Private fields in `version.txt` must not be submitted or documented.
   - Default GoPro transfer categories should include regular/continuous and looping videos; Time Lapse, TimeWarp, and photos should be visible but unchecked by default.
+  - Detected GoPro loop groups offer a user-facing output choice in What to Download: original clips only, original clips + merged clip, or merged clip only (default). The choice lives in `FilterState.goProLoopGroupOutput`, is applied in `CopyPlanner.groupedDownloadItems`, and resets to merged-only on each new scan. The picker appears only when the scanned card actually contains loop groups.
 
 ## UX Preferences Captured In Repo
 
