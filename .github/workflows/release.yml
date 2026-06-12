@@ -3,6 +3,7 @@ name: Build and Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,6 +16,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Build app
+        id: buildapp
         run: bash scripts/build-macos-app.sh
 
       - name: Zip app
@@ -34,6 +36,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Publish latest release
+        id: ghrelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -43,6 +46,7 @@ jobs:
             "${{ github.repository }}"
 
       - name: Publish public Cloudflare update
+        id: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
@@ -89,3 +93,31 @@ jobs:
 
           npx --yes wrangler@latest r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
           npx --yes wrangler@latest deploy --config workers/updates/wrangler.toml
+
+      - name: Record release outcome
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          STATUS_JSON=$(jq -n \
+            --arg sha "$GITHUB_SHA" \
+            --arg runId "$GITHUB_RUN_ID" \
+            --arg attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg jobStatus "${{ job.status }}" \
+            --arg build "${{ steps.buildapp.outcome }}" \
+            --arg zip "${{ steps.package.outcome }}" \
+            --arg githubRelease "${{ steps.ghrelease.outcome }}" \
+            --arg cloudflare "${{ steps.cloudflare.outcome }}" \
+            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, zip:$zip, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
+          CONTENT=$(printf '%s' "$STATUS_JSON" | base64)
+          EXISTING_SHA=$(gh api "repos/$GITHUB_REPOSITORY/contents/release-status.json?ref=ci-status" --jq .sha 2>/dev/null || true)
+          if [ -n "$EXISTING_SHA" ]; then
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/release-status.json" \
+              -f message="Record release outcome for $GITHUB_SHA" \
+              -f content="$CONTENT" -f branch=ci-status -f sha="$EXISTING_SHA"
+          else
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/release-status.json" \
+              -f message="Record release outcome for $GITHUB_SHA" \
+              -f content="$CONTENT" -f branch=ci-status
+          fi
