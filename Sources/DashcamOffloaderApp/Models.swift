@@ -630,6 +630,26 @@ struct FilterState: Hashable, Sendable {
     var includeGPS: Bool = false
     var includeCameraSettings: Bool = false
     var separateCategoryFolders: Bool = true
+    var goProLoopGroupOutput: GoProLoopGroupOutput = .mergedOnly
+}
+
+enum GoProLoopGroupOutput: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case originalsOnly
+    case originalsAndMerged
+    case mergedOnly
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .originalsOnly:
+            return "Original clips only"
+        case .originalsAndMerged:
+            return "Original clips + merged clip"
+        case .mergedOnly:
+            return "Merged clip only"
+        }
+    }
 }
 
 struct OutputNamingOptions: Hashable, Sendable {

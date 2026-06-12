@@ -688,6 +688,7 @@ final class TransferViewModel: ObservableObject {
         filters.includeGPS = false
         filters.includeCameraSettings = false
         filters.separateCategoryFolders = true
+        filters.goProLoopGroupOutput = .mergedOnly
     }
 
     private static func isDeselectedByDefaultMode(_ mode: String) -> Bool {
@@ -772,6 +773,16 @@ final class TransferViewModel: ObservableObject {
     func setVideoFilenameSuffix(_ value: String) {
         outputNamingOptions.videoFilenameSuffix = value
         rebuildPlan()
+    }
+
+    func setGoProLoopGroupOutput(_ value: GoProLoopGroupOutput) {
+        filters.goProLoopGroupOutput = value
+        rebuildPlan()
+    }
+
+    var shouldShowGoProLoopGroupOption: Bool {
+        guard let selectedProfile else { return false }
+        return planner.hasGoProLoopGroups(profile: selectedProfile, clips: eligibleClips)
     }
 
     func startCopy() {
