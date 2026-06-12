@@ -823,10 +823,17 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if viewModel.queueAlreadyExistingCount > 0 {
+                    Label("\(viewModel.queueAlreadyExistingCount) of these files are already in the download folder and will be skipped", systemImage: "checkmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? [], selection: $viewModel.selectedQueueItemIDs) {
                     TableColumn("File") { item in
                         Text(item.displayFilename)
                             .lineLimit(1)
+                            .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
                     }
                     TableColumn("Source") { item in
                         Text(item.displaySource)
@@ -862,13 +869,38 @@ struct ContentView: View {
             if !viewModel.copyResults.isEmpty {
                 GroupBox("Last Run") {
                     VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(viewModel.lastRunSummaryLine)
+                                .font(.callout)
+                            Spacer()
+                            if viewModel.failedResultCount > 0 {
+                                Button {
+                                    viewModel.retryFailedItems()
+                                } label: {
+                                    Label("Retry Failed", systemImage: "arrow.clockwise")
+                                }
+                                .disabled(viewModel.copyProgress.isRunning)
+                            }
+                        }
+                        if let outputPath = viewModel.lastOutputDirectory?.path {
+                            Text("Saved to \(outputPath)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        Divider()
                         ForEach(viewModel.copyResults.prefix(10)) { item in
                             HStack {
                                 Text(item.displayFilename).lineLimit(1)
                                 Spacer()
-                                Text(item.status.rawValue)
+                                Text(resultLabel(for: item))
                                     .foregroundStyle(item.status == .failed ? .red : .secondary)
                             }
+                        }
+                        if viewModel.copyResults.count > 10 {
+                            Text("and \(viewModel.copyResults.count - 10) more files")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                         if !viewModel.supportFileResults.isEmpty {
                             Divider()
@@ -881,6 +913,13 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    private func resultLabel(for item: CopyPlanItem) -> String {
+        if item.status == .skipped {
+            return "already in destination"
+        }
+        return item.status.rawValue
     }
 
     private var footer: some View {

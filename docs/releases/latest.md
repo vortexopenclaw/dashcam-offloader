@@ -1,2 +1,6 @@
 - GoPro looping videos: choose original clips only, original clips plus a merged clip, or just the merged clip (the default). The option appears under What to Download when a card has looping chains.
+- Downloads never overwrite footage already in your destination. Files that are already there are skipped and counted instead of failing.
+- The review queue now tells you how many queued files are already in the download folder before you start.
+- A clearer completion summary shows what was copied (with total size), what was already in the destination, what failed, and where files went, with a one-click retry for failures.
+- New "Last 3 days" date filter.
 - The ZIP still includes only the main app.

@@ -718,6 +718,11 @@ final class TransferViewModel: ObservableObject {
             filters.useEndDate = true
             filters.startDate = yesterday
             filters.endDate = yesterday
+        case .lastThreeDays:
+            filters.useStartDate = true
+            filters.useEndDate = true
+            filters.startDate = calendar.date(byAdding: .day, value: -2, to: today) ?? today
+            filters.endDate = today
         case .lastWeek:
             filters.useStartDate = true
             filters.useEndDate = true
@@ -785,7 +790,7 @@ final class TransferViewModel: ObservableObject {
         return planner.hasGoProLoopGroups(profile: selectedProfile, clips: eligibleClips)
     }
 
-    func startCopy() {
+    func startCopy(retryingItemIDs: Set<CopyPlanItem.ID>? = nil) {
         guard destinationURL != nil else {
             statusMessage = "Choose a download folder first"
             return
@@ -794,14 +799,19 @@ final class TransferViewModel: ObservableObject {
             statusMessage = "Nothing selected to download"
             return
         }
-        let runPlan = copyPlan.limitedToMediaItemIDs(selectedQueueItemIDs)
+        let limitIDs = retryingItemIDs ?? selectedQueueItemIDs
+        let runPlan = copyPlan.limitedToMediaItemIDs(limitIDs)
         guard !runPlan.items.isEmpty else {
-            statusMessage = selectedQueueItemIDs.isEmpty ? "Nothing selected to download" : "Selected files are no longer in the queue"
+            statusMessage = limitIDs.isEmpty ? "Nothing selected to download" : "Selected files are no longer in the queue"
             return
         }
         guard !copyProgress.isRunning else { return }
 
-        statusMessage = selectedQueueItemIDs.isEmpty ? "Downloading..." : "Downloading \(runPlan.items.count) selected files..."
+        if retryingItemIDs != nil {
+            statusMessage = "Retrying \(runPlan.items.count) failed files..."
+        } else {
+            statusMessage = selectedQueueItemIDs.isEmpty ? "Downloading..." : "Downloading \(runPlan.items.count) selected files..."
+        }
         copyResults = []
         supportFileResults = []
         let executor = CopyExecutor { [weak self] progress in
@@ -830,7 +840,40 @@ final class TransferViewModel: ObservableObject {
             }
             statusMessage = finalMessage
             copyTask = nil
+            rebuildPlan()
         }
+    }
+
+    func retryFailedItems() {
+        let failedIDs = Set(copyResults.filter { $0.status == .failed }.map(\.id))
+        guard !failedIDs.isEmpty else { return }
+        startCopy(retryingItemIDs: failedIDs)
+    }
+
+    var failedResultCount: Int {
+        copyResults.filter { $0.status == .failed }.count +
+            supportFileResults.filter { $0.status == .failed }.count
+    }
+
+    var lastRunSummaryLine: String {
+        let copied = copyResults.filter { $0.status == .copied }
+        let copiedSupport = supportFileResults.filter { $0.status == .copied }
+        let copiedBytes = copied.reduce(Int64(0)) { $0 + $1.totalSize } + copiedSupport.reduce(Int64(0)) { $0 + $1.size }
+        let skippedCount = copyResults.filter { $0.status == .skipped }.count +
+            supportFileResults.filter { $0.status == .skipped }.count
+        var parts = ["Copied \(copied.count + copiedSupport.count) (\(copiedBytes.formattedBytes))"]
+        if skippedCount > 0 {
+            parts.append("\(skippedCount) already in destination")
+        }
+        if failedResultCount > 0 {
+            parts.append("\(failedResultCount) failed")
+        }
+        return parts.joined(separator: " • ")
+    }
+
+    var queueAlreadyExistingCount: Int {
+        guard destinationURL != nil else { return 0 }
+        return copyPlan?.items.filter(\.alreadyExistsAtDestination).count ?? 0
     }
 
     func cancelCopy() {

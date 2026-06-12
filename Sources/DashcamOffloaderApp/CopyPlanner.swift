@@ -41,17 +41,19 @@ struct CopyPlanner {
             namingOptions: namingOptions
         ).map { itemClips in
             let representative = representativeClip(for: itemClips)
+            let itemDestination = destinationURL(
+                for: representative,
+                destinationRoot: destinationRoot,
+                filters: filters,
+                namingOptions: namingOptions
+            )
             return CopyPlanItem(
                 clip: representative,
                 sourceClips: itemClips.count > 1 ? itemClips : [],
-                destinationURL: destinationURL(
-                    for: representative,
-                    destinationRoot: destinationRoot,
-                    filters: filters,
-                    namingOptions: namingOptions
-                ),
+                destinationURL: itemDestination,
                 status: .planned,
-                message: nil
+                message: nil,
+                alreadyExistsAtDestination: FileManager.default.fileExists(atPath: itemDestination.path)
             )
         }
         let supportItems = filters.includeCameraSettings ? settingsItems(

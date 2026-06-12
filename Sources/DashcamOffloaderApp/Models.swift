@@ -471,6 +471,7 @@ struct CopyPlanItem: Identifiable, Hashable, Sendable {
     var destinationURL: URL
     var status: CopyStatus
     var message: String?
+    var alreadyExistsAtDestination: Bool = false
 
     var orderedSourceClips: [ClipItem] {
         sourceClips.isEmpty ? [clip] : sourceClips
@@ -596,6 +597,7 @@ struct CopyProgress: Hashable, Sendable {
 enum DateFilterPreset: String, CaseIterable, Identifiable, Sendable {
     case today
     case yesterday
+    case lastThreeDays
     case lastWeek
     case allTime
     case custom
@@ -608,6 +610,8 @@ enum DateFilterPreset: String, CaseIterable, Identifiable, Sendable {
             return "Today"
         case .yesterday:
             return "Yesterday"
+        case .lastThreeDays:
+            return "Last 3 days"
         case .lastWeek:
             return "Last week"
         case .allTime:

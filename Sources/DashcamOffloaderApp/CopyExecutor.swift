@@ -26,13 +26,19 @@ struct CopyExecutor {
 
             do {
                 if item.sourceFileCount > 1 {
-                    try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
+                    let exported = try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
                         progress.copiedBytes += copiedChunk
                         await update(progress)
                     }
                     progress.completedFiles += 1
-                    result.status = .copied
-                    result.message = "Combined \(item.sourceFileCount) loop clips"
+                    if exported {
+                        result.status = .copied
+                        result.message = "Combined \(item.sourceFileCount) loop clips"
+                    } else {
+                        result.status = .skipped
+                        result.message = "Already in destination"
+                        progress.copiedBytes += item.totalSize
+                    }
                 } else {
                     let copied = try await copyOne(sourceURL: item.clip.sourceURL, destinationURL: item.destinationURL, expectedSize: item.clip.size) { copiedChunk in
                         progress.copiedBytes += copiedChunk
@@ -44,7 +50,7 @@ struct CopyExecutor {
                         result.message = "Copied"
                     } else {
                         result.status = .skipped
-                        result.message = "Existing file matched size"
+                        result.message = "Already in destination"
                         progress.copiedBytes += item.clip.size
                     }
                 }
@@ -80,7 +86,7 @@ struct CopyExecutor {
                     result.message = "Copied"
                 } else {
                     result.status = .skipped
-                    result.message = "Existing file matched size"
+                    result.message = "Already in destination"
                     progress.copiedBytes += item.size
                 }
             } catch is CancellationError {
@@ -108,7 +114,20 @@ struct CopyExecutor {
             let copiedCount = results.filter { $0.status == .copied }.count + supportResults.filter { $0.status == .copied }.count
             let skippedCount = results.filter { $0.status == .skipped }.count + supportResults.filter { $0.status == .skipped }.count
             let failedCount = results.filter { $0.status == .failed }.count + supportResults.filter { $0.status == .failed }.count
-            progress.summary = "Completed \(copiedCount) copied, \(skippedCount) skipped, \(failedCount) failed"
+            let copiedBytes = results.filter { $0.status == .copied }.reduce(Int64(0)) { $0 + $1.totalSize } +
+                supportResults.filter { $0.status == .copied }.reduce(Int64(0)) { $0 + $1.size }
+            if copiedCount == 0 && failedCount == 0 && skippedCount > 0 {
+                progress.summary = "All \(skippedCount) files were already in the destination"
+            } else {
+                var parts = ["Downloaded \(copiedCount) files (\(copiedBytes.formattedBytes))"]
+                if skippedCount > 0 {
+                    parts.append("\(skippedCount) already in destination")
+                }
+                if failedCount > 0 {
+                    parts.append("\(failedCount) failed")
+                }
+                progress.summary = parts.joined(separator: ", ")
+            }
         }
 
         progress.currentFile = ""
@@ -135,11 +154,7 @@ struct CopyExecutor {
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
 
         if fileManager.fileExists(atPath: destination.path) {
-            let destinationSize = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
-            if destinationSize == expectedSize {
-                return false
-            }
-            throw CopyError.conflictingDestination(destination.path)
+            return false
         }
 
         let input = try FileHandle(forReadingFrom: sourceURL)
@@ -176,13 +191,13 @@ struct CopyExecutor {
         _ item: CopyPlanItem,
         destinationURL: URL,
         progress: (Int64) async -> Void
-    ) async throws {
+    ) async throws -> Bool {
         let fileManager = FileManager.default
         let destinationDirectory = destinationURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
 
         if fileManager.fileExists(atPath: destinationURL.path) {
-            throw CopyError.conflictingDestination(destinationURL.path)
+            return false
         }
         var didFinishExport = false
         defer {
@@ -258,6 +273,7 @@ struct CopyExecutor {
         case .completed:
             didFinishExport = true
             await progress(item.totalSize)
+            return true
         case .cancelled:
             throw CancellationError()
         default:
@@ -288,14 +304,11 @@ struct CopyRunResult: Hashable, Sendable {
 }
 
 enum CopyError: LocalizedError {
-    case conflictingDestination(String)
     case sizeVerificationFailed
     case videoConcatenationFailed(String)
 
     var errorDescription: String? {
         switch self {
-        case .conflictingDestination(let path):
-            return "Destination exists with a different size: \(path)"
         case .sizeVerificationFailed:
             return "Copied file size did not match source"
         case .videoConcatenationFailed(let message):
