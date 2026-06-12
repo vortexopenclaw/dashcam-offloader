@@ -121,6 +121,22 @@ final class TransferViewModel: ObservableObject {
         eligibleClips.filter { !$0.isGPS && !$0.isPhoto }
     }
 
+    var hasVideoItems: Bool {
+        !footageClips.isEmpty
+    }
+
+    var hasPhotoItems: Bool {
+        eligibleClips.contains { $0.isPhoto }
+    }
+
+    var hasGPSItems: Bool {
+        eligibleClips.contains { $0.isGPS }
+    }
+
+    var areVideosIncluded: Bool {
+        !filters.selectedModes.isEmpty && !filters.selectedChannels.isEmpty
+    }
+
     var inferredLearningChannelSetup: (count: Int, description: String) {
         let scannedLabels = orderedChannelLabels(from: footageClips.map(\.channel))
         if !scannedLabels.isEmpty {
@@ -297,9 +313,10 @@ final class TransferViewModel: ObservableObject {
     func startInitialSourceDiscovery() {
         guard !didStartInitialSourceDiscovery else { return }
         didStartInitialSourceDiscovery = true
+        canRunAutomaticSourceDiscovery = true
+        refreshSources()
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 1_000_000_000)
-            self?.canRunAutomaticSourceDiscovery = true
             self?.refreshSources()
         }
     }
@@ -456,6 +473,29 @@ final class TransferViewModel: ObservableObject {
     func setShowAllVolumes(_ value: Bool) {
         showAllVolumes = value
         refreshSources()
+    }
+
+    func setIncludeVideos(_ include: Bool) {
+        if include {
+            filters.selectedModes = Set(footageClips.map(\.mode)).filter { mode in
+                !Self.isDeselectedByDefaultMode(mode)
+            }
+            filters.selectedChannels = Set(footageClips.map(\.channel))
+        } else {
+            filters.selectedModes = []
+            filters.selectedChannels = []
+        }
+        rebuildPlan()
+    }
+
+    func setIncludePhotos(_ include: Bool) {
+        filters.includePhotos = include
+        rebuildPlan()
+    }
+
+    func setIncludeGPS(_ include: Bool) {
+        filters.includeGPS = include
+        rebuildPlan()
     }
 
     private func isMountedVolumeSource(_ source: MountedSource) -> Bool {

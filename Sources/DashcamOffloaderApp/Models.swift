@@ -508,6 +508,12 @@ struct CopyPlanItem: Identifiable, Hashable, Sendable {
     var displaySize: Int64 {
         totalSize
     }
+
+    var createdAt: Date? {
+        guard let firstURL = orderedSourceClips.first?.sourceURL else { return nil }
+        let values = try? firstURL.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
+        return values?.creationDate ?? values?.contentModificationDate
+    }
 }
 
 struct SupportFileItem: Identifiable, Hashable, Sendable {

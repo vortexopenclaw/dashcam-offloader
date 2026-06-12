@@ -1,14 +1,24 @@
 import AppKit
 import SwiftUI
 
+private extension DateFormatter {
+    static let dashcamOffloaderCreatedColumn: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter
+    }()
+}
+
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel: TransferViewModel
     @State private var isFeedbackPresented = false
     @State private var cardLearningWindow: NSWindow?
-    @State private var showDownloadOptions = false
-    @State private var showDownloadFilters = false
+    @State private var showDownloadOptions = true
+    @State private var showDownloadFilters = true
     @State private var selectedProfileBrand: String?
+    private let createdDateFormatter = DateFormatter.dashcamOffloaderCreatedColumn
 
     var body: some View {
         NavigationSplitView {
@@ -230,6 +240,8 @@ struct ContentView: View {
                     if !viewModel.scanSummary.sortedModeCounts.isEmpty {
                         countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
                     }
+
+                    fileTypeToggles
                 }
             }
             .padding(8)
@@ -659,6 +671,10 @@ struct ContentView: View {
 
                         Divider()
 
+                        fileTypeToggles
+
+                        Divider()
+
                         checkboxGrid(
                             title: "Recording Types",
                             values: viewModel.availableModes,
@@ -693,14 +709,6 @@ struct ContentView: View {
 
                         Divider()
 
-                        Toggle("Include photos", isOn: Binding(
-                            get: { viewModel.filters.includePhotos },
-                            set: { viewModel.filters.includePhotos = $0; viewModel.rebuildPlan() }
-                        ))
-                        Toggle("Include GPS logs", isOn: Binding(
-                            get: { viewModel.filters.includeGPS },
-                            set: { viewModel.filters.includeGPS = $0; viewModel.rebuildPlan() }
-                        ))
                         Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -829,38 +837,114 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Table(viewModel.copyPlan?.items.prefix(250).map { $0 } ?? [], selection: $viewModel.selectedQueueItemIDs) {
-                    TableColumn("File") { item in
-                        Text(item.displayFilename)
-                            .lineLimit(1)
-                            .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
-                    }
-                    TableColumn("Source") { item in
-                        Text(item.displaySource)
-                            .font(.caption)
-                            .lineLimit(1)
-                    }
-                    TableColumn("Mode") { item in
-                        Text(item.clip.displayMode)
-                    }
-                    TableColumn("Folder") { item in
-                        Text(item.clip.outputCategory)
-                    }
-                    TableColumn(viewModel.shouldShowChannelFilter ? "Channel" : "") { item in
-                        Text(viewModel.shouldShowChannelFilter ? item.clip.displayChannel : "")
-                    }
-                    TableColumn("Download Folder") { item in
-                        Text(item.destinationURL.path)
-                            .font(.caption)
-                            .lineLimit(1)
-                    }
-                    TableColumn("Size") { item in
-                        Text(item.displaySize.formattedBytes)
-                    }
-                }
-                .frame(minHeight: 220)
+                reviewTable
+                    .frame(minHeight: 220)
             }
             .padding(8)
+        }
+    }
+
+    @ViewBuilder
+    private var reviewTable: some View {
+        let items = viewModel.copyPlan?.items.prefix(250).map { $0 } ?? []
+        if viewModel.shouldShowChannelFilter {
+            Table(items, selection: $viewModel.selectedQueueItemIDs) {
+                TableColumn("File") { item in
+                    Text(item.displayFilename)
+                        .lineLimit(1)
+                        .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
+                }
+                TableColumn("Source") { item in
+                    Text(item.displaySource)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                TableColumn("Mode") { item in
+                    Text(item.clip.displayMode)
+                }
+                TableColumn("Folder") { item in
+                    Text(item.clip.outputCategory)
+                }
+                TableColumn("Channel") { item in
+                    Text(item.clip.displayChannel)
+                }
+                TableColumn("Created") { item in
+                    Text(item.createdAt.map(createdDateFormatter.string(from:)) ?? "-")
+                        .font(.caption)
+                }
+                TableColumn("Download Folder") { item in
+                    Text(item.destinationURL.path)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                TableColumn("Size") { item in
+                    Text(item.displaySize.formattedBytes)
+                }
+            }
+        } else {
+            Table(items, selection: $viewModel.selectedQueueItemIDs) {
+                TableColumn("File") { item in
+                    Text(item.displayFilename)
+                        .lineLimit(1)
+                        .foregroundStyle(item.alreadyExistsAtDestination ? .secondary : .primary)
+                }
+                TableColumn("Source") { item in
+                    Text(item.displaySource)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                TableColumn("Mode") { item in
+                    Text(item.clip.displayMode)
+                }
+                TableColumn("Folder") { item in
+                    Text(item.clip.outputCategory)
+                }
+                TableColumn("Created") { item in
+                    Text(item.createdAt.map(createdDateFormatter.string(from:)) ?? "-")
+                        .font(.caption)
+                }
+                TableColumn("Download Folder") { item in
+                    Text(item.destinationURL.path)
+                        .font(.caption)
+                        .lineLimit(1)
+                }
+                TableColumn("Size") { item in
+                    Text(item.displaySize.formattedBytes)
+                }
+            }
+        }
+    }
+
+    private var fileTypeToggles: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("File Types")
+                .font(.headline)
+            HStack(spacing: 18) {
+                Toggle("Videos", isOn: Binding(
+                    get: { viewModel.areVideosIncluded },
+                    set: { viewModel.setIncludeVideos($0) }
+                ))
+                .disabled(!viewModel.hasVideoItems)
+
+                Toggle("Photos", isOn: Binding(
+                    get: { viewModel.filters.includePhotos },
+                    set: { viewModel.setIncludePhotos($0) }
+                ))
+                .disabled(!viewModel.hasPhotoItems)
+
+                Toggle("GPS logs", isOn: Binding(
+                    get: { viewModel.filters.includeGPS },
+                    set: { viewModel.setIncludeGPS($0) }
+                ))
+                .disabled(!viewModel.hasGPSItems)
+            }
+            .font(.caption)
+
+            if !viewModel.scanSummary.hasScan {
+                Text("Scan a source to choose file types.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

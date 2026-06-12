@@ -1,3 +1,5 @@
-- In-app updates now handle macOS App Translocation better, so an updated app can replace and reopen the original app instead of leaving you in Finder.
-- If the running app cannot be safely replaced, the updater still reveals the downloaded app so you can install it manually.
-- The ZIP still includes only `Dashcam Offloader.app`.
+- The app now scans the initially selected card as soon as it loads, so recognized cards should not require an extra click in the source list.
+- Download options and filters are expanded by default for easier review.
+- File type choices are available near the card scan summary and stay synced with the What to Download section.
+- The Review and Download table now hides the Channel column when it does not apply, avoiding an empty column for single-lens cameras.
+- The Review and Download table now includes a Created date/time column for each file.
