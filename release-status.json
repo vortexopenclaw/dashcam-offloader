@@ -1,0 +1,13 @@
+{
+  "sha": "74567867cf4e1ccad25052231f0500e4abd0315f",
+  "runId": "27427364572",
+  "attempt": "1",
+  "jobStatus": "success",
+  "steps": {
+    "build": "success",
+    "zip": "success",
+    "githubRelease": "success",
+    "cloudflare": "success"
+  },
+  "recordedAt": "2026-06-12T16:03:31Z"
+}
