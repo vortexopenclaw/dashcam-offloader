@@ -160,8 +160,13 @@ struct UpdateService: @unchecked Sendable {
     }
 
     func installStagedUpdate(_ stagedAppURL: URL) throws -> UpdateInstallMode {
-        guard currentBundleURL.pathExtension == "app",
-              fileManager.fileExists(atPath: currentBundleURL.path) else {
+        guard let installTargetURL = Self.installTargetBundleURL(
+            currentBundleURL: currentBundleURL,
+            bundleIdentifier: Bundle.main.bundleIdentifier,
+            fileExists: { fileManager.fileExists(atPath: $0) },
+            isWritableDirectory: { fileManager.isWritableFile(atPath: $0) },
+            applicationURLForBundleIdentifier: { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) }
+        ) else {
             NSWorkspace.shared.activateFileViewerSelecting([stagedAppURL])
             return .revealDownloadedApp
         }
@@ -172,7 +177,7 @@ struct UpdateService: @unchecked Sendable {
             .appendingPathComponent("install-update.sh")
         let script = Self.installerScript(
             stagedAppPath: stagedAppURL.path,
-            currentAppPath: currentBundleURL.path,
+            currentAppPath: installTargetURL.path,
             stagingRootPath: stagedAppURL.deletingLastPathComponent().deletingLastPathComponent().path,
             currentProcessID: ProcessInfo.processInfo.processIdentifier
         )
@@ -189,6 +194,48 @@ struct UpdateService: @unchecked Sendable {
             throw UpdateServiceError.installerLaunchFailed
         }
         return .installAndRelaunch
+    }
+
+    static func installTargetBundleURL(
+        currentBundleURL: URL,
+        bundleIdentifier: String?,
+        fileExists: (String) -> Bool,
+        isWritableDirectory: (String) -> Bool,
+        applicationURLForBundleIdentifier: (String) -> URL?
+    ) -> URL? {
+        let currentURL = currentBundleURL.standardizedFileURL
+        if isUsableInstallTarget(currentURL, fileExists: fileExists, isWritableDirectory: isWritableDirectory),
+           !isLikelyAppTranslocationURL(currentURL) {
+            return currentURL
+        }
+
+        guard isLikelyAppTranslocationURL(currentURL),
+              let bundleIdentifier,
+              let workspaceURL = applicationURLForBundleIdentifier(bundleIdentifier)?.standardizedFileURL,
+              workspaceURL.path != currentURL.path,
+              isUsableInstallTarget(workspaceURL, fileExists: fileExists, isWritableDirectory: isWritableDirectory) else {
+            return nil
+        }
+
+        return workspaceURL
+    }
+
+    private static func isUsableInstallTarget(
+        _ url: URL,
+        fileExists: (String) -> Bool,
+        isWritableDirectory: (String) -> Bool
+    ) -> Bool {
+        guard url.pathExtension == "app",
+              fileExists(url.path) else {
+            return false
+        }
+        let parent = url.deletingLastPathComponent()
+        return fileExists(parent.path) && isWritableDirectory(parent.path)
+    }
+
+    private static func isLikelyAppTranslocationURL(_ url: URL) -> Bool {
+        let path = url.standardizedFileURL.path
+        return path.contains("/AppTranslocation/")
     }
 
     static func installerScript(

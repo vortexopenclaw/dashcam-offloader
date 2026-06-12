@@ -67,6 +67,39 @@ enum VerificationTest {
                 print("VERIFY FAIL: update installer script does not replace and relaunch in place")
                 return false
             }
+            let normalInstallTarget = UpdateService.installTargetBundleURL(
+                currentBundleURL: URL(fileURLWithPath: "/Users/example/Downloads/Dashcam Offloader.app"),
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                fileExists: { ["/Users/example/Downloads", "/Users/example/Downloads/Dashcam Offloader.app"].contains($0) },
+                isWritableDirectory: { $0 == "/Users/example/Downloads" },
+                applicationURLForBundleIdentifier: { _ in URL(fileURLWithPath: "/Applications/Dashcam Offloader.app") }
+            )
+            guard normalInstallTarget?.path == "/Users/example/Downloads/Dashcam Offloader.app" else {
+                print("VERIFY FAIL: update installer should prefer the current writable app bundle")
+                return false
+            }
+            let translocatedInstallTarget = UpdateService.installTargetBundleURL(
+                currentBundleURL: URL(fileURLWithPath: "/private/var/folders/example/AppTranslocation/12345/d/Dashcam Offloader.app"),
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                fileExists: { ["/Applications", "/Applications/Dashcam Offloader.app"].contains($0) },
+                isWritableDirectory: { $0 == "/Applications" },
+                applicationURLForBundleIdentifier: { _ in URL(fileURLWithPath: "/Applications/Dashcam Offloader.app") }
+            )
+            guard translocatedInstallTarget?.path == "/Applications/Dashcam Offloader.app" else {
+                print("VERIFY FAIL: update installer should resolve translocated apps to the original bundle")
+                return false
+            }
+            let commandLineInstallTarget = UpdateService.installTargetBundleURL(
+                currentBundleURL: URL(fileURLWithPath: "/Users/example/dashcam-offloader/.build/debug/DashcamOffloader"),
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                fileExists: { ["/Applications", "/Applications/Dashcam Offloader.app"].contains($0) },
+                isWritableDirectory: { $0 == "/Applications" },
+                applicationURLForBundleIdentifier: { _ in URL(fileURLWithPath: "/Applications/Dashcam Offloader.app") }
+            )
+            guard commandLineInstallTarget == nil else {
+                print("VERIFY FAIL: command-line builds should not update an installed app bundle")
+                return false
+            }
             let requiredDisplayNames = [
                 "Blackvue Elite 9",
                 "70mai M310",

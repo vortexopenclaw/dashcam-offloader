@@ -1,6 +1,3 @@
-- Sony A7 III photo imports: `.ARW` RAW files are now recognized as real photos and included in Review and Download.
-- Sony A7 III thumbnail folders are excluded from downloads, so `PRIVATE/M4ROOT/THMBNL` clip thumbnails no longer appear as full photos.
-- RAW and JPEG stills now show clearer Mode labels: `RAW` and `JPEG`.
-- Single-lens camera profiles hide dashcam-style channel controls in the review flow.
-- Mirrorless/camera profiles include photos by default, so image offloads do not require an extra Include photos toggle.
-- The ZIP still includes only the main app.
+- In-app updates now handle macOS App Translocation better, so an updated app can replace and reopen the original app instead of leaving you in Finder.
+- If the running app cannot be safely replaced, the updater still reveals the downloaded app so you can install it manually.
+- The ZIP still includes only `Dashcam Offloader.app`.
