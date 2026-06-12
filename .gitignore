@@ -4,6 +4,8 @@ tmp/
 dist/
 build/
 .build/
+__pycache__/
+*.pyc
 backups/
 node_modules/
 .env
