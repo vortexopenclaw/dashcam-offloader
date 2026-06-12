@@ -1,6 +1,6 @@
-- GoPro looping videos: choose original clips only, original clips plus a merged clip, or just the merged clip (the default). The option appears under What to Download when a card has looping chains.
-- Downloads never overwrite footage already in your destination. Files that are already there are skipped and counted instead of failing.
-- The review queue now tells you how many queued files are already in the download folder before you start.
-- A clearer completion summary shows what was copied (with total size), what was already in the destination, what failed, and where files went, with a one-click retry for failures.
-- New "Last 3 days" date filter.
+- Sony A7 III photo imports: `.ARW` RAW files are now recognized as real photos and included in Review and Download.
+- Sony A7 III thumbnail folders are excluded from downloads, so `PRIVATE/M4ROOT/THMBNL` clip thumbnails no longer appear as full photos.
+- RAW and JPEG stills now show clearer Mode labels: `RAW` and `JPEG`.
+- Single-lens camera profiles hide dashcam-style channel controls in the review flow.
+- Mirrorless/camera profiles include photos by default, so image offloads do not require an extra Include photos toggle.
 - The ZIP still includes only the main app.
