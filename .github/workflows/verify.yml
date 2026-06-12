@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: verify-${{ github.ref }}
@@ -38,3 +39,15 @@ jobs:
 
       - name: Check review script syntax
         run: python3 -m py_compile scripts/review-feedback-submissions.py
+
+      - name: Report verify status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          STATE=failure
+          if [ "${{ job.status }}" = "success" ]; then STATE=success; fi
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="$STATE" \
+            -f context="verify" \
+            -f description="Verify ${{ job.status }}"

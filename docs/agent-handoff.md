@@ -118,3 +118,5 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - The main app window should appear before mounted-card scans and permission prompts block the user.
 - Improve Camera Support should be draggable. Camera channel examples should be placeholder text, not prefilled white text.
 - Filter changes should not leave stale items in Review and Download when the selected modes/channels become empty.
+- Destination files are never overwritten. A same-name file at the destination means "already downloaded": single copies and merged loop exports skip it and report "already in destination" instead of failing. Ariel's rule: there should never be two different files with identical names, so no size comparison or rename fallback is needed.
+- The review queue flags how many queued files already exist at the chosen destination before downloading. The Last Run summary shows copied count/size, already-in-destination count, failed count, the destination path, and a Retry Failed action.

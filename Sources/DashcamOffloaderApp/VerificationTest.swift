@@ -517,6 +517,28 @@ enum VerificationTest {
                 return false
             }
 
+            guard DateFilterPreset.allCases == [.today, .yesterday, .lastThreeDays, .lastWeek, .allTime, .custom],
+                  DateFilterPreset.lastThreeDays.label == "Last 3 days" else {
+                print("VERIFY FAIL: date filter presets should include Last 3 days in order")
+                return false
+            }
+
+            let existingDestination = temp.appendingPathComponent("GoPro Existing Output", isDirectory: true)
+            try FileManager.default.createDirectory(at: existingDestination.appendingPathComponent("Regular Recording", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 7, count: 64).write(to: existingDestination.appendingPathComponent("Regular Recording/GX010273.MP4"))
+            let existingPlan = CopyPlanner().makePlan(
+                sourceRoot: goProSource,
+                destinationRoot: existingDestination,
+                profile: goProScan.selectedProfile ?? .genericNewDashcam,
+                clips: goProScan.clips,
+                filters: goProFilters
+            )
+            guard existingPlan.items.filter(\.alreadyExistsAtDestination).map(\.displayFilename) == ["GX010273.MP4"],
+                  existingPlan.items.filter({ !$0.alreadyExistsAtDestination }).count == existingPlan.items.count - 1 else {
+                print("VERIFY FAIL: planner should flag only the file already present at the destination, got \(existingPlan.items.filter(\.alreadyExistsAtDestination).map(\.displayFilename))")
+                return false
+            }
+
             let goPro12Source = temp.appendingPathComponent("U3000PRO", isDirectory: true)
             try FileManager.default.createDirectory(at: goPro12Source.appendingPathComponent("DCIM/100GOPRO", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: goPro12Source.appendingPathComponent("MISC", isDirectory: true), withIntermediateDirectories: true)
