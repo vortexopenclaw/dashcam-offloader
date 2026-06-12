@@ -100,8 +100,7 @@ final class TransferViewModel: ObservableObject {
 
     var shouldShowChannelFilter: Bool {
         guard !availableChannels.isEmpty else { return false }
-        guard !isSingleLensNonDashcamProfile else { return true }
-        return false
+        return !isSingleLensNonDashcamProfile
     }
 
     private var isSingleLensNonDashcamProfile: Bool {
@@ -110,8 +109,8 @@ final class TransferViewModel: ObservableObject {
         guard nonDashcamTypes.contains((selectedProfile.cameraType ?? "").lowercased()) else {
             return false
         }
-        let normalizedChannels = Set(footageClips.map { $0.channel.lowercased() })
-        return normalizedChannels.isSubset(of: ["primary", "front", "360_primary"])
+        let normalizedChannels = Set(eligibleClips.filter { !$0.isGPS }.map { $0.channel.lowercased() })
+        return normalizedChannels.isEmpty || normalizedChannels.isSubset(of: ["unknown", "primary", "front", "360_primary"])
     }
 
     var eligibleClips: [ClipItem] {
@@ -684,7 +683,7 @@ final class TransferViewModel: ObservableObject {
             !Self.isDeselectedByDefaultMode(mode)
         }
         filters.selectedChannels = Set(footageClips.map(\.channel))
-        filters.includePhotos = false
+        filters.includePhotos = shouldIncludePhotosByDefault
         filters.includeGPS = false
         filters.includeCameraSettings = false
         filters.separateCategoryFolders = true
@@ -698,6 +697,12 @@ final class TransferViewModel: ObservableObject {
         default:
             return false
         }
+    }
+
+    private var shouldIncludePhotosByDefault: Bool {
+        guard let selectedProfile else { return false }
+        let photoFirstTypes = ["mirrorless_camera", "camera"]
+        return photoFirstTypes.contains((selectedProfile.cameraType ?? "").lowercased())
     }
 
     func setDatePreset(_ preset: DateFilterPreset) {

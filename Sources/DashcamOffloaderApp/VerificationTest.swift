@@ -269,6 +269,82 @@ enum VerificationTest {
                 return false
             }
 
+            let sonySource = temp.appendingPathComponent("A7III 128", isDirectory: true)
+            try FileManager.default.createDirectory(at: sonySource.appendingPathComponent("PRIVATE/M4ROOT/CLIP", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: sonySource.appendingPathComponent("PRIVATE/M4ROOT/THMBNL", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: sonySource.appendingPathComponent("DCIM/100MSDCF", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 51, count: 2048).write(to: sonySource.appendingPathComponent("PRIVATE/M4ROOT/CLIP/C0001.MP4"))
+            try Data(repeating: 52, count: 1024).write(to: sonySource.appendingPathComponent("PRIVATE/M4ROOT/THMBNL/C0001T01.JPG"))
+            let sonyRaw = sonySource.appendingPathComponent("DCIM/100MSDCF/A7307789.ARW")
+            let sonyJPEG = sonySource.appendingPathComponent("DCIM/100MSDCF/A7307790.JPG")
+            try Data(repeating: 53, count: 4096).write(to: sonyRaw)
+            try Data(repeating: 54, count: 3072).write(to: sonyJPEG)
+            let today = Date()
+            try FileManager.default.setAttributes([.modificationDate: today], ofItemAtPath: sonyRaw.path)
+            try FileManager.default.setAttributes([.modificationDate: today], ofItemAtPath: sonyJPEG.path)
+            let sonyScan = try scanner.scan(sourceURL: sonySource, profiles: profiles)
+            guard sonyScan.selectedProfile?.id == "sony-a7-iii" else {
+                print("VERIFY FAIL: Sony A7 III card was not selected: \(sonyScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard let sonyRawClip = sonyScan.clips.first(where: { $0.filename == "A7307789.ARW" }),
+                  sonyRawClip.isPhoto,
+                  sonyRawClip.mode == "raw",
+                  sonyRawClip.displayMode == "RAW",
+                  sonyRawClip.outputCategory == "Photos",
+                  sonyRawClip.timestampSource == .filesystemModified else {
+                print("VERIFY FAIL: Sony ARW was not classified as a RAW photo")
+                return false
+            }
+            guard let sonyJPEGClip = sonyScan.clips.first(where: { $0.filename == "A7307790.JPG" }),
+                  sonyJPEGClip.isPhoto,
+                  sonyJPEGClip.mode == "jpeg",
+                  sonyJPEGClip.displayMode == "JPEG",
+                  sonyJPEGClip.outputCategory == "Photos" else {
+                print("VERIFY FAIL: Sony full-size JPEG was not classified as a JPEG photo")
+                return false
+            }
+            guard sonyScan.clips.first(where: { $0.filename == "C0001T01.JPG" })?.excludedReason != nil else {
+                print("VERIFY FAIL: Sony clip thumbnail should be excluded from downloads")
+                return false
+            }
+            guard sonyScan.clips.filter({ $0.excludedReason == nil }).map(\.filename).sorted() == ["A7307789.ARW", "A7307790.JPG", "C0001.MP4"] else {
+                print("VERIFY FAIL: Sony downloadable items should include real media only: \(sonyScan.clips.filter({ $0.excludedReason == nil }).map(\.filename).sorted())")
+                return false
+            }
+            var sonyFilters = FilterState()
+            sonyFilters.selectedModes = Set(sonyScan.clips.filter(\.isVideo).map(\.mode))
+            sonyFilters.selectedChannels = Set(sonyScan.clips.filter(\.isVideo).map(\.channel))
+            sonyFilters.includePhotos = true
+            sonyFilters.useStartDate = true
+            sonyFilters.useEndDate = true
+            sonyFilters.startDate = today
+            sonyFilters.endDate = today
+            let sonyPlan = CopyPlanner().makePlan(
+                sourceRoot: sonySource,
+                destinationRoot: destination,
+                profile: sonyScan.selectedProfile ?? .genericNewDashcam,
+                clips: sonyScan.clips,
+                filters: sonyFilters
+            )
+            guard sonyPlan.items.contains(where: { $0.displayFilename == "A7307789.ARW" }),
+                  sonyPlan.items.contains(where: { $0.displayFilename == "A7307790.JPG" }),
+                  !sonyPlan.items.contains(where: { $0.displayFilename == "C0001T01.JPG" }) else {
+                print("VERIFY FAIL: Sony Today filter plan should include full images but not thumbnails: \(sonyPlan.items.map(\.displayFilename).sorted())")
+                return false
+            }
+            let sonyCameraUI = MainActor.assumeIsolated { () -> (showChannelFilter: Bool, includePhotos: Bool) in
+                let viewModel = TransferViewModel()
+                viewModel.selectedProfile = sonyScan.selectedProfile
+                viewModel.clips = sonyScan.clips
+                viewModel.resetFiltersForCurrentClips()
+                return (viewModel.shouldShowChannelFilter, viewModel.filters.includePhotos)
+            }
+            guard !sonyCameraUI.showChannelFilter, sonyCameraUI.includePhotos else {
+                print("VERIFY FAIL: single-lens Sony camera should hide channel controls and include photos by default")
+                return false
+            }
+
             let unknownVantrueSource = temp.appendingPathComponent("unknown-vantrue-family", isDirectory: true)
             try FileManager.default.createDirectory(at: unknownVantrueSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: unknownVantrueSource.appendingPathComponent("Parking", isDirectory: true), withIntermediateDirectories: true)

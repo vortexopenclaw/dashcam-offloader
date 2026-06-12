@@ -61,6 +61,7 @@ folders:
       Primary video storage. Present even on freshly formatted video-only cards.
   - path: PRIVATE/M4ROOT/THMBNL
     mode: thumbnails
+    import: false
     validation: real_card_sampled
     notes: JPEG thumbnails for each clip (C0001T01.JPG etc.).
   - path: PRIVATE/M4ROOT/MEDIAPRO.XML

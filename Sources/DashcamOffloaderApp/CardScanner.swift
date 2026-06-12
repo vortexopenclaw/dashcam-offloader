@@ -627,6 +627,8 @@ struct CardScanner {
                 if ext != "dat" {
                     excludedReason = "GPS/settings sidecar excluded by default"
                 }
+            } else if ClipItem.photoExtensions.contains(ext) {
+                mode = photoMode(extensionLowercased: ext)
             }
 
             let timestampResult = bestTimestamp(filenameTimestamp: timestamp, fileURL: fileURL)
@@ -684,6 +686,8 @@ struct CardScanner {
                 if ext != "dat" {
                     excludedReason = "GPS/settings sidecar excluded by default"
                 }
+            } else if ClipItem.photoExtensions.contains(ext) {
+                mode = photoMode(extensionLowercased: ext)
             }
 
             let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
@@ -1599,7 +1603,7 @@ struct CardScanner {
 
     private func genericMode(relativePath: String, filename: String, extensionLowercased: String) -> String {
         if ClipItem.photoExtensions.contains(extensionLowercased) {
-            return "photo"
+            return photoMode(extensionLowercased: extensionLowercased)
         }
 
         let pathTokens = genericTokens(from: relativePath)
@@ -1642,6 +1646,17 @@ struct CardScanner {
         }
 
         return "continuous"
+    }
+
+    private func photoMode(extensionLowercased: String) -> String {
+        switch extensionLowercased {
+        case "arw", "gpr":
+            return "raw"
+        case "jpg", "jpeg":
+            return "jpeg"
+        default:
+            return "photo"
+        }
     }
 
     private func bestTimestamp(filenameTimestamp: Date?, fileURL: URL) -> (date: Date?, source: TimestampSource) {

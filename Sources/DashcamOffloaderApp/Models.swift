@@ -213,7 +213,7 @@ enum DetectionConfidence: String, CaseIterable, Hashable, Sendable {
 
 struct ClipItem: Identifiable, Hashable, Sendable {
     static let videoExtensions: Set<String> = ["mp4", "mov", "avi", "mts", "m2ts", "ts", "mkv", "3gp"]
-    static let photoExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "bmp", "gpr"]
+    static let photoExtensions: Set<String> = ["jpg", "jpeg", "png", "heic", "bmp", "gpr", "arw"]
     static let gpsExtensions: Set<String> = ["dat", "gpx", "nmea"]
 
     var id: String { sourceURL.path }
@@ -354,6 +354,12 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             return "TimeWarp"
         case "time_lapse_or_timewarp":
             return "Time Lapse / TimeWarp"
+        case "raw", "raw_photo":
+            return "RAW"
+        case "jpeg", "jpg", "jpeg_photo":
+            return "JPEG"
+        case "photo", "photos":
+            return "Photo"
         case "driving_event":
             return "Driving Event"
         case "parking_continuous_low_bitrate":

@@ -846,8 +846,8 @@ struct ContentView: View {
                     TableColumn("Folder") { item in
                         Text(item.clip.outputCategory)
                     }
-                    TableColumn("Channel") { item in
-                        Text(item.clip.displayChannel)
+                    TableColumn(viewModel.shouldShowChannelFilter ? "Channel" : "") { item in
+                        Text(viewModel.shouldShowChannelFilter ? item.clip.displayChannel : "")
                     }
                     TableColumn("Download Folder") { item in
                         Text(item.destinationURL.path)
