@@ -1,3 +1,4 @@
+- Dashcam Offloader now remembers the last download folder and preselects it the next time the app opens.
 - The app now scans the initially selected card as soon as it loads, so recognized cards should not require an extra click in the source list.
 - Download options and filters are expanded by default for easier review.
 - File type choices are available near the card scan summary and stay synced with the What to Download section.

@@ -51,12 +51,14 @@ final class TransferViewModel: ObservableObject {
     private var copyTask: Task<Void, Never>?
     private var customSourceNames: [MountedSource.ID: String] = [:]
     private static let automaticUpdateChecksKey = "DashcamOffloaderAutomaticUpdateChecksEnabled"
+    nonisolated private static let lastDownloadDestinationPathKey = "DashcamOffloaderLastDownloadDestinationPath"
 
     init() {
         if UserDefaults.standard.object(forKey: Self.automaticUpdateChecksKey) == nil {
             UserDefaults.standard.set(true, forKey: Self.automaticUpdateChecksKey)
         }
         automaticUpdateChecksEnabled = UserDefaults.standard.bool(forKey: Self.automaticUpdateChecksKey)
+        destinationURL = Self.restoredLastDownloadDestination()
         loadProfiles()
         startVolumeObservation()
         statusMessage = "Ready. Looking for mounted cards..."
@@ -652,9 +654,10 @@ final class TransferViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
+        panel.directoryURL = destinationURL ?? Self.restoredLastDownloadDestination()
 
         if panel.runModal() == .OK, let url = panel.url {
-            destinationURL = url.standardizedFileURL
+            setDestinationURL(url.standardizedFileURL)
             removeOutputDirectorySources()
             rebuildPlan()
         }
@@ -872,6 +875,7 @@ final class TransferViewModel: ObservableObject {
             copyResults = result.mediaItems
             supportFileResults = result.supportItems
             lastOutputDirectory = runPlan.destinationRoot
+            saveLastDownloadDestination(runPlan.destinationRoot)
             let baseMessage = copyProgress.summary.isEmpty ? "Download complete" : copyProgress.summary
             var finalMessage = baseMessage
             if !Task.isCancelled && openDestinationWhenComplete {
@@ -990,6 +994,33 @@ final class TransferViewModel: ObservableObject {
             selectedSource = mountedSources.first
             clearSourceDerivedState(for: selectedSource)
         }
+    }
+
+    private func setDestinationURL(_ url: URL) {
+        destinationURL = url.standardizedFileURL
+        saveLastDownloadDestination(url)
+    }
+
+    private func saveLastDownloadDestination(_ url: URL) {
+        UserDefaults.standard.set(url.standardizedFileURL.path, forKey: Self.lastDownloadDestinationPathKey)
+    }
+
+    nonisolated static func restoredLastDownloadDestination(
+        defaults: UserDefaults = .standard,
+        fileManager: FileManager = .default
+    ) -> URL? {
+        guard let path = defaults.string(forKey: lastDownloadDestinationPathKey),
+              !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
     }
 
     func submitFeedback(

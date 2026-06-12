@@ -54,6 +54,26 @@ enum VerificationTest {
                 print("VERIFY FAIL: release notes summary did not strip duplicate What's New heading")
                 return false
             }
+            let destinationDefaultsName = "DashcamOffloaderVerify-\(UUID().uuidString)"
+            guard let destinationDefaults = UserDefaults(suiteName: destinationDefaultsName) else {
+                print("VERIFY FAIL: could not create isolated destination defaults")
+                return false
+            }
+            defer { destinationDefaults.removePersistentDomain(forName: destinationDefaultsName) }
+            let restoredDestinationRoot = FileManager.default.temporaryDirectory
+                .appendingPathComponent("dashcam-offloader-restored-destination-\(UUID().uuidString)", isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: restoredDestinationRoot) }
+            try FileManager.default.createDirectory(at: restoredDestinationRoot, withIntermediateDirectories: true)
+            destinationDefaults.set(restoredDestinationRoot.path, forKey: "DashcamOffloaderLastDownloadDestinationPath")
+            guard TransferViewModel.restoredLastDownloadDestination(defaults: destinationDefaults)?.path == restoredDestinationRoot.standardizedFileURL.path else {
+                print("VERIFY FAIL: last download destination did not restore an existing folder")
+                return false
+            }
+            destinationDefaults.set(restoredDestinationRoot.appendingPathComponent("missing", isDirectory: true).path, forKey: "DashcamOffloaderLastDownloadDestinationPath")
+            guard TransferViewModel.restoredLastDownloadDestination(defaults: destinationDefaults) == nil else {
+                print("VERIFY FAIL: last download destination should ignore missing folders")
+                return false
+            }
             let installerScript = UpdateService.installerScript(
                 stagedAppPath: "/tmp/Dashcam Offloader.app",
                 currentAppPath: "/Users/example/Downloads/Dashcam Offloader.app",
