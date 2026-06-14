@@ -679,6 +679,41 @@ enum DateFilterPreset: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum OutputOrganizationMode: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case oneFolder
+    case byClipType
+    case byDate
+    case byCamera
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .oneFolder:
+            return "One folder"
+        case .byClipType:
+            return "By clip type"
+        case .byDate:
+            return "By date"
+        case .byCamera:
+            return "By camera"
+        }
+    }
+
+    var helpText: String {
+        switch self {
+        case .oneFolder:
+            return "Copy selected files directly into the download folder."
+        case .byClipType:
+            return "Create folders such as Driving, Parking, Protected, Photos, and GPS Logs."
+        case .byDate:
+            return "Create date folders from clip timestamps, with rough and suspicious camera-clock dates clearly labeled."
+        case .byCamera:
+            return "Create one folder for the detected camera or source card."
+        }
+    }
+}
+
 struct FilterState: Hashable, Sendable {
     var selectedModes: Set<String> = []
     var selectedChannels: Set<String> = []
@@ -690,7 +725,7 @@ struct FilterState: Hashable, Sendable {
     var includePhotos: Bool = false
     var includeGPS: Bool = false
     var includeCameraSettings: Bool = false
-    var separateCategoryFolders: Bool = true
+    var outputOrganizationMode: OutputOrganizationMode = .byClipType
     var goProLoopGroupOutput: GoProLoopGroupOutput = .mergedOnly
 }
 

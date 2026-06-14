@@ -43,7 +43,9 @@ struct CopyPlanner {
             let representative = representativeClip(for: itemClips)
             let itemDestination = destinationURL(
                 for: representative,
+                sourceRoot: sourceRoot,
                 destinationRoot: destinationRoot,
+                profile: profile,
                 filters: filters,
                 namingOptions: namingOptions
             )
@@ -74,17 +76,31 @@ struct CopyPlanner {
 
     private func destinationURL(
         for clip: ClipItem,
+        sourceRoot: URL,
         destinationRoot: URL,
+        profile: DashcamProfile,
         filters: FilterState,
         namingOptions: OutputNamingOptions
     ) -> URL {
         let outputFilename = filename(for: clip, namingOptions: namingOptions)
-        guard filters.separateCategoryFolders else {
+        let folderComponent: String?
+        switch filters.outputOrganizationMode {
+        case .oneFolder:
+            folderComponent = nil
+        case .byClipType:
+            folderComponent = clip.outputCategory
+        case .byDate:
+            folderComponent = dateFolderName(for: clip)
+        case .byCamera:
+            folderComponent = cameraFolderName(profile: profile, sourceRoot: sourceRoot)
+        }
+
+        guard let folderComponent, !folderComponent.isEmpty else {
             return destinationRoot.appendingPathComponent(outputFilename)
         }
 
         return destinationRoot
-            .appendingPathComponent(safePathComponent(clip.outputCategory), isDirectory: true)
+            .appendingPathComponent(safePathComponent(folderComponent), isDirectory: true)
             .appendingPathComponent(outputFilename)
     }
 
@@ -217,6 +233,34 @@ struct CopyPlanner {
         return value.unicodeScalars.map { allowed.contains($0) ? Character($0) : "-" }
             .reduce(into: "") { $0.append($1) }
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func dateFolderName(for clip: ClipItem) -> String {
+        guard let timestamp = clip.timestamp else {
+            return "Undated"
+        }
+
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let datePart = formatter.string(from: timestamp)
+
+        if clip.hasSuspiciousTimestamp {
+            return "camera-clock-suspect-\(datePart)"
+        }
+        if clip.timestampSource == .filesystemCreated || clip.timestampSource == .filesystemModified {
+            return "rough-\(datePart)"
+        }
+        return datePart
+    }
+
+    private func cameraFolderName(profile: DashcamProfile, sourceRoot: URL) -> String {
+        if profile.id != DashcamProfile.genericNewDashcam.id {
+            return profile.displayName
+        }
+        let sourceName = sourceRoot.lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        return sourceName.isEmpty ? "Dashcam" : sourceName
     }
 
     private func settingsItems(
