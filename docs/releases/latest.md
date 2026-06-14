@@ -7,3 +7,4 @@
 - Sony A7 III video clips now show as Video instead of Regular Recording.
 - The Review and Download list is grouped by file type by default, keeping videos and photos together.
 - Review table headers such as File, Mode, Folder, Created, Download Folder, and Size can now be clicked to sort the preview.
+- Download options now include organization modes for One folder, By clip type, By date, and By camera.

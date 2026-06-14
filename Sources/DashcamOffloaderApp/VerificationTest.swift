@@ -668,6 +668,11 @@ enum VerificationTest {
                 print("VERIFY FAIL: date filter presets should include Last 3 days in order")
                 return false
             }
+            guard OutputOrganizationMode.allCases == [.oneFolder, .byClipType, .byDate, .byCamera],
+                  OutputOrganizationMode.byClipType.label == "By clip type" else {
+                print("VERIFY FAIL: output organization modes should include one folder, clip type, date, and camera")
+                return false
+            }
 
             let existingDestination = temp.appendingPathComponent("GoPro Existing Output", isDirectory: true)
             try FileManager.default.createDirectory(at: existingDestination.appendingPathComponent("Regular Recording", isDirectory: true), withIntermediateDirectories: true)
@@ -807,6 +812,33 @@ enum VerificationTest {
             }
             guard unknownPlan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") && $0.destinationURL.lastPathComponent == "20120101_010101_F.TS" }) else {
                 print("VERIFY FAIL: suspect camera-clock TS was not planned in the Parking folder")
+                return false
+            }
+            var unknownDateFolderFilters = unknownFilters
+            unknownDateFolderFilters.outputOrganizationMode = .byDate
+            let unknownDateFolderPlan = CopyPlanner().makePlan(
+                sourceRoot: unknownSource,
+                destinationRoot: destination,
+                profile: unknownScan.selectedProfile ?? .genericNewDashcam,
+                clips: unknownScan.clips,
+                filters: unknownDateFolderFilters
+            )
+            guard unknownDateFolderPlan.items.contains(where: { $0.destinationURL.path.contains("/rough-2026-06-07/") && $0.destinationURL.lastPathComponent == "NO_DATE_FRONT.AVI" }),
+                  unknownDateFolderPlan.items.contains(where: { $0.destinationURL.path.contains("/camera-clock-suspect-2012-01-01/") && $0.destinationURL.lastPathComponent == "20120101_010101_F.TS" }) else {
+                print("VERIFY FAIL: date organization should label rough and suspicious unknown-card timestamps")
+                return false
+            }
+            var unknownCameraFolderFilters = unknownFilters
+            unknownCameraFolderFilters.outputOrganizationMode = .byCamera
+            let unknownCameraFolderPlan = CopyPlanner().makePlan(
+                sourceRoot: unknownSource,
+                destinationRoot: destination,
+                profile: unknownScan.selectedProfile ?? .genericNewDashcam,
+                clips: unknownScan.clips,
+                filters: unknownCameraFolderFilters
+            )
+            guard unknownCameraFolderPlan.items.allSatisfy({ $0.destinationURL.path.contains("/unsupported-card/") }) else {
+                print("VERIFY FAIL: generic camera organization should fall back to the source folder name")
                 return false
             }
             var dateFilteredUnknownFilters = unknownFilters
@@ -1125,6 +1157,45 @@ enum VerificationTest {
             }
             guard plan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") }) else {
                 print("VERIFY FAIL: parking output folder missing")
+                return false
+            }
+            var oneFolderFilters = filters
+            oneFolderFilters.outputOrganizationMode = .oneFolder
+            let oneFolderPlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: oneFolderFilters
+            )
+            guard oneFolderPlan.items.allSatisfy({ $0.destinationURL.deletingLastPathComponent().standardizedFileURL == destination.standardizedFileURL }) else {
+                print("VERIFY FAIL: one-folder organization should copy media directly to the download folder")
+                return false
+            }
+            var dateFolderFilters = filters
+            dateFolderFilters.outputOrganizationMode = .byDate
+            let dateFolderPlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: dateFolderFilters
+            )
+            guard dateFolderPlan.items.allSatisfy({ $0.destinationURL.path.contains("/2026-01-01/") }) else {
+                print("VERIFY FAIL: date organization should use clip timestamp folders")
+                return false
+            }
+            var cameraFolderFilters = filters
+            cameraFolderFilters.outputOrganizationMode = .byCamera
+            let cameraFolderPlan = CopyPlanner().makePlan(
+                sourceRoot: source,
+                destinationRoot: destination,
+                profile: profile,
+                clips: scan.clips,
+                filters: cameraFolderFilters
+            )
+            guard cameraFolderPlan.items.allSatisfy({ $0.destinationURL.path.contains("/Vantrue E1 Pro/") }) else {
+                print("VERIFY FAIL: camera organization should use the detected camera folder")
                 return false
             }
 

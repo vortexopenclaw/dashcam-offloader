@@ -729,7 +729,7 @@ final class TransferViewModel: ObservableObject {
         filters.includePhotos = shouldIncludePhotosByDefault
         filters.includeGPS = false
         filters.includeCameraSettings = false
-        filters.separateCategoryFolders = true
+        filters.outputOrganizationMode = .byClipType
         filters.goProLoopGroupOutput = .mergedOnly
     }
 
@@ -830,6 +830,11 @@ final class TransferViewModel: ObservableObject {
 
     func setGoProLoopGroupOutput(_ value: GoProLoopGroupOutput) {
         filters.goProLoopGroupOutput = value
+        rebuildPlan()
+    }
+
+    func setOutputOrganizationMode(_ value: OutputOrganizationMode) {
+        filters.outputOrganizationMode = value
         rebuildPlan()
     }
 

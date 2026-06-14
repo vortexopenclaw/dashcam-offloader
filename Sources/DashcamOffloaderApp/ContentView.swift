@@ -716,6 +716,20 @@ struct ContentView: View {
                         Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+
+                        Picker("Organize downloads", selection: Binding(
+                            get: { viewModel.filters.outputOrganizationMode },
+                            set: { viewModel.setOutputOrganizationMode($0) }
+                        )) {
+                            ForEach(OutputOrganizationMode.allCases) { mode in
+                                Text(mode.label).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        Text(viewModel.filters.outputOrganizationMode.helpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
                         Toggle("Copy camera settings and boot logs", isOn: Binding(
                             get: { viewModel.filters.includeCameraSettings },
                             set: { viewModel.filters.includeCameraSettings = $0; viewModel.rebuildPlan() }
@@ -723,10 +737,6 @@ struct ContentView: View {
                         Text("Copies Config/Settings folders and boot logs into a separate Camera Settings folder for troubleshooting.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Toggle("Separate folders for driving, parking, protected, photos, and GPS", isOn: Binding(
-                            get: { viewModel.filters.separateCategoryFolders },
-                            set: { viewModel.filters.separateCategoryFolders = $0; viewModel.rebuildPlan() }
-                        ))
                     }
                     .padding(.top, 6)
                 }

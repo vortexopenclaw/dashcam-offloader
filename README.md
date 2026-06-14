@@ -8,7 +8,7 @@ Learning new dashcams supports that main offload workflow. A user should be able
 
 ## Current Status
 
-This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, check/install app updates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
+This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, organize downloads into one folder or by clip type, date, or camera, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, check/install app updates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
@@ -68,6 +68,7 @@ swift run DashcamOffloader --verify
 - Date/time parsing from filenames and metadata
 - Event/protected/manual/emergency clip handling
 - Optional video filename suffix inserted before the original extension
+- Output organization modes: one folder, by clip type, by date, or by camera
 - Optional camera settings/log copy for troubleshooting, stored separately from copied footage
 - Editable review queue before download
 - Clear progress and verification per card/job
