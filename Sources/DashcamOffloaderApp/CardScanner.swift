@@ -159,6 +159,10 @@ struct CardScanner {
             return "Top candidate matched filename structure, but nearby \(candidate.profile.displayManufacturer) sibling profiles also matched and no explicit model text or OSD proof was found. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
         }
 
+        if let unsupportedTokens = unsupportedFilenameChannelTokenEvidence(candidate) {
+            return "Top candidate matched filename structure, but this card also contains channel token(s) \(unsupportedTokens) outside the \(candidate.profile.displayName) profile. Treating this as an unrecognized/new camera instead of assuming this exact model."
+        }
+
         if hasFilenameEvidence, requiresExplicitModelEvidence(candidate.profile) {
             return "Top candidate matched a supported card layout, but this profile requires exact model evidence. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
         }
@@ -228,6 +232,19 @@ struct CardScanner {
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
             .filter { !$0.isEmpty }
+    }
+
+    private func unsupportedFilenameChannelTokenEvidence(_ candidate: DetectionCandidate) -> String? {
+        guard let evidence = candidate.evidence.first(where: { $0.hasPrefix("filename channel tokens outside profile ") }) else {
+            return nil
+        }
+
+        let raw = String(evidence.dropFirst("filename channel tokens outside profile ".count))
+        let tokens = raw
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
+        return tokens.isEmpty ? nil : tokens.joined(separator: ",")
     }
 
     /// Async scan that augments folder/filename detection with OSD OCR to
@@ -1134,6 +1151,7 @@ struct CardScanner {
             let sampleNames = representativeDetectionFilenames(from: allFiles)
             var totalFilenameMatches = 0
             var matchedChannelTokens = Set<String>()
+            let observedChannelTokens = observedTrailingChannelTokens(from: sampleNames)
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
                 let channelMap = mergedChannelMap(profile: profile, pattern: pattern)
@@ -1161,6 +1179,11 @@ struct CardScanner {
                 evidence.append("filename pattern match (\(totalFilenameMatches))")
                 if !matchedChannelTokens.isEmpty {
                     evidence.append("filename channel tokens \(matchedChannelTokens.sorted().joined(separator: ","))")
+                }
+                let profileChannelTokens = Set(profile.channels.keys.map { $0.uppercased() })
+                let unsupportedChannelTokens = observedChannelTokens.subtracting(profileChannelTokens)
+                if !profileChannelTokens.isEmpty, !unsupportedChannelTokens.isEmpty {
+                    evidence.append("filename channel tokens outside profile \(unsupportedChannelTokens.sorted().joined(separator: ","))")
                 }
             }
 
@@ -1200,6 +1223,22 @@ struct CardScanner {
         }
 
         return Array(result.prefix(5_000))
+    }
+
+    private func observedTrailingChannelTokens(from filenames: [String]) -> Set<String> {
+        Set(filenames.compactMap { filename in
+            let stem = URL(fileURLWithPath: filename)
+                .deletingPathExtension()
+                .lastPathComponent
+                .uppercased()
+            guard let last = stem.last,
+                  last >= "A", last <= "Z",
+                  let previous = stem.dropLast().last,
+                  previous.isNumber else {
+                return nil
+            }
+            return String(last)
+        })
     }
 
     private func mediaFingerprintEvidence(profile: DashcamProfile, allFiles: [URL]) -> (score: Int, evidence: [String]) {

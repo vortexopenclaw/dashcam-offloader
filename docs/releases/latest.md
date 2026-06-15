@@ -1,10 +1,3 @@
-- Dashcam Offloader now remembers the last download folder and preselects it the next time the app opens.
-- The app now scans the initially selected card as soon as it loads, so recognized cards should not require an extra click in the source list.
-- Download options and filters are expanded by default for easier review.
-- File type choices are available near the card scan summary and stay synced with the What to Download section.
-- The Review and Download table now hides the Channel column when it does not apply, avoiding an empty column for single-lens cameras.
-- The Review and Download table now includes a Created date/time column for each file.
-- Sony A7 III video clips now show as Video instead of Regular Recording.
-- The Review and Download list is grouped by file type by default, keeping videos and photos together.
-- Review table headers such as File, Mode, Folder, Created, Download Folder, and Size can now be clicked to sort the preview.
-- Download options now include organization modes for One folder, By clip type, By date, and By camera.
+- Improved camera detection for unprofiled dashcams that look similar to an existing model.
+- Cards with extra filename channel tokens now fall back to the generic new-card path instead of being overmatched to a sibling profile.
+- This helps new multi-channel cameras keep useful channel and clip metadata while waiting for a dedicated profile.

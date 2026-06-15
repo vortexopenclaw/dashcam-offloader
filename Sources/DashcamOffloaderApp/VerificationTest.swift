@@ -791,6 +791,32 @@ enum VerificationTest {
                 return false
             }
 
+            let t800LikeSource = temp.appendingPathComponent("unknown-70mai-t800-like", isDirectory: true)
+            for folder in ["Normal/Front", "Normal/Rear", "Normal/Cabin"] {
+                try FileManager.default.createDirectory(at: t800LikeSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            try Data(repeating: 20, count: 1024).write(to: t800LikeSource.appendingPathComponent("Normal/Front/NO20260615-093309-000000F.MP4"))
+            try Data(repeating: 21, count: 1024).write(to: t800LikeSource.appendingPathComponent("Normal/Rear/NO20260615-093309-000000R.MP4"))
+            try Data(repeating: 22, count: 1024).write(to: t800LikeSource.appendingPathComponent("Normal/Cabin/NO20260615-093309-000000C.MP4"))
+            let t800LikeScan = try scanner.scan(sourceURL: t800LikeSource, profiles: profiles)
+            guard t800LikeScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: unprofiled 3CH 70mai-style card selected exact profile \(t800LikeScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard t800LikeScan.diagnostics.contains(where: {
+                $0.stage == "profile_selection_guard" &&
+                    $0.outcome == "selected_generic_new_card" &&
+                    $0.detail.contains("outside")
+            }) else {
+                print("VERIFY FAIL: unprofiled 3CH 70mai-style card did not record extra-channel guard")
+                return false
+            }
+            guard Set(t800LikeScan.clips.map(\.channel)) == ["front", "interior", "rear"],
+                  t800LikeScan.clips.allSatisfy({ $0.outputCategory == "Driving" }) else {
+                print("VERIFY FAIL: unprofiled 3CH 70mai-style generic import lost channels: \(Set(t800LikeScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
             var unknownFilters = FilterState()
             unknownFilters.selectedModes = Set(unknownScan.clips.map(\.mode))
             unknownFilters.selectedChannels = Set(unknownScan.clips.map(\.channel))
