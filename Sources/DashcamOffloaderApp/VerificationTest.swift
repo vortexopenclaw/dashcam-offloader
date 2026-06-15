@@ -21,6 +21,10 @@ enum VerificationTest {
                 print("VERIFY FAIL: missing Vueroid H1 profile")
                 return false
             }
+            guard profiles.first(where: { $0.id == "70mai-4k-omni" })?.maxChannels == 2 else {
+                print("VERIFY FAIL: 70mai 4K Omni max channel metadata missing")
+                return false
+            }
             let currentBuild = AppBuildInfo(version: "0.1.0", build: "1", commit: "abc1234")
             let matchingManifest = AppUpdateManifest(
                 version: "0.1.0",
@@ -806,14 +810,33 @@ enum VerificationTest {
             guard t800LikeScan.diagnostics.contains(where: {
                 $0.stage == "profile_selection_guard" &&
                     $0.outcome == "selected_generic_new_card" &&
-                    $0.detail.contains("outside")
+                    ($0.detail.contains("exceeds") || $0.detail.contains("outside"))
             }) else {
                 print("VERIFY FAIL: unprofiled 3CH 70mai-style card did not record extra-channel guard")
+                return false
+            }
+            guard t800LikeScan.candidates.first?.evidence.contains(where: { $0.contains("observed channel count 3 exceeds profile max 2") }) == true else {
+                print("VERIFY FAIL: unprofiled 3CH 70mai-style card did not record max-channel evidence")
                 return false
             }
             guard Set(t800LikeScan.clips.map(\.channel)) == ["front", "interior", "rear"],
                   t800LikeScan.clips.allSatisfy({ $0.outputCategory == "Driving" }) else {
                 print("VERIFY FAIL: unprofiled 3CH 70mai-style generic import lost channels: \(Set(t800LikeScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
+            let knownVolumeLabelSource = temp.appendingPathComponent("70mai A800", isDirectory: true)
+            try FileManager.default.createDirectory(at: knownVolumeLabelSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 23, count: 1024).write(to: knownVolumeLabelSource.appendingPathComponent("Normal/NO20260615-093309-000000F.MP4"))
+            let knownVolumeLabelScan = try scanner.scan(sourceURL: knownVolumeLabelSource, profiles: [])
+            guard knownVolumeLabelScan.selectedProfile?.id == "generic-new-dashcam",
+                  knownVolumeLabelScan.identifiedCamera == nil,
+                  knownVolumeLabelScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_volume_hint" &&
+                          $0.outcome == "matched_known_model_label" &&
+                          $0.detail.contains("70mai A800")
+                  }) else {
+                print("VERIFY FAIL: known volume label should create a private 70mai A800 hint without selecting a profile")
                 return false
             }
 

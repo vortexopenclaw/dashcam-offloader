@@ -35,6 +35,7 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     var folders: [ProfileFolder]
     var filenamePatterns: [FilenamePattern]
     var channels: [String: String]
+    var maxChannels: Int? = nil
     var detectionRules: [DetectionRule]
     var disqualifyingRules: [DetectionRule]
     var osdSpec: OSDSpec?

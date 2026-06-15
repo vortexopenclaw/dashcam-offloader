@@ -144,6 +144,7 @@ enum KnownDashcamCatalog {
         model("70mai", "A810S", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A810", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A810 Lite", channels: 2, roles: ["front", "rear"]),
+        model("70mai", "A800", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A800SE", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A800S", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A510", channels: 2, roles: ["front", "rear"]),

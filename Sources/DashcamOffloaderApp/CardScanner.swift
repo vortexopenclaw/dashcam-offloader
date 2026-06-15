@@ -129,6 +129,15 @@ struct CardScanner {
                 detail: goProVersionInfo.diagnosticSummary
             ))
         }
+        if let volumeLabelHint = KnownDashcamCatalog.exactVolumeLabelMatch(sourceURL.lastPathComponent) {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "known_catalog_volume_hint",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: "matched_known_model_label",
+                detail: "Volume label \(sourceURL.lastPathComponent) matches known catalog model \(volumeLabelHint.displayName)"
+            ))
+        }
         diagnostics.append(contentsOf: parkingPatternResult.diagnostics)
 
         return ScanResult(
@@ -157,6 +166,10 @@ struct CardScanner {
            hasSameManufacturerAmbiguity(candidate, allCandidates: allCandidates),
            !hasDistinctiveFilenameEvidence(candidate, allCandidates: allCandidates) {
             return "Top candidate matched filename structure, but nearby \(candidate.profile.displayManufacturer) sibling profiles also matched and no explicit model text or OSD proof was found. Treating this as an unrecognized/new camera instead of assuming \(candidate.profile.displayName)."
+        }
+
+        if let exceededMaxChannels = exceededProfileMaxChannelEvidence(candidate) {
+            return "Top candidate matched filename structure, but this card shows \(exceededMaxChannels), which exceeds the known \(candidate.profile.displayName) channel capability. Treating this as an unrecognized/new camera instead of assuming this exact model."
         }
 
         if let unsupportedTokens = unsupportedFilenameChannelTokenEvidence(candidate) {
@@ -245,6 +258,13 @@ struct CardScanner {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
             .filter { !$0.isEmpty }
         return tokens.isEmpty ? nil : tokens.joined(separator: ",")
+    }
+
+    private func exceededProfileMaxChannelEvidence(_ candidate: DetectionCandidate) -> String? {
+        guard let evidence = candidate.evidence.first(where: { $0.hasPrefix("observed channel count ") }) else {
+            return nil
+        }
+        return String(evidence.dropFirst("observed channel count ".count))
     }
 
     /// Async scan that augments folder/filename detection with OSD OCR to
@@ -1185,6 +1205,10 @@ struct CardScanner {
                 if !profileChannelTokens.isEmpty, !unsupportedChannelTokens.isEmpty {
                     evidence.append("filename channel tokens outside profile \(unsupportedChannelTokens.sorted().joined(separator: ","))")
                 }
+                if let profileMaxChannels = effectiveMaxChannels(for: profile),
+                   observedChannelTokens.count > profileMaxChannels {
+                    evidence.append("observed channel count \(observedChannelTokens.count) exceeds profile max \(profileMaxChannels)")
+                }
             }
 
             let mediaEvidence = mediaFingerprintEvidence(profile: profile, allFiles: allFiles)
@@ -1239,6 +1263,20 @@ struct CardScanner {
             }
             return String(last)
         })
+    }
+
+    private func effectiveMaxChannels(for profile: DashcamProfile) -> Int? {
+        let mappedChannelCount = profile.channels.isEmpty ? nil : profile.channels.count
+        switch (profile.maxChannels, mappedChannelCount) {
+        case let (.some(maxChannels), .some(mapped)):
+            return max(maxChannels, mapped)
+        case let (.some(maxChannels), .none):
+            return maxChannels
+        case let (.none, .some(mapped)):
+            return mapped
+        case (.none, .none):
+            return nil
+        }
     }
 
     private func mediaFingerprintEvidence(profile: DashcamProfile, allFiles: [URL]) -> (score: Int, evidence: [String]) {

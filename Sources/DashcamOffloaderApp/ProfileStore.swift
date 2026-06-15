@@ -60,6 +60,8 @@ enum ProfileParser {
         let folders = parseFolders(lines)
         let patterns = parseFilenamePatterns(lines)
         let channels = parseChannels(lines, patterns: patterns)
+        let parsedMaxChannels = parseMaxChannels(lines)
+        let maxChannels = parsedMaxChannels ?? (channels.isEmpty ? nil : channels.count)
         let detectionRules = parseDetectionRules(lines)
         let disqualifyingRules = parseDisqualifyingRules(lines)
         let osdSpec = parseOSDSpec(lines)
@@ -76,6 +78,7 @@ enum ProfileParser {
             folders: folders,
             filenamePatterns: patterns,
             channels: channels,
+            maxChannels: maxChannels,
             detectionRules: detectionRules,
             disqualifyingRules: disqualifyingRules,
             osdSpec: osdSpec
@@ -244,6 +247,32 @@ enum ProfileParser {
         }
 
         return channels
+    }
+
+    private static func parseMaxChannels(_ lines: [String]) -> Int? {
+        let topLevelChannels = lines.compactMap { line -> Int? in
+            guard line.hasPrefix("channels:") else { return nil }
+            guard let value = cleanValue(String(line.dropFirst("channels:".count))) else { return nil }
+            return Int(value)
+        }.max()
+
+        let variantChannels = lines.compactMap { line -> Int? in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("- channels:") else { return nil }
+            guard let value = cleanValue(String(trimmed.dropFirst("- channels:".count))) else { return nil }
+            return Int(value)
+        }.max()
+
+        switch (topLevelChannels, variantChannels) {
+        case let (.some(topLevel), .some(variant)):
+            return max(topLevel, variant)
+        case let (.some(topLevel), .none):
+            return topLevel
+        case let (.none, .some(variant)):
+            return variant
+        case (.none, .none):
+            return nil
+        }
     }
 
     private static func parseCameraChannelLabels(_ lines: [String]) -> [String: String] {
