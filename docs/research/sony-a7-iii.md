@@ -1,4 +1,4 @@
-# Sony Alpha A7 III (ILCE-7M3) — Research Notes
+# Sony A7 III (ILCE-7M3) — Research Notes
 
 ## Sources
 

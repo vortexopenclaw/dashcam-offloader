@@ -462,7 +462,7 @@ No mounted media files were found for these models in this archive pass:
 
 - 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
 - DJI Mini 3 Pro
-- Sony Alpha A7 III
+- Sony A7 III
 - Vueroid S1 4K Infinite
 
 Those rows stay on manual/spec-driven data until we get real footage samples.

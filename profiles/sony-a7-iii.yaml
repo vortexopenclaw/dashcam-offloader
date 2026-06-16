@@ -1,6 +1,6 @@
 id: sony-a7-iii
 manufacturer: Sony
-model: Alpha A7 III
+model: A7 III
 slug: sony-a7-iii
 channels: 1
 type: mirrorless_camera
@@ -16,7 +16,7 @@ detection:
       notes: >
         MEDIAPRO.XML is created by the camera on every card, including freshly
         formatted cards with only one clip. Contains systemKind="ILCE-7M3" —
-        the Sony internal model identifier for the Alpha A7 III. Works on
+        the Sony internal model identifier for the Sony A7 III. Works on
         video-only cards where DCIM/ is absent.
     - method: xml_field
       path: PRIVATE/M4ROOT/CLIP/*.xml
@@ -114,7 +114,7 @@ filename_patterns:
     groups:
       sequence: 1
     notes: >
-      Sony ARW raw. "A73" prefix is Alpha A7 III model-specific. 5-digit
+      Sony ARW raw. "A73" prefix is A7 III model-specific. 5-digit
       sequence independent from video clip numbering.
   photo_jpg:
     regex: '^A73(\d{5})\.JPG$'

@@ -112,7 +112,7 @@ swift run DashcamOffloader --verify
 - Escort MAXcam 360c: 1CH, real card sampled. Combined radar detector + dashcam.
 
 **Sony**
-- Sony Alpha A7 III (ILCE-7M3): 1CH mirrorless camera, real card sampled. Video + photos.
+- Sony A7 III (ILCE-7M3): 1CH mirrorless camera, real card sampled. Video + photos.
 
 **Thinkware**
 - Thinkware U3000: 2CH, real card sampled

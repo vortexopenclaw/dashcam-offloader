@@ -166,7 +166,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactBlackVueModelMention("model = ELITE 10 v1.000(rev100)")?.model == "Elite 10",
                   KnownDashcamCatalog.exactModelMention("Device Name:U3000PRO", manufacturer: "Thinkware")?.model == "U3000 Pro",
                   KnownDashcamCatalog.exactModelMention("E1PRO_Settings.ini", manufacturer: "Vantrue")?.model == "Element 1 Pro",
-                  KnownDashcamCatalog.exactModelMention("systemKind=\"ILCE-7M3\"", manufacturer: "Sony")?.model == "Alpha A7 III",
+                  KnownDashcamCatalog.exactModelMention("systemKind=\"ILCE-7M3\"", manufacturer: "Sony")?.model == "A7 III",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
@@ -934,7 +934,7 @@ enum VerificationTest {
             let untrainedSonyScan = try scanner.scan(sourceURL: untrainedSonySource, profiles: [])
             guard untrainedSonyScan.selectedProfile?.id == "generic-new-dashcam",
                   untrainedSonyScan.identifiedCamera?.manufacturer == "Sony",
-                  untrainedSonyScan.identifiedCamera?.model == "Alpha A7 III",
+                  untrainedSonyScan.identifiedCamera?.model == "A7 III",
                   untrainedSonyScan.identifiedCamera?.isSupported == false,
                   untrainedSonyScan.diagnostics.contains(where: {
                       $0.stage == "safe_model_metadata" &&

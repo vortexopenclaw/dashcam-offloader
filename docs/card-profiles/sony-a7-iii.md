@@ -1,4 +1,4 @@
-# Sony Alpha A7 III (ILCE-7M3) — Card Profile
+# Sony A7 III (ILCE-7M3) — Card Profile
 
 **Type:** Mirrorless camera (1CH)  
 **Manufacturer:** Sony Corporation  
@@ -68,7 +68,7 @@ Both confirmed on real cards, including a video-only card.
 | Photo (JPEG) | `A73#####.JPG` | `A7307789.JPG` |
 
 - `C####` — 4-digit sequential clip number (global)
-- `A73` — Alpha A7 III model-specific prefix
+- `A73` — A7 III model-specific prefix
 - `#####` — 5-digit photo sequence (independent from clips)
 - No date/time in filenames — use `CreationDate` in XML sidecar
 
@@ -102,7 +102,7 @@ Codec confirmed from XML sidecar (`AVC_3840_2160_HP@L51`). Audio: LPCM16 stereo.
 ## Photo Specifications
 
 - 24.2 MP full-frame sensor, 6000×4000
-- `A73` prefix = Alpha A7 III model code
+- `A73` prefix = A7 III model code
 - Formats: ARW (Sony RAW), JPEG
 - Camera can shoot RAW-only, JPEG-only, or RAW+JPEG
 - Sampled card: ARW only
