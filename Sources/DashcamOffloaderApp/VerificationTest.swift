@@ -1231,21 +1231,40 @@ enum VerificationTest {
                 print("VERIFY FAIL: Wolfbox remote learning snapshot did not preserve placeholder-only photo folders: \(wolfboxLearningSnapshot?.directorySummaries ?? [])")
                 return false
             }
-            let wolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, hasG900Pro: Bool, isCatalogOnly: Bool) in
+            let hiddenWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, hasG900Pro: Bool) in
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
                 let wolfboxGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Wolfbox" }
                 let g900Pro = wolfboxGroup?.models.first { $0.model == "G900 Pro" }
+                return (wolfboxGroup != nil, g900Pro != nil)
+            }
+            guard !hiddenWolfboxSelectorState.hasBrand,
+                  !hiddenWolfboxSelectorState.hasG900Pro else {
+                print("VERIFY FAIL: Wolfbox catalog-only models should stay hidden before exact card identification: \(hiddenWolfboxSelectorState)")
+                return false
+            }
+            let identifiedWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, models: [String], hasG900Pro: Bool, isCatalogOnly: Bool) in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                viewModel.loadScanResultForVerification(
+                    source: MountedSource(url: untrainedWolfboxSource, name: "WOLFBOX"),
+                    scanResult: untrainedWolfboxScan
+                )
+                let wolfboxGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Wolfbox" }
+                let models = wolfboxGroup?.models.map(\.model) ?? []
+                let g900Pro = wolfboxGroup?.models.first { $0.model == "G900 Pro" }
                 return (
                     wolfboxGroup != nil,
+                    models,
                     g900Pro != nil,
                     g900Pro?.isCatalogOnly == true && g900Pro?.profile == nil
                 )
             }
-            guard wolfboxSelectorState.hasBrand,
-                  wolfboxSelectorState.hasG900Pro,
-                  wolfboxSelectorState.isCatalogOnly else {
-                print("VERIFY FAIL: Wolfbox catalog-only models should appear in the camera selector without becoming trained profiles: \(wolfboxSelectorState)")
+            guard identifiedWolfboxSelectorState.hasBrand,
+                  identifiedWolfboxSelectorState.models == ["G900 Pro"],
+                  identifiedWolfboxSelectorState.hasG900Pro,
+                  identifiedWolfboxSelectorState.isCatalogOnly else {
+                print("VERIFY FAIL: only the exactly identified untrained Wolfbox model should appear in the camera selector: \(identifiedWolfboxSelectorState)")
                 return false
             }
 

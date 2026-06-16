@@ -487,12 +487,20 @@ struct ContentView: View {
     }
 
     private var activeProfileBrand: String? {
+        if let selectedCatalogModel {
+            return selectedCatalogModel.brand
+        }
+        if let selectedProfile = viewModel.selectedProfile,
+           selectedProfile.id != DashcamProfile.genericNewDashcam.id {
+            return selectedProfile.displayManufacturer
+        }
+        if let identifiedCamera = viewModel.identifiedCamera,
+           !identifiedCamera.isSupported {
+            return identifiedCamera.displayManufacturer
+        }
         if let selectedProfileBrand,
            viewModel.cameraModelsByBrand.contains(where: { $0.brand == selectedProfileBrand }) {
             return selectedProfileBrand
-        }
-        if let selectedCatalogModel {
-            return selectedCatalogModel.brand
         }
         if let selectedProfile = viewModel.selectedProfile {
             return selectedProfile.displayManufacturer
@@ -512,6 +520,11 @@ struct ContentView: View {
         }
         guard let selectedProfile = viewModel.selectedProfile,
               selectedProfile.displayManufacturer == activeProfileBrand else {
+            if let identifiedCamera = viewModel.identifiedCamera,
+               !identifiedCamera.isSupported,
+               identifiedCamera.displayManufacturer == activeProfileBrand {
+                return identifiedCamera.model
+            }
             return nil
         }
         return selectedProfile.model

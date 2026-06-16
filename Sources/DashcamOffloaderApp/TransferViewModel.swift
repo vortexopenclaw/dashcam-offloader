@@ -209,13 +209,31 @@ final class TransferViewModel: ObservableObject {
             )
         }
 
-        for model in KnownDashcamCatalog.models {
+        for model in KnownDashcamCatalog.models where shouldExposeCatalogChoice(model) {
             let brand = ManufacturerDisplayFormatter.displayName(for: model.manufacturer)
             let key = Self.cameraModelKey(model.model)
             if grouped[brand, default: [:]][key] == nil {
                 grouped[brand, default: [:]][key] = CameraModelChoice(
                     brand: brand,
                     model: model.model,
+                    profile: nil,
+                    isCatalogOnly: true
+                )
+            }
+        }
+
+        if let identifiedCamera,
+           !identifiedCamera.isSupported,
+           KnownDashcamCatalog.exactModelMatch(
+               manufacturer: identifiedCamera.manufacturer,
+               modelText: identifiedCamera.model
+           ) == nil {
+            let brand = identifiedCamera.displayManufacturer
+            let key = Self.cameraModelKey(identifiedCamera.model)
+            if grouped[brand, default: [:]][key] == nil {
+                grouped[brand, default: [:]][key] = CameraModelChoice(
+                    brand: brand,
+                    model: identifiedCamera.model,
                     profile: nil,
                     isCatalogOnly: true
                 )
@@ -231,6 +249,20 @@ final class TransferViewModel: ObservableObject {
                     }
                 )
             }
+    }
+
+    private func shouldExposeCatalogChoice(_ model: KnownDashcamModel) -> Bool {
+        guard let identifiedCamera,
+              !identifiedCamera.isSupported,
+              let matchedModel = KnownDashcamCatalog.exactModelMatch(
+                  manufacturer: identifiedCamera.manufacturer,
+                  modelText: identifiedCamera.model
+              ) else {
+            return false
+        }
+
+        return matchedModel.manufacturer == model.manufacturer &&
+            matchedModel.model == model.model
     }
 
     private func orderedChannelLabels(from values: some Sequence<String>) -> [String] {

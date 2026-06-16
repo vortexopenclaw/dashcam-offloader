@@ -1,3 +1,3 @@
-- Fixes a crash when submitting learning scans from cards with duplicate representative video paths.
-- Keeps Wolfbox G900 Pro and other researched but untrained cameras visible in the camera selector.
-- Preserves the fuller sanitized remote learning scan manifest for unknown dashcams.
+- Keeps researched but untrained cameras hidden from the manual camera picker unless the current card scan safely identifies that exact model.
+- Still surfaces the detected make/model for learning submissions when safe metadata identifies an untrained camera.
+- Preserves the generic download path for unknown and unsupported dashcam cards.
