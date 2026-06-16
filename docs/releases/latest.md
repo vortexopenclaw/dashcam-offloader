@@ -1,3 +1,3 @@
-- Shows researched but untrained camera brands and models in the camera selector, including Wolfbox G900 Pro.
-- Keeps untrained catalog-only cameras on the safe New Dashcam path while pre-filling learning submissions with the selected brand and model.
+- Fixes a crash when submitting learning scans from cards with duplicate representative video paths.
+- Keeps Wolfbox G900 Pro and other researched but untrained cameras visible in the camera selector.
 - Preserves the fuller sanitized remote learning scan manifest for unknown dashcams.

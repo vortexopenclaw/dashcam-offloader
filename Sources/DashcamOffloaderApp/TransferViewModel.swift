@@ -1766,7 +1766,7 @@ final class TransferViewModel: ObservableObject {
         samples: [FeedbackVideoSpecSample],
         sourceRoot: URL?
     ) -> [FeedbackVideoSpecSummary] {
-        let samplesByPath = Dictionary(uniqueKeysWithValues: samples.map { ($0.relativePath, $0) })
+        let samplesByPath = Dictionary(samples.map { ($0.relativePath, $0) }, uniquingKeysWith: { current, _ in current })
         let grouped = Dictionary(grouping: clips) { clip in
             videoSpecBucketKey(for: clip)
         }
