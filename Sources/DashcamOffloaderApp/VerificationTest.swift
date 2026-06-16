@@ -1163,9 +1163,69 @@ enum VerificationTest {
                       $0.stage == "parking_pattern_inference" &&
                           $0.detail.contains("CarDV/Movie/Park") &&
                           $0.detail.contains("motion_or_impact")
+                  }),
+                  miofiveRealCardScan.diagnostics.contains(where: {
+                      $0.stage == "generic_card_shape_hint" &&
+                          $0.detail.contains("Miofive") &&
+                          $0.detail.contains("CarDV/Movie")
                   }) else {
                 print("VERIFY FAIL: Miofive S1 Ultra real-card-shaped generic scan did not preserve A/B channels and ambiguous parking impact mode: profile=\(miofiveRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: miofiveRealCardScan.identifiedCamera)), channels=\(Set(miofiveRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(miofiveRealCardScan.clips.map(\.mode)).sorted()), diagnostics=\(miofiveRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
+            }
+
+            let genericShapeFixtures: [(name: String, manufacturer: String, folders: [String], files: [String])] = [
+                (
+                    "garmin-generic-shape",
+                    "Garmin",
+                    ["DCIM/100EVENT", "DCIM/101PHOTO", "DCIM/102SAVED", "DCIM/103PARKM", "DCIM/104UNSVD"],
+                    ["DCIM/104UNSVD/20260616_120000.MP4"]
+                ),
+                (
+                    "nextbase-generic-shape",
+                    "Nextbase",
+                    ["Video", "Protected", "Photo"],
+                    ["Video/20260616_120000.MP4", "Protected/20260616_120100.MP4"]
+                ),
+                (
+                    "viofo-generic-shape",
+                    "VIOFO",
+                    ["DCIM/Movie/RO", "DCIM/Movie/Parking", "DCIM/Photo"],
+                    ["DCIM/Movie/20260616_120000_F.MP4", "DCIM/Movie/Parking/20260616_120100_F.MP4"]
+                ),
+                (
+                    "thinkware-generic-shape",
+                    "Thinkware",
+                    ["cont_rec", "evt_rec", "motion_timelapse_rec", "parking_rec", "manual_rec", "SETTING"],
+                    ["cont_rec/20260616_120000_F.MP4", "parking_rec/20260616_120100_F.MP4"]
+                ),
+                (
+                    "ddpai-generic-shape",
+                    "DDPAI",
+                    ["DCIM/NormalVideo", "DCIM/EventVideo", "DCIM/ParkingVideo", "DCIM/Photo"],
+                    ["DCIM/NormalVideo/20260616_120000.mp4", "DCIM/ParkingVideo/20260616_120100.mp4"]
+                )
+            ]
+
+            for fixture in genericShapeFixtures {
+                let source = temp.appendingPathComponent(fixture.name, isDirectory: true)
+                for folder in fixture.folders {
+                    try FileManager.default.createDirectory(
+                        at: source.appendingPathComponent(folder, isDirectory: true),
+                        withIntermediateDirectories: true
+                    )
+                }
+                for file in fixture.files {
+                    try Data(repeating: 51, count: 1024).write(to: source.appendingPathComponent(file))
+                }
+
+                let shapeScan = try scanner.scan(sourceURL: source, profiles: profiles)
+                guard shapeScan.diagnostics.contains(where: {
+                    $0.stage == "generic_card_shape_hint" &&
+                        $0.detail.localizedCaseInsensitiveContains(fixture.manufacturer)
+                }) else {
+                    print("VERIFY FAIL: \(fixture.manufacturer) generic card-shape hint missing: \(shapeScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                    return false
+                }
             }
 
             let z4TimelapseSource = temp.appendingPathComponent("z4-timelapse", isDirectory: true)

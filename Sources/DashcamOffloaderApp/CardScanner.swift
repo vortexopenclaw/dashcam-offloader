@@ -54,6 +54,7 @@ struct CardScanner {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let safeModelMetadataInfos = safeKnownModelMetadataInfos(sourceURL: sourceURL)
         let primarySafeModelMetadataInfo = safeModelMetadataInfos.first { $0.matchedModel != nil }
+        let genericCardShapeHints = genericCardShapeHints(sourceURL: sourceURL, allFiles: allFiles)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap {
@@ -129,6 +130,15 @@ struct CardScanner {
                 detail: "Used filename dates and folder semantics because no reliable supported profile was selected"
             ))
         }
+        for hint in genericCardShapeHints {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "generic_card_shape_hint",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: "matched_\(hint.confidence)_family_shape",
+                detail: "\(hint.manufacturer) \(hint.family): \(hint.evidence.joined(separator: "; "))"
+            ))
+        }
         for safeModelMetadataInfo in safeModelMetadataInfos {
             diagnostics.append(ScanDiagnosticEntry(
                 stage: safeModelMetadataInfo.stage,
@@ -198,6 +208,157 @@ struct CardScanner {
                 detail: detail
             )
         ]
+    }
+
+    private struct GenericCardShapeHint {
+        var manufacturer: String
+        var family: String
+        var confidence: String
+        var evidence: [String]
+    }
+
+    private func genericCardShapeHints(sourceURL: URL, allFiles: [URL]) -> [GenericCardShapeHint] {
+        let relativePaths = allFiles.map { $0.relativePath(from: sourceURL) }
+        let filenames = representativeDetectionFilenames(from: allFiles)
+        let folderExists: (String) -> Bool = { path in
+            let folderURL = sourceURL.appendingPathComponent(path, isDirectory: true)
+            var isDirectory: ObjCBool = false
+            if self.fileManager.fileExists(atPath: folderURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                return true
+            }
+            let normalized = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return relativePaths.contains { $0 == normalized || $0.hasPrefix(normalized + "/") }
+        }
+        let fileExists: (String) -> Bool = { path in
+            let fileURL = sourceURL.appendingPathComponent(path)
+            var isDirectory: ObjCBool = false
+            if self.fileManager.fileExists(atPath: fileURL.path, isDirectory: &isDirectory), !isDirectory.boolValue {
+                return true
+            }
+            let normalized = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return relativePaths.contains(normalized)
+        }
+        let hasFilenameMatch: (String) -> Bool = { pattern in
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+                return false
+            }
+            return filenames.contains { filename in
+                let nsFilename = filename as NSString
+                return regex.firstMatch(in: filename, range: NSRange(location: 0, length: nsFilename.length)) != nil
+            }
+        }
+
+        func hint(_ manufacturer: String, _ family: String, _ confidence: String, _ evidence: [String]) -> GenericCardShapeHint {
+            GenericCardShapeHint(
+                manufacturer: manufacturer,
+                family: family,
+                confidence: confidence,
+                evidence: Array(evidence.prefix(6))
+            )
+        }
+
+        var hints: [GenericCardShapeHint] = []
+
+        if folderExists("BlackVue/Record") && folderExists("BlackVue/Config") {
+            hints.append(hint(
+                "BlackVue",
+                "BlackVue shared Record/Config layout",
+                "medium",
+                ["BlackVue/Record", "BlackVue/Config", "version.bin can identify exact trained/untrained catalog models when present"]
+            ))
+        }
+
+        if folderExists("cont_rec") && (folderExists("evt_rec") || folderExists("parking_rec") || folderExists("motion_timelapse_rec") || folderExists("SETTING")) {
+            var evidence = ["cont_rec"]
+            for path in ["evt_rec", "manual_rec", "motion_timelapse_rec", "parking_rec", "sos_rec", "SETTING"] where folderExists(path) {
+                evidence.append(path)
+            }
+            hints.append(hint("Thinkware", "Thinkware recording-folder layout", "medium", evidence))
+        }
+
+        if folderExists("DCIM/Movie") && (folderExists("DCIM/Movie/RO") || folderExists("DCIM/RO") || folderExists("DCIM/Movie/Parking") || folderExists("DCIM/Parking") || folderExists("DCIM/Photo")) {
+            hints.append(hint(
+                "VIOFO",
+                "VIOFO DCIM/Movie layout",
+                "medium",
+                ["DCIM/Movie", "RO for locked clips when present", "Parking subfolder when present", "exact A-series model still needs OSD/user/trained evidence"]
+            ))
+        }
+
+        if folderExists("DCIM/100EVENT") || folderExists("DCIM/103PARKM") || folderExists("DCIM/104UNSVD") {
+            var evidence = ["DCIM"]
+            for path in ["DCIM/100EVENT", "DCIM/101PHOTO", "DCIM/102SAVED", "DCIM/103PARKM", "DCIM/104TLPSE", "DCIM/104UNSVD", "DCIM/105UNSVD"] where folderExists(path) {
+                evidence.append(path)
+            }
+            hints.append(hint("Garmin", "Garmin Dash Cam numbered DCIM folders", "medium", evidence))
+        }
+
+        if folderExists("Videos") && folderExists("Protected") {
+            hints.append(hint("Nextbase", "Nextbase Videos/Protected layout", "medium", ["Videos", "Protected"]))
+        } else if folderExists("Video") && folderExists("Protected") && folderExists("Photo") {
+            hints.append(hint("Nextbase", "Nextbase Video/Protected/Photo layout", "medium", ["Video", "Protected", "Photo"]))
+        }
+
+        if folderExists("CarDV/Movie/Normal") && folderExists("CarDV/Movie/Park") {
+            var evidence = ["CarDV/Movie/Normal", "CarDV/Movie/Park"]
+            if folderExists("LOG/DEVLOG") { evidence.append("LOG/DEVLOG") }
+            hints.append(hint("Miofive", "Miofive/CarDV family layout", "medium", evidence))
+        }
+
+        if folderExists("Normal") && (folderExists("Event") || folderExists("Parking")) && folderExists("GPS") {
+            hints.append(hint("Vantrue", "Vantrue root Normal/Event/Parking/GPS layout", "medium", ["Normal", "Event/Parking", "GPS"]))
+        }
+
+        if folderExists("Normal") && (folderExists("Parking") || folderExists("Lapse")) && (fileExists(".formated") || fileExists(".sstar.format")) {
+            hints.append(hint("70mai", "70mai root recording layout", "medium", ["Normal", "Parking/Lapse", ".formated or .sstar.format marker"]))
+        }
+
+        if folderExists("INF") && (folderExists("PARK") || folderExists("PEVENT")) {
+            var evidence = ["INF"]
+            for path in ["EVENT", "PARK", "PEVENT", "USER", "CONFIG"] where folderExists(path) {
+                evidence.append(path)
+            }
+            hints.append(hint("Vueroid", "Vueroid INF/PARK/PEVENT layout", "medium", evidence))
+        }
+
+        if folderExists("VIDEO") && folderExists("PROTECTED") && hasFilenameMatch(#"^\d{8}_\d{6}_[LRB]\.MP4$"#) {
+            hints.append(hint("Cansonic", "Cansonic UltraDash multi-channel layout", "medium", ["VIDEO", "PROTECTED", "L/R/B channel suffix filenames"]))
+        }
+
+        if folderExists("360CARDVR/REC") && (folderExists("360CARDVR/PARKING") || folderExists("360CARDVR/SECVIDEO")) {
+            var evidence = ["360CARDVR/REC"]
+            for path in ["360CARDVR/PARKING", "360CARDVR/SECVIDEO", "360CARDVR/GPS", "MISC"] where folderExists(path) {
+                evidence.append(path)
+            }
+            hints.append(hint("Botslab", "Botslab/360CARDVR layout", "medium", evidence))
+        }
+
+        if folderExists("Escort_M1/MOVIE") && folderExists("Escort_M1/LockedVideo") {
+            hints.append(hint("Escort", "Escort M-series layout", "medium", ["Escort_M1/MOVIE", "Escort_M1/LockedVideo"]))
+        }
+
+        if folderExists("DCIM/RoadScout") {
+            hints.append(hint("Cobra", "Cobra Road Scout DCIM layout", "medium", ["DCIM/RoadScout"]))
+        }
+
+        if folderExists("DCIM") && (
+            folderExists("DCIM/NormalVideo") ||
+                folderExists("DCIM/EventVideo") ||
+                folderExists("DCIM/ParkingVideo") ||
+                folderExists("DCIM/Photo")
+        ) {
+            var evidence = ["DCIM"]
+            for path in ["DCIM/NormalVideo", "DCIM/EventVideo", "DCIM/ParkingVideo", "DCIM/Photo"] where folderExists(path) {
+                evidence.append(path)
+            }
+            hints.append(hint("DDPAI", "DDPAI DCIM mode folders", "medium", evidence))
+        }
+
+        if folderExists("Video") && hasFilenameMatch(#"^\d{4}_\d{4}_\d{6}_\d+\.MP4$"#) {
+            hints.append(hint("Rove", "Rove Video root layout", "low", ["Video", "Rove-style numeric timestamp filenames"]))
+        }
+
+        return hints
     }
 
     private func profileSelectionIssue(

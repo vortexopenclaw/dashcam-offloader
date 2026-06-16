@@ -1,3 +1,4 @@
 - Improved generic scanning for real Miofive S1 Ultra sample cards before profile training.
 - Preserves Miofive-style A/B channel suffixes as separate generic channels instead of losing them as unknown.
 - Classifies `CarDV/Movie/Park` clips as parking motion-or-impact when the card does not expose a more specific event type.
+- Adds safe family-level card-shape hints for unknown/untrained cards across Garmin, Nextbase, VIOFO, Thinkware, DDPAI, BlackVue, Vantrue, 70mai, Vueroid, Cansonic, Botslab, Escort, Cobra, Miofive, and Rove without promoting folder-only evidence to exact model support.
