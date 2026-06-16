@@ -1202,6 +1202,35 @@ enum VerificationTest {
                 print("VERIFY FAIL: Wolfbox G900 Pro real-card-shaped generic scan did not preserve front/rear channels and emergency parking mode: profile=\(wolfboxRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: wolfboxRealCardScan.identifiedCamera)), channels=\(Set(wolfboxRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(wolfboxRealCardScan.clips.map(\.mode)).sorted()), categories=\(Set(wolfboxRealCardScan.clips.map(\.outputCategory)).sorted()), diagnostics=\(wolfboxRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
+            let wolfboxLearningSnapshot = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                viewModel.loadScanResultForVerification(
+                    source: MountedSource(url: wolfboxRealCardSource, name: "NO NAME"),
+                    scanResult: wolfboxRealCardScan
+                )
+                return viewModel.makeFeedbackScanSnapshot()
+            }
+            guard let wolfboxLearningSnapshot,
+                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
+                      $0.path == "front_photo" &&
+                          $0.directPlaceholderFileCount == 1 &&
+                          $0.directHiddenFileCount == 1
+                  }),
+                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
+                      $0.path == "rear_photo" &&
+                          $0.directPlaceholderFileCount == 1 &&
+                          $0.directHiddenFileCount == 1
+                  }),
+                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
+                      $0.path == "." &&
+                          $0.childDirectoryCount >= 6
+                  }),
+                  wolfboxLearningSnapshot.folderSamples.contains("front_photo"),
+                  wolfboxLearningSnapshot.folderSamples.contains("rear_photo") else {
+                print("VERIFY FAIL: Wolfbox remote learning snapshot did not preserve placeholder-only photo folders: \(wolfboxLearningSnapshot?.directorySummaries ?? [])")
+                return false
+            }
 
             let genericShapeFixtures: [(name: String, manufacturer: String, folders: [String], files: [String])] = [
                 (

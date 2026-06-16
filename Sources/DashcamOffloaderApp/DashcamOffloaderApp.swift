@@ -43,15 +43,16 @@ enum ScanDiagnostic {
         do {
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             let result = try CardScanner().scanWithOSD(sourceURL: sourceURL, profiles: profiles)
-            guard let selected = result.selectedProfile else {
-                print("SCAN FAIL: no selected profile")
-                return false
-            }
+            let selected = result.selectedProfile ?? .genericNewDashcam
 
             let confidence = result.candidates.first?.confidence.rawValue ?? "None"
             let score = result.candidates.first?.score ?? 0
             let evidence = result.candidates.first?.evidence.joined(separator: "; ") ?? ""
             print("SCAN PASS: \(selected.id) \(confidence) score \(score)")
+            if let identified = result.identifiedCamera {
+                print("SCAN IDENTIFIED: \(identified.displayName) supported=\(identified.isSupported)")
+            }
+            print("SCAN FILES: \(result.allFiles.count) files, \(result.clips.filter { $0.excludedReason == nil }.count) importable")
             if !evidence.isEmpty {
                 print("SCAN EVIDENCE: \(evidence)")
             }

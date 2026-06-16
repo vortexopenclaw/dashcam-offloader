@@ -1,3 +1,3 @@
-- Adds Wolfbox generic card-shape recognition for front/rear normal and emergency folder layouts.
-- Classifies Wolfbox `front_emer` and `rear_emer` clips as parking impact/event footage instead of Driving.
-- Preserves known preallocation placeholder folders in learning submissions so remote scans capture more of the card shape.
+- Improves remote learning submissions with a fuller sanitized directory manifest for unknown dashcams.
+- Preserves empty folders, hidden placeholder files, per-folder counts, and directory shape that can identify channels and recording modes.
+- Fixes command-line scans so unsupported cards report as generic scans instead of false failures.

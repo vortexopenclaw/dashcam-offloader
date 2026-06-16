@@ -713,6 +713,28 @@ final class TransferViewModel: ObservableObject {
         }
     }
 
+    func loadScanResultForVerification(source: MountedSource, scanResult: ScanResult) {
+        selectedSource = source
+        detectionCandidates = scanResult.candidates
+        identifiedCamera = scanResult.identifiedCamera
+        selectedProfile = scanResult.selectedProfile
+        lastScannedFiles = scanResult.allFiles
+        lastScanDiagnostics = scanResult.diagnostics
+        clips = scanResult.clips
+        resetFiltersForCurrentClips()
+        scanSummary = ScanSummary(
+            sourcePath: source.url.path,
+            scannedFiles: scanResult.allFiles.count,
+            copyableItems: eligibleClips.count,
+            excludedItems: scanResult.clips.filter { $0.excludedReason != nil }.count,
+            samplePaths: [],
+            categoryCounts: Dictionary(grouping: eligibleClips, by: \.outputCategory)
+                .mapValues(\.count),
+            modeCounts: Dictionary(grouping: footageClips, by: \.displayMode)
+                .mapValues(\.count)
+        )
+    }
+
     func selectProfile(_ profile: DashcamProfile) {
         selectedProfile = profile
         guard let selectedSource else { return }
@@ -1197,6 +1219,7 @@ final class TransferViewModel: ObservableObject {
             sampleRelativePaths: Array(safeSamples),
             rootFolders: Array(rootFolders.prefix(40)),
             folderSamples: Array(folderSamples),
+            directorySummaries: makeDirectorySummaries(sourceRoot: sourceRoot),
             folderSummaries: makeFolderSummaries(from: safeFiles, sourceRoot: sourceRoot),
             filenameSamples: Array(filenameSamples),
             filenamePatternSummaries: makeFilenamePatternSummaries(from: safeFiles, sourceRoot: sourceRoot),
@@ -1237,6 +1260,28 @@ final class TransferViewModel: ObservableObject {
         if lowerPath.contains("/gps/") || lowerPath.hasPrefix("gps/") { return false }
         if containsSensitiveTrainingPath(lowerPath) { return false }
         if ["gpx", "nmea"].contains(fileURL.pathExtension.lowercased()) { return false }
+        return true
+    }
+
+    private func isSafeTrainingDirectory(relativePath: String) -> Bool {
+        let lowerPath = relativePath.lowercased()
+        let components = lowerPath.split(separator: "/").map(String.init)
+        guard !components.isEmpty else { return true }
+
+        let ignoredDirectories = [
+            ".spotlight-v100",
+            ".fseventsd",
+            ".trashes",
+            ".temporaryitems",
+            ".documentrevisions-v100",
+            "system volume information"
+        ]
+        if components.contains(where: { ignoredDirectories.contains($0) }) {
+            return false
+        }
+        if containsSensitiveTrainingPath(lowerPath) {
+            return false
+        }
         return true
     }
 
@@ -1341,6 +1386,86 @@ final class TransferViewModel: ObservableObject {
                     extensionCounts: extensionCounts
                 )
             }
+    }
+
+    private func makeDirectorySummaries(sourceRoot: URL?) -> [FeedbackDirectorySummary] {
+        guard let sourceRoot else { return [] }
+
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(
+            at: sourceRoot,
+            includingPropertiesForKeys: [.isDirectoryKey, .isHiddenKey, .fileSizeKey],
+            options: [.skipsPackageDescendants]
+        ) else {
+            return []
+        }
+
+        var directFilesByDirectory: [String: [URL]] = [:]
+        var childDirectoryCounts: [String: Int] = [:]
+        var directories: Set<String> = ["."]
+
+        for case let url as URL in enumerator {
+            let relativePath = sanitizedRelativePath(for: url, sourceRoot: sourceRoot)
+            let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+            let isDirectory = values?.isDirectory == true
+
+            if isDirectory {
+                guard isSafeTrainingDirectory(relativePath: relativePath) else {
+                    enumerator.skipDescendants()
+                    continue
+                }
+
+                directories.insert(relativePath)
+                let parent = parentDirectoryPath(for: relativePath)
+                childDirectoryCounts[parent, default: 0] += 1
+            } else if isSafeTrainingSample(url, sourceRoot: sourceRoot) {
+                let directory = parentDirectoryPath(for: relativePath)
+                if isSafeTrainingDirectory(relativePath: directory) {
+                    directories.insert(directory)
+                    directFilesByDirectory[directory, default: []].append(url)
+                }
+            }
+        }
+
+        return directories
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .prefix(160)
+            .map { path in
+                let files = directFilesByDirectory[path, default: []]
+                let mediaFiles = files.filter(isMediaLikeFile)
+                let sizes = files.compactMap(fileSizeBytes)
+                let extensionCounts = Dictionary(grouping: files) { fileURL in
+                    let ext = fileURL.pathExtension.lowercased()
+                    return ext.isEmpty ? "[none]" : ext
+                }
+                .mapValues(\.count)
+                let sampleFilenames = files
+                    .map(\.lastPathComponent)
+                    .filter { !$0.hasPrefix("._") }
+                    .uniquedPreservingOrder()
+                    .prefix(8)
+
+                return FeedbackDirectorySummary(
+                    path: path,
+                    depth: path == "." ? 0 : path.split(separator: "/").count,
+                    childDirectoryCount: childDirectoryCounts[path, default: 0],
+                    directFileCount: files.count,
+                    directMediaFileCount: mediaFiles.count,
+                    directSupportFileCount: files.count - mediaFiles.count,
+                    directHiddenFileCount: files.filter { $0.lastPathComponent.hasPrefix(".") }.count,
+                    directPlaceholderFileCount: files.filter { isKnownPlaceholderFile($0.lastPathComponent) }.count,
+                    directTotalFileSizeBytes: sizes.reduce(Int64(0), +),
+                    extensionCounts: extensionCounts,
+                    sampleFilenames: Array(sampleFilenames)
+                )
+            }
+    }
+
+    private func parentDirectoryPath(for relativePath: String) -> String {
+        guard let slashIndex = relativePath.lastIndex(of: "/") else {
+            return "."
+        }
+        return String(relativePath[..<slashIndex])
     }
 
     private func makeFilenamePatternSummaries(from files: [URL], sourceRoot: URL?) -> [FeedbackFilenamePatternSummary] {

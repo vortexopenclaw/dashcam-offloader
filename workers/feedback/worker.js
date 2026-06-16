@@ -3,6 +3,7 @@ const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
 const MAX_FILENAME_PATTERN_SUMMARIES = 160;
 const MAX_FILENAME_SEQUENCE_SUMMARIES = 240;
+const MAX_DIRECTORY_SUMMARIES = 160;
 const MAX_CLIP_GROUP_SUMMARIES = 160;
 const MAX_VIDEO_SPEC_SAMPLES = 64;
 const MAX_VIDEO_SPEC_SUMMARIES = 120;
@@ -164,6 +165,9 @@ function sanitizeScan(scan) {
     sampleRelativePaths: safePathList(scan.sampleRelativePaths, MAX_SAMPLE_PATHS),
     rootFolders: safePathList(scan.rootFolders, 40),
     folderSamples: safePathList(scan.folderSamples, MAX_SAMPLE_PATHS),
+    directorySummaries: Array.isArray(scan.directorySummaries)
+      ? scan.directorySummaries.slice(0, MAX_DIRECTORY_SUMMARIES).map(sanitizeDirectorySummary).filter(Boolean)
+      : [],
     folderSummaries: Array.isArray(scan.folderSummaries)
       ? scan.folderSummaries.slice(0, 80).map(sanitizeFolderSummary).filter(Boolean)
       : [],
@@ -194,6 +198,31 @@ function sanitizeScan(scan) {
     scanDiagnostics: Array.isArray(scan.scanDiagnostics)
       ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
       : [],
+  };
+}
+
+function sanitizeDirectorySummary(summary) {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return null;
+  }
+
+  const path = sanitizePath(summary.path || ".");
+  if (!path) {
+    return null;
+  }
+
+  return {
+    path,
+    depth: numberValue(summary.depth),
+    childDirectoryCount: numberValue(summary.childDirectoryCount),
+    directFileCount: numberValue(summary.directFileCount),
+    directMediaFileCount: numberValue(summary.directMediaFileCount),
+    directSupportFileCount: numberValue(summary.directSupportFileCount),
+    directHiddenFileCount: numberValue(summary.directHiddenFileCount),
+    directPlaceholderFileCount: numberValue(summary.directPlaceholderFileCount),
+    directTotalFileSizeBytes: numberValue(summary.directTotalFileSizeBytes),
+    extensionCounts: countMap(summary.extensionCounts),
+    sampleFilenames: safePathList(summary.sampleFilenames, 8),
   };
 }
 

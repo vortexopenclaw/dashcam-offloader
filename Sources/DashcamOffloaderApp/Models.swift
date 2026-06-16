@@ -856,6 +856,7 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var sampleRelativePaths: [String]
     var rootFolders: [String]
     var folderSamples: [String]
+    var directorySummaries: [FeedbackDirectorySummary]
     var folderSummaries: [FeedbackFolderSummary]
     var filenameSamples: [String]
     var filenamePatternSummaries: [FeedbackFilenamePatternSummary]
@@ -868,6 +869,20 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var settingSnapshots: [FeedbackSettingSnapshot]
     var candidates: [FeedbackCandidateSnapshot]
     var scanDiagnostics: [ScanDiagnosticEntry]
+}
+
+struct FeedbackDirectorySummary: Codable, Hashable, Sendable {
+    var path: String
+    var depth: Int
+    var childDirectoryCount: Int
+    var directFileCount: Int
+    var directMediaFileCount: Int
+    var directSupportFileCount: Int
+    var directHiddenFileCount: Int
+    var directPlaceholderFileCount: Int
+    var directTotalFileSizeBytes: Int64
+    var extensionCounts: [String: Int]
+    var sampleFilenames: [String]
 }
 
 struct FeedbackFolderSummary: Codable, Hashable, Sendable {

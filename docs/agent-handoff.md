@@ -61,7 +61,7 @@ scripts/review-feedback-submissions.py search ULTRADASH --date 2026-06-09
 scripts/review-feedback-submissions.py get feedback/2026-06-09/<submission-id>.json
 ```
 
-Submissions should include `appVersion`, `identifiedCamera`, selected profile/candidates/evidence, diagnostics, folder summaries, file sizes, setting snapshots, video spec samples, and video spec summaries. The Worker currently accepts up to 1 MB and stores up to 64 video spec samples plus 120 video spec summaries.
+Submissions should include `appVersion`, `identifiedCamera`, selected profile/candidates/evidence, diagnostics, directory summaries, folder summaries, file sizes, setting snapshots, video spec samples, and video spec summaries. Directory summaries are the expected way to preserve empty folders, placeholder-only folders, hidden camera folders, child directory counts, and per-folder extension counts without uploading media. The Worker currently accepts up to 1 MB and stores up to 64 video spec samples plus 120 video spec summaries.
 
 ## Current Scanner Rules
 
@@ -76,7 +76,7 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - Recording type and channel checkboxes rebuild the download plan immediately, so deselecting all recording types or all channels clears the review/download queue instead of leaving stale rows visible.
 - GoPro cards should be identified from safe `MISC/version.txt` model/firmware fields when present. Do not use stale/mutable volume labels as proof; user cards can be named after a previous camera.
 - GoPro media can span `DCIM/100GOPRO`, `DCIM/101GOPRO`, and later numbered folders. Scan every matching `DCIM/*GOPRO` folder.
-- Generic unknown-camera scanning should gather useful structure, filename patterns, mode/channel counts, file-size ranges, and sampled media metadata while excluding video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, and private identifiers.
+- Generic unknown-camera scanning should gather useful structure, directory manifests including empty/placeholder-only folders, filename patterns, mode/channel counts, file-size ranges, and sampled media metadata while excluding video/photo bytes, GPS traces, serials, Wi-Fi/cloud fields, and private identifiers.
 
 ## Recent Camera Notes
 
