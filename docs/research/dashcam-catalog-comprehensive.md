@@ -188,9 +188,9 @@ The current Vueroid dashcam page lists these selector candidates.
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
-| G900 Pro | 2CH mirror | 4K front, 2.5K rear class | 2024 to current | STARVIS 2 IMX678, mirror display, GPS module. |
+| G900 Pro | 2CH mirror | 4K front, 2.5K rear class | 2024 to current | Official G900Pro 12MP Sony STARVIS 2 Wi-Fi mirror dash cam; front IMX678, rear camera, 12-inch split-screen mirror, voice control, GPS, parking monitoring. |
 | G900 | 2CH mirror | 4K front class | 2022 to current | 12-inch mirror, rear camera, GPS module support. |
-| G900 Tripro | 3CH mirror | 4K front class | 2024 to current | 3-channel G900-family mirror variant. |
+| G900 Tripro | 3CH mirror | 4K front class | 2024 to current | 3-channel G900-family mirror variant, official bumper and cabin versions. |
 | G850 | 2CH mirror | 4K front class | 2023 to current | Mirror dashcam, rear camera. |
 | G850 Pro | 2CH mirror | 4K front class | 2023 to current | Upgraded G850-family mirror variant. |
 | G840S | 2CH mirror | 4K front, 1080p rear class | 2021 to current | Popular mirror family; split from G840H for selector-level card evidence. |
@@ -367,9 +367,12 @@ The requested manufacturer is Cansonic, whose current brand uses UltraDash model
 
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
-| S1 Pro | 2CH | 4K front, 2K rear | 2025 current | Current official listing, dual dashcam. |
-| S1 Ultra | 2CH | 4K front, 4K rear | 2024 current | Dual-channel, rear defaults may vary, GPS/app. |
-| S1 | 1CH | 4K front | 2024 current | Budget 4K, GPS, app. |
+| S1 Ultra | 2CH | 4K front, 4K rear | 2024 current | Official S1-series flagship, 3-inch IPS, 5 GHz Wi-Fi, Bluetooth 4.2, GPS, Type-C, supercapacitor, HWK2 parking monitor. |
+| S1 Pro | 2CH | 4K front, 2K rear | 2025 current | Official compare page lists 4K30 front and 2K30 rear, 3-inch IPS, GPS, supercapacitor. |
+| S1 E | 1CH | 4K front | 2026 current | Official compare page lists front 4K, Wi-Fi 6, Bluetooth 4.2, GPS, supercapacitor, no included card. |
+| S1 | 1CH | 4K front | 2024 current | Official compare page lists front 4K30, included 32 GB card, 3-inch IPS, GPS, app. |
+| MF02 | 2CH | 4K front, 2K rear | 2024/current | Official product page lists 4K+2K dual dash cam, 5 GHz Wi-Fi, GPS, built-in 128 GB eMMC, Micro USB, lithium backup battery, HWK1 parking monitor. |
+| Mini 2 | 1CH | Needs confirmation | Current | Listed in Miofive official compare page; specs need additional page/manual evidence before profile training. |
 | 4K Dash Cam | 1CH | 4K front | Legacy/current | Original Miofive 4K single-camera family. |
 | 4K Dual Dash Cam | 2CH | 4K front, 1080p/2K rear class | Legacy/current | Front/rear variant. |
 

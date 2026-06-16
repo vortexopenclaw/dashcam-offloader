@@ -674,8 +674,54 @@ struct CardScanner {
             safeBlackVueModelMetadataInfo(sourceURL: sourceURL),
             safeThinkwareModelMetadataInfo(sourceURL: sourceURL),
             safeVantrueModelMetadataInfo(sourceURL: sourceURL),
+            safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Miofive"),
+            safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Wolfbox"),
             safeSonyModelMetadataInfo(sourceURL: sourceURL)
         ].compactMap { $0 }
+    }
+
+    private func safeCommonBrandModelMetadataInfo(sourceURL: URL, manufacturer: String) -> SafeModelMetadataInfo? {
+        let paths = [
+            "version.txt",
+            "VERSION.TXT",
+            "model.txt",
+            "MODEL.TXT",
+            "device_info.txt",
+            "DEVICE_INFO.TXT",
+            "system_info.txt",
+            "SYSTEM_INFO.TXT",
+            "\(manufacturer)/version.txt",
+            "\(manufacturer.uppercased())/VERSION.TXT",
+            "SYSTEM/version.txt",
+            "SYSTEM/VERSION.TXT"
+        ]
+
+        for relativePath in paths {
+            let metadataURL = sourceURL.appendingPathComponent(relativePath)
+            guard fileManager.fileExists(atPath: metadataURL.path),
+                  let raw = evidenceText(at: metadataURL) else {
+                continue
+            }
+
+            let modelText = firstVersionValue(
+                in: raw,
+                keys: ["model", "model name", "camera model", "device model", "product", "product name"]
+            ) ?? raw
+            guard KnownDashcamCatalog.exactModelMention(modelText, manufacturer: manufacturer) != nil else {
+                continue
+            }
+
+            return SafeModelMetadataInfo(
+                manufacturer: manufacturer,
+                modelText: modelText,
+                firmwareVersion: firstVersionValue(in: raw, keys: ["version", "firmware version", "fw version", "ver"]),
+                sourcePath: relativePath,
+                valueLabel: "model",
+                stage: "safe_model_metadata"
+            )
+        }
+
+        return nil
     }
 
     private func safeBlackVueModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {

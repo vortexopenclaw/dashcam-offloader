@@ -1,3 +1,3 @@
-- Generic unknown-card recognition now uses safe model metadata across known brands instead of treating BlackVue Elite 10 as a one-off.
-- Safe metadata can identify untrained BlackVue, GoPro, Thinkware, Vantrue, and Sony catalog models while keeping unsupported cards on the New Dashcam import path.
-- Safe metadata now blocks selecting a different same-brand sibling profile when shared folder/filename evidence conflicts with the parsed model identity.
+- Expanded generic unknown-card recognition for upcoming Miofive and Wolfbox samples.
+- Safe model metadata can now identify untrained Miofive S1 Ultra and Wolfbox G900 Pro cards while keeping them on the New Dashcam import path until real card profiles are trained.
+- Expanded the internal Miofive and Wolfbox model/spec catalog, including current S1-series, MF02, G900 Pro, and G900 TriPro variants.

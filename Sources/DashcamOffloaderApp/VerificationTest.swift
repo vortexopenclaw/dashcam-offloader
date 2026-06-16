@@ -180,9 +180,16 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("F7NT")?.model == "F7NT",
                   KnownDashcamCatalog.exactVolumeLabelMatch("VP40")?.channelResolutions["left"] == "1080p",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G900 TriPro Bumper")?.channelRoles == ["front", "rear", "bumper"],
+                  KnownDashcamCatalog.exactModelMention("model=G900 Pro", manufacturer: "Wolfbox")?.model == "G900 Pro",
+                  KnownDashcamCatalog.exactModelMention("model=G900 Pro", manufacturer: "Wolfbox")?.channelSensors["front"] == "Sony STARVIS 2 IMX678",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.model == "G850 Pro",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.channelResolutions["rear"] == "2K",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G840H")?.parkingModes.contains("reverse parking guide lines") == true,
+                  KnownDashcamCatalog.exactModelMention("model=S1 Ultra", manufacturer: "Miofive")?.model == "S1 Ultra",
+                  KnownDashcamCatalog.exactModelMention("model=S1 Ultra", manufacturer: "Miofive")?.channelResolutions["rear"] == "4K",
+                  KnownDashcamCatalog.exactModelMention("model=S1 Pro", manufacturer: "Miofive")?.model == "S1 Pro",
+                  KnownDashcamCatalog.exactModelMention("model=S1 E", manufacturer: "Miofive")?.model == "S1 E",
+                  KnownDashcamCatalog.exactModelMention("model=MF02", manufacturer: "Miofive")?.channelResolutions["rear"] == "2K",
                   KnownDashcamCatalog.exactVolumeLabelMatch("HERO9 Black")?.manufacturer == "GoPro",
                   KnownDashcamCatalog.exactVolumeLabelMatch("Hero 9 Black")?.parkingModes.contains("looping 5/20/60/120 minutes/max") == true,
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MISSION 1")?.channelSensors["primary"] == "1-inch",
@@ -935,6 +942,46 @@ enum VerificationTest {
                           $0.detail.contains("ILCE-7M3")
                   }) else {
                 print("VERIFY FAIL: untrained Sony XML metadata should identify known catalog model while staying generic: profile=\(untrainedSonyScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedSonyScan.identifiedCamera)), diagnostics=\(untrainedSonyScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedMiofiveSource = temp.appendingPathComponent("MIOFIVE", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedMiofiveSource.appendingPathComponent("DCIM", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model=S1 Ultra\nversion=1.0.0\n".utf8).write(to: untrainedMiofiveSource.appendingPathComponent("version.txt"))
+            try Data(repeating: 42, count: 1024).write(to: untrainedMiofiveSource.appendingPathComponent("DCIM/20260616_104000_F.MP4"))
+            try Data(repeating: 43, count: 1024).write(to: untrainedMiofiveSource.appendingPathComponent("DCIM/20260616_104000_R.MP4"))
+            let untrainedMiofiveScan = try scanner.scan(sourceURL: untrainedMiofiveSource, profiles: [])
+            guard untrainedMiofiveScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedMiofiveScan.identifiedCamera?.manufacturer == "Miofive",
+                  untrainedMiofiveScan.identifiedCamera?.model == "S1 Ultra",
+                  untrainedMiofiveScan.identifiedCamera?.isSupported == false,
+                  Set(untrainedMiofiveScan.clips.map(\.channel)) == ["front", "rear"],
+                  untrainedMiofiveScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("version.txt") &&
+                          $0.detail.contains("S1 Ultra")
+                  }) else {
+                print("VERIFY FAIL: untrained Miofive S1 Ultra safe metadata should identify known catalog model while staying generic: profile=\(untrainedMiofiveScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedMiofiveScan.identifiedCamera)), channels=\(Set(untrainedMiofiveScan.clips.map(\.channel)).sorted()), diagnostics=\(untrainedMiofiveScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedWolfboxSource = temp.appendingPathComponent("WOLFBOX", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedWolfboxSource.appendingPathComponent("MOVIE", isDirectory: true), withIntermediateDirectories: true)
+            try Data("camera model=G900 Pro\nfirmware version=1.0.0\n".utf8).write(to: untrainedWolfboxSource.appendingPathComponent("SYSTEM_INFO.TXT"))
+            try Data(repeating: 44, count: 1024).write(to: untrainedWolfboxSource.appendingPathComponent("MOVIE/20260616_104100_F.MP4"))
+            try Data(repeating: 45, count: 1024).write(to: untrainedWolfboxSource.appendingPathComponent("MOVIE/20260616_104100_R.MP4"))
+            let untrainedWolfboxScan = try scanner.scan(sourceURL: untrainedWolfboxSource, profiles: [])
+            guard untrainedWolfboxScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedWolfboxScan.identifiedCamera?.manufacturer == "Wolfbox",
+                  untrainedWolfboxScan.identifiedCamera?.model == "G900 Pro",
+                  untrainedWolfboxScan.identifiedCamera?.isSupported == false,
+                  Set(untrainedWolfboxScan.clips.map(\.channel)) == ["front", "rear"],
+                  untrainedWolfboxScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.localizedCaseInsensitiveContains("system_info.txt") &&
+                          $0.detail.contains("G900 Pro")
+                  }) else {
+                print("VERIFY FAIL: untrained Wolfbox G900 Pro safe metadata should identify known catalog model while staying generic: profile=\(untrainedWolfboxScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedWolfboxScan.identifiedCamera)), channels=\(Set(untrainedWolfboxScan.clips.map(\.channel)).sorted()), diagnostics=\(untrainedWolfboxScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

@@ -210,8 +210,8 @@ enum KnownDashcamCatalog {
         model("GoPro", "MAX2", aliases: ["MAX 2", "Max2"], channels: 1, roles: ["360_primary"], resolutions: ["360_primary": "8K 360, 5.6K60 360, 4K100 360, 4K60 single-lens"], parkingModes: ["time lapse"], notes: "Current 360 action camera candidate from GoPro compare/nav. Product page lists True 8K 360, 4K100 spherical slow motion, replaceable lenses, and up to 300 Mbps via GoPro Labs."),
         model("GoPro", "MAX", channels: 1, roles: ["360_primary"], resolutions: ["360_primary": "5.6K 360, 1440p60/1080p60 HERO mode"], parkingModes: ["time lapse"], notes: "360 action camera candidate. File structure may differ from HERO Black cards."),
         model("GoPro", "Fusion", channels: 1, roles: ["360_primary"], resolutions: ["360_primary": "5.2K30 360"], parkingModes: ["time lapse"], notes: "Legacy 360 action camera candidate. Card structure can differ from HERO Black cards."),
-        model("Wolfbox", "G900 Pro", aliases: ["G900Pro"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2.5K"], parkingModes: ["parking monitoring with hardwire kit", "loop recording"], notes: "Official comparison lists 4K Sony STARVIS IMX678 front and 2.5K Sony STARVIS IMX335 rear mirror dash cam."),
-        model("Wolfbox", "G900", channels: 2, roles: ["front", "rear"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "G900 family mirror dashcam with front/rear camera support."),
+        model("Wolfbox", "G900 Pro", aliases: ["G900Pro", "G900Pro 12MP", "G900 PRO"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2.5K"], sensors: ["front": "Sony STARVIS 2 IMX678", "rear": "Sony STARVIS IMX335"], parkingModes: ["parking monitoring with hardwire kit", "instant impact detection", "loop recording", "adjustable reversing assist"], notes: "Official G900Pro pages list a 12-inch mirror, 12MP/8MP-class IMX678 front camera, rear camera, Wi-Fi, GPS, voice control, and parking monitoring."),
+        model("Wolfbox", "G900", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K"], parkingModes: ["parking monitoring", "G-sensor alerts", "reverse parking guide lines"], notes: "G900 family mirror dashcam with front/rear camera support."),
         model("Wolfbox", "G900 Tripro", aliases: ["G900 TriPro", "G900TriPro"], channels: 3, roles: ["front", "rear", "interior"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official FAQ says 3CH mode uses Front / Rear / Cabin ports; third camera can be cabin or bumper."),
         model("Wolfbox", "G900 Tripro Bumper", aliases: ["G900 TriPro Bumper"], channels: 3, roles: ["front", "rear", "bumper"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official product nav has a bumper-version 3CH G900 TriPro."),
         model("Wolfbox", "G900 Tripro Cabin", aliases: ["G900 TriPro Cabin"], channels: 3, roles: ["front", "rear", "interior"], parkingModes: ["parking monitoring", "G-sensor alerts"], notes: "Official product nav has a cabin-version 3CH G900 TriPro."),
@@ -254,8 +254,12 @@ enum KnownDashcamCatalog {
         model("Nexar", "Beam2", channels: 2, roles: ["front", "interior"]),
         model("Pelsee", "P12 Pro Max", channels: 2, roles: ["front", "rear"]),
         model("Pelsee", "P1 Duo", channels: 2, roles: ["front", "rear"]),
-        model("Miofive", "S1 Pro", channels: 2, roles: ["front", "rear"]),
-        model("Miofive", "S1 Ultra", channels: 2, roles: ["front", "rear"]),
+        model("Miofive", "S1 Ultra", aliases: ["S1-Ultra", "S1 Ultra Dual", "S1 Ultra Dual 4K", "S1-Ultra(Front 4K+Rear 4K)"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30", "rear": "4K"], parkingModes: ["24-hour parking monitor", "HWK2 required"], notes: "Official current S1-series flagship, dual 4K front/rear, 3-inch IPS, 5 GHz Wi-Fi, Bluetooth 4.2, GPS, Type-C, supercapacitor."),
+        model("Miofive", "S1 Pro", aliases: ["S1-Pro", "S1 Pro 4K+2K", "S1-Pro(Front 4K+Rear 2K)"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30", "rear": "2K30"], parkingModes: ["24-hour parking monitor", "HWK2 required"], notes: "Official compare page lists 4K front and 2K rear, dual channel, 3-inch IPS, GPS, supercapacitor."),
+        model("Miofive", "S1 E", aliases: ["S1E", "S1 E 4K", "S1 E(Front 4K)"], channels: 1, roles: ["front"], resolutions: ["front": "4K25"], parkingModes: ["24-hour parking monitor", "HWK2 required"], notes: "Official compare page lists single-channel front 4K, Wi-Fi 6, Bluetooth 4.2, GPS, supercapacitor, no included card."),
+        model("Miofive", "S1", aliases: ["S1+32G", "S1 4K", "S1+32G(Front 4K)"], channels: 1, roles: ["front"], resolutions: ["front": "4K30"], parkingModes: ["24-hour parking monitor", "HWK2 required"], notes: "Official compare page lists single-channel 4K, included 32 GB card, 3-inch IPS, GPS, supercapacitor."),
+        model("Miofive", "MF02", aliases: ["Miofive 4K+2K Dual", "MF02(Front 4K+Rear 2K)"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "2K"], parkingModes: ["24-hour parking monitor", "HWK1 required"], notes: "Official product page lists 4K+2K dual dash cam, 5 GHz Wi-Fi, GPS, built-in 128 GB eMMC, Micro USB, lithium backup battery."),
+        model("Miofive", "Mini 2", aliases: ["Mini2"], channels: 1, roles: ["front"], notes: "Listed in the official compare page; specs need additional page/manual evidence before profile training."),
         model("iiwey", "N9", channels: 5, roles: ["front", "rear", "left", "right", "interior"]),
         model("iiwey", "N5 Pro", channels: 4, roles: ["front", "rear", "left", "right"]),
         model("Coolcrazy", "N8 Pro", channels: 2, roles: ["front", "rear"]),
@@ -298,18 +302,25 @@ enum KnownDashcamCatalog {
         let normalizedManufacturer = manufacturer.map(compact)
         guard !normalizedModelText.isEmpty else { return nil }
 
-        return models.first { model in
+        var bestMatch: (model: KnownDashcamModel, length: Int)?
+        for model in models {
             if let normalizedManufacturer,
                compact(model.manufacturer) != normalizedManufacturer {
-                return false
+                continue
             }
 
-            return model.searchNames.contains { searchName in
+            for searchName in model.searchNames {
                 let normalizedSearchName = compact(searchName)
-                return !normalizedSearchName.isEmpty &&
-                    normalizedModelText.contains(normalizedSearchName)
+                guard !normalizedSearchName.isEmpty,
+                      normalizedModelText.contains(normalizedSearchName) else {
+                    continue
+                }
+                if bestMatch == nil || normalizedSearchName.count > bestMatch!.length {
+                    bestMatch = (model, normalizedSearchName.count)
+                }
             }
         }
+        return bestMatch?.model
     }
 
     static func isSpecificVolumeLabel(_ label: String) -> Bool {
