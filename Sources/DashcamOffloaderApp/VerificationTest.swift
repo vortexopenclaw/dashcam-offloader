@@ -180,6 +180,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("F7NT")?.model == "F7NT",
                   KnownDashcamCatalog.exactVolumeLabelMatch("VP40")?.channelResolutions["left"] == "1080p",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G900 TriPro Bumper")?.channelRoles == ["front", "rear", "bumper"],
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "Wolfbox", modelText: "G900 TriPro")?.model == "G900 TriPro",
                   KnownDashcamCatalog.exactModelMention("model=G900 Pro", manufacturer: "Wolfbox")?.model == "G900 Pro",
                   KnownDashcamCatalog.exactModelMention("model=G900 Pro", manufacturer: "Wolfbox")?.channelSensors["front"] == "Sony STARVIS 2 IMX678",
                   KnownDashcamCatalog.exactVolumeLabelMatch("G850Pro")?.model == "G850 Pro",
@@ -977,11 +978,46 @@ enum VerificationTest {
                   untrainedWolfboxScan.identifiedCamera?.isSupported == false,
                   Set(untrainedWolfboxScan.clips.map(\.channel)) == ["front", "rear"],
                   untrainedWolfboxScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_capability_check" &&
+                          $0.outcome == "observed_within_catalog_capability" &&
+                          $0.detail.contains("front,rear")
+                  }),
+                  untrainedWolfboxScan.diagnostics.contains(where: {
                       $0.stage == "safe_model_metadata" &&
                           $0.detail.localizedCaseInsensitiveContains("system_info.txt") &&
                           $0.detail.contains("G900 Pro")
                   }) else {
                 print("VERIFY FAIL: untrained Wolfbox G900 Pro safe metadata should identify known catalog model while staying generic: profile=\(untrainedWolfboxScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedWolfboxScan.identifiedCamera)), channels=\(Set(untrainedWolfboxScan.clips.map(\.channel)).sorted()), diagnostics=\(untrainedWolfboxScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedWolfboxTriProSource = temp.appendingPathComponent("WOLFBOX-TRIPRO", isDirectory: true)
+            for folder in ["front_norm", "rear_norm", "cabin_norm"] {
+                try FileManager.default.createDirectory(
+                    at: untrainedWolfboxTriProSource.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            try Data("camera model=G900\nfirmware version=1.0.0\n".utf8).write(to: untrainedWolfboxTriProSource.appendingPathComponent("SYSTEM_INFO.TXT"))
+            try Data(repeating: 46, count: 1024).write(to: untrainedWolfboxTriProSource.appendingPathComponent("front_norm/20260616_104200_F.MP4"))
+            try Data(repeating: 47, count: 1024).write(to: untrainedWolfboxTriProSource.appendingPathComponent("rear_norm/20260616_104200_R.MP4"))
+            try Data(repeating: 48, count: 1024).write(to: untrainedWolfboxTriProSource.appendingPathComponent("cabin_norm/20260616_104200_I.MP4"))
+            let untrainedWolfboxTriProScan = try scanner.scan(sourceURL: untrainedWolfboxTriProSource, profiles: [])
+            guard untrainedWolfboxTriProScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedWolfboxTriProScan.identifiedCamera?.manufacturer == "Wolfbox",
+                  untrainedWolfboxTriProScan.identifiedCamera?.model == "G900 TriPro Cabin",
+                  untrainedWolfboxTriProScan.identifiedCamera?.isSupported == false,
+                  Set(untrainedWolfboxTriProScan.clips.map(\.channel)) == ["front", "interior", "rear"],
+                  untrainedWolfboxTriProScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_capability_check" &&
+                          $0.outcome == "observed_within_catalog_capability" &&
+                          $0.detail.contains("front,interior,rear")
+                  }),
+                  untrainedWolfboxTriProScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("G900 TriPro Cabin")
+                  }) else {
+                print("VERIFY FAIL: untrained Wolfbox G900-family 3CH metadata should identify TriPro Cabin while staying generic: profile=\(untrainedWolfboxTriProScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedWolfboxTriProScan.identifiedCamera)), channels=\(Set(untrainedWolfboxTriProScan.clips.map(\.channel)).sorted()), diagnostics=\(untrainedWolfboxTriProScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 
@@ -1042,7 +1078,8 @@ enum VerificationTest {
                       $0.stage == "known_catalog_capability_check" &&
                           $0.outcome == "observed_exceeds_catalog_capability" &&
                           $0.detail.contains("70mai A800 supports up to 2 channel") &&
-                          $0.detail.contains("card shows 3 channel")
+                          $0.detail.contains("card shows 3 observed channel role") &&
+                          $0.detail.contains("front,interior,rear")
                   }) else {
                 print("VERIFY FAIL: catalog max-channel capability should flag impossible 70mai A800 evidence")
                 return false

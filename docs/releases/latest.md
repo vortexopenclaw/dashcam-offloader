@@ -1,3 +1,3 @@
 - Keeps researched but untrained cameras hidden from the manual camera picker unless the current card scan safely identifies that exact model.
-- Still surfaces the detected make/model for learning submissions when safe metadata identifies an untrained camera.
+- Uses observed channel roles to distinguish Wolfbox G900-family 2CH cards from 3CH TriPro-style cards when safe model metadata is present.
 - Preserves the generic download path for unknown and unsupported dashcam cards.

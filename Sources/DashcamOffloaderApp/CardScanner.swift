@@ -52,7 +52,11 @@ struct CardScanner {
 
     func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
-        let safeModelMetadataInfos = safeKnownModelMetadataInfos(sourceURL: sourceURL)
+        let observedChannelRoles = observedChannelRoles(from: allFiles, sourceURL: sourceURL)
+        let safeModelMetadataInfos = safeKnownModelMetadataInfos(
+            sourceURL: sourceURL,
+            observedChannelRoles: observedChannelRoles
+        )
         let primarySafeModelMetadataInfo = safeModelMetadataInfos.first { $0.matchedModel != nil }
         let genericCardShapeHints = genericCardShapeHints(sourceURL: sourceURL, allFiles: allFiles)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
@@ -150,7 +154,7 @@ struct CardScanner {
             if let matchedModel = safeModelMetadataInfo.matchedModel {
                 diagnostics.append(contentsOf: catalogCapabilityDiagnostics(
                     modelHint: matchedModel,
-                    allFiles: allFiles,
+                    observedChannelRoles: observedChannelRoles,
                     selectedProfile: selectedProfile
                 ))
             }
@@ -165,7 +169,7 @@ struct CardScanner {
             ))
             diagnostics.append(contentsOf: catalogCapabilityDiagnostics(
                 modelHint: volumeLabelHint,
-                allFiles: allFiles,
+                observedChannelRoles: observedChannelRoles,
                 selectedProfile: selectedProfile
             ))
         }
@@ -184,20 +188,17 @@ struct CardScanner {
 
     private func catalogCapabilityDiagnostics(
         modelHint: KnownDashcamModel,
-        allFiles: [URL],
+        observedChannelRoles: Set<String>,
         selectedProfile: DashcamProfile?
     ) -> [ScanDiagnosticEntry] {
         guard let maxChannels = modelHint.channels else { return [] }
 
-        let observedTokens = observedTrailingChannelTokens(
-            from: representativeDetectionFilenames(from: allFiles)
-        )
-        guard !observedTokens.isEmpty else { return [] }
+        guard !observedChannelRoles.isEmpty else { return [] }
 
-        let observedCount = observedTokens.count
-        let sortedTokens = observedTokens.sorted().joined(separator: ",")
+        let observedCount = observedChannelRoles.count
+        let sortedTokens = observedChannelRoles.sorted().joined(separator: ",")
         let outcome = observedCount > maxChannels ? "observed_exceeds_catalog_capability" : "observed_within_catalog_capability"
-        let detail = "Known catalog model \(modelHint.displayName) supports up to \(maxChannels) channel(s); card shows \(observedCount) channel token(s): \(sortedTokens)"
+        let detail = "Known catalog model \(modelHint.displayName) supports up to \(maxChannels) channel(s); card shows \(observedCount) observed channel role(s): \(sortedTokens)"
 
         return [
             ScanDiagnosticEntry(
@@ -675,7 +676,11 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
-        let safeModelMetadataInfo = safeKnownModelMetadataInfos(sourceURL: sourceURL).first { $0.matchedModel != nil }
+        let observedChannelRoles = observedChannelRoles(from: result.allFiles, sourceURL: sourceURL)
+        let safeModelMetadataInfo = safeKnownModelMetadataInfos(
+            sourceURL: sourceURL,
+            observedChannelRoles: observedChannelRoles
+        ).first { $0.matchedModel != nil }
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
             selectedProfile: result.selectedProfile,
@@ -840,16 +845,59 @@ struct CardScanner {
         }
     }
 
-    private func safeKnownModelMetadataInfos(sourceURL: URL) -> [SafeModelMetadataInfo] {
+    private func safeKnownModelMetadataInfos(
+        sourceURL: URL,
+        observedChannelRoles: Set<String>
+    ) -> [SafeModelMetadataInfo] {
         [
             safeGoProModelMetadataInfo(sourceURL: sourceURL),
             safeBlackVueModelMetadataInfo(sourceURL: sourceURL),
             safeThinkwareModelMetadataInfo(sourceURL: sourceURL),
             safeVantrueModelMetadataInfo(sourceURL: sourceURL),
             safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Miofive"),
-            safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Wolfbox"),
+            safeWolfboxModelMetadataInfo(sourceURL: sourceURL, observedChannelRoles: observedChannelRoles),
             safeSonyModelMetadataInfo(sourceURL: sourceURL)
         ].compactMap { $0 }
+    }
+
+    private func safeWolfboxModelMetadataInfo(
+        sourceURL: URL,
+        observedChannelRoles: Set<String>
+    ) -> SafeModelMetadataInfo? {
+        guard var info = safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Wolfbox") else {
+            return nil
+        }
+
+        let normalizedModelText = info.modelText
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+        let isG900Family = normalizedModelText.contains("g900")
+        let explicitlyTriPro = normalizedModelText.contains("tripro")
+        let explicitlyPro = normalizedModelText.contains("g900pro")
+        let observedThreeChannel = observedChannelRoles.count >= 3 &&
+            (observedChannelRoles.contains("interior") ||
+                observedChannelRoles.contains("cabin") ||
+                observedChannelRoles.contains("bumper") ||
+                observedChannelRoles.contains("channel_c"))
+
+        if isG900Family, observedThreeChannel, !explicitlyTriPro {
+            if observedChannelRoles.contains("bumper"),
+               let triProBumper = KnownDashcamCatalog.exactModelMatch(manufacturer: "Wolfbox", modelText: "G900 TriPro Bumper") {
+                info.modelText = triProBumper.model
+                info.valueLabel = "model inferred from G900-family metadata plus 3CH bumper channel evidence"
+            } else if (observedChannelRoles.contains("interior") || observedChannelRoles.contains("cabin")),
+                      let triProCabin = KnownDashcamCatalog.exactModelMatch(manufacturer: "Wolfbox", modelText: "G900 TriPro Cabin") {
+                info.modelText = triProCabin.model
+                info.valueLabel = "model inferred from G900-family metadata plus 3CH cabin channel evidence"
+            } else if let triPro = KnownDashcamCatalog.exactModelMatch(manufacturer: "Wolfbox", modelText: "G900 TriPro") {
+                info.modelText = triPro.model
+                info.valueLabel = "model inferred from G900-family metadata plus 3CH channel evidence"
+            }
+        } else if isG900Family, explicitlyPro, observedChannelRoles.count == 2 {
+            info.valueLabel = "model confirmed with 2CH channel evidence"
+        }
+
+        return info
     }
 
     private func safeCommonBrandModelMetadataInfo(sourceURL: URL, manufacturer: String) -> SafeModelMetadataInfo? {
@@ -1840,6 +1888,22 @@ struct CardScanner {
         })
     }
 
+    private func observedChannelRoles(from allFiles: [URL], sourceURL: URL) -> Set<String> {
+        let roles = allFiles.compactMap { fileURL -> String? in
+            guard isCandidateExtension(fileURL.pathExtension.lowercased()) else { return nil }
+            let relativePath = fileURL.relativePath(from: sourceURL)
+            let role = genericChannel(relativePath: relativePath, filename: fileURL.lastPathComponent)
+            switch role {
+            case "front", "rear", "interior", "bumper", "left", "right",
+                "channel_a", "channel_b", "channel_c", "channel_d":
+                return role
+            default:
+                return nil
+            }
+        }
+        return Set(roles)
+    }
+
     private func effectiveMaxChannels(for profile: DashcamProfile) -> Int? {
         let mappedChannelCount = profile.channels.isEmpty ? nil : profile.channels.count
         switch (profile.maxChannels, mappedChannelCount) {
@@ -2349,6 +2413,9 @@ struct CardScanner {
         }
         if tokens.contains("interior") || tokens.contains("inside") || tokens.contains("cabin") || tokens.contains("incabin") {
             return "interior"
+        }
+        if tokens.contains("bumper") {
+            return "bumper"
         }
 
         let stem = URL(fileURLWithPath: filenameCandidates(for: filename).last ?? filename)

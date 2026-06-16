@@ -190,7 +190,7 @@ The current Vueroid dashcam page lists these selector candidates.
 |---|---:|---|---|---|
 | G900 Pro | 2CH mirror | 4K front, 2.5K rear class | 2024 to current | Official G900Pro 12MP Sony STARVIS 2 Wi-Fi mirror dash cam; front IMX678, rear camera, 12-inch split-screen mirror, voice control, GPS, parking monitoring. |
 | G900 | 2CH mirror | 4K front class | 2022 to current | 12-inch mirror, rear camera, GPS module support. |
-| G900 Tripro | 3CH mirror | 4K front class | 2024 to current | 3-channel G900-family mirror variant, official bumper and cabin versions. |
+| G900 TriPro | 3CH mirror | 4K front class | 2024 to current | 3-channel G900-family mirror variant, official bumper and cabin versions. |
 | G850 | 2CH mirror | 4K front class | 2023 to current | Mirror dashcam, rear camera. |
 | G850 Pro | 2CH mirror | 4K front class | 2023 to current | Upgraded G850-family mirror variant. |
 | G840S | 2CH mirror | 4K front, 1080p rear class | 2021 to current | Popular mirror family; split from G840H for selector-level card evidence. |
