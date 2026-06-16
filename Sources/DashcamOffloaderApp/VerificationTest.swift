@@ -159,6 +159,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("Nexus 4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("E360 ACE")?.channelRoles == ["panoramic_front", "rear"],
                   KnownDashcamCatalog.exactVolumeLabelMatch("ELITE 10")?.model == "Elite 10",
+                  KnownDashcamCatalog.exactBlackVueModelMention("model = ELITE 10 v1.000(rev100)")?.model == "Elite 10",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
@@ -841,6 +842,35 @@ enum VerificationTest {
                 let channels = Set(x800LikeScan.clips.map(\.channel)).sorted()
                 let modes = Set(x800LikeScan.clips.map(\.mode)).sorted()
                 print("VERIFY FAIL: X800 profile import lost identity, channels, or parking modes: identified=\(String(describing: x800LikeScan.identifiedCamera)), channels=\(channels), modes=\(modes)")
+                return false
+            }
+
+            let untrainedElite10Source = temp.appendingPathComponent("BLACKVUE", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedElite10Source.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: untrainedElite10Source.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = ELITE 10 v1.000(rev100)\nversion = 1.000\n".utf8).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data(repeating: 37, count: 1024).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NF.mp4"))
+            try Data(repeating: 38, count: 1024).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NR.mp4"))
+            let untrainedElite10Scan = try scanner.scan(sourceURL: untrainedElite10Source, profiles: profiles)
+            guard untrainedElite10Scan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedElite10Scan.identifiedCamera?.manufacturer == "BlackVue",
+                  untrainedElite10Scan.identifiedCamera?.model == "Elite 10",
+                  untrainedElite10Scan.identifiedCamera?.isSupported == false,
+                  Set(untrainedElite10Scan.clips.map(\.channel)) == ["front", "rear"] else {
+                print("VERIFY FAIL: untrained BlackVue Elite 10 metadata should identify known model while staying generic: profile=\(untrainedElite10Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedElite10Scan.identifiedCamera)), channels=\(Set(untrainedElite10Scan.clips.map(\.channel)).sorted())")
+                return false
+            }
+            guard untrainedElite10Scan.diagnostics.contains(where: {
+                $0.stage == "blackvue_config_metadata" &&
+                    $0.outcome == "parsed_safe_fields" &&
+                    $0.detail.contains("Elite 10")
+            }),
+            untrainedElite10Scan.diagnostics.contains(where: {
+                $0.stage == "profile_selection_guard" &&
+                    $0.outcome == "selected_generic_new_card" &&
+                    $0.detail.contains("BlackVue Elite 10")
+            }) else {
+                print("VERIFY FAIL: untrained BlackVue Elite 10 scan did not record metadata and guard diagnostics: \(untrainedElite10Scan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

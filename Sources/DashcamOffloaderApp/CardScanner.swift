@@ -52,12 +52,18 @@ struct CardScanner {
 
     func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
+        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
+        let blackVueMetadataInfo = safeBlackVueMetadataInfo(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap {
-            profileSelectionIssue($0, allCandidates: candidates, sourceURL: sourceURL)
+            profileSelectionIssue(
+                $0,
+                allCandidates: candidates,
+                sourceURL: sourceURL,
+                blackVueMetadataInfo: blackVueMetadataInfo
+            )
         }
-        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
         var selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
             selectedProfile = topCandidate.profile
@@ -74,7 +80,8 @@ struct CardScanner {
             from: candidates,
             selectedProfile: selectedProfile,
             sourceURL: sourceURL,
-            goProVersionInfo: goProVersionInfo
+            goProVersionInfo: goProVersionInfo,
+            blackVueMetadataInfo: blackVueMetadataInfo
         )
 
         let rawClips: [ClipItem]
@@ -131,6 +138,22 @@ struct CardScanner {
                 outcome: "parsed_safe_fields",
                 detail: goProVersionInfo.diagnosticSummary
             ))
+        }
+        if let blackVueMetadataInfo {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "blackvue_config_metadata",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: "parsed_safe_fields",
+                detail: blackVueMetadataInfo.diagnosticSummary
+            ))
+            if let matchedModel = blackVueMetadataInfo.matchedModel {
+                diagnostics.append(contentsOf: catalogCapabilityDiagnostics(
+                    modelHint: matchedModel,
+                    allFiles: allFiles,
+                    selectedProfile: selectedProfile
+                ))
+            }
         }
         if let volumeLabelHint = KnownDashcamCatalog.exactVolumeLabelMatch(sourceURL.lastPathComponent) {
             diagnostics.append(ScanDiagnosticEntry(
@@ -190,7 +213,8 @@ struct CardScanner {
     private func profileSelectionIssue(
         _ candidate: DetectionCandidate,
         allCandidates: [DetectionCandidate],
-        sourceURL: URL
+        sourceURL: URL,
+        blackVueMetadataInfo: BlackVueMetadataInfo? = nil
     ) -> String? {
         if candidate.confidence == .low {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
@@ -198,6 +222,13 @@ struct CardScanner {
 
         if knownCatalogVolumeMatches(candidate, sourceURL: sourceURL) {
             return nil
+        }
+        if let blackVueMetadataInfo,
+           let matchedModel = blackVueMetadataInfo.matchedModel {
+            if profile(candidate.profile, matchesKnownModel: matchedModel) {
+                return nil
+            }
+            return "BlackVue config metadata identifies \(matchedModel.displayName), so this card was not selected as different profile \(candidate.profile.displayName) from shared BlackVue folder/filename evidence."
         }
 
         let hasModelEvidence = hasExplicitModelEvidence(candidate)
@@ -559,7 +590,8 @@ struct CardScanner {
         from candidates: [DetectionCandidate],
         selectedProfile: DashcamProfile?,
         sourceURL: URL,
-        goProVersionInfo: GoProVersionInfo? = nil
+        goProVersionInfo: GoProVersionInfo? = nil,
+        blackVueMetadataInfo: BlackVueMetadataInfo? = nil
     ) -> IdentifiedCamera? {
         if let goProVersionInfo,
            let matchedModel = KnownDashcamCatalog.exactModelMatch(
@@ -572,6 +604,20 @@ struct CardScanner {
                 manufacturer: matchedModel.manufacturer,
                 model: matchedModel.model,
                 evidence: goProVersionInfo.safeEvidence,
+                isSupported: selectedSupportsExactModel
+            )
+        }
+
+        if let blackVueMetadataInfo,
+           let matchedModel = blackVueMetadataInfo.matchedModel {
+            let selectedSupportsExactModel = selectedProfile.map {
+                $0.manufacturer.lowercased() == "blackvue" &&
+                    self.profile($0, matchesKnownModel: matchedModel)
+            } ?? false
+            return IdentifiedCamera(
+                manufacturer: matchedModel.manufacturer,
+                model: matchedModel.model,
+                evidence: blackVueMetadataInfo.safeEvidence,
                 isSupported: selectedSupportsExactModel
             )
         }
@@ -629,6 +675,67 @@ struct CardScanner {
         var diagnosticSummary: String {
             safeEvidence.joined(separator: "; ")
         }
+    }
+
+    private struct BlackVueMetadataInfo {
+        var modelText: String
+        var firmwareVersion: String?
+        var sourcePath: String
+
+        var matchedModel: KnownDashcamModel? {
+            KnownDashcamCatalog.exactBlackVueModelMention(modelText)
+        }
+
+        var safeEvidence: [String] {
+            var result = ["\(sourcePath) model: \(modelText)"]
+            if let firmwareVersion {
+                result.append("\(sourcePath) firmware version: \(firmwareVersion)")
+            }
+            return result
+        }
+
+        var diagnosticSummary: String {
+            safeEvidence.joined(separator: "; ")
+        }
+    }
+
+    private func safeBlackVueMetadataInfo(sourceURL: URL) -> BlackVueMetadataInfo? {
+        let candidates = [
+            "BlackVue/Config/version.bin",
+            "BlackVue/Config/micom_version.bin",
+            "BlackVue/Config/smart_gsensor_version.bin"
+        ]
+
+        for relativePath in candidates {
+            let metadataURL = sourceURL.appendingPathComponent(relativePath)
+            guard fileManager.fileExists(atPath: metadataURL.path),
+                  let raw = evidenceText(at: metadataURL) else {
+                continue
+            }
+
+            let parsedModelText = blackVueModelText(in: raw)
+            let matchedModel = parsedModelText.flatMap(KnownDashcamCatalog.exactBlackVueModelMention) ??
+                KnownDashcamCatalog.exactBlackVueModelMention(raw)
+            guard let modelText = parsedModelText ?? matchedModel?.model else {
+                continue
+            }
+
+            return BlackVueMetadataInfo(
+                modelText: modelText,
+                firmwareVersion: blackVueFirmwareVersion(in: raw),
+                sourcePath: relativePath
+            )
+        }
+
+        return nil
+    }
+
+    private func blackVueModelText(in raw: String) -> String? {
+        firstVersionValue(in: raw, keys: ["model", "model name", "product", "product name"])
+    }
+
+    private func blackVueFirmwareVersion(in raw: String) -> String? {
+        firstVersionValue(in: raw, keys: ["version", "firmware version", "ver"])
     }
 
     private func safeGoProVersionInfo(sourceURL: URL) -> GoProVersionInfo? {

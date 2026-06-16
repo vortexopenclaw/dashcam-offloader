@@ -1,4 +1,3 @@
-- Added a sampled 70mai X800 profile from the submitted/live `70MAI_X800` card evidence.
-- X800 cards are now recognized as 2-channel front/rear cards instead of being accepted as the sampled 3-channel T800 profile.
-- X800 `NO`, `PA`, and `LA` clips are mapped as driving, parking surveillance/motion-or-impact, and parking time-lapse.
-- Exact known catalog labels such as `70MAI_X800` now block selecting a different supported sibling profile from shared layout evidence alone.
+- BlackVue config metadata now identifies known BlackVue models such as Elite 10 even before a dedicated trained card profile exists.
+- Untrained BlackVue models stay on the safe New Dashcam import path while showing the exact catalog model from safe `BlackVue/Config` metadata.
+- BlackVue sibling profiles no longer get model credit merely because `version.bin` exists; list-form `contains:` rules now require the matching model text.

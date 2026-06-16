@@ -299,6 +299,7 @@ enum ProfileParser {
         var rules: [DetectionRule] = []
         var currentSection: String?
         var currentRule: DetectionRule?
+        var currentListKey: String?
 
         func sectionScore(_ section: String?, for rule: DetectionRule) -> Int {
             if rule.volumeLabel != nil {
@@ -316,6 +317,7 @@ enum ProfileParser {
                 rules.append(rule)
             }
             currentRule = nil
+            currentListKey = nil
         }
 
         for line in detectionLines {
@@ -330,7 +332,13 @@ enum ProfileParser {
                 continue
             }
 
-            if trimmed.hasPrefix("- path:") {
+            if currentListKey == "contains",
+               trimmed.hasPrefix("- "),
+               !trimmed.hasPrefix("- path:"),
+               !trimmed.hasPrefix("- volume_label:") {
+                currentRule?.contains = cleanValue(String(trimmed.dropFirst("- ".count)))
+                currentListKey = nil
+            } else if trimmed.hasPrefix("- path:") {
                 flush()
                 currentRule = DetectionRule(
                     path: cleanValue(String(trimmed.dropFirst("- path:".count))),
@@ -353,7 +361,9 @@ enum ProfileParser {
                     score: 0
                 )
             } else if trimmed.hasPrefix("contains:") {
-                currentRule?.contains = cleanValue(String(trimmed.dropFirst("contains:".count)))
+                let value = cleanValue(String(trimmed.dropFirst("contains:".count)))
+                currentRule?.contains = value
+                currentListKey = value == nil ? "contains" : nil
             } else if trimmed.hasPrefix("exists:") {
                 currentRule?.exists = (cleanValue(String(trimmed.dropFirst("exists:".count))) ?? "true") != "false"
             }

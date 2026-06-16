@@ -285,6 +285,20 @@ enum KnownDashcamCatalog {
         }
     }
 
+    static func exactBlackVueModelMention(_ modelText: String) -> KnownDashcamModel? {
+        let normalizedModelText = compact(modelText)
+        guard !normalizedModelText.isEmpty else { return nil }
+
+        return models.first { model in
+            compact(model.manufacturer) == "blackvue" &&
+                model.searchNames.contains { searchName in
+                    let normalizedSearchName = compact(searchName)
+                    return !normalizedSearchName.isEmpty &&
+                        normalizedModelText.contains(normalizedSearchName)
+                }
+        }
+    }
+
     static func isSpecificVolumeLabel(_ label: String) -> Bool {
         let normalized = compact(label)
         guard !normalized.isEmpty else { return false }
