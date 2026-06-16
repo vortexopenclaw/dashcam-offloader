@@ -137,6 +137,11 @@ struct CardScanner {
                 outcome: "matched_known_model_label",
                 detail: "Volume label \(sourceURL.lastPathComponent) matches known catalog model \(volumeLabelHint.displayName)"
             ))
+            diagnostics.append(contentsOf: catalogCapabilityDiagnostics(
+                modelHint: volumeLabelHint,
+                allFiles: allFiles,
+                selectedProfile: selectedProfile
+            ))
         }
         diagnostics.append(contentsOf: parkingPatternResult.diagnostics)
 
@@ -149,6 +154,34 @@ struct CardScanner {
             clips: clips,
             diagnostics: diagnostics
         )
+    }
+
+    private func catalogCapabilityDiagnostics(
+        modelHint: KnownDashcamModel,
+        allFiles: [URL],
+        selectedProfile: DashcamProfile?
+    ) -> [ScanDiagnosticEntry] {
+        guard let maxChannels = modelHint.channels else { return [] }
+
+        let observedTokens = observedTrailingChannelTokens(
+            from: representativeDetectionFilenames(from: allFiles)
+        )
+        guard !observedTokens.isEmpty else { return [] }
+
+        let observedCount = observedTokens.count
+        let sortedTokens = observedTokens.sorted().joined(separator: ",")
+        let outcome = observedCount > maxChannels ? "observed_exceeds_catalog_capability" : "observed_within_catalog_capability"
+        let detail = "Known catalog model \(modelHint.displayName) supports up to \(maxChannels) channel(s); card shows \(observedCount) channel token(s): \(sortedTokens)"
+
+        return [
+            ScanDiagnosticEntry(
+                stage: "known_catalog_capability_check",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: outcome,
+                detail: detail
+            )
+        ]
     }
 
     private func profileSelectionIssue(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> String? {

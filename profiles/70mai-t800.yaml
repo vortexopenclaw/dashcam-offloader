@@ -1,0 +1,71 @@
+id: 70mai-t800
+manufacturer: 70mai
+model: T800
+status: sampled
+confidence: high
+channels: 3
+source_notes:
+  - App learning submissions 1d85ac44-d2ea-45c6-968f-f2529f2bc453, 0927364a-6480-4f1c-9a7e-3b611bb6a4ae, and 1fe0b1a0-11c7-4357-8f6f-5080049949af
+detection:
+  high_confidence:
+    - volume_label: 70MAI_T800
+    - volume_label: 70mai T800
+  supporting:
+    - volume_label: T800
+folders:
+  - path: Normal/Front
+    mode: continuous
+  - path: Normal/Rear
+    mode: continuous
+  - path: Normal/Cabin
+    mode: continuous
+  - path: Normal/.s_Front
+    mode: continuous
+  - path: Normal/.s_Rear
+    mode: continuous
+  - path: Parking/Front
+    mode: parking_motion_or_impact
+  - path: Parking/Rear
+    mode: parking_motion_or_impact
+  - path: Parking/Cabin
+    mode: parking_motion_or_impact
+  - path: Parking/.s_Front
+    mode: parking_motion_or_impact
+  - path: Parking/.s_Rear
+    mode: parking_motion_or_impact
+  - path: Lapse/Front
+    mode: parking_timelapse
+  - path: Lapse/Rear
+    mode: parking_timelapse
+  - path: Lapse/Cabin
+    mode: parking_timelapse
+  - path: Lapse/.s_Front
+    mode: parking_timelapse
+  - path: Lapse/.s_Rear
+    mode: parking_timelapse
+  - path: Event
+    mode: event
+  - path: Photo
+    mode: photo
+filename_patterns:
+  - pattern: "^(NO|PA|LA|EV)(\\d{8})-(\\d{6})-(\\d+)(F|R|C)\\.MP4$"
+    timestamp:
+      format: YYYYMMDD-HHMMSS
+    modes:
+      NO: continuous
+      PA: parking_motion_or_impact
+      LA: parking_timelapse
+      EV: event
+    channels:
+      F: front
+      R: rear
+      C: interior
+channels:
+  F: front
+  R: rear
+  C: interior
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

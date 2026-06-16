@@ -23,6 +23,7 @@
 - Vantrue E1 Pro - profile drafted from one real single-channel card and official manual. Observed Normal driving clips, motion-detection parking clips, parking event clips, and model-specific `GPS/E1PRO_Settings.ini`.
 - GoPro HERO9 Black - profile drafted from two real cards and official GoPro support/manual references. See `docs/card-profiles/gopro-hero9-black.md`. Detected from safe `MISC/version.txt` model/firmware fields, imports media from every matching `DCIM/*GOPRO` folder such as `100GOPRO` and `101GOPRO`, excludes `.LRV`/`.THM` sidecars, labels normal videos as Regular Recording, hides the single primary channel filter, and can combine same-prefix looping chunks into one passthrough output file.
 - GoPro HERO / MAX Camera - generic GoPro fallback profile. See `docs/card-profiles/gopro-hero-action-camera.md`. Reads safe `MISC/version.txt` `camera type` and `firmware version` fields to identify known GoPro models without trusting the mutable card volume name. Shared media handling covers modern `DCIM/*GOPRO` folders, GoPro video/photo naming, loop sequence grouping, and sanitized filename sequence summaries while keeping serial, Wi-Fi, and other private version fields out of submissions. Internal catalog hints include HERO4-HERO13, HERO compact/LIT HERO, MAX/MAX2, Fusion, and Mission camera variants.
+- 70mai T800 - profile drafted from real app learning submissions. 3-channel F/R/C card with full-resolution folders `Normal/Front`, `Normal/Rear`, `Normal/Cabin`, parking surveillance folders under `Parking/`, time-lapse folders under `Lapse/`, and low-resolution proxy folders `.s_Front` / `.s_Rear`. Filename pattern is `NO`/`PA`/`LA`/`EV` + `YYYYMMDD-HHMMSS-SEQUENCE` + channel suffix.
 - 70mai M310 - profile drafted from a private archive sample and real card scan. Single-channel front only. Distinct filename pattern: MODE_PREFIX + YYYYMMDD-HHMMSS-SEQUENCE + lowercase .mp4. OSD shows date/time only (no model name). Folder structure confirmed: Normal/, Parking/, Lapse/, Event/, Photo/.
 - Cansonic UltraDash Z3+ Standard Edition - profile drafted from a private archive sample and official product page. Dual front-lens camera (L = wide 140°, R = telephoto 164ft) + optional B rear camera (R1). Distinct filename pattern: YYYYMMDD_HHMMSS_CHANNEL (no sequence number, 8-digit date). All channels 2K QHD.
 - Cansonic UltraDash Z4 Standard Edition - profile drafted from real app submission and direct card scan. 3CH L/R/B clips in VIDEO/ and P-prefixed protected parking clips in PROTECTED/. Sample card shows 4K L/R and 2K B H.264 video.
@@ -53,7 +54,6 @@
 
 - Nextbase iQ - private archive folder did not include enough raw camera filenames for a profile.
 - Vantrue N4 Pro - private archive folder only showed edited/b-roll filenames, not raw camera filenames.
-- 70mai T800 - private archive folder only showed edited/b-roll filenames, not raw camera filenames.
 
 ## Support Definitions
 

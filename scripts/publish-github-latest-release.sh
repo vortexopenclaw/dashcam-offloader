@@ -9,6 +9,7 @@ fi
 ZIP_PATH="$1"
 ZIP_NAME="$2"
 REPOSITORY="$3"
+WORKSPACE_DIR="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 SHORT_SHA="$(git rev-parse --short HEAD)"
 FULL_SHA="$(git rev-parse HEAD)"
 RELEASE_NOTES_FILE="${RELEASE_NOTES_FILE:-docs/releases/latest.md}"
@@ -32,6 +33,11 @@ run_with_retries() {
     sleep $((attempt * 5))
   done
 }
+
+if [[ -z "${GH_TOKEN:-}" && -f "$WORKSPACE_DIR/scripts/openclaw_env_value.py" ]]; then
+  GH_TOKEN="$(python3 "$WORKSPACE_DIR/scripts/openclaw_env_value.py" GITHUB_PAT 2>/dev/null || true)"
+  export GH_TOKEN
+fi
 
 if [[ -z "${GH_TOKEN:-}" ]]; then
   echo "GH_TOKEN is required to publish the GitHub latest release." >&2

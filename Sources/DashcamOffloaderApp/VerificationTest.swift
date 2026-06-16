@@ -795,7 +795,12 @@ enum VerificationTest {
                 return false
             }
 
-            let t800LikeSource = temp.appendingPathComponent("unknown-70mai-t800-like", isDirectory: true)
+            guard profiles.contains(where: { $0.id == "70mai-t800" && $0.maxChannels == 3 }) else {
+                print("VERIFY FAIL: 70mai T800 profile missing or max channel metadata missing")
+                return false
+            }
+
+            let t800LikeSource = temp.appendingPathComponent("70MAI_T800", isDirectory: true)
             for folder in ["Normal/Front", "Normal/Rear", "Normal/Cabin"] {
                 try FileManager.default.createDirectory(at: t800LikeSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
             }
@@ -803,25 +808,35 @@ enum VerificationTest {
             try Data(repeating: 21, count: 1024).write(to: t800LikeSource.appendingPathComponent("Normal/Rear/NO20260615-093309-000000R.MP4"))
             try Data(repeating: 22, count: 1024).write(to: t800LikeSource.appendingPathComponent("Normal/Cabin/NO20260615-093309-000000C.MP4"))
             let t800LikeScan = try scanner.scan(sourceURL: t800LikeSource, profiles: profiles)
-            guard t800LikeScan.selectedProfile?.id == "generic-new-dashcam" else {
-                print("VERIFY FAIL: unprofiled 3CH 70mai-style card selected exact profile \(t800LikeScan.selectedProfile?.id ?? "nil")")
-                return false
-            }
-            guard t800LikeScan.diagnostics.contains(where: {
-                $0.stage == "profile_selection_guard" &&
-                    $0.outcome == "selected_generic_new_card" &&
-                    ($0.detail.contains("exceeds") || $0.detail.contains("outside"))
-            }) else {
-                print("VERIFY FAIL: unprofiled 3CH 70mai-style card did not record extra-channel guard")
-                return false
-            }
-            guard t800LikeScan.candidates.first?.evidence.contains(where: { $0.contains("observed channel count 3 exceeds profile max 2") }) == true else {
-                print("VERIFY FAIL: unprofiled 3CH 70mai-style card did not record max-channel evidence")
+            guard t800LikeScan.selectedProfile?.id == "70mai-t800" else {
+                print("VERIFY FAIL: T800-like 3CH 70mai card was not recognized as T800: \(t800LikeScan.selectedProfile?.id ?? "nil")")
                 return false
             }
             guard Set(t800LikeScan.clips.map(\.channel)) == ["front", "interior", "rear"],
                   t800LikeScan.clips.allSatisfy({ $0.outputCategory == "Driving" }) else {
-                print("VERIFY FAIL: unprofiled 3CH 70mai-style generic import lost channels: \(Set(t800LikeScan.clips.map(\.channel)).sorted())")
+                print("VERIFY FAIL: T800 profile import lost channels: \(Set(t800LikeScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
+            let impossibleT800LikeSource = temp.appendingPathComponent("unknown-70mai-4ch-like", isDirectory: true)
+            for folder in ["Normal/Front", "Normal/Rear", "Normal/Cabin", "Normal/Side"] {
+                try FileManager.default.createDirectory(at: impossibleT800LikeSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            try Data(repeating: 27, count: 1024).write(to: impossibleT800LikeSource.appendingPathComponent("Normal/Front/NO20260615-093309-000000F.MP4"))
+            try Data(repeating: 28, count: 1024).write(to: impossibleT800LikeSource.appendingPathComponent("Normal/Rear/NO20260615-093309-000000R.MP4"))
+            try Data(repeating: 29, count: 1024).write(to: impossibleT800LikeSource.appendingPathComponent("Normal/Cabin/NO20260615-093309-000000C.MP4"))
+            try Data(repeating: 30, count: 1024).write(to: impossibleT800LikeSource.appendingPathComponent("Normal/Side/NO20260615-093309-000000D.MP4"))
+            let impossibleT800LikeScan = try scanner.scan(sourceURL: impossibleT800LikeSource, profiles: profiles)
+            guard impossibleT800LikeScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: impossible 4CH 70mai-style card selected exact profile \(impossibleT800LikeScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard impossibleT800LikeScan.diagnostics.contains(where: {
+                $0.stage == "profile_selection_guard" &&
+                    $0.outcome == "selected_generic_new_card" &&
+                    ($0.detail.contains("exceeds") || $0.detail.contains("outside"))
+            }) else {
+                print("VERIFY FAIL: impossible 4CH 70mai-style card did not record extra-channel guard")
                 return false
             }
 
@@ -835,8 +850,34 @@ enum VerificationTest {
                       $0.stage == "known_catalog_volume_hint" &&
                           $0.outcome == "matched_known_model_label" &&
                           $0.detail.contains("70mai A800")
+                  }),
+                  knownVolumeLabelScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_capability_check" &&
+                          $0.outcome == "observed_within_catalog_capability" &&
+                          $0.detail.contains("supports up to 2 channel")
                   }) else {
                 print("VERIFY FAIL: known volume label should create a private 70mai A800 hint without selecting a profile")
+                return false
+            }
+
+            let impossibleKnownVolumeLabelSource = temp.appendingPathComponent("70mai A800", isDirectory: true)
+            try FileManager.default.removeItem(at: knownVolumeLabelSource)
+            try FileManager.default.createDirectory(at: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Front", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Rear", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Cabin", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 24, count: 1024).write(to: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Front/NO20260615-093309-000000F.MP4"))
+            try Data(repeating: 25, count: 1024).write(to: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Rear/NO20260615-093309-000000R.MP4"))
+            try Data(repeating: 26, count: 1024).write(to: impossibleKnownVolumeLabelSource.appendingPathComponent("Normal/Cabin/NO20260615-093309-000000C.MP4"))
+            let impossibleKnownVolumeLabelScan = try scanner.scan(sourceURL: impossibleKnownVolumeLabelSource, profiles: [])
+            guard impossibleKnownVolumeLabelScan.selectedProfile?.id == "generic-new-dashcam",
+                  impossibleKnownVolumeLabelScan.identifiedCamera == nil,
+                  impossibleKnownVolumeLabelScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_capability_check" &&
+                          $0.outcome == "observed_exceeds_catalog_capability" &&
+                          $0.detail.contains("70mai A800 supports up to 2 channel") &&
+                          $0.detail.contains("card shows 3 channel")
+                  }) else {
+                print("VERIFY FAIL: catalog max-channel capability should flag impossible 70mai A800 evidence")
                 return false
             }
 

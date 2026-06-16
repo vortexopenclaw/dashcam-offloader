@@ -1,5 +1,4 @@
-- Improved camera detection for unprofiled dashcams that look similar to an existing model.
-- Cards with extra filename channel tokens now fall back to the generic new-card path instead of being overmatched to a sibling profile.
-- Known profile channel limits are now used as negative evidence: a 3-channel card will not be identified as a model that only supports up to 2 channels.
-- Specific in-camera volume labels, such as a model-named 70mai card, are preserved as private known-catalog hints without forcing a supported profile match.
-- This helps new multi-channel cameras keep useful channel and clip metadata while waiting for a dedicated profile.
+- Added a sampled 70mai T800 profile from the submitted learning packages.
+- T800 cards are now recognized as 3-channel front/rear/interior cards instead of falling back to New Dashcam.
+- T800 `NO`, `PA`, and `LA` clips are mapped as driving, parking surveillance, and parking time-lapse.
+- 70mai 4K Omni overmatch protection remains in place for cards that exceed a known profile's channel capability.
