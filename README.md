@@ -6,6 +6,16 @@ The purpose of this app is to automate and simplify moving dashcam footage from 
 
 Learning new dashcams supports that main offload workflow. A user should be able to choose a known model, choose a known but not-yet-supported model, or choose `Other`, describe their camera/channel setup, scan the card, and generate a sanitized intake package that can be used to add that dashcam to the profile library.
 
+## License and Branding
+
+Dashcam Offloader is open source under the GNU Affero General Public License v3.0. You can inspect, use, modify, and share the code under the terms of the AGPLv3. Modified versions that are distributed or offered as a network service must preserve the same license freedoms and make their corresponding source available.
+
+Copyright (c) 2026 Vortex Radar.
+
+The Vortex Radar name, Vortex Radar logo, Dashcam Offloader name, Dashcam Offloader app icon, and related branding are not licensed for reuse by forks, ports, hosted services, or unofficial builds. See [TRADEMARKS.md](TRADEMARKS.md) for branding guidance.
+
+Official builds are published by Vortex Radar. Unofficial builds, forks, ports, and hosted services should use their own names and clearly state that they are not official Vortex Radar releases.
+
 ## Current Status
 
 This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, organize downloads into one folder or by clip type, date, or camera, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, check/install app updates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
@@ -78,54 +88,54 @@ swift run DashcamOffloader --verify
 ## Seed Profiles
 
 **Botslab**
-- Botslab G980H — 4CH, app submission and real card sampled. Detected from `MISC/G980HMCN5291.TXT`; generic `360CARDVR` cards should remain unrecognized unless exact model evidence is present.
+- Botslab G980H: 4CH, app submission and real card sampled. Detected from `MISC/G980HMCN5291.TXT`; generic `360CARDVR` cards should remain unrecognized unless exact model evidence is present.
 
 **BlackVue**
-- BlackVue DR970X Plus — 2CH, real card sampled
-- BlackVue Elite 8 — 2CH, real card sampled
-- BlackVue Elite 9 — 2CH, real card sampled
+- BlackVue DR970X Plus: 2CH, real card sampled
+- BlackVue Elite 8: 2CH, real card sampled
+- BlackVue Elite 9: 2CH, real card sampled
 
 **Cansonic**
-- Cansonic UltraDash Z3+ Standard Edition — dual front lens (wide + telephoto) + optional rear (R1), footage sampled
-- Cansonic UltraDash Z4 Standard Edition — 3CH, app submission and real card sampled. Uses `VIDEO/` driving clips and `PROTECTED/` P-prefixed protected parking clips.
+- Cansonic UltraDash Z3+ Standard Edition: dual front lens (wide + telephoto) + optional rear (R1), footage sampled
+- Cansonic UltraDash Z4 Standard Edition: 3CH, app submission and real card sampled. Uses `VIDEO/` driving clips and `PROTECTED/` P-prefixed protected parking clips.
 
 **Cobra**
-- Cobra Road Scout — 1CH, real card sampled. Combined radar detector + dashcam.
+- Cobra Road Scout: 1CH, real card sampled. Combined radar detector + dashcam.
 
 **DJI**
-- DJI Mini 3 Pro — 1CH drone, real card sampled
-- DJI RC (RM330) — companion device (remote controller), real card sampled. Controller microSD only; full-res drone footage is on the drone's own card.
+- DJI Mini 3 Pro: 1CH drone, real card sampled
+- DJI RC (RM330): companion device (remote controller), real card sampled. Controller microSD only; full-res drone footage is on the drone's own card.
 
 **Escort**
-- Escort M1 — 1CH, real card sampled
-- Escort M2 — 1CH, real card sampled
-- Escort MAXcam 360c — 1CH, real card sampled. Combined radar detector + dashcam.
+- Escort M1: 1CH, real card sampled
+- Escort M2: 1CH, real card sampled
+- Escort MAXcam 360c: 1CH, real card sampled. Combined radar detector + dashcam.
 
 **Sony**
-- Sony Alpha A7 III (ILCE-7M3) — 1CH mirrorless camera, real card sampled. Video + photos.
+- Sony Alpha A7 III (ILCE-7M3): 1CH mirrorless camera, real card sampled. Video + photos.
 
 **Thinkware**
-- Thinkware U3000 — 2CH, real card sampled
-- Thinkware U3000 Pro — real card sampled
+- Thinkware U3000: 2CH, real card sampled
+- Thinkware U3000 Pro: real card sampled
 
 **Vantrue**
-- Vantrue E1 Pro — 1CH, real card sampled
-- Vantrue N4 Pro S — 3CH, real card sampled
-- Vantrue N4 S — 3CH, real card sampled
+- Vantrue E1 Pro: 1CH, real card sampled
+- Vantrue N4 Pro S: 3CH, real card sampled
+- Vantrue N4 S: 3CH, real card sampled
 
 **VIOFO**
-- VIOFO A119 Mini 2 — 1CH, real card sampled
-- VIOFO A119M Pro — 1CH, footage sampled
-- VIOFO A139 Pro — 3CH, footage sampled
-- VIOFO A229 Plus — 3CH, real card sampled
-- VIOFO A229 Pro — 3CH, real card sampled
-- VIOFO A229 Ultra — 3CH, footage sampled, OSD OCR confirmed
-- VIOFO A329S — 3CH, real card sampled
-- VIOFO A329T — telephoto variant, official references only
+- VIOFO A119 Mini 2: 1CH, real card sampled
+- VIOFO A119M Pro: 1CH, footage sampled
+- VIOFO A139 Pro: 3CH, footage sampled
+- VIOFO A229 Plus: 3CH, real card sampled
+- VIOFO A229 Pro: 3CH, real card sampled
+- VIOFO A229 Ultra: 3CH, footage sampled, OSD OCR confirmed
+- VIOFO A329S: 3CH, real card sampled
+- VIOFO A329T: telephoto variant, official references only
 
 **Vueroid**
-- Vueroid H1 — 1CH front variant, confirmed from app submission and real card sample
-- Vueroid S1 4K Infinite — 1CH/2CH/3CH variants, all confirmed from real card samples
+- Vueroid H1: 1CH front variant, confirmed from app submission and real card sample
+- Vueroid S1 4K Infinite: 1CH/2CH/3CH variants, all confirmed from real card samples
 
 ## Repository Layout
 
