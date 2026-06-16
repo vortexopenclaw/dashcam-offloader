@@ -1,0 +1,57 @@
+id: 70mai-x800
+manufacturer: 70mai
+model: X800
+status: sampled
+confidence: high
+channels: 2
+source_notes:
+  - App learning submission 91e46abf-0eea-40fb-9335-0931bfd45be7 and live mounted card /Volumes/70MAI_X800
+detection:
+  high_confidence:
+    - volume_label: 70MAI_X800
+    - volume_label: 70mai X800
+  supporting:
+    - volume_label: X800
+folders:
+  - path: Normal/Front
+    mode: continuous
+  - path: Normal/Rear
+    mode: continuous
+  - path: Normal/.s_Front
+    mode: continuous
+  - path: Parking/Front
+    mode: parking_motion_or_impact
+  - path: Parking/Rear
+    mode: parking_motion_or_impact
+  - path: Parking/.s_Front
+    mode: parking_motion_or_impact
+  - path: Lapse/Front
+    mode: parking_timelapse
+  - path: Lapse/Rear
+    mode: parking_timelapse
+  - path: Lapse/.s_Front
+    mode: parking_timelapse
+  - path: Event
+    mode: event
+  - path: Photo
+    mode: photo
+filename_patterns:
+  - pattern: "^(NO|PA|LA|EV)(\\d{8})-(\\d{6})-(\\d+)(F|R)\\.MP4$"
+    timestamp:
+      format: YYYYMMDD-HHMMSS
+    modes:
+      NO: continuous
+      PA: parking_motion_or_impact
+      LA: parking_timelapse
+      EV: event
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"

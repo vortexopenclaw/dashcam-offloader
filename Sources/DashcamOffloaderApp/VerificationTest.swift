@@ -795,8 +795,9 @@ enum VerificationTest {
                 return false
             }
 
-            guard profiles.contains(where: { $0.id == "70mai-t800" && $0.maxChannels == 3 }) else {
-                print("VERIFY FAIL: 70mai T800 profile missing or max channel metadata missing")
+            guard profiles.contains(where: { $0.id == "70mai-t800" && $0.maxChannels == 3 }),
+                  profiles.contains(where: { $0.id == "70mai-x800" && $0.maxChannels == 2 }) else {
+                print("VERIFY FAIL: 70mai T800/X800 profile missing or max channel metadata missing")
                 return false
             }
 
@@ -829,24 +830,17 @@ enum VerificationTest {
             try Data(repeating: 35, count: 1024).write(to: x800LikeSource.appendingPathComponent("Lapse/Front/LA20260616-095200-000002F.MP4"))
             try Data(repeating: 36, count: 1024).write(to: x800LikeSource.appendingPathComponent("Lapse/Rear/LA20260616-095200-000002R.MP4"))
             let x800LikeScan = try scanner.scan(sourceURL: x800LikeSource, profiles: profiles)
-            guard x800LikeScan.selectedProfile?.id == "generic-new-dashcam" else {
-                print("VERIFY FAIL: X800-like 2CH 70mai card selected exact profile \(x800LikeScan.selectedProfile?.id ?? "nil")")
+            guard x800LikeScan.selectedProfile?.id == "70mai-x800" else {
+                print("VERIFY FAIL: X800-like 2CH 70mai card was not recognized as X800: \(x800LikeScan.selectedProfile?.id ?? "nil")")
                 return false
             }
-            guard x800LikeScan.identifiedCamera == nil,
-                  x800LikeScan.diagnostics.contains(where: {
-                      $0.stage == "known_catalog_volume_hint" &&
-                          $0.outcome == "matched_known_model_label" &&
-                          $0.detail.contains("70mai X800")
-                  }),
-                  x800LikeScan.diagnostics.contains(where: {
-                      $0.stage == "profile_selection_guard" &&
-                          $0.outcome == "selected_generic_new_card" &&
-                          $0.detail.contains("70MAI_X800") &&
-                          $0.detail.contains("70mai X800") &&
-                          $0.detail.contains("70mai T800")
-                  }) else {
-                print("VERIFY FAIL: X800-like card did not preserve catalog hint and reject T800")
+            guard x800LikeScan.identifiedCamera?.model == "X800",
+                  Set(x800LikeScan.clips.map(\.channel)) == ["front", "rear"],
+                  x800LikeScan.clips.contains(where: { $0.mode == "parking_timelapse" }),
+                  x800LikeScan.clips.contains(where: { $0.mode == "parking_motion_or_impact" }) else {
+                let channels = Set(x800LikeScan.clips.map(\.channel)).sorted()
+                let modes = Set(x800LikeScan.clips.map(\.mode)).sorted()
+                print("VERIFY FAIL: X800 profile import lost identity, channels, or parking modes: identified=\(String(describing: x800LikeScan.identifiedCamera)), channels=\(channels), modes=\(modes)")
                 return false
             }
 

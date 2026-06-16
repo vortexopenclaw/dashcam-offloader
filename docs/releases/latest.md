@@ -1,4 +1,4 @@
-- Fixed 70mai X800 cards being accepted as the sampled 70mai T800 profile when shared 70mai folders and filenames overlap.
-- If a card label exactly matches a known catalog model such as `70MAI_X800`, the app now refuses to select a different supported sibling profile from shared layout evidence alone.
-- Learn Card submissions now prefer the exact catalog hint for the manufacturer/model fields and label rejected top candidates clearly.
-- Added a verifier regression for a 2-channel X800-style card with T800-overlapping `Normal`, `Parking`, and `Lapse` folders.
+- Added a sampled 70mai X800 profile from the submitted/live `70MAI_X800` card evidence.
+- X800 cards are now recognized as 2-channel front/rear cards instead of being accepted as the sampled 3-channel T800 profile.
+- X800 `NO`, `PA`, and `LA` clips are mapped as driving, parking surveillance/motion-or-impact, and parking time-lapse.
+- Exact known catalog labels such as `70MAI_X800` now block selecting a different supported sibling profile from shared layout evidence alone.

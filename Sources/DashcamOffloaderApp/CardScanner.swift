@@ -73,6 +73,7 @@ struct CardScanner {
         let identifiedCamera = identifyCamera(
             from: candidates,
             selectedProfile: selectedProfile,
+            sourceURL: sourceURL,
             goProVersionInfo: goProVersionInfo
         )
 
@@ -195,6 +196,10 @@ struct CardScanner {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
         }
 
+        if knownCatalogVolumeMatches(candidate, sourceURL: sourceURL) {
+            return nil
+        }
+
         let hasModelEvidence = hasExplicitModelEvidence(candidate)
         let hasFilenameEvidence = candidate.evidence.contains { $0.hasPrefix("filename pattern match ") }
         if hasModelEvidence {
@@ -248,6 +253,13 @@ struct CardScanner {
         }
 
         return "Volume label \(sourceURL.lastPathComponent) exactly matches known catalog model \(volumeLabelHint.displayName), so this card was not selected as different profile \(candidate.profile.displayName) from shared folder/filename evidence."
+    }
+
+    private func knownCatalogVolumeMatches(_ candidate: DetectionCandidate, sourceURL: URL) -> Bool {
+        guard let volumeLabelHint = KnownDashcamCatalog.exactVolumeLabelMatch(sourceURL.lastPathComponent) else {
+            return false
+        }
+        return profile(candidate.profile, matchesKnownModel: volumeLabelHint)
     }
 
     private func profile(_ profile: DashcamProfile, matchesKnownModel model: KnownDashcamModel) -> Bool {
@@ -470,6 +482,7 @@ struct CardScanner {
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
             selectedProfile: result.selectedProfile,
+            sourceURL: sourceURL,
             goProVersionInfo: goProVersionInfo
         )
 
@@ -545,6 +558,7 @@ struct CardScanner {
     private func identifyCamera(
         from candidates: [DetectionCandidate],
         selectedProfile: DashcamProfile?,
+        sourceURL: URL,
         goProVersionInfo: GoProVersionInfo? = nil
     ) -> IdentifiedCamera? {
         if let goProVersionInfo,
@@ -559,6 +573,18 @@ struct CardScanner {
                 model: matchedModel.model,
                 evidence: goProVersionInfo.safeEvidence,
                 isSupported: selectedSupportsExactModel
+            )
+        }
+
+        if let selectedProfile,
+           selectedProfile.id != DashcamProfile.genericNewDashcam.id,
+           let volumeLabelHint = KnownDashcamCatalog.exactVolumeLabelMatch(sourceURL.lastPathComponent),
+           profile(selectedProfile, matchesKnownModel: volumeLabelHint) {
+            return IdentifiedCamera(
+                manufacturer: volumeLabelHint.manufacturer,
+                model: volumeLabelHint.model,
+                evidence: ["Volume label \(sourceURL.lastPathComponent) matches known catalog model \(volumeLabelHint.displayName)"],
+                isSupported: true
             )
         }
 
@@ -898,6 +924,21 @@ struct CardScanner {
 
     private func explicitParkingPattern(for clip: ClipItem) -> ParkingPattern? {
         guard clip.excludedReason == nil, clip.isVideo else { return nil }
+
+        switch clip.mode {
+        case "parking_timelapse":
+            return .timelapse
+        case "parking_motion_detection":
+            return .motionDetection
+        case "parking_impact_detection":
+            return .impactDetection
+        case "parking_motion_or_impact":
+            return .motionOrImpact
+        case "parking_continuous_low_bitrate":
+            return .continuousLowBitrate
+        default:
+            break
+        }
 
         let lowerPath = clip.relativePath.lowercased()
         let isProtectedFolder = lowerPath.contains("/ro/") ||
