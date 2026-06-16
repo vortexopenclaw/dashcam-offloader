@@ -136,8 +136,8 @@ The current Vueroid dashcam page lists these selector candidates.
 | Model | Channels | Max resolution | Era | Distinctive features |
 |---|---:|---|---|---|
 | T800 | 3CH | 4K front, 4K rear, FHD interior | 2025 current | Triple-channel, dual STARVIS 2 IMX678, 4G compatible. |
-| X800 | 1/2CH | 4K 60 fps front, optional rear | 2025 current | 4K Omni model, rotating front camera, AI motion, 4G compatibility. |
-| X200 | 1CH | 1080p/1944p class | 2022 to current | Omni model, rotating 360-degree front/cabin view, AI parking. |
+| 4K Omni X800 | 1/2CH | 4K 60 fps front, optional rear | 2025 current | 4K Omni / X800 are the same sampled camera family, rotating front camera, AI motion, 4G compatibility. |
+| X200 | 1CH | 1080p class | 2022 to current | Original Omni model, rotating 360-degree front/cabin view, AI parking. 70mai's `/us/omni/` page lists 1920×1080P. |
 | A810S | 1/2CH | 4K front | 2025 current | STARVIS 2, ROI license plate enhancement, dual-channel options. |
 | A810 | 1/2CH | 4K front | 2023 to current | HDR, Night Owl Vision, optional rear, ADAS. |
 | A810 Lite | 1/2CH | 4K front | 2026 current | Compact 4K, 4G compatibility, supercapacitor. |

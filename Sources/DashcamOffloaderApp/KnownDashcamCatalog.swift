@@ -139,8 +139,8 @@ enum KnownDashcamCatalog {
 
         // 70mai
         model("70mai", "T800", channels: 3, roles: ["front", "rear", "interior"]),
-        model("70mai", "X800", channels: 2, roles: ["front", "rear"]),
-        model("70mai", "X200", channels: 1, roles: ["rotating_front"]),
+        model("70mai", "4K Omni X800", aliases: ["70MAI_X800", "X800", "4K Omni", "4K Omni X800", "Dash Cam 4K Omni X800"], channels: 2, roles: ["front", "rear"]),
+        model("70mai", "X200", aliases: ["Dash Cam Omni"], channels: 1, roles: ["rotating_front"]),
         model("70mai", "A810S", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A810", channels: 2, roles: ["front", "rear"]),
         model("70mai", "A810 Lite", channels: 2, roles: ["front", "rear"]),

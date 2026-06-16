@@ -1,3 +1,3 @@
-- BlackVue config metadata now identifies known BlackVue models such as Elite 10 even before a dedicated trained card profile exists.
-- Untrained BlackVue models stay on the safe New Dashcam import path while showing the exact catalog model from safe `BlackVue/Config` metadata.
-- BlackVue sibling profiles no longer get model credit merely because `version.bin` exists; list-form `contains:` rules now require the matching model text.
+- 70mai X800 is now canonicalized as 70mai 4K Omni X800, with X800 and 4K Omni aliases mapped to the same sampled profile.
+- Removed the older separate 70mai 4K Omni seed profile so it cannot compete with the real X800/4K Omni card evidence.
+- 70mai X200 remains a separate original 1080p Omni catalog model.

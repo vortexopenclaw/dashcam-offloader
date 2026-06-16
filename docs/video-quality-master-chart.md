@@ -33,7 +33,7 @@ Representative front-channel driving rows where measured files are 3840x2160 at 
 | Thinkware U1000 Plus | 2 | HEVC | 3840x2160 | 30 | ~24.0 Mbps | ffprobe | Rear 1080p at ~6 Mbps. |
 | Vantrue N4 Pro S | 3 | HEVC | 3840x2160 | 30 | ~31.9 Mbps | ffprobe | Front highest; interior 1080p ~9.8 Mbps, rear 1440p ~14.3 Mbps. |
 | Vantrue E1 Pro | 1 | H.264 | 3840x2160 | 30 | ~31.9 Mbps | ffprobe | Time-lapse parking can keep 4K30 at same bitrate in sample. |
-| 70mai 4K Omni | 1-2 mixed archive | HEVC | 3840x2160 | 30 | ~31.9-60.3 Mbps | ffprobe | Archive has mixed-source evidence; needs clean card-origin confirmation. |
+| 70mai 4K Omni X800 | 1-2 mixed archive + 2CH card layout | HEVC | 3840x2160 | 30 | ~31.9-60.3 Mbps | ffprobe/card scan | X800 and 4K Omni are the same product family; clean card confirms layout, archive still informs media specs. |
 | Rove R2-4K Dual | 2 | HEVC | 3840x2160 | 30 | ~20.0 Mbps | ffprobe | 4K file at relatively low bitrate. |
 | Rove R2-4K Pro | 1 | HEVC | 3840x2160 | 30 | ~36.9 Mbps | ffprobe | Real app submission confirmed root Video folder and filename family. |
 
@@ -80,7 +80,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Vantrue N4 | A/B/C | A 1440p30, B/C 1080p30 | A ~10.6-15.6 Mbps, B/C ~3.2-11.7 Mbps | Parking drops to 720p and under ~1.3 Mbps. |
 | Vantrue E360 | A/C observed | A 5184x1944 ultrawide, C 1440p | A ~28.7 Mbps, C ~14.4 Mbps | Parking not represented in current row. |
 | 70mai M310 | F | 2304x1296 30 fps | ~12 Mbps | Parking/lapse measured same resolution/bitrate in sample. |
-| 70mai 4K Omni | F/R mixed archive | F 4K30, R 1080p30 | F ~31.9-60.3 Mbps, R ~10.9 Mbps | Mixed-source parking evidence; needs cleaner card sample. |
+| 70mai 4K Omni X800 | F/R mixed archive + 2CH card layout | F 4K30, R 1080p30 | F ~31.9-60.3 Mbps, R ~10.9 Mbps | X800 card confirms F/R layout; archive still provides provisional media measurements. |
 | Cansonic UltraDash Z3+ | L/R/B | L/R/B all 1440p30 | L/R ~14.3 Mbps, B ~11.9 Mbps | Parking not represented in current row. |
 | Rove R2-4K Dual | F | F 4K30 | ~20 Mbps | Protected/parking event stays ~20 Mbps in sample. |
 | Rove R2-4K Pro | F | F 4K30 | ~36.9 Mbps | Parking not represented in current row. |

@@ -21,8 +21,9 @@ enum VerificationTest {
                 print("VERIFY FAIL: missing Vueroid H1 profile")
                 return false
             }
-            guard profiles.first(where: { $0.id == "70mai-4k-omni" })?.maxChannels == 2 else {
-                print("VERIFY FAIL: 70mai 4K Omni max channel metadata missing")
+            guard profiles.first(where: { $0.id == "70mai-x800" })?.maxChannels == 2,
+                  profiles.contains(where: { $0.id == "70mai-4k-omni" }) == false else {
+                print("VERIFY FAIL: 70mai 4K Omni X800 canonical profile or duplicate removal failed")
                 return false
             }
             let currentBuild = AppBuildInfo(version: "0.1.0", build: "1", commit: "abc1234")
@@ -158,6 +159,9 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("N4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("Nexus 4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("E360 ACE")?.channelRoles == ["panoramic_front", "rear"],
+                  KnownDashcamCatalog.exactVolumeLabelMatch("4K Omni")?.model == "4K Omni X800",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("70MAI_X800")?.model == "4K Omni X800",
+                  KnownDashcamCatalog.exactVolumeLabelMatch("Dash Cam Omni")?.model == "X200",
                   KnownDashcamCatalog.exactVolumeLabelMatch("ELITE 10")?.model == "Elite 10",
                   KnownDashcamCatalog.exactBlackVueModelMention("model = ELITE 10 v1.000(rev100)")?.model == "Elite 10",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
@@ -835,7 +839,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: X800-like 2CH 70mai card was not recognized as X800: \(x800LikeScan.selectedProfile?.id ?? "nil")")
                 return false
             }
-            guard x800LikeScan.identifiedCamera?.model == "X800",
+            guard x800LikeScan.identifiedCamera?.model == "4K Omni X800",
                   Set(x800LikeScan.clips.map(\.channel)) == ["front", "rear"],
                   x800LikeScan.clips.contains(where: { $0.mode == "parking_timelapse" }),
                   x800LikeScan.clips.contains(where: { $0.mode == "parking_motion_or_impact" }) else {

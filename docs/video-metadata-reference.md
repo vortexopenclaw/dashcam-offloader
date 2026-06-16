@@ -384,7 +384,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The sampled 360-channel file is an ultrawide 5184x1944 stream.
 
-## 70mai 4K Omni
+## 70mai 4K Omni X800
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
@@ -392,7 +392,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | R (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9 Mbps | MP4 | `ffprobe` |
 | PI / PR | parking | H.264 | 1920x1080 / 2560x1440 | 30 | ~3.9-4.1 Mbps | MP4 | `ffprobe` |
 
-**Notes:** NAS samples show both 70mai-style `NO`/`PA` prefixed files and VIOFO-style parking suffix examples in the same model folder, so treat this archive as mixed-source evidence until a card-origin sample is inspected.
+**Notes:** X800 and 4K Omni are the same product family in the current catalog. NAS samples show both 70mai-style `NO`/`PA` prefixed files and VIOFO-style parking suffix examples in the same model folder, so keep archive media specs provisional even though the X800 card layout is now sampled.
 
 ## Escort M1
 
