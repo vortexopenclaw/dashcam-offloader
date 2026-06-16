@@ -1,3 +1,3 @@
-- Keeps researched but untrained cameras hidden from the manual camera picker unless the current card scan safely identifies that exact model.
-- Uses observed channel roles to distinguish Wolfbox G900-family 2CH cards from 3CH TriPro-style cards when safe model metadata is present.
-- Preserves the generic download path for unknown and unsupported dashcam cards.
+- Improves Wolfbox G900-family card scans by separating manual driving emergency clips from parking impact clips when the timeline supports it.
+- Detects Wolfbox parking timelapse sequences from the normal recording cadence.
+- Keeps generic learning scans stable and conservative for unsupported dashcams.

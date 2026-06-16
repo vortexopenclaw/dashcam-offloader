@@ -1228,15 +1228,88 @@ enum VerificationTest {
             guard wolfboxRealCardScan.selectedProfile?.id == "generic-new-dashcam",
                   wolfboxRealCardScan.identifiedCamera == nil,
                   Set(wolfboxRealCardScan.clips.map(\.channel)) == ["front", "rear"],
-                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("front_emer/") && $0.mode == "parking_motion_or_impact" }),
-                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("rear_emer/") && $0.outputCategory == "Parking Events" }),
+                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("front_emer/") && $0.mode == "driving_event" }),
+                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("rear_emer/") && $0.outputCategory == "Protected" }),
                   wolfboxRealCardScan.diagnostics.contains(where: {
                       $0.stage == "generic_card_shape_hint" &&
                           $0.detail.contains("Wolfbox") &&
                           $0.detail.contains("front_norm") &&
                           $0.detail.contains("front_emer")
                   }) else {
-                print("VERIFY FAIL: Wolfbox G900 Pro real-card-shaped generic scan did not preserve front/rear channels and emergency parking mode: profile=\(wolfboxRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: wolfboxRealCardScan.identifiedCamera)), channels=\(Set(wolfboxRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(wolfboxRealCardScan.clips.map(\.mode)).sorted()), categories=\(Set(wolfboxRealCardScan.clips.map(\.outputCategory)).sorted()), diagnostics=\(wolfboxRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                print("VERIFY FAIL: Wolfbox G900 Pro real-card-shaped generic scan did not preserve front/rear channels and driving emergency mode: profile=\(wolfboxRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: wolfboxRealCardScan.identifiedCamera)), channels=\(Set(wolfboxRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(wolfboxRealCardScan.clips.map(\.mode)).sorted()), categories=\(Set(wolfboxRealCardScan.clips.map(\.outputCategory)).sorted()), diagnostics=\(wolfboxRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let wolfboxSecondCardSource = temp.appendingPathComponent("wolfbox-g900-pro-second-test-card", isDirectory: true)
+            for folder in ["front_norm", "rear_norm", "front_emer", "rear_emer", "front_photo", "rear_photo"] {
+                try FileManager.default.createDirectory(
+                    at: wolfboxSecondCardSource.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            for stamp in ["134004", "134104", "134204", "134304", "134410"] {
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("front_norm/2026_06_16_\(stamp)_00_F.MP4"),
+                    size: stamp == "134410" ? 80_000_000 : 251_000_000
+                )
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("rear_norm/2026_06_16_\(stamp)_00_R.MP4"),
+                    size: stamp == "134410" ? 40_000_000 : 104_000_000
+                )
+            }
+            try createSparseFile(
+                at: wolfboxSecondCardSource.appendingPathComponent("front_emer/2026_06_16_133935_02_F.MP4"),
+                size: 125_829_120
+            )
+            try createSparseFile(
+                at: wolfboxSecondCardSource.appendingPathComponent("rear_emer/2026_06_16_133935_02_R.MP4"),
+                size: 62_914_560
+            )
+            for stamp in ["134455", "134539"] {
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("front_emer/2026_06_16_\(stamp)_02_F.MP4"),
+                    size: 83_886_080
+                )
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("rear_emer/2026_06_16_\(stamp)_02_R.MP4"),
+                    size: 41_943_040
+                )
+            }
+            try createSparseFile(
+                at: wolfboxSecondCardSource.appendingPathComponent("front_norm/2026_06_16_134605_00_F.MP4"),
+                size: 80_000_000
+            )
+            try createSparseFile(
+                at: wolfboxSecondCardSource.appendingPathComponent("rear_norm/2026_06_16_134605_00_R.MP4"),
+                size: 40_000_000
+            )
+            for stamp in ["134614", "141614", "144614", "151614"] {
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("front_norm/2026_06_16_\(stamp)_00_F.MP4"),
+                    size: 230_000_000
+                )
+                try createSparseFile(
+                    at: wolfboxSecondCardSource.appendingPathComponent("rear_norm/2026_06_16_\(stamp)_00_R.MP4"),
+                    size: 310_000_000
+                )
+            }
+            let wolfboxSecondCardScan = try scanner.scan(sourceURL: wolfboxSecondCardSource, profiles: profiles)
+            let wolfboxSecondModes = Dictionary(
+                wolfboxSecondCardScan.clips.map { ($0.relativePath, $0.mode) },
+                uniquingKeysWith: { current, _ in current }
+            )
+            guard wolfboxSecondCardScan.selectedProfile?.id == "generic-new-dashcam",
+                  wolfboxSecondModes["front_emer/2026_06_16_133935_02_F.MP4"] == "driving_event",
+                  wolfboxSecondModes["rear_emer/2026_06_16_133935_02_R.MP4"] == "driving_event",
+                  wolfboxSecondModes["front_emer/2026_06_16_134455_02_F.MP4"] == "parking_impact_detection",
+                  wolfboxSecondModes["rear_emer/2026_06_16_134455_02_R.MP4"] == "parking_impact_detection",
+                  wolfboxSecondModes["front_emer/2026_06_16_134539_02_F.MP4"] == "parking_impact_detection",
+                  wolfboxSecondModes["rear_emer/2026_06_16_134539_02_R.MP4"] == "parking_impact_detection",
+                  wolfboxSecondModes["front_norm/2026_06_16_134614_00_F.MP4"] == "parking_timelapse",
+                  wolfboxSecondModes["rear_norm/2026_06_16_134614_00_R.MP4"] == "parking_timelapse",
+                  wolfboxSecondModes["front_norm/2026_06_16_151614_00_F.MP4"] == "parking_timelapse",
+                  wolfboxSecondCardScan.diagnostics.contains(where: { $0.stage == "wolfbox_context_inference" }) else {
+                print("VERIFY FAIL: Wolfbox second-card context inference failed: modes=\(wolfboxSecondModes), diagnostics=\(wolfboxSecondCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
             let wolfboxLearningSnapshot = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in

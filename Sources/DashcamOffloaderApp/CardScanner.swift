@@ -1350,10 +1350,14 @@ struct CardScanner {
     }
 
     private func inferParkingPatterns(in clips: [ClipItem]) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
-        var inferredByRelativePath: [String: ParkingPattern] = [:]
-        var diagnostics: [ScanDiagnosticEntry] = []
+        let wolfboxContext = inferWolfboxContextualParkingPatterns(in: clips)
+        var inferredByRelativePath = wolfboxContext.inferredByRelativePath
+        var diagnostics = wolfboxContext.diagnostics
 
         for clip in clips {
+            if inferredByRelativePath[clip.relativePath] != nil {
+                continue
+            }
             if let explicitPattern = explicitParkingPattern(for: clip) {
                 inferredByRelativePath[clip.relativePath] = explicitPattern
             }
@@ -1424,6 +1428,157 @@ struct CardScanner {
             return copy
         }
         return (annotated, diagnostics)
+    }
+
+    private func inferWolfboxContextualParkingPatterns(in clips: [ClipItem]) -> (
+        inferredByRelativePath: [String: ParkingPattern],
+        diagnostics: [ScanDiagnosticEntry]
+    ) {
+        let videos = clips.filter { clip in
+            clip.excludedReason == nil &&
+                clip.isVideo &&
+                clip.timestamp != nil &&
+                !clip.hasSuspiciousTimestamp
+        }
+        let folders = Set(videos.map { relativeFolderPath(for: $0.relativePath).lowercased() })
+        guard folders.contains("front_norm"),
+              folders.contains("rear_norm"),
+              folders.contains("front_emer"),
+              folders.contains("rear_emer") else {
+            return ([:], [])
+        }
+
+        let normalClips = videos.filter {
+            $0.relativePath.lowercased().hasPrefix("front_norm/") ||
+                $0.relativePath.lowercased().hasPrefix("rear_norm/")
+        }
+        let normalMoments = wolfboxGroupedRecordingMoments(normalClips)
+        let timelapseMoments = wolfboxTimelapseMoments(in: normalMoments)
+        guard !timelapseMoments.isEmpty,
+              let firstTimelapseTimestamp = timelapseMoments.map(\.timestamp).min() else {
+            return ([:], [])
+        }
+
+        var inferredByRelativePath: [String: ParkingPattern] = [:]
+        for moment in timelapseMoments {
+            for relativePath in moment.relativePaths {
+                inferredByRelativePath[relativePath] = .timelapse
+            }
+        }
+
+        let emergencyClips = videos.filter {
+            $0.relativePath.lowercased().hasPrefix("front_emer/") ||
+                $0.relativePath.lowercased().hasPrefix("rear_emer/")
+        }
+        let emergencyMoments = wolfboxGroupedRecordingMoments(emergencyClips)
+        let parkingContextLeadTime: TimeInterval = 4 * 60
+        let parkingContextStart = firstTimelapseTimestamp.addingTimeInterval(-parkingContextLeadTime)
+        let parkingEmergencyPaths = Set(emergencyMoments.filter { moment in
+            moment.timestamp >= parkingContextStart
+        }.flatMap(\.relativePaths))
+
+        for relativePath in parkingEmergencyPaths {
+            inferredByRelativePath[relativePath] = .impactDetection
+        }
+
+        guard !inferredByRelativePath.isEmpty else {
+            return ([:], [])
+        }
+
+        let parkingEmergencyCount = emergencyClips.filter { parkingEmergencyPaths.contains($0.relativePath) }.count
+        let drivingEmergencyCount = emergencyClips.count - parkingEmergencyCount
+        return (
+            inferredByRelativePath,
+            [
+                ScanDiagnosticEntry(
+                    stage: "wolfbox_context_inference",
+                    profileID: nil,
+                    profileName: nil,
+                    outcome: "classified",
+                    detail: "front/rear normal + emergency layout: timelapse_moments=\(timelapseMoments.count), parking_emergency_clips=\(parkingEmergencyCount), driving_emergency_clips=\(drivingEmergencyCount)"
+                )
+            ]
+        )
+    }
+
+    private struct ContextRecordingMoment {
+        var timestamp: Date
+        var totalBytes: Int64
+        var relativePaths: [String]
+    }
+
+    private func wolfboxGroupedRecordingMoments(_ clips: [ClipItem]) -> [ContextRecordingMoment] {
+        let sortedClips = clips
+            .compactMap { clip -> (clip: ClipItem, timestamp: Date)? in
+                guard let timestamp = clip.timestamp else { return nil }
+                return (clip, timestamp)
+            }
+            .sorted { lhs, rhs in
+                if lhs.timestamp != rhs.timestamp {
+                    return lhs.timestamp < rhs.timestamp
+                }
+                return lhs.clip.relativePath.localizedStandardCompare(rhs.clip.relativePath) == .orderedAscending
+            }
+
+        var moments: [ContextRecordingMoment] = []
+        for item in sortedClips {
+            if var current = moments.last,
+               item.timestamp.timeIntervalSince(current.timestamp) <= 3 {
+                current.totalBytes += item.clip.size
+                current.relativePaths.append(item.clip.relativePath)
+                current.timestamp = min(current.timestamp, item.timestamp)
+                moments[moments.count - 1] = current
+            } else {
+                moments.append(ContextRecordingMoment(
+                    timestamp: item.timestamp,
+                    totalBytes: item.clip.size,
+                    relativePaths: [item.clip.relativePath]
+                ))
+            }
+        }
+
+        return moments
+    }
+
+    private func wolfboxTimelapseMoments(in moments: [ContextRecordingMoment]) -> [ContextRecordingMoment] {
+        guard moments.count >= 3 else { return [] }
+
+        var bestRun: [ContextRecordingMoment] = []
+        var currentRun: [ContextRecordingMoment] = []
+        for moment in moments {
+            guard let previous = currentRun.last else {
+                currentRun = [moment]
+                continue
+            }
+
+            let interval = moment.timestamp.timeIntervalSince(previous.timestamp)
+            if interval >= 300, interval <= 7_200 {
+                currentRun.append(moment)
+            } else {
+                if currentRun.count > bestRun.count {
+                    bestRun = currentRun
+                }
+                currentRun = [moment]
+            }
+        }
+        if currentRun.count > bestRun.count {
+            bestRun = currentRun
+        }
+
+        guard bestRun.count >= 3 else { return [] }
+        let intervals = zip(bestRun, bestRun.dropFirst()).map { lhs, rhs in
+            rhs.timestamp.timeIntervalSince(lhs.timestamp)
+        }
+        guard let medianInterval = median(intervals) else { return [] }
+        let consistentIntervalCount = intervals.filter { interval in
+            abs(interval - medianInterval) <= max(60, medianInterval * 0.20)
+        }.count
+        let consistency = intervals.isEmpty ? 0 : Double(consistentIntervalCount) / Double(intervals.count)
+        guard medianInterval >= 300, medianInterval <= 7_200, consistency >= 0.65 else {
+            return []
+        }
+
+        return bestRun
     }
 
     private func explicitParkingPattern(for clip: ClipItem) -> ParkingPattern? {
@@ -2320,11 +2475,6 @@ struct CardScanner {
     private func genericMode(relativePath: String, filename: String, extensionLowercased: String) -> String {
         if ClipItem.photoExtensions.contains(extensionLowercased) {
             return photoMode(extensionLowercased: extensionLowercased)
-        }
-
-        let lowerRelativePath = relativePath.lowercased()
-        if lowerRelativePath.hasPrefix("front_emer/") || lowerRelativePath.hasPrefix("rear_emer/") {
-            return "parking_motion_or_impact"
         }
 
         let pathTokens = genericTokens(from: relativePath)
