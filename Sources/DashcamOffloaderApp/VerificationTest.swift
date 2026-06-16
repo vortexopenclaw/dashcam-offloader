@@ -170,6 +170,9 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("TeslaCam") == nil,
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "Tesla", modelText: "TeslaCam 6-Camera")?.channelRoles == ["front", "rear", "left_repeater", "right_repeater", "left_pillar", "right_pillar"],
+                  KnownDashcamCatalog.exactModelMatch(manufacturer: "Tesla", modelText: "TeslaCam 4-Camera")?.channelRoles == ["front", "rear", "left_repeater", "right_repeater"],
                   KnownDashcamCatalog.exactVolumeLabelMatch("F17 Plus")?.channels == 4,
                   KnownDashcamCatalog.exactVolumeLabelMatch("F17 Plus")?.channelSensors["front"] == "Sony IMX675",
                   KnownDashcamCatalog.exactVolumeLabelMatch("F17 Elite")?.channelSensors["interior"] == "Sony IMX307 STARVIS",
@@ -1408,6 +1411,18 @@ enum VerificationTest {
                     "DDPAI",
                     ["DCIM/NormalVideo", "DCIM/EventVideo", "DCIM/ParkingVideo", "DCIM/Photo"],
                     ["DCIM/NormalVideo/20260616_120000.mp4", "DCIM/ParkingVideo/20260616_120100.mp4"]
+                ),
+                (
+                    "tesla-generic-shape",
+                    "Tesla",
+                    ["TeslaCam/RecentClips", "TeslaCam/SavedClips/2026-06-16_120000", "TeslaCam/SentryClips/2026-06-16_130000"],
+                    [
+                        "TeslaCam/RecentClips/2026-06-16_115900-front.mp4",
+                        "TeslaCam/SavedClips/2026-06-16_120000/2026-06-16_120000-left_repeater.mp4",
+                        "TeslaCam/SentryClips/2026-06-16_130000/2026-06-16_130000-right_repeater.mp4",
+                        "TeslaCam/SentryClips/2026-06-16_130000/event.json",
+                        "TeslaCam/SentryClips/2026-06-16_130000/thumb.png"
+                    ]
                 )
             ]
 
@@ -1431,6 +1446,39 @@ enum VerificationTest {
                     print("VERIFY FAIL: \(fixture.manufacturer) generic card-shape hint missing: \(shapeScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                     return false
                 }
+            }
+
+            let teslaSixSource = temp.appendingPathComponent("tesla-six-camera", isDirectory: true)
+            let teslaRecent = teslaSixSource.appendingPathComponent("TeslaCam/RecentClips", isDirectory: true)
+            let teslaSaved = teslaSixSource.appendingPathComponent("TeslaCam/SavedClips/2026-06-16_133900", isDirectory: true)
+            let teslaSentry = teslaSixSource.appendingPathComponent("TeslaCam/SentryClips/2026-06-16_134400", isDirectory: true)
+            for folder in [teslaRecent, teslaSaved, teslaSentry] {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            }
+            for (folder, timestamp) in [
+                (teslaRecent, "2026-06-16_133800"),
+                (teslaSaved, "2026-06-16_133900"),
+                (teslaSentry, "2026-06-16_134400")
+            ] {
+                for channel in ["front", "back", "left_repeater", "right_repeater", "left_pillar", "right_pillar"] {
+                    try Data(repeating: 52, count: 1024).write(to: folder.appendingPathComponent("\(timestamp)-\(channel).mp4"))
+                }
+            }
+            try "{}".data(using: .utf8)?.write(to: teslaSentry.appendingPathComponent("event.json"))
+            try Data(repeating: 1, count: 32).write(to: teslaSentry.appendingPathComponent("thumb.png"))
+
+            let teslaScan = try scanner.scan(sourceURL: teslaSixSource, profiles: profiles)
+            let teslaChannels = Set(teslaScan.clips.filter { $0.sourceURL.pathExtension.lowercased() == "mp4" }.map(\.channel))
+            guard teslaScan.selectedProfile?.id == "tesla-dashcam",
+                  teslaScan.identifiedCamera?.manufacturer == "Tesla",
+                  teslaScan.identifiedCamera?.model == "TeslaCam 6-Camera",
+                  teslaChannels.isSuperset(of: ["front", "rear", "left_repeater", "right_repeater", "left_pillar", "right_pillar"]),
+                  teslaScan.clips.contains(where: { $0.mode == "continuous" && $0.relativePath.contains("RecentClips") }),
+                  teslaScan.clips.contains(where: { $0.mode == "driving_event" && $0.relativePath.contains("SavedClips") }),
+                  teslaScan.clips.contains(where: { $0.mode.hasPrefix("parking") && $0.relativePath.contains("SentryClips") }),
+                  teslaScan.diagnostics.contains(where: { $0.stage == "tesla_channel_configuration" && $0.outcome == "parsed_safe_fields" }) else {
+                print("VERIFY FAIL: TeslaCam 6-camera scan should identify channel configuration safely: profile=\(teslaScan.selectedProfile?.id ?? "nil") identified=\(String(describing: teslaScan.identifiedCamera)) channels=\(teslaChannels) modes=\(teslaScan.clips.map { "\($0.relativePath):\($0.mode):\($0.channel)" }) diagnostics=\(teslaScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
             }
 
             let z4TimelapseSource = temp.appendingPathComponent("z4-timelapse", isDirectory: true)

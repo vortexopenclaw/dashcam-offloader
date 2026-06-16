@@ -1,3 +1,3 @@
-- Improves Wolfbox G900-family card scans by separating manual driving emergency clips from parking impact clips when the timeline supports it.
-- Detects Wolfbox parking timelapse sequences from the normal recording cadence.
-- Keeps generic learning scans stable and conservative for unsupported dashcams.
+- Adds generic TeslaCam USB recognition for RecentClips, SavedClips, and SentryClips.
+- Detects Tesla front, rear/back, left/right repeater, and left/right pillar camera channels.
+- Infers TeslaCam 4-camera vs 6-camera configurations from observed safe channel filenames while avoiding exact vehicle-model claims.

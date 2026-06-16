@@ -317,6 +317,21 @@ struct CardScanner {
             hints.append(hint("Wolfbox", "Wolfbox front/rear normal/emergency layout", "medium", evidence))
         }
 
+        if folderExists("TeslaCam") &&
+            (folderExists("TeslaCam/RecentClips") || folderExists("TeslaCam/SavedClips") || folderExists("TeslaCam/SentryClips")) {
+            var evidence = ["TeslaCam"]
+            for path in ["TeslaCam/RecentClips", "TeslaCam/SavedClips", "TeslaCam/SentryClips"] where folderExists(path) {
+                evidence.append(path)
+            }
+            if hasFilenameMatch(#"^20\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-(front|back|rear|rear_view|left_repeater|right_repeater|left_pillar|right_pillar)\.mp4$"#) {
+                evidence.append("TeslaCam timestamp-camera MP4 filenames")
+            }
+            if hasFilenameMatch(#"^(event|thumb)\.(json|png)$"#) {
+                evidence.append("event.json/thumb.png session sidecars")
+            }
+            hints.append(hint("Tesla", "TeslaCam USB layout", "medium", evidence))
+        }
+
         if folderExists("Normal") && (folderExists("Event") || folderExists("Parking")) && folderExists("GPS") {
             hints.append(hint("Vantrue", "Vantrue root Normal/Event/Parking/GPS layout", "medium", ["Normal", "Event/Parking", "GPS"]))
         }
@@ -371,6 +386,20 @@ struct CardScanner {
         }
 
         return hints
+    }
+
+    private func isTeslaCamLayout(sourceURL: URL) -> Bool {
+        let root = sourceURL.appendingPathComponent("TeslaCam", isDirectory: true)
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: root.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            return false
+        }
+
+        return ["RecentClips", "SavedClips", "SentryClips"].contains { folder in
+            let url = root.appendingPathComponent(folder, isDirectory: true)
+            var isDirectory: ObjCBool = false
+            return fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue
+        }
     }
 
     private func profileSelectionIssue(
@@ -856,8 +885,40 @@ struct CardScanner {
             safeVantrueModelMetadataInfo(sourceURL: sourceURL),
             safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Miofive"),
             safeWolfboxModelMetadataInfo(sourceURL: sourceURL, observedChannelRoles: observedChannelRoles),
+            safeTeslaChannelConfigurationInfo(sourceURL: sourceURL, observedChannelRoles: observedChannelRoles),
             safeSonyModelMetadataInfo(sourceURL: sourceURL)
         ].compactMap { $0 }
+    }
+
+    private func safeTeslaChannelConfigurationInfo(
+        sourceURL: URL,
+        observedChannelRoles: Set<String>
+    ) -> SafeModelMetadataInfo? {
+        guard isTeslaCamLayout(sourceURL: sourceURL) else { return nil }
+
+        let hasBaseChannels = observedChannelRoles.isSuperset(of: ["front", "rear", "left_repeater", "right_repeater"])
+        let hasPillarChannels = observedChannelRoles.contains("left_pillar") || observedChannelRoles.contains("right_pillar")
+        let modelText: String
+        let valueLabel: String
+
+        if hasBaseChannels, hasPillarChannels {
+            modelText = "TeslaCam 6-Camera"
+            valueLabel = "configuration inferred from TeslaCam folders plus pillar camera filenames"
+        } else if hasBaseChannels {
+            modelText = "TeslaCam 4-Camera"
+            valueLabel = "configuration inferred from TeslaCam folders plus repeater camera filenames"
+        } else {
+            return nil
+        }
+
+        return SafeModelMetadataInfo(
+            manufacturer: "Tesla",
+            modelText: modelText,
+            firmwareVersion: nil,
+            sourcePath: "TeslaCam",
+            valueLabel: valueLabel,
+            stage: "tesla_channel_configuration"
+        )
     }
 
     private func safeWolfboxModelMetadataInfo(
@@ -1247,6 +1308,10 @@ struct CardScanner {
                 }
                 timestamp = parseTimestamp(groups: groups, format: pattern.timestampFormat)
                 break
+            }
+
+            if channel == "unknown" {
+                channel = genericChannel(relativePath: relativePath, filename: filename)
             }
 
             if ext == "dat" || relativePath.hasPrefix("GPS/") {
@@ -2050,6 +2115,7 @@ struct CardScanner {
             let role = genericChannel(relativePath: relativePath, filename: fileURL.lastPathComponent)
             switch role {
             case "front", "rear", "interior", "bumper", "left", "right",
+                "left_repeater", "right_repeater", "left_pillar", "right_pillar",
                 "channel_a", "channel_b", "channel_c", "channel_d":
                 return role
             default:
@@ -2481,6 +2547,16 @@ struct CardScanner {
         let filenameTokens = genericTokens(from: filenameCandidates(for: filename).last ?? filename)
         let tokens = pathTokens + filenameTokens
 
+        if tokens.contains("sentryclips") {
+            return "parking_event"
+        }
+        if tokens.contains("savedclips") {
+            return "driving_event"
+        }
+        if tokens.contains("recentclips") {
+            return "continuous"
+        }
+
         if (tokens.contains("protected") || tokens.contains("ro")) && hasParkingFilenamePrefix(filename) {
             return "parking_event"
         }
@@ -2549,10 +2625,23 @@ struct CardScanner {
     private func genericChannel(relativePath: String, filename: String) -> String {
         let tokens = genericTokens(from: relativePath) + genericTokens(from: filenameCandidates(for: filename).last ?? filename)
 
+        if tokens.contains("leftrepeater") || containsOrdered(tokens, first: "left", second: "repeater") {
+            return "left_repeater"
+        }
+        if tokens.contains("rightrepeater") || containsOrdered(tokens, first: "right", second: "repeater") {
+            return "right_repeater"
+        }
+        if tokens.contains("leftpillar") || containsOrdered(tokens, first: "left", second: "pillar") {
+            return "left_pillar"
+        }
+        if tokens.contains("rightpillar") || containsOrdered(tokens, first: "right", second: "pillar") {
+            return "right_pillar"
+        }
+
         if tokens.contains("front") || tokens.contains("frontcam") || tokens.contains("frontcamera") {
             return "front"
         }
-        if tokens.contains("rear") || tokens.contains("back") || tokens.contains("rearcam") || tokens.contains("rearcamera") {
+        if tokens.contains("rear") || tokens.contains("back") || tokens.contains("rearview") || containsOrdered(tokens, first: "rear", second: "view") || tokens.contains("rearcam") || tokens.contains("rearcamera") {
             return "rear"
         }
         if tokens.contains("left") || tokens.contains("leftcam") || tokens.contains("leftcamera") {

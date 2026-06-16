@@ -34,6 +34,7 @@ enum KnownDashcamCatalog {
         "noname",
         "sd",
         "sdcard",
+        "teslacam",
         "tfcard",
         "untitled",
         "usb",
@@ -157,6 +158,11 @@ enum KnownDashcamCatalog {
         model("70mai", "M500", channels: 1, roles: ["front"]),
         model("70mai", "M300", channels: 1, roles: ["front"]),
         model("70mai", "T400", channels: 2, roles: ["front", "rear"]),
+
+        // Tesla
+        model("Tesla", "TeslaCam 6-Camera", aliases: ["TeslaCam HW4", "TeslaCam Pillar Cameras", "Tesla Dashcam 6-Camera"], channels: 6, roles: ["front", "rear", "left_repeater", "right_repeater", "left_pillar", "right_pillar"], parkingModes: ["RecentClips rolling buffer", "SavedClips manually saved dashcam events", "SentryClips sentry/parking events"], notes: "TeslaCam USB layout with front, back/rear, left/right repeater, and left/right pillar camera files. Exact Tesla vehicle generation still needs metadata or user/card submission context."),
+        model("Tesla", "TeslaCam 4-Camera", aliases: ["TeslaCam Legacy", "Tesla Dashcam 4-Camera"], channels: 4, roles: ["front", "rear", "left_repeater", "right_repeater"], parkingModes: ["RecentClips rolling buffer", "SavedClips manually saved dashcam events", "SentryClips sentry/parking events"], notes: "TeslaCam USB layout with front, back/rear, and left/right repeater camera files. Older tooling used rear_view on some exports; newer files commonly use back."),
+        model("Tesla", "TeslaCam", aliases: ["Tesla Dashcam"], channels: nil, roles: ["front", "rear", "left_repeater", "right_repeater", "left_pillar", "right_pillar"], parkingModes: ["RecentClips", "SavedClips", "SentryClips"], notes: "Generic TeslaCam family entry. Do not exact-ID from volume label alone; use TeslaCam folder shape, observed channels, SEI/model metadata when available, or trained evidence."),
 
         // Other manufacturers already researched for selector/profile candidates.
         model("Redtiger", "F77", channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K", "rear": "4K"], sensors: ["front": "Sony IMX678", "rear": "Sony IMX678"], sensorNotes: ["eMMC", "Long Parking Mode Wakeup Times"], parkingModes: ["24/7 parking protection", "hardwire parking monitor"], notes: "Official current 2CH product, 4K+4K dual IMX678, voice control, 5.8 GHz Wi-Fi. Sensor notes imported from Ariel's tracking sheet."),

@@ -1,0 +1,70 @@
+id: tesla-dashcam
+manufacturer: Tesla
+model: TeslaCam
+slug: tesla-dashcam
+channels: 6
+type: dashcam
+status: generic
+confidence: medium
+source_notes:
+  - Generic TeslaCam USB profile. MIT/Apache/open public tooling and Tesla docs describe TeslaCam/RecentClips, SavedClips, and SentryClips with timestamp-camera MP4 files.
+  - Exact TeslaCam 4-camera vs 6-camera configuration is inferred from observed channel filenames, not from the volume label.
+detection:
+  high_confidence:
+    - path: TeslaCam
+  supporting:
+    - path: TeslaCam/RecentClips
+    - path: TeslaCam/SavedClips
+    - path: TeslaCam/SentryClips
+folders:
+  - path: TeslaCam/RecentClips
+    mode: continuous
+    import: true
+  - path: TeslaCam/SavedClips
+    mode: driving_event
+    import: true
+  - path: TeslaCam/SentryClips
+    mode: parking_event
+    import: true
+filename_patterns:
+  - pattern: '^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-(front|back|rear|rear_view|left_repeater|right_repeater|left_pillar|right_pillar)\.(MP4|mp4)$'
+    modes:
+      front: recording
+      back: recording
+      rear: recording
+      rear_view: recording
+      left_repeater: recording
+      right_repeater: recording
+      left_pillar: recording
+      right_pillar: recording
+    channels:
+      front: front
+      back: rear
+      rear: rear
+      rear_view: rear
+      left_repeater: left_repeater
+      right_repeater: right_repeater
+      left_pillar: left_pillar
+      right_pillar: right_pillar
+channels:
+  front: front
+  back: rear
+  rear: rear
+  rear_view: rear
+  left_repeater: left_repeater
+  right_repeater: right_repeater
+  left_pillar: left_pillar
+  right_pillar: right_pillar
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - TeslaCam/**/event.json
+  - TeslaCam/**/thumb.png
+notes: >
+  TeslaCam cards are recognized from the root TeslaCam folder and RecentClips,
+  SavedClips, and SentryClips subfolders. RecentClips is the rolling buffer,
+  SavedClips is manually saved dashcam/event footage, and SentryClips is
+  parking/sentry footage. Newer vehicles/cards can include left/right pillar
+  camera clips in addition to front, rear/back, and left/right repeaters.
