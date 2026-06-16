@@ -64,6 +64,13 @@ struct DashcamProfile: Identifiable, Hashable, Sendable {
     )
 }
 
+struct CameraModelChoice: Hashable, Sendable {
+    var brand: String
+    var model: String
+    var profile: DashcamProfile?
+    var isCatalogOnly: Bool
+}
+
 struct DetectionRule: Hashable, Sendable {
     var path: String?
     var contains: String?

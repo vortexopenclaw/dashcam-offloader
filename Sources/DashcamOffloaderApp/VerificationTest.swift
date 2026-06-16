@@ -1231,6 +1231,23 @@ enum VerificationTest {
                 print("VERIFY FAIL: Wolfbox remote learning snapshot did not preserve placeholder-only photo folders: \(wolfboxLearningSnapshot?.directorySummaries ?? [])")
                 return false
             }
+            let wolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, hasG900Pro: Bool, isCatalogOnly: Bool) in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                let wolfboxGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Wolfbox" }
+                let g900Pro = wolfboxGroup?.models.first { $0.model == "G900 Pro" }
+                return (
+                    wolfboxGroup != nil,
+                    g900Pro != nil,
+                    g900Pro?.isCatalogOnly == true && g900Pro?.profile == nil
+                )
+            }
+            guard wolfboxSelectorState.hasBrand,
+                  wolfboxSelectorState.hasG900Pro,
+                  wolfboxSelectorState.isCatalogOnly else {
+                print("VERIFY FAIL: Wolfbox catalog-only models should appear in the camera selector without becoming trained profiles: \(wolfboxSelectorState)")
+                return false
+            }
 
             let genericShapeFixtures: [(name: String, manufacturer: String, folders: [String], files: [String])] = [
                 (

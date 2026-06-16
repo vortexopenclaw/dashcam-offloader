@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var showDownloadOptions = true
     @State private var showDownloadFilters = true
     @State private var selectedProfileBrand: String?
+    @State private var selectedCatalogModel: CameraModelChoice?
     @State private var reviewSortOrder: [KeyPathComparator<CopyPlanItem>] = [
         KeyPathComparator(\CopyPlanItem.mediaKindSortRank),
         KeyPathComparator(\CopyPlanItem.displayFilename)
@@ -401,26 +402,34 @@ struct ContentView: View {
                         compactProfileMenu(
                             title: activeProfileBrand ?? "Brand",
                             placeholder: "Brand",
-                            options: viewModel.profilesByBrand.map(\.brand)
+                            options: viewModel.cameraModelsByBrand.map(\.brand)
                         ) { brand in
                             selectedProfileBrand = brand
+                            selectedCatalogModel = nil
                         }
 
                         compactProfileMenu(
                             title: activeProfileModelTitle,
                             placeholder: "Model",
-                            options: profilesForActiveBrand.map(\.model),
+                            options: modelsForActiveBrand.map(\.model),
                             footerOptions: ["New model..."]
                         ) { model in
                             if model == "New model..." {
+                                selectedCatalogModel = nil
                                 viewModel.selectProfile(.genericNewDashcam)
                                 return
                             }
-                            guard let profile = profilesForActiveBrand.first(where: { $0.model == model }) else {
+                            guard let choice = modelsForActiveBrand.first(where: { $0.model == model }) else {
                                 return
                             }
-                            selectedProfileBrand = profile.displayManufacturer
-                            viewModel.selectProfile(profile)
+                            selectedProfileBrand = choice.brand
+                            if let profile = choice.profile {
+                                selectedCatalogModel = nil
+                                viewModel.selectProfile(profile)
+                            } else {
+                                selectedCatalogModel = choice
+                                viewModel.selectProfile(.genericNewDashcam)
+                            }
                         }
                         .disabled(activeProfileBrand == nil)
                     }
@@ -479,8 +488,11 @@ struct ContentView: View {
 
     private var activeProfileBrand: String? {
         if let selectedProfileBrand,
-           viewModel.profilesByBrand.contains(where: { $0.brand == selectedProfileBrand }) {
+           viewModel.cameraModelsByBrand.contains(where: { $0.brand == selectedProfileBrand }) {
             return selectedProfileBrand
+        }
+        if let selectedCatalogModel {
+            return selectedCatalogModel.brand
         }
         if let selectedProfile = viewModel.selectedProfile {
             return selectedProfile.displayManufacturer
@@ -488,12 +500,16 @@ struct ContentView: View {
         return nil
     }
 
-    private var profilesForActiveBrand: [DashcamProfile] {
+    private var modelsForActiveBrand: [CameraModelChoice] {
         guard let activeProfileBrand else { return [] }
-        return viewModel.profilesByBrand.first(where: { $0.brand == activeProfileBrand })?.profiles ?? []
+        return viewModel.cameraModelsByBrand.first(where: { $0.brand == activeProfileBrand })?.models ?? []
     }
 
     private var activeProfileModelTitle: String? {
+        if let selectedCatalogModel,
+           selectedCatalogModel.brand == activeProfileBrand {
+            return selectedCatalogModel.model
+        }
         guard let selectedProfile = viewModel.selectedProfile,
               selectedProfile.displayManufacturer == activeProfileBrand else {
             return nil
@@ -553,6 +569,7 @@ struct ContentView: View {
         window.contentView = NSHostingView(rootView: CardLearningSheet(
             viewModel: viewModel,
             selectedBrand: activeProfileBrand,
+            selectedCatalogModel: selectedCatalogModel,
             onClose: { [weak window] in
                 window?.close()
             }
@@ -1315,6 +1332,7 @@ struct FeedbackSheet: View {
 struct CardLearningSheet: View {
     @ObservedObject var viewModel: TransferViewModel
     var selectedBrand: String?
+    var selectedCatalogModel: CameraModelChoice?
     var onClose: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var manufacturer = ""
@@ -1470,6 +1488,15 @@ struct CardLearningSheet: View {
         selectedChannelCount = inferred.count
 
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
+            if let selectedCatalogModel {
+                if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    manufacturer = selectedCatalogModel.brand
+                }
+                if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    model = selectedCatalogModel.model
+                }
+                return
+            }
             if let identity = viewModel.inferredLearningCameraIdentity {
                 if manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     manufacturer = identity.manufacturer

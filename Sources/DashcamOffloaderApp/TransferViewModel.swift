@@ -195,6 +195,44 @@ final class TransferViewModel: ObservableObject {
             }
     }
 
+    var cameraModelsByBrand: [(brand: String, models: [CameraModelChoice])] {
+        var grouped: [String: [String: CameraModelChoice]] = [:]
+
+        for profile in profiles {
+            let brand = profile.displayManufacturer
+            let key = Self.cameraModelKey(profile.model)
+            grouped[brand, default: [:]][key] = CameraModelChoice(
+                brand: brand,
+                model: profile.model,
+                profile: profile,
+                isCatalogOnly: false
+            )
+        }
+
+        for model in KnownDashcamCatalog.models {
+            let brand = ManufacturerDisplayFormatter.displayName(for: model.manufacturer)
+            let key = Self.cameraModelKey(model.model)
+            if grouped[brand, default: [:]][key] == nil {
+                grouped[brand, default: [:]][key] = CameraModelChoice(
+                    brand: brand,
+                    model: model.model,
+                    profile: nil,
+                    isCatalogOnly: true
+                )
+            }
+        }
+
+        return grouped.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            .map { brand in
+                (
+                    brand,
+                    grouped[brand, default: [:]].values.sorted {
+                        $0.model.localizedStandardCompare($1.model) == .orderedAscending
+                    }
+                )
+            }
+    }
+
     private func orderedChannelLabels(from values: some Sequence<String>) -> [String] {
         let ignored = Set(["", "unknown", "gps"])
         let labels = Set(
@@ -211,6 +249,12 @@ final class TransferViewModel: ObservableObject {
             return lhs.localizedStandardCompare(rhs) == .orderedAscending
         }
         .map(ClipItem.displayLabel(for:))
+    }
+
+    private static func cameraModelKey(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
     }
 
     private func normalizedPhysicalChannelLabel(_ value: String) -> String? {

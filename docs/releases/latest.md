@@ -1,3 +1,3 @@
-- Improves remote learning submissions with a fuller sanitized directory manifest for unknown dashcams.
-- Preserves empty folders, hidden placeholder files, per-folder counts, and directory shape that can identify channels and recording modes.
-- Fixes command-line scans so unsupported cards report as generic scans instead of false failures.
+- Shows researched but untrained camera brands and models in the camera selector, including Wolfbox G900 Pro.
+- Keeps untrained catalog-only cameras on the safe New Dashcam path while pre-filling learning submissions with the selected brand and model.
+- Preserves the fuller sanitized remote learning scan manifest for unknown dashcams.
