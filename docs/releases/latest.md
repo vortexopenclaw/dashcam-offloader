@@ -1,4 +1,4 @@
-- Added a sampled 70mai T800 profile from the submitted learning packages.
-- T800 cards are now recognized as 3-channel front/rear/interior cards instead of falling back to New Dashcam.
-- T800 `NO`, `PA`, and `LA` clips are mapped as driving, parking surveillance, and parking time-lapse.
-- 70mai 4K Omni overmatch protection remains in place for cards that exceed a known profile's channel capability.
+- Fixed 70mai X800 cards being accepted as the sampled 70mai T800 profile when shared 70mai folders and filenames overlap.
+- If a card label exactly matches a known catalog model such as `70MAI_X800`, the app now refuses to select a different supported sibling profile from shared layout evidence alone.
+- Learn Card submissions now prefer the exact catalog hint for the manufacturer/model fields and label rejected top candidates clearly.
+- Added a verifier regression for a 2-channel X800-style card with T800-overlapping `Normal`, `Parking`, and `Lapse` folders.

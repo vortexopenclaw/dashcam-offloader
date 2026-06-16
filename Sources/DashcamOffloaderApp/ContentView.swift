@@ -1548,7 +1548,10 @@ struct CardLearningSheet: View {
         let topEvidence = topCandidate.evidence.prefix(3).joined(separator: "; ")
         let topLine = "top candidate \(topCandidate.profile.displayName), \(topCandidate.confidence.rawValue), score \(topCandidate.score)"
         if selectedID == DashcamProfile.genericNewDashcam.id {
-            return "App scan: New/unrecognized card; \(topLine); evidence: \(topEvidence)"
+            let catalogHint = viewModel.selectedSource
+                .flatMap { KnownDashcamCatalog.exactVolumeLabelMatch($0.name) }
+                .map { "; catalog hint \($0.displayName)" } ?? ""
+            return "App scan: New/unrecognized card\(catalogHint); rejected \(topLine); evidence: \(topEvidence)"
         }
 
         return "App scan: \(selectedName) (\(selectedID)); \(topLine); evidence: \(topEvidence)"

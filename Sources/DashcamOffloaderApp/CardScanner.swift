@@ -54,7 +54,9 @@ struct CardScanner {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
-        let selectionIssue = topCandidate.flatMap { profileSelectionIssue($0, allCandidates: candidates) }
+        let selectionIssue = topCandidate.flatMap {
+            profileSelectionIssue($0, allCandidates: candidates, sourceURL: sourceURL)
+        }
         let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
         var selectedProfile: DashcamProfile?
         if let topCandidate, topCandidate.confidence != .low, selectionIssue == nil {
@@ -184,7 +186,11 @@ struct CardScanner {
         ]
     }
 
-    private func profileSelectionIssue(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> String? {
+    private func profileSelectionIssue(
+        _ candidate: DetectionCandidate,
+        allCandidates: [DetectionCandidate],
+        sourceURL: URL
+    ) -> String? {
         if candidate.confidence == .low {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
         }
@@ -193,6 +199,10 @@ struct CardScanner {
         let hasFilenameEvidence = candidate.evidence.contains { $0.hasPrefix("filename pattern match ") }
         if hasModelEvidence {
             return nil
+        }
+
+        if let catalogConflict = knownCatalogVolumeConflict(candidate, sourceURL: sourceURL) {
+            return catalogConflict
         }
 
         if hasFilenameEvidence,
@@ -227,6 +237,22 @@ struct CardScanner {
                 evidence.hasPrefix("media fingerprint ") ||
                 evidence.hasPrefix("OSD OCR match ")
         }
+    }
+
+    private func knownCatalogVolumeConflict(_ candidate: DetectionCandidate, sourceURL: URL) -> String? {
+        guard let volumeLabelHint = KnownDashcamCatalog.exactVolumeLabelMatch(sourceURL.lastPathComponent) else {
+            return nil
+        }
+        guard !profile(candidate.profile, matchesKnownModel: volumeLabelHint) else {
+            return nil
+        }
+
+        return "Volume label \(sourceURL.lastPathComponent) exactly matches known catalog model \(volumeLabelHint.displayName), so this card was not selected as different profile \(candidate.profile.displayName) from shared folder/filename evidence."
+    }
+
+    private func profile(_ profile: DashcamProfile, matchesKnownModel model: KnownDashcamModel) -> Bool {
+        compactModelToken(profile.manufacturer) == compactModelToken(model.manufacturer) &&
+            model.searchNames.contains { compactModelToken($0) == compactModelToken(profile.model) }
     }
 
     private func requiresExplicitModelEvidence(_ profile: DashcamProfile) -> Bool {
@@ -448,7 +474,9 @@ struct CardScanner {
         )
 
         // Re-select and re-classify if the winner changed.
-        let updatedSelectionIssue = updatedCandidates.first.flatMap { profileSelectionIssue($0, allCandidates: updatedCandidates) }
+        let updatedSelectionIssue = updatedCandidates.first.flatMap {
+            profileSelectionIssue($0, allCandidates: updatedCandidates, sourceURL: sourceURL)
+        }
         if let updatedSelectionIssue, let newTop = updatedCandidates.first {
             let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: sourceURL))
             result.selectedProfile = DashcamProfile.genericNewDashcam

@@ -818,6 +818,38 @@ enum VerificationTest {
                 return false
             }
 
+            let x800LikeSource = temp.appendingPathComponent("70MAI_X800", isDirectory: true)
+            for folder in ["Normal/Front", "Normal/Rear", "Normal/.s_Front", "Parking/Front", "Parking/Rear", "Lapse/Front", "Lapse/Rear"] {
+                try FileManager.default.createDirectory(at: x800LikeSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            try Data(repeating: 31, count: 1024).write(to: x800LikeSource.appendingPathComponent("Normal/Front/NO20260616-095000-000000F.MP4"))
+            try Data(repeating: 32, count: 1024).write(to: x800LikeSource.appendingPathComponent("Normal/Rear/NO20260616-095000-000000R.MP4"))
+            try Data(repeating: 33, count: 1024).write(to: x800LikeSource.appendingPathComponent("Parking/Front/PA20260616-095100-000001F.MP4"))
+            try Data(repeating: 34, count: 1024).write(to: x800LikeSource.appendingPathComponent("Parking/Rear/PA20260616-095100-000001R.MP4"))
+            try Data(repeating: 35, count: 1024).write(to: x800LikeSource.appendingPathComponent("Lapse/Front/LA20260616-095200-000002F.MP4"))
+            try Data(repeating: 36, count: 1024).write(to: x800LikeSource.appendingPathComponent("Lapse/Rear/LA20260616-095200-000002R.MP4"))
+            let x800LikeScan = try scanner.scan(sourceURL: x800LikeSource, profiles: profiles)
+            guard x800LikeScan.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: X800-like 2CH 70mai card selected exact profile \(x800LikeScan.selectedProfile?.id ?? "nil")")
+                return false
+            }
+            guard x800LikeScan.identifiedCamera == nil,
+                  x800LikeScan.diagnostics.contains(where: {
+                      $0.stage == "known_catalog_volume_hint" &&
+                          $0.outcome == "matched_known_model_label" &&
+                          $0.detail.contains("70mai X800")
+                  }),
+                  x800LikeScan.diagnostics.contains(where: {
+                      $0.stage == "profile_selection_guard" &&
+                          $0.outcome == "selected_generic_new_card" &&
+                          $0.detail.contains("70MAI_X800") &&
+                          $0.detail.contains("70mai X800") &&
+                          $0.detail.contains("70mai T800")
+                  }) else {
+                print("VERIFY FAIL: X800-like card did not preserve catalog hint and reject T800")
+                return false
+            }
+
             let impossibleT800LikeSource = temp.appendingPathComponent("unknown-70mai-4ch-like", isDirectory: true)
             for folder in ["Normal/Front", "Normal/Rear", "Normal/Cabin", "Normal/Side"] {
                 try FileManager.default.createDirectory(at: impossibleT800LikeSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)

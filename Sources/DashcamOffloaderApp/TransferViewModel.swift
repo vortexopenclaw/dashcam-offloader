@@ -166,17 +166,17 @@ final class TransferViewModel: ObservableObject {
             return (selectedProfile.manufacturer, selectedProfile.model)
         }
 
+        if let selectedSource,
+           let catalogMatch = KnownDashcamCatalog.exactVolumeLabelMatch(selectedSource.name) {
+            return (catalogMatch.manufacturer, catalogMatch.model)
+        }
+
         if let volumeMatchedCandidate = detectionCandidates.first(where: { candidate in
             candidate.confidence != .low &&
                 candidate.profile.id != DashcamProfile.genericNewDashcam.id &&
                 candidate.evidence.contains { $0.hasPrefix("volume label ") }
         }) {
             return (volumeMatchedCandidate.profile.manufacturer, volumeMatchedCandidate.profile.model)
-        }
-
-        if let selectedSource,
-           let catalogMatch = KnownDashcamCatalog.exactVolumeLabelMatch(selectedSource.name) {
-            return (catalogMatch.manufacturer, catalogMatch.model)
         }
 
         return nil
