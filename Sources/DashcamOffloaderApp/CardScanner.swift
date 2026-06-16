@@ -305,6 +305,17 @@ struct CardScanner {
             hints.append(hint("Miofive", "Miofive/CarDV family layout", "medium", evidence))
         }
 
+        if (folderExists("front_norm") || folderExists("rear_norm")) &&
+            (folderExists("front_emer") || folderExists("rear_emer")) {
+            var evidence: [String] = []
+            for path in ["front_norm", "rear_norm", "front_emer", "rear_emer", "front_photo", "rear_photo", "GPS_Player.txt"] {
+                if folderExists(path) || fileExists(path) {
+                    evidence.append(path)
+                }
+            }
+            hints.append(hint("Wolfbox", "Wolfbox front/rear normal/emergency layout", "medium", evidence))
+        }
+
         if folderExists("Normal") && (folderExists("Event") || folderExists("Parking")) && folderExists("GPS") {
             hints.append(hint("Vantrue", "Vantrue root Normal/Event/Parking/GPS layout", "medium", ["Normal", "Event/Parking", "GPS"]))
         }
@@ -2247,6 +2258,11 @@ struct CardScanner {
             return photoMode(extensionLowercased: extensionLowercased)
         }
 
+        let lowerRelativePath = relativePath.lowercased()
+        if lowerRelativePath.hasPrefix("front_emer/") || lowerRelativePath.hasPrefix("rear_emer/") {
+            return "parking_motion_or_impact"
+        }
+
         let pathTokens = genericTokens(from: relativePath)
         let filenameTokens = genericTokens(from: filenameCandidates(for: filename).last ?? filename)
         let tokens = pathTokens + filenameTokens
@@ -2266,6 +2282,7 @@ struct CardScanner {
             tokens.contains("event") ||
             tokens.contains("sos") ||
             tokens.contains("emergency") ||
+            tokens.contains("emer") ||
             tokens.contains("locked") ||
             tokens.contains("protected") ||
             tokens.contains("ro") ||

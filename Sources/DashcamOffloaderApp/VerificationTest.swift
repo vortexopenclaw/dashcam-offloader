@@ -1173,6 +1173,36 @@ enum VerificationTest {
                 return false
             }
 
+            let wolfboxRealCardSource = temp.appendingPathComponent("wolfbox-g900-pro-real-card-shape", isDirectory: true)
+            for folder in ["front_norm", "rear_norm", "front_emer", "rear_emer", "front_photo", "rear_photo"] {
+                try FileManager.default.createDirectory(
+                    at: wolfboxRealCardSource.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            try Data(repeating: 61, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("front_norm/20260616120000_0001_F.MP4"))
+            try Data(repeating: 62, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("rear_norm/20260616120000_0001_R.MP4"))
+            try Data(repeating: 63, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("front_emer/20260616120500_0002_F.MP4"))
+            try Data(repeating: 64, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("rear_emer/20260616120500_0002_R.MP4"))
+            try Data(repeating: 65, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("front_photo/.PreAllocFile_00"))
+            try Data(repeating: 66, count: 1024).write(to: wolfboxRealCardSource.appendingPathComponent("rear_photo/.PreAllocFile_00"))
+            try Data("Wolfbox GPS Player\n".utf8).write(to: wolfboxRealCardSource.appendingPathComponent("GPS_Player.txt"))
+            let wolfboxRealCardScan = try scanner.scan(sourceURL: wolfboxRealCardSource, profiles: profiles)
+            guard wolfboxRealCardScan.selectedProfile?.id == "generic-new-dashcam",
+                  wolfboxRealCardScan.identifiedCamera == nil,
+                  Set(wolfboxRealCardScan.clips.map(\.channel)) == ["front", "rear"],
+                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("front_emer/") && $0.mode == "parking_motion_or_impact" }),
+                  wolfboxRealCardScan.clips.contains(where: { $0.relativePath.hasPrefix("rear_emer/") && $0.outputCategory == "Parking Events" }),
+                  wolfboxRealCardScan.diagnostics.contains(where: {
+                      $0.stage == "generic_card_shape_hint" &&
+                          $0.detail.contains("Wolfbox") &&
+                          $0.detail.contains("front_norm") &&
+                          $0.detail.contains("front_emer")
+                  }) else {
+                print("VERIFY FAIL: Wolfbox G900 Pro real-card-shaped generic scan did not preserve front/rear channels and emergency parking mode: profile=\(wolfboxRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: wolfboxRealCardScan.identifiedCamera)), channels=\(Set(wolfboxRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(wolfboxRealCardScan.clips.map(\.mode)).sorted()), categories=\(Set(wolfboxRealCardScan.clips.map(\.outputCategory)).sorted()), diagnostics=\(wolfboxRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
             let genericShapeFixtures: [(name: String, manufacturer: String, folders: [String], files: [String])] = [
                 (
                     "garmin-generic-shape",

@@ -1,2 +1,3 @@
-- Renames the Sony mirrorless profile from Sony Alpha A7 III to Sony A7 III throughout the app and supported-camera docs.
-- Keeps ILCE-7M3 and A73 as model identifiers so existing Sony card scans continue to identify the camera correctly.
+- Adds Wolfbox generic card-shape recognition for front/rear normal and emergency folder layouts.
+- Classifies Wolfbox `front_emer` and `rear_emer` clips as parking impact/event footage instead of Driving.
+- Preserves known preallocation placeholder folders in learning submissions so remote scans capture more of the card shape.

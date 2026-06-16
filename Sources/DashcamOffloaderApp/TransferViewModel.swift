@@ -1231,13 +1231,18 @@ final class TransferViewModel: ObservableObject {
         let lowerPath = relativePath.lowercased()
         let filename = fileURL.lastPathComponent
         if filename.hasPrefix("._") { return false }
-        if filename.hasPrefix("."), filename != ".boot.log" { return false }
+        if filename.hasPrefix("."), filename != ".boot.log", !isKnownPlaceholderFile(filename) { return false }
         if lowerPath.contains("device.uid") { return false }
         if lowerPath.contains("thumbnail") { return false }
         if lowerPath.contains("/gps/") || lowerPath.hasPrefix("gps/") { return false }
         if containsSensitiveTrainingPath(lowerPath) { return false }
         if ["gpx", "nmea"].contains(fileURL.pathExtension.lowercased()) { return false }
         return true
+    }
+
+    private func isKnownPlaceholderFile(_ filename: String) -> Bool {
+        let lower = filename.lowercased()
+        return lower.hasPrefix(".preallocfile") || lower.hasPrefix(".prealloc_file")
     }
 
     private func containsSensitiveTrainingPath(_ lowerPath: String) -> Bool {
