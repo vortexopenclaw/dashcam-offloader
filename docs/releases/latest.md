@@ -1,3 +1,3 @@
-- Expanded generic unknown-card recognition for upcoming Miofive and Wolfbox samples.
-- Safe model metadata can now identify untrained Miofive S1 Ultra and Wolfbox G900 Pro cards while keeping them on the New Dashcam import path until real card profiles are trained.
-- Expanded the internal Miofive and Wolfbox model/spec catalog, including current S1-series, MF02, G900 Pro, and G900 TriPro variants.
+- Improved generic scanning for real Miofive S1 Ultra sample cards before profile training.
+- Preserves Miofive-style A/B channel suffixes as separate generic channels instead of losing them as unknown.
+- Classifies `CarDV/Movie/Park` clips as parking motion-or-impact when the card does not expose a more specific event type.

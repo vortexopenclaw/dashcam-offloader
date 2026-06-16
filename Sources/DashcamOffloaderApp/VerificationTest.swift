@@ -1145,6 +1145,29 @@ enum VerificationTest {
                 return false
             }
 
+            let miofiveRealCardSource = temp.appendingPathComponent("miofive-s1-ultra-real-card-shape", isDirectory: true)
+            for folder in ["CarDV/Movie/Normal", "CarDV/Movie/Park", "LOG/DEVLOG"] {
+                try FileManager.default.createDirectory(at: miofiveRealCardSource.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            try Data(repeating: 41, count: 1024).write(to: miofiveRealCardSource.appendingPathComponent("CarDV/Movie/Normal/043025_014447_000003A.MP4"))
+            try Data(repeating: 42, count: 1024).write(to: miofiveRealCardSource.appendingPathComponent("CarDV/Movie/Normal/043025_014450_000004B.MP4"))
+            try Data(repeating: 43, count: 1024).write(to: miofiveRealCardSource.appendingPathComponent("CarDV/Movie/Park/043025_015337_000017A.MP4"))
+            try Data(repeating: 44, count: 1024).write(to: miofiveRealCardSource.appendingPathComponent("CarDV/Movie/Park/043025_015340_000018B.MP4"))
+            try "7,2025-04-30T01:53:44\n6,2025-04-30T01:54:38\n".data(using: .utf8)?.write(to: miofiveRealCardSource.appendingPathComponent("LOG/DEVLOG/dev_20250430_015344.log"))
+            let miofiveRealCardScan = try scanner.scan(sourceURL: miofiveRealCardSource, profiles: profiles)
+            guard miofiveRealCardScan.selectedProfile?.id == "generic-new-dashcam",
+                  miofiveRealCardScan.identifiedCamera == nil,
+                  Set(miofiveRealCardScan.clips.map(\.channel)) == ["channel_a", "channel_b"],
+                  miofiveRealCardScan.clips.contains(where: { $0.relativePath.contains("CarDV/Movie/Park/") && $0.mode == "parking_motion_or_impact" }),
+                  miofiveRealCardScan.diagnostics.contains(where: {
+                      $0.stage == "parking_pattern_inference" &&
+                          $0.detail.contains("CarDV/Movie/Park") &&
+                          $0.detail.contains("motion_or_impact")
+                  }) else {
+                print("VERIFY FAIL: Miofive S1 Ultra real-card-shaped generic scan did not preserve A/B channels and ambiguous parking impact mode: profile=\(miofiveRealCardScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: miofiveRealCardScan.identifiedCamera)), channels=\(Set(miofiveRealCardScan.clips.map(\.channel)).sorted()), modes=\(Set(miofiveRealCardScan.clips.map(\.mode)).sorted()), diagnostics=\(miofiveRealCardScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
             let z4TimelapseSource = temp.appendingPathComponent("z4-timelapse", isDirectory: true)
             try FileManager.default.createDirectory(at: z4TimelapseSource.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: z4TimelapseSource.appendingPathComponent("PROTECTED", isDirectory: true), withIntermediateDirectories: true)
@@ -1412,7 +1435,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: driving output folder missing")
                 return false
             }
-            guard plan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") }) else {
+            guard plan.items.contains(where: { $0.destinationURL.path.contains("/Parking/") || $0.destinationURL.path.contains("/Parking Events/") }) else {
                 print("VERIFY FAIL: parking output folder missing")
                 return false
             }

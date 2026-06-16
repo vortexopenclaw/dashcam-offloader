@@ -1236,6 +1236,11 @@ struct CardScanner {
             return .impactDetection
         }
 
+        let tokens = genericTokens(from: clip.relativePath)
+        if tokens.contains("motion") || tokens.contains("mot") {
+            return .motionDetection
+        }
+
         if isProtectedFolder && hasParkingChannelSuffix(clip.filename) {
             return .impactDetection
         }
@@ -1248,7 +1253,19 @@ struct CardScanner {
     }
 
     private func defaultParkingPattern(for clips: [ClipItem]) -> ParkingPattern? {
+        let tokens = clips.flatMap { genericTokens(from: $0.relativePath) }
+        if tokens.contains("motion") || tokens.contains("mot") {
+            return .motionDetection
+        }
+        if tokens.contains("impact") || tokens.contains("event") || tokens.contains("evt") {
+            return .impactDetection
+        }
         if clips.contains(where: { $0.outputCategory == "Parking Events" }) {
+            return .motionOrImpact
+        }
+        if clips.contains(where: { clip in
+            clip.relativePath.lowercased().contains("cardv/movie/park")
+        }) {
             return .motionOrImpact
         }
         return nil
@@ -2179,6 +2196,11 @@ struct CardScanner {
             default:
                 break
             }
+        }
+
+        if let last = compactStem.last,
+           compactStem.range(of: #"\d{6}[A-D]$"#, options: .regularExpression) != nil {
+            return "channel_\(String(last).lowercased())"
         }
 
         if compactStem.range(of: #"20\d{18}A[A-D]$"#, options: .regularExpression) != nil {
