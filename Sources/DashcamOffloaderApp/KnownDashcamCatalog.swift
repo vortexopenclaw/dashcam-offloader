@@ -45,7 +45,14 @@ enum KnownDashcamCatalog {
     static let models: [KnownDashcamModel] = [
         // Vueroid
         model("Vueroid", "H1", channels: 1, roles: ["front"], notes: "Observed card signature H1-QHD-INFINITE."),
-        model("Vueroid", "S1 4K Infinite", channels: 1, roles: ["front"]),
+        model(
+            "Vueroid",
+            "S1 4K Infinite",
+            aliases: ["S1 4K", "S1-4K", "S1-4K-INF", "S1 4K INF", "S1-4K-INFINITE"],
+            channels: 3,
+            roles: ["front", "rear", "interior"],
+            notes: "Observed 1CH, 2CH, and 3CH S1 4K Infinite card variants."
+        ),
         model("Vueroid", "S1 QHD Infinite", channels: 2, roles: ["front", "rear"]),
         model("Vueroid", "D40-Q2", channels: 2, roles: ["front", "rear"]),
         model("Vueroid", "D21 4K", channels: 2, roles: ["front", "rear"]),
@@ -280,9 +287,10 @@ enum KnownDashcamCatalog {
         let normalized = compact(label)
         guard isSpecificVolumeLabel(label) else { return nil }
 
-        return models.first { model in
+        let matches = models.filter { model in
             model.searchNames.contains { compact($0) == normalized }
         }
+        return matches.count == 1 ? matches[0] : nil
     }
 
     static func exactModelMatch(manufacturer: String, modelText: String) -> KnownDashcamModel? {

@@ -167,10 +167,12 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMention("Device Name:U3000PRO", manufacturer: "Thinkware")?.model == "U3000 Pro",
                   KnownDashcamCatalog.exactModelMention("E1PRO_Settings.ini", manufacturer: "Vantrue")?.model == "Element 1 Pro",
                   KnownDashcamCatalog.exactModelMention("systemKind=\"ILCE-7M3\"", manufacturer: "Sony")?.model == "A7 III",
+                  KnownDashcamCatalog.exactModelMention("model=S1 4K", manufacturer: "Vueroid")?.model == "S1 4K Infinite",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("TeslaCam") == nil,
+                  KnownDashcamCatalog.exactVolumeLabelMatch("S1-4K") == nil,
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "Tesla", modelText: "TeslaCam 6-Camera")?.channelRoles == ["front", "rear", "left_repeater", "right_repeater", "left_pillar", "right_pillar"],
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "Tesla", modelText: "TeslaCam 4-Camera")?.channelRoles == ["front", "rear", "left_repeater", "right_repeater"],
                   KnownDashcamCatalog.exactVolumeLabelMatch("F17 Plus")?.channels == 4,
@@ -1818,9 +1820,11 @@ enum VerificationTest {
             }
 
             let vueroidSource = temp.appendingPathComponent("vueroid-s1", isDirectory: true)
+            try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("PARK", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
+            try Data("S1-4K-INFINITE V1.5.5\u{0}S1-4K-INFINITE".utf8).write(to: vueroidSource.appendingPathComponent("CONFIG/config.bin"))
             try Data(repeating: 3, count: 1024).write(to: vueroidSource.appendingPathComponent("INF/20260101_120000_INF_F_N.mp4"))
             try Data(repeating: 4, count: 1024).write(to: vueroidSource.appendingPathComponent("PARK/20260101_121000_PRK_F_N.mp4"))
             try Data(repeating: 5, count: 1024).write(to: vueroidSource.appendingPathComponent("PEVENT/20260101_122000_PVT_F_N.mp4"))
@@ -1829,6 +1833,17 @@ enum VerificationTest {
             let vueroidScan = try scanner.scan(sourceURL: vueroidSource, profiles: profiles)
             guard vueroidScan.candidates.first?.profile.id == "vueroid-s1-4k-infinite" else {
                 print("VERIFY FAIL: Vueroid S1 was not top candidate")
+                return false
+            }
+            guard vueroidScan.identifiedCamera?.manufacturer == "Vueroid",
+                  vueroidScan.identifiedCamera?.model == "S1 4K Infinite",
+                  vueroidScan.identifiedCamera?.isSupported == true,
+                  vueroidScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("CONFIG/config.bin") &&
+                          $0.detail.contains("S1 4K Infinite")
+                  }) else {
+                print("VERIFY FAIL: Vueroid S1 safe metadata did not identify supported profile: identified=\(String(describing: vueroidScan.identifiedCamera)), diagnostics=\(vueroidScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

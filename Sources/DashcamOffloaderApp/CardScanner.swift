@@ -883,6 +883,7 @@ struct CardScanner {
             safeBlackVueModelMetadataInfo(sourceURL: sourceURL),
             safeThinkwareModelMetadataInfo(sourceURL: sourceURL),
             safeVantrueModelMetadataInfo(sourceURL: sourceURL),
+            safeVueroidModelMetadataInfo(sourceURL: sourceURL),
             safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Miofive"),
             safeWolfboxModelMetadataInfo(sourceURL: sourceURL, observedChannelRoles: observedChannelRoles),
             safeTeslaChannelConfigurationInfo(sourceURL: sourceURL, observedChannelRoles: observedChannelRoles),
@@ -1136,6 +1137,50 @@ struct CardScanner {
                 valueLabel: "model-coded settings filename",
                 stage: "safe_model_metadata"
             )
+        }
+        return nil
+    }
+
+    private func safeVueroidModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let candidates = [
+            "CONFIG/config.bin",
+            "CONFIG/.boot.log",
+            ".boot.log"
+        ]
+
+        for relativePath in candidates {
+            let metadataURL = sourceURL.appendingPathComponent(relativePath)
+            guard fileManager.fileExists(atPath: metadataURL.path),
+                  let raw = evidenceText(at: metadataURL),
+                  let modelText = vueroidModelText(in: raw) else {
+                continue
+            }
+
+            return SafeModelMetadataInfo(
+                manufacturer: "Vueroid",
+                modelText: modelText,
+                firmwareVersion: firstVersionValue(in: raw, keys: ["version", "firmware version", "fw version", "ver"]),
+                sourcePath: relativePath,
+                valueLabel: "model",
+                stage: "safe_model_metadata"
+            )
+        }
+
+        return nil
+    }
+
+    private func vueroidModelText(in raw: String) -> String? {
+        let normalized = raw.uppercased()
+        if normalized.contains("H1-QHD-INFINITE") {
+            return "H1"
+        }
+        if normalized.contains("S1-4K") ||
+            normalized.contains("S1 4K") {
+            return "S1 4K Infinite"
+        }
+        if normalized.contains("S1-QHD") ||
+            normalized.contains("S1 QHD") {
+            return "S1 QHD Infinite"
         }
         return nil
     }
