@@ -164,6 +164,9 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("Dash Cam Omni")?.model == "X200",
                   KnownDashcamCatalog.exactVolumeLabelMatch("ELITE 10")?.model == "Elite 10",
                   KnownDashcamCatalog.exactBlackVueModelMention("model = ELITE 10 v1.000(rev100)")?.model == "Elite 10",
+                  KnownDashcamCatalog.exactModelMention("Device Name:U3000PRO", manufacturer: "Thinkware")?.model == "U3000 Pro",
+                  KnownDashcamCatalog.exactModelMention("E1PRO_Settings.ini", manufacturer: "Vantrue")?.model == "Element 1 Pro",
+                  KnownDashcamCatalog.exactModelMention("systemKind=\"ILCE-7M3\"", manufacturer: "Sony")?.model == "Alpha A7 III",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("Untitled") == nil,
                   KnownDashcamCatalog.exactVolumeLabelMatch("BLACKVUE") == nil,
@@ -867,7 +870,7 @@ enum VerificationTest {
             guard untrainedElite10Scan.diagnostics.contains(where: {
                 $0.stage == "blackvue_config_metadata" &&
                     $0.outcome == "parsed_safe_fields" &&
-                    $0.detail.contains("Elite 10")
+                    $0.detail.localizedCaseInsensitiveContains("Elite 10")
             }),
             untrainedElite10Scan.diagnostics.contains(where: {
                 $0.stage == "profile_selection_guard" &&
@@ -875,6 +878,63 @@ enum VerificationTest {
                     $0.detail.contains("BlackVue Elite 10")
             }) else {
                 print("VERIFY FAIL: untrained BlackVue Elite 10 scan did not record metadata and guard diagnostics: \(untrainedElite10Scan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedThinkwareSource = temp.appendingPathComponent("THINKWARE", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedThinkwareSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: untrainedThinkwareSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try Data("Device Name:U3000PRO\nVersion:1.00\n".utf8).write(to: untrainedThinkwareSource.appendingPathComponent("SETTING/lang/ver.dat"))
+            try Data(repeating: 39, count: 1024).write(to: untrainedThinkwareSource.appendingPathComponent("cont_rec/REC_20260616_103000_F.MP4"))
+            let untrainedThinkwareScan = try scanner.scan(sourceURL: untrainedThinkwareSource, profiles: [])
+            guard untrainedThinkwareScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedThinkwareScan.identifiedCamera?.manufacturer == "Thinkware",
+                  untrainedThinkwareScan.identifiedCamera?.model == "U3000 Pro",
+                  untrainedThinkwareScan.identifiedCamera?.isSupported == false,
+                  untrainedThinkwareScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("SETTING/lang/ver.dat") &&
+                          $0.detail.contains("U3000PRO")
+                  }) else {
+                print("VERIFY FAIL: untrained Thinkware safe metadata should identify known catalog model while staying generic: profile=\(untrainedThinkwareScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedThinkwareScan.identifiedCamera)), diagnostics=\(untrainedThinkwareScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedVantrueSource = temp.appendingPathComponent("VANTRUE", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedVantrueSource.appendingPathComponent("GPS", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: untrainedVantrueSource.appendingPathComponent("Normal", isDirectory: true), withIntermediateDirectories: true)
+            try Data("placeholder=settings\n".utf8).write(to: untrainedVantrueSource.appendingPathComponent("GPS/E1PRO_Settings.ini"))
+            try Data(repeating: 40, count: 1024).write(to: untrainedVantrueSource.appendingPathComponent("Normal/20260616_103100_00001_N_A.MP4"))
+            let untrainedVantrueScan = try scanner.scan(sourceURL: untrainedVantrueSource, profiles: [])
+            guard untrainedVantrueScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedVantrueScan.identifiedCamera?.manufacturer == "Vantrue",
+                  untrainedVantrueScan.identifiedCamera?.model == "Element 1 Pro",
+                  untrainedVantrueScan.identifiedCamera?.isSupported == false,
+                  untrainedVantrueScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("GPS/E1PRO_Settings.ini") &&
+                          $0.detail.contains("Element 1 Pro")
+                  }) else {
+                print("VERIFY FAIL: untrained Vantrue model-coded settings filename should identify known catalog model while staying generic: profile=\(untrainedVantrueScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedVantrueScan.identifiedCamera)), diagnostics=\(untrainedVantrueScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let untrainedSonySource = temp.appendingPathComponent("SONY", isDirectory: true)
+            try FileManager.default.createDirectory(at: untrainedSonySource.appendingPathComponent("PRIVATE/M4ROOT", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: untrainedSonySource.appendingPathComponent("DCIM/100MSDCF", isDirectory: true), withIntermediateDirectories: true)
+            try Data(#"<MediaProfile><Properties><System systemKind="ILCE-7M3"/></Properties></MediaProfile>"#.utf8).write(to: untrainedSonySource.appendingPathComponent("PRIVATE/M4ROOT/MEDIAPRO.XML"))
+            try Data(repeating: 41, count: 1024).write(to: untrainedSonySource.appendingPathComponent("DCIM/100MSDCF/A7300001.ARW"))
+            let untrainedSonyScan = try scanner.scan(sourceURL: untrainedSonySource, profiles: [])
+            guard untrainedSonyScan.selectedProfile?.id == "generic-new-dashcam",
+                  untrainedSonyScan.identifiedCamera?.manufacturer == "Sony",
+                  untrainedSonyScan.identifiedCamera?.model == "Alpha A7 III",
+                  untrainedSonyScan.identifiedCamera?.isSupported == false,
+                  untrainedSonyScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("PRIVATE/M4ROOT/MEDIAPRO.XML") &&
+                          $0.detail.contains("ILCE-7M3")
+                  }) else {
+                print("VERIFY FAIL: untrained Sony XML metadata should identify known catalog model while staying generic: profile=\(untrainedSonyScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedSonyScan.identifiedCamera)), diagnostics=\(untrainedSonyScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

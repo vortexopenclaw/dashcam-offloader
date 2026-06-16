@@ -246,6 +246,7 @@ enum KnownDashcamCatalog {
         model("Escort", "MAXcam 360c", channels: 1, roles: ["front"]),
         model("Escort", "M2", channels: 1, roles: ["front"]),
         model("Escort", "M1", channels: 1, roles: ["front"]),
+        model("Sony", "Alpha A7 III", aliases: ["ILCE-7M3", "A7 III", "A73"], channels: 1, roles: ["primary"], resolutions: ["primary": "4K30 / 1080p"], notes: "Mirrorless camera; ARW stills and XAVC S video."),
         model("Cobra", "SC 400D", channels: 3, roles: ["front", "rear", "interior"]),
         model("Cobra", "SC 250R", channels: 2, roles: ["front", "rear"]),
         model("Cobra", "Road Scout", channels: 1, roles: ["front"]),
@@ -289,13 +290,25 @@ enum KnownDashcamCatalog {
         let normalizedModelText = compact(modelText)
         guard !normalizedModelText.isEmpty else { return nil }
 
+        return exactModelMention(modelText, manufacturer: "BlackVue")
+    }
+
+    static func exactModelMention(_ modelText: String, manufacturer: String? = nil) -> KnownDashcamModel? {
+        let normalizedModelText = compact(modelText)
+        let normalizedManufacturer = manufacturer.map(compact)
+        guard !normalizedModelText.isEmpty else { return nil }
+
         return models.first { model in
-            compact(model.manufacturer) == "blackvue" &&
-                model.searchNames.contains { searchName in
-                    let normalizedSearchName = compact(searchName)
-                    return !normalizedSearchName.isEmpty &&
-                        normalizedModelText.contains(normalizedSearchName)
-                }
+            if let normalizedManufacturer,
+               compact(model.manufacturer) != normalizedManufacturer {
+                return false
+            }
+
+            return model.searchNames.contains { searchName in
+                let normalizedSearchName = compact(searchName)
+                return !normalizedSearchName.isEmpty &&
+                    normalizedModelText.contains(normalizedSearchName)
+            }
         }
     }
 

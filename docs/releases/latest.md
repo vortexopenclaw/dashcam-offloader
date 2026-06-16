@@ -1,3 +1,3 @@
-- 70mai X800 is now canonicalized as 70mai 4K Omni X800, with X800 and 4K Omni aliases mapped to the same sampled profile.
-- Removed the older separate 70mai 4K Omni seed profile so it cannot compete with the real X800/4K Omni card evidence.
-- 70mai X200 remains a separate original 1080p Omni catalog model.
+- Generic unknown-card recognition now uses safe model metadata across known brands instead of treating BlackVue Elite 10 as a one-off.
+- Safe metadata can identify untrained BlackVue, GoPro, Thinkware, Vantrue, and Sony catalog models while keeping unsupported cards on the New Dashcam import path.
+- Safe metadata now blocks selecting a different same-brand sibling profile when shared folder/filename evidence conflicts with the parsed model identity.

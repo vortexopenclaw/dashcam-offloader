@@ -52,8 +52,8 @@ struct CardScanner {
 
     func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
-        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
-        let blackVueMetadataInfo = safeBlackVueMetadataInfo(sourceURL: sourceURL)
+        let safeModelMetadataInfos = safeKnownModelMetadataInfos(sourceURL: sourceURL)
+        let primarySafeModelMetadataInfo = safeModelMetadataInfos.first { $0.matchedModel != nil }
         let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap {
@@ -61,7 +61,7 @@ struct CardScanner {
                 $0,
                 allCandidates: candidates,
                 sourceURL: sourceURL,
-                blackVueMetadataInfo: blackVueMetadataInfo
+                safeModelMetadataInfo: primarySafeModelMetadataInfo
             )
         }
         var selectedProfile: DashcamProfile?
@@ -80,8 +80,7 @@ struct CardScanner {
             from: candidates,
             selectedProfile: selectedProfile,
             sourceURL: sourceURL,
-            goProVersionInfo: goProVersionInfo,
-            blackVueMetadataInfo: blackVueMetadataInfo
+            safeModelMetadataInfo: primarySafeModelMetadataInfo
         )
 
         let rawClips: [ClipItem]
@@ -130,24 +129,15 @@ struct CardScanner {
                 detail: "Used filename dates and folder semantics because no reliable supported profile was selected"
             ))
         }
-        if let goProVersionInfo {
+        for safeModelMetadataInfo in safeModelMetadataInfos {
             diagnostics.append(ScanDiagnosticEntry(
-                stage: "gopro_version_txt",
+                stage: safeModelMetadataInfo.stage,
                 profileID: selectedProfile?.id,
                 profileName: selectedProfile?.displayName,
                 outcome: "parsed_safe_fields",
-                detail: goProVersionInfo.diagnosticSummary
+                detail: safeModelMetadataInfo.diagnosticSummary
             ))
-        }
-        if let blackVueMetadataInfo {
-            diagnostics.append(ScanDiagnosticEntry(
-                stage: "blackvue_config_metadata",
-                profileID: selectedProfile?.id,
-                profileName: selectedProfile?.displayName,
-                outcome: "parsed_safe_fields",
-                detail: blackVueMetadataInfo.diagnosticSummary
-            ))
-            if let matchedModel = blackVueMetadataInfo.matchedModel {
+            if let matchedModel = safeModelMetadataInfo.matchedModel {
                 diagnostics.append(contentsOf: catalogCapabilityDiagnostics(
                     modelHint: matchedModel,
                     allFiles: allFiles,
@@ -214,7 +204,7 @@ struct CardScanner {
         _ candidate: DetectionCandidate,
         allCandidates: [DetectionCandidate],
         sourceURL: URL,
-        blackVueMetadataInfo: BlackVueMetadataInfo? = nil
+        safeModelMetadataInfo: SafeModelMetadataInfo? = nil
     ) -> String? {
         if candidate.confidence == .low {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
@@ -223,12 +213,16 @@ struct CardScanner {
         if knownCatalogVolumeMatches(candidate, sourceURL: sourceURL) {
             return nil
         }
-        if let blackVueMetadataInfo,
-           let matchedModel = blackVueMetadataInfo.matchedModel {
+        if let safeModelMetadataInfo,
+           let matchedModel = safeModelMetadataInfo.matchedModel {
             if profile(candidate.profile, matchesKnownModel: matchedModel) {
                 return nil
             }
-            return "BlackVue config metadata identifies \(matchedModel.displayName), so this card was not selected as different profile \(candidate.profile.displayName) from shared BlackVue folder/filename evidence."
+            if candidate.profile.manufacturer.caseInsensitiveCompare(matchedModel.manufacturer) == .orderedSame,
+               candidate.profile.status.caseInsensitiveCompare("generic") == .orderedSame {
+                return nil
+            }
+            return "\(safeModelMetadataInfo.sourcePath) identifies \(matchedModel.displayName), so this card was not selected as different profile \(candidate.profile.displayName) from shared folder/filename evidence."
         }
 
         let hasModelEvidence = hasExplicitModelEvidence(candidate)
@@ -509,17 +503,22 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
-        let goProVersionInfo = safeGoProVersionInfo(sourceURL: sourceURL)
+        let safeModelMetadataInfo = safeKnownModelMetadataInfos(sourceURL: sourceURL).first { $0.matchedModel != nil }
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
             selectedProfile: result.selectedProfile,
             sourceURL: sourceURL,
-            goProVersionInfo: goProVersionInfo
+            safeModelMetadataInfo: safeModelMetadataInfo
         )
 
         // Re-select and re-classify if the winner changed.
         let updatedSelectionIssue = updatedCandidates.first.flatMap {
-            profileSelectionIssue($0, allCandidates: updatedCandidates, sourceURL: sourceURL)
+            profileSelectionIssue(
+                $0,
+                allCandidates: updatedCandidates,
+                sourceURL: sourceURL,
+                safeModelMetadataInfo: safeModelMetadataInfo
+            )
         }
         if let updatedSelectionIssue, let newTop = updatedCandidates.first {
             let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: sourceURL))
@@ -590,34 +589,18 @@ struct CardScanner {
         from candidates: [DetectionCandidate],
         selectedProfile: DashcamProfile?,
         sourceURL: URL,
-        goProVersionInfo: GoProVersionInfo? = nil,
-        blackVueMetadataInfo: BlackVueMetadataInfo? = nil
+        safeModelMetadataInfo: SafeModelMetadataInfo? = nil
     ) -> IdentifiedCamera? {
-        if let goProVersionInfo,
-           let matchedModel = KnownDashcamCatalog.exactModelMatch(
-               manufacturer: "GoPro",
-               modelText: goProVersionInfo.cameraType
-           ) {
-            let selectedSupportsExactModel = selectedProfile?.manufacturer.lowercased() == "gopro" &&
-                compactModelToken(selectedProfile?.model ?? "") == compactModelToken(matchedModel.model)
-            return IdentifiedCamera(
-                manufacturer: matchedModel.manufacturer,
-                model: matchedModel.model,
-                evidence: goProVersionInfo.safeEvidence,
-                isSupported: selectedSupportsExactModel
-            )
-        }
-
-        if let blackVueMetadataInfo,
-           let matchedModel = blackVueMetadataInfo.matchedModel {
+        if let safeModelMetadataInfo,
+           let matchedModel = safeModelMetadataInfo.matchedModel {
             let selectedSupportsExactModel = selectedProfile.map {
-                $0.manufacturer.lowercased() == "blackvue" &&
+                $0.manufacturer.caseInsensitiveCompare(matchedModel.manufacturer) == .orderedSame &&
                     self.profile($0, matchesKnownModel: matchedModel)
             } ?? false
             return IdentifiedCamera(
                 manufacturer: matchedModel.manufacturer,
                 model: matchedModel.model,
-                evidence: blackVueMetadataInfo.safeEvidence,
+                evidence: safeModelMetadataInfo.safeEvidence,
                 isSupported: selectedSupportsExactModel
             )
         }
@@ -660,34 +643,20 @@ struct CardScanner {
         )
     }
 
-    private struct GoProVersionInfo {
-        var cameraType: String
-        var firmwareVersion: String?
-
-        var safeEvidence: [String] {
-            var result = ["MISC/version.txt camera type: \(cameraType)"]
-            if let firmwareVersion {
-                result.append("MISC/version.txt firmware version: \(firmwareVersion)")
-            }
-            return result
-        }
-
-        var diagnosticSummary: String {
-            safeEvidence.joined(separator: "; ")
-        }
-    }
-
-    private struct BlackVueMetadataInfo {
+    private struct SafeModelMetadataInfo {
+        var manufacturer: String
         var modelText: String
         var firmwareVersion: String?
         var sourcePath: String
+        var valueLabel: String
+        var stage: String
 
         var matchedModel: KnownDashcamModel? {
-            KnownDashcamCatalog.exactBlackVueModelMention(modelText)
+            KnownDashcamCatalog.exactModelMention(modelText, manufacturer: manufacturer)
         }
 
         var safeEvidence: [String] {
-            var result = ["\(sourcePath) model: \(modelText)"]
+            var result = ["\(sourcePath) \(valueLabel): \(modelText)"]
             if let firmwareVersion {
                 result.append("\(sourcePath) firmware version: \(firmwareVersion)")
             }
@@ -699,7 +668,17 @@ struct CardScanner {
         }
     }
 
-    private func safeBlackVueMetadataInfo(sourceURL: URL) -> BlackVueMetadataInfo? {
+    private func safeKnownModelMetadataInfos(sourceURL: URL) -> [SafeModelMetadataInfo] {
+        [
+            safeGoProModelMetadataInfo(sourceURL: sourceURL),
+            safeBlackVueModelMetadataInfo(sourceURL: sourceURL),
+            safeThinkwareModelMetadataInfo(sourceURL: sourceURL),
+            safeVantrueModelMetadataInfo(sourceURL: sourceURL),
+            safeSonyModelMetadataInfo(sourceURL: sourceURL)
+        ].compactMap { $0 }
+    }
+
+    private func safeBlackVueModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
         let candidates = [
             "BlackVue/Config/version.bin",
             "BlackVue/Config/micom_version.bin",
@@ -714,16 +693,20 @@ struct CardScanner {
             }
 
             let parsedModelText = blackVueModelText(in: raw)
-            let matchedModel = parsedModelText.flatMap(KnownDashcamCatalog.exactBlackVueModelMention) ??
-                KnownDashcamCatalog.exactBlackVueModelMention(raw)
+            let matchedModel = parsedModelText.flatMap {
+                KnownDashcamCatalog.exactModelMention($0, manufacturer: "BlackVue")
+            } ?? KnownDashcamCatalog.exactModelMention(raw, manufacturer: "BlackVue")
             guard let modelText = parsedModelText ?? matchedModel?.model else {
                 continue
             }
 
-            return BlackVueMetadataInfo(
+            return SafeModelMetadataInfo(
+                manufacturer: "BlackVue",
                 modelText: modelText,
                 firmwareVersion: blackVueFirmwareVersion(in: raw),
-                sourcePath: relativePath
+                sourcePath: relativePath,
+                valueLabel: "model",
+                stage: "blackvue_config_metadata"
             )
         }
 
@@ -738,15 +721,11 @@ struct CardScanner {
         firstVersionValue(in: raw, keys: ["version", "firmware version", "ver"])
     }
 
-    private func safeGoProVersionInfo(sourceURL: URL) -> GoProVersionInfo? {
-        let versionURL = sourceURL.appendingPathComponent("MISC/version.txt")
-        guard fileManager.fileExists(atPath: versionURL.path) else { return nil }
-        guard let attributes = try? fileManager.attributesOfItem(atPath: versionURL.path),
-              let fileSize = attributes[.size] as? NSNumber,
-              fileSize.intValue <= 1_000_000 else {
-            return nil
-        }
-        guard let raw = try? String(contentsOf: versionURL, encoding: .utf8) else { return nil }
+    private func safeGoProModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let relativePath = "MISC/version.txt"
+        let versionURL = sourceURL.appendingPathComponent(relativePath)
+        guard fileManager.fileExists(atPath: versionURL.path),
+              let raw = evidenceText(at: versionURL) else { return nil }
         guard let cameraType = firstVersionValue(
             in: raw,
             keys: ["camera type", "camera_type", "cameraType"]
@@ -757,11 +736,146 @@ struct CardScanner {
             in: raw,
             keys: ["firmware version", "firmware_version", "firmwareVersion"]
         )
-        return GoProVersionInfo(cameraType: cameraType, firmwareVersion: firmwareVersion)
+        return SafeModelMetadataInfo(
+            manufacturer: "GoPro",
+            modelText: cameraType,
+            firmwareVersion: firmwareVersion,
+            sourcePath: relativePath,
+            valueLabel: "camera type",
+            stage: "gopro_version_txt"
+        )
+    }
+
+    private func safeThinkwareModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let versionPath = "SETTING/lang/ver.dat"
+        let versionURL = sourceURL.appendingPathComponent(versionPath)
+        if fileManager.fileExists(atPath: versionURL.path),
+           let raw = evidenceText(at: versionURL),
+           let deviceName = firstVersionValue(in: raw, keys: ["Device Name", "DeviceName", "model", "model name"]) {
+            return SafeModelMetadataInfo(
+                manufacturer: "Thinkware",
+                modelText: deviceName,
+                firmwareVersion: firstVersionValue(in: raw, keys: ["version", "firmware version", "ver"]),
+                sourcePath: versionPath,
+                valueLabel: "device name",
+                stage: "safe_model_metadata"
+            )
+        }
+
+        let settingFolderURL = sourceURL.appendingPathComponent("SETTING", isDirectory: true)
+        guard let settingFiles = try? fileManager.contentsOfDirectory(
+            at: settingFolderURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return nil }
+
+        for fileURL in settingFiles {
+            let filename = fileURL.lastPathComponent
+            guard filename.localizedCaseInsensitiveContains("_Setting.exe"),
+                  let matchedModel = KnownDashcamCatalog.exactModelMention(filename, manufacturer: "Thinkware") else {
+                continue
+            }
+            return SafeModelMetadataInfo(
+                manufacturer: "Thinkware",
+                modelText: matchedModel.model,
+                firmwareVersion: nil,
+                sourcePath: "SETTING/\(filename)",
+                valueLabel: "model-coded support filename",
+                stage: "safe_model_metadata"
+            )
+        }
+        return nil
+    }
+
+    private func safeVantrueModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let gpsFolderURL = sourceURL.appendingPathComponent("GPS", isDirectory: true)
+        guard let gpsFiles = try? fileManager.contentsOfDirectory(
+            at: gpsFolderURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return nil }
+
+        for fileURL in gpsFiles {
+            let filename = fileURL.lastPathComponent
+            guard filename.localizedCaseInsensitiveContains("_Settings.ini"),
+                  let matchedModel = KnownDashcamCatalog.exactModelMention(filename, manufacturer: "Vantrue") else {
+                continue
+            }
+            return SafeModelMetadataInfo(
+                manufacturer: "Vantrue",
+                modelText: matchedModel.model,
+                firmwareVersion: nil,
+                sourcePath: "GPS/\(filename)",
+                valueLabel: "model-coded settings filename",
+                stage: "safe_model_metadata"
+            )
+        }
+        return nil
+    }
+
+    private func safeSonyModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let mediaProfilePath = "PRIVATE/M4ROOT/MEDIAPRO.XML"
+        let mediaProfileURL = sourceURL.appendingPathComponent(mediaProfilePath)
+        if fileManager.fileExists(atPath: mediaProfileURL.path),
+           let raw = evidenceText(at: mediaProfileURL),
+           let systemKind = xmlAttributeValue(in: raw, name: "systemKind") {
+            return SafeModelMetadataInfo(
+                manufacturer: "Sony",
+                modelText: systemKind,
+                firmwareVersion: nil,
+                sourcePath: mediaProfilePath,
+                valueLabel: "systemKind",
+                stage: "safe_model_metadata"
+            )
+        }
+
+        let clipFolderURL = sourceURL.appendingPathComponent("PRIVATE/M4ROOT/CLIP", isDirectory: true)
+        guard let clipXMLs = try? fileManager.contentsOfDirectory(
+            at: clipFolderURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ).filter({ $0.pathExtension.caseInsensitiveCompare("xml") == .orderedSame }) else {
+            return nil
+        }
+
+        for fileURL in clipXMLs.prefix(5) {
+            guard let raw = evidenceText(at: fileURL),
+                  let modelName = xmlAttributeValue(in: raw, name: "modelName") else {
+                continue
+            }
+            return SafeModelMetadataInfo(
+                manufacturer: "Sony",
+                modelText: modelName,
+                firmwareVersion: nil,
+                sourcePath: "PRIVATE/M4ROOT/CLIP/\(fileURL.lastPathComponent)",
+                valueLabel: "modelName",
+                stage: "safe_model_metadata"
+            )
+        }
+        return nil
     }
 
     private func firstVersionValue(in raw: String, keys: [String]) -> String? {
         for key in keys {
+            let normalizedKey = key.lowercased().filter { !$0.isWhitespace }
+            for line in raw.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
+                let text = String(line)
+                let separators: [Character] = [":", "="]
+                guard let separatorIndex = text.firstIndex(where: { separators.contains($0) }) else {
+                    continue
+                }
+                let lineKey = String(text[..<separatorIndex])
+                    .lowercased()
+                    .filter { !$0.isWhitespace }
+                guard lineKey == normalizedKey else { continue }
+                let valueStart = text.index(after: separatorIndex)
+                let value = String(text[valueStart...])
+                    .trimmingCharacters(in: CharacterSet(charactersIn: "\" ,}\r\n\t"))
+                if !value.isEmpty {
+                    return value
+                }
+            }
+
             let escapedKey = NSRegularExpression.escapedPattern(for: key)
             let patterns = [
                 #""\#(escapedKey)"\s*:\s*"([^"]+)""#,
@@ -786,6 +900,23 @@ struct CardScanner {
             }
         }
         return nil
+    }
+
+    private func xmlAttributeValue(in raw: String, name: String) -> String? {
+        let escapedName = NSRegularExpression.escapedPattern(for: name)
+        let pattern = #"\#(escapedName)\s*=\s*"([^"]+)""#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        let nsRaw = raw as NSString
+        let range = NSRange(location: 0, length: nsRaw.length)
+        guard let match = regex.firstMatch(in: raw, range: range),
+              match.numberOfRanges > 1 else {
+            return nil
+        }
+        let value = nsRaw.substring(with: match.range(at: 1))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
     }
 
     func classify(files: [URL], sourceURL: URL, profile: DashcamProfile) -> [ClipItem] {
