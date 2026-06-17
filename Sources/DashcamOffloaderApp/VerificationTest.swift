@@ -1887,6 +1887,26 @@ enum VerificationTest {
                 print("VERIFY FAIL: nested Vueroid scan did not record source root resolution")
                 return false
             }
+            let nestedVueroidLearningSnapshot = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                viewModel.loadScanResultForVerification(
+                    source: MountedSource(url: mixedArchiveSource, name: "4TB SSD"),
+                    scanResult: nestedVueroidScan
+                )
+                return viewModel.makeFeedbackScanSnapshot()
+            }
+            guard let nestedVueroidLearningSnapshot,
+                  nestedVueroidLearningSnapshot.effectiveSourceName == "S1-4K",
+                  nestedVueroidLearningSnapshot.effectiveSourceRelativePath == "S1-4K",
+                  nestedVueroidLearningSnapshot.rootFolders.contains("CONFIG"),
+                  nestedVueroidLearningSnapshot.rootFolders.contains("INF"),
+                  !nestedVueroidLearningSnapshot.rootFolders.contains("A329S"),
+                  nestedVueroidLearningSnapshot.directorySummaries.contains(where: { $0.path == "CONFIG" }),
+                  nestedVueroidLearningSnapshot.sampleRelativePaths.contains("CONFIG/config.bin") else {
+                print("VERIFY FAIL: nested Vueroid learning snapshot used outer archive evidence: \(String(describing: nestedVueroidLearningSnapshot))")
+                return false
+            }
 
             let unknownVueroidSource = temp.appendingPathComponent("unknown-vueroid-family", isDirectory: true)
             for folder in ["EVENT", "INF", "PARK", "PEVENT", "USER"] {

@@ -123,6 +123,7 @@ def summary_for(record: dict[str, Any], key: str) -> dict[str, Any]:
         "confidence": scan.get("confidence"),
         "videoSpecSamples": len(scan.get("videoSpecSamples") or []),
         "videoSpecSummaries": len(scan.get("videoSpecSummaries") or []),
+        "directorySummaries": len(scan.get("directorySummaries") or []),
         "folderSummaries": len(scan.get("folderSummaries") or []),
         "settingSnapshots": len(scan.get("settingSnapshots") or []),
     }

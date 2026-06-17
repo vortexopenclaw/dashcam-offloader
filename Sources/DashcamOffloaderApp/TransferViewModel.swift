@@ -47,6 +47,7 @@ final class TransferViewModel: ObservableObject {
     private var canRunAutomaticSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
+    private var lastEffectiveScanSourceURL: URL?
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
     private var copyTask: Task<Void, Never>?
     private var customSourceNames: [MountedSource.ID: String] = [:]
@@ -715,6 +716,7 @@ final class TransferViewModel: ObservableObject {
         clips = []
         lastScannedFiles = []
         lastScanDiagnostics = []
+        lastEffectiveScanSourceURL = nil
         excludedQueueClipIDs = []
         selectedQueueItemIDs = []
         copyPlan = nil
@@ -766,6 +768,7 @@ final class TransferViewModel: ObservableObject {
                 self.selectedProfile = scanResult.selectedProfile
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
+                self.lastEffectiveScanSourceURL = scanResult.sourceURL
                 self.clips = scanResult.clips
                 self.resetFiltersForCurrentClips()
                 let footageClips = self.footageClips
@@ -796,6 +799,7 @@ final class TransferViewModel: ObservableObject {
         selectedProfile = scanResult.selectedProfile
         lastScannedFiles = scanResult.allFiles
         lastScanDiagnostics = scanResult.diagnostics
+        lastEffectiveScanSourceURL = scanResult.sourceURL
         clips = scanResult.clips
         resetFiltersForCurrentClips()
         scanSummary = ScanSummary(
@@ -814,7 +818,8 @@ final class TransferViewModel: ObservableObject {
     func selectProfile(_ profile: DashcamProfile) {
         selectedProfile = profile
         guard let selectedSource else { return }
-        clips = scanner.classifyWithParkingPatterns(files: lastScannedFiles, sourceURL: selectedSource.url, profile: profile).clips
+        let sourceRoot = lastEffectiveScanSourceURL ?? selectedSource.url
+        clips = scanner.classifyWithParkingPatterns(files: lastScannedFiles, sourceURL: sourceRoot, profile: profile).clips
         resetFiltersForCurrentClips()
         rebuildPlan()
     }
@@ -1170,7 +1175,8 @@ final class TransferViewModel: ObservableObject {
     func makeFeedbackScanSnapshot() -> FeedbackScanSnapshot? {
         guard scanSummary.hasScan else { return nil }
 
-        let sourceRoot = selectedSource?.url
+        let requestedSourceRoot = selectedSource?.url
+        let sourceRoot = lastEffectiveScanSourceURL ?? requestedSourceRoot
         let safeFiles = lastScannedFiles.filter { isSafeTrainingSample($0, sourceRoot: sourceRoot) }
         let safeSamples = safeFiles
             .prefix(80)
@@ -1275,6 +1281,12 @@ final class TransferViewModel: ObservableObject {
 
         return FeedbackScanSnapshot(
             volumeName: selectedSource?.name ?? "Unknown",
+            requestedSourceName: selectedSource?.name,
+            effectiveSourceName: sourceRoot?.lastPathComponent,
+            effectiveSourceRelativePath: effectiveSourceRelativePath(
+                requestedSourceRoot: requestedSourceRoot,
+                effectiveSourceRoot: sourceRoot
+            ),
             identifiedCamera: identifiedCamera,
             selectedProfileID: selectedProfile?.id,
             selectedProfileName: selectedProfile?.displayName,
@@ -1323,6 +1335,14 @@ final class TransferViewModel: ObservableObject {
             return fileURL.relativePath(from: sourceRoot)
         }
         return fileURL.lastPathComponent
+    }
+
+    private func effectiveSourceRelativePath(requestedSourceRoot: URL?, effectiveSourceRoot: URL?) -> String? {
+        guard let requestedSourceRoot, let effectiveSourceRoot else { return nil }
+        let requestedPath = requestedSourceRoot.standardizedFileURL.path
+        let effectivePath = effectiveSourceRoot.standardizedFileURL.path
+        guard requestedPath != effectivePath else { return "." }
+        return effectiveSourceRoot.relativePath(from: requestedSourceRoot)
     }
 
     private func isSafeTrainingSample(_ fileURL: URL, sourceRoot: URL?) -> Bool {

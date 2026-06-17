@@ -1,3 +1,4 @@
-- Improves recognition when a submitted scan contains a trained card inside a wrapper folder or mixed archive.
-- Keeps trained cards from being hidden by unrelated folders and files in remote submissions.
-- Adds regression coverage for Vueroid S1 4K recognition from a nested mixed submission.
+- Roots remote learning payloads at the scanner's effective card root, so SSD/archive submissions do not mix unrelated folder evidence into a nested trained card.
+- Records the requested source name, effective source name, and relative nested-card path in sanitized feedback scans.
+- Keeps clean Vueroid S1 4K Infinite cards recognized as the trained profile while SSD/archive scans stay generic unless a reliable nested card root is found.
+- Adds regression coverage for Vueroid S1 4K recognition and remote-learning snapshots from a nested mixed submission.

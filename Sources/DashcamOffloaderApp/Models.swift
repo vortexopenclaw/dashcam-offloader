@@ -843,6 +843,9 @@ struct CardTrainingDetails: Codable, Hashable, Sendable {
 
 struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var volumeName: String
+    var requestedSourceName: String?
+    var effectiveSourceName: String?
+    var effectiveSourceRelativePath: String?
     var identifiedCamera: IdentifiedCamera?
     var selectedProfileID: String?
     var selectedProfileName: String?

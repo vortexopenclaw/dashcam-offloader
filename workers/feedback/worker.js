@@ -145,6 +145,9 @@ function sanitizeTraining(training) {
 function sanitizeScan(scan) {
   return {
     volumeName: stringValue(scan.volumeName),
+    requestedSourceName: optionalString(scan.requestedSourceName),
+    effectiveSourceName: optionalString(scan.effectiveSourceName),
+    effectiveSourceRelativePath: optionalString(scan.effectiveSourceRelativePath),
     identifiedCamera: sanitizeIdentifiedCamera(scan.identifiedCamera),
     selectedProfileID: optionalString(scan.selectedProfileID),
     selectedProfileName: optionalString(scan.selectedProfileName),
