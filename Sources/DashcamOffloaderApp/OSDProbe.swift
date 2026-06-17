@@ -41,21 +41,18 @@ struct OSDProbe {
         for frame in extractFrames(from: videoURL) {
             framesExtracted += 1
             guard let strip = cropBottomStrip(of: frame, percent: spec.stripPercent) else { continue }
-            guard let recognized = recognizeText(in: strip) else { continue }
+            guard let recognized = recognizeText(in: strip, customWords: spec.matchStrings) else { continue }
             framesWithText += 1
             textCandidateCount += recognized.count
 
-            for candidate in spec.matchStrings {
-                let needle = candidate.lowercased()
-                if recognized.contains(where: { $0.lowercased().contains(needle) }) {
-                    return OSDProbeResult(
-                        videoName: videoURL.lastPathComponent,
-                        framesExtracted: framesExtracted,
-                        framesWithText: framesWithText,
-                        textCandidateCount: textCandidateCount,
-                        matchedString: candidate
-                    )
-                }
+            if let candidate = bestMatchingString(in: recognized, matchStrings: spec.matchStrings) {
+                return OSDProbeResult(
+                    videoName: videoURL.lastPathComponent,
+                    framesExtracted: framesExtracted,
+                    framesWithText: framesWithText,
+                    textCandidateCount: textCandidateCount,
+                    matchedString: candidate
+                )
             }
         }
         return OSDProbeResult(
@@ -65,6 +62,32 @@ struct OSDProbe {
             textCandidateCount: textCandidateCount,
             matchedString: nil
         )
+    }
+
+    private func bestMatchingString(in recognized: [String], matchStrings: [String]) -> String? {
+        var bestMatch: (value: String, length: Int)?
+        for observed in recognized {
+            let observedLower = observed.lowercased()
+            let observedCompact = compactModelToken(observed)
+            for candidate in matchStrings {
+                let candidateLower = candidate.lowercased()
+                let candidateCompact = compactModelToken(candidate)
+                guard !candidateCompact.isEmpty else { continue }
+                guard observedLower.contains(candidateLower) || observedCompact.contains(candidateCompact) else {
+                    continue
+                }
+                if bestMatch == nil || candidateCompact.count > bestMatch!.length {
+                    bestMatch = (candidate, candidateCompact.count)
+                }
+            }
+        }
+        return bestMatch?.value
+    }
+
+    private func compactModelToken(_ value: String) -> String {
+        value
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
     }
 
     /// Pull several CGImages out of the video. Some scenes make the OSD low
@@ -115,11 +138,12 @@ struct OSDProbe {
 
     /// Run Vision text recognition over the cropped strip and collect every
     /// candidate string from all observations.
-    private func recognizeText(in image: CGImage) -> [String]? {
+    private func recognizeText(in image: CGImage, customWords: [String]) -> [String]? {
         var results: [String] = []
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false
+        request.customWords = customWords
 
         let handler = VNImageRequestHandler(cgImage: image, options: [:])
         do {

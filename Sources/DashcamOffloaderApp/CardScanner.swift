@@ -586,6 +586,7 @@ struct CardScanner {
                 outcome: "skipped_no_candidates",
                 detail: "No profile candidates available for OSD OCR"
             ))
+            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
             return result
         }
 
@@ -601,6 +602,7 @@ struct CardScanner {
                 outcome: "skipped_no_ocr_competition",
                 detail: "Top score \(top.score), confidence \(top.confidence.rawValue); closeCompetition \(hasCompetition), osdSiblingCandidates \(osdCandidateCount)"
             ))
+            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
             return result
         }
 
@@ -757,7 +759,241 @@ struct CardScanner {
             }
         }
 
+        augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
         return result
+    }
+
+    /// Generic/untrained cards can still burn exact model text into the video
+    /// OSD. Use card-shape hints to limit the OCR search to likely brands,
+    /// then expose the matched catalog model while keeping the generic import
+    /// path unless a trained profile exists.
+    private func augmentWithGenericCatalogOSDIfNeeded(_ result: inout ScanResult, sourceURL: URL) {
+        guard result.identifiedCamera == nil else { return }
+        guard result.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || result.selectedProfile == nil else { return }
+
+        let hints = genericCardShapeHints(sourceURL: sourceURL, allFiles: result.allFiles)
+        let hintedManufacturers = Set(hints.map { compactModelToken($0.manufacturer) })
+        guard !hintedManufacturers.isEmpty else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "catalog_osd_ocr_gate",
+                profileID: result.selectedProfile?.id,
+                profileName: result.selectedProfile?.displayName,
+                outcome: "skipped_no_family_hint",
+                detail: "No brand/family card-shape hint was available to constrain generic catalog OCR"
+            ))
+            return
+        }
+
+        let candidateModels = KnownDashcamCatalog.models.filter {
+            hintedManufacturers.contains(compactModelToken($0.manufacturer))
+        }
+        let matchStrings = Array(Set(candidateModels.flatMap(\.searchNames)))
+            .sorted {
+                let left = compactModelToken($0).count
+                let right = compactModelToken($1).count
+                if left != right { return left > right }
+                return $0 < $1
+            }
+        guard !matchStrings.isEmpty else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "catalog_osd_ocr_gate",
+                profileID: result.selectedProfile?.id,
+                profileName: result.selectedProfile?.displayName,
+                outcome: "skipped_no_catalog_match_strings",
+                detail: "Family hint matched no catalog OSD strings"
+            ))
+            return
+        }
+
+        let spec = OSDSpec(
+            containsModelName: true,
+            matchStrings: matchStrings,
+            stripPercent: 0.16,
+            probeChannels: ["F", "front"]
+        )
+        let sampleVideos = sampleVideos(for: spec, allFiles: result.allFiles)
+        guard !sampleVideos.isEmpty else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "catalog_osd_ocr_gate",
+                profileID: result.selectedProfile?.id,
+                profileName: result.selectedProfile?.displayName,
+                outcome: "skipped_no_sample_videos",
+                detail: "No sample videos were available for generic catalog OCR"
+            ))
+            return
+        }
+
+        result.diagnostics.append(ScanDiagnosticEntry(
+            stage: "catalog_osd_ocr_gate",
+            profileID: result.selectedProfile?.id,
+            profileName: result.selectedProfile?.displayName,
+            outcome: "running",
+            detail: "Trying \(candidateModels.count) catalog model(s) across hinted manufacturer(s) \(hintedManufacturers.sorted().joined(separator: ","))"
+        ))
+
+        let probe = OSDProbe()
+        var frameCount = 0
+        var framesWithText = 0
+        var textCandidateCount = 0
+        var matchedString: String?
+        var videosChecked = 0
+
+        for videoURL in sampleVideos {
+            videosChecked += 1
+            let probeResult = probe.probeWithDiagnostics(videoURL: videoURL, spec: spec)
+            frameCount += probeResult.framesExtracted
+            framesWithText += probeResult.framesWithText
+            textCandidateCount += probeResult.textCandidateCount
+            if let matched = probeResult.matchedString {
+                matchedString = matched
+                break
+            }
+        }
+
+        let detail = "videos \(videosChecked), frames \(frameCount), framesWithText \(framesWithText), textCandidates \(textCandidateCount)"
+        guard let matchedString else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "catalog_osd_ocr_probe",
+                profileID: result.selectedProfile?.id,
+                profileName: result.selectedProfile?.displayName,
+                outcome: "no_match",
+                detail: detail
+            ))
+            return
+        }
+
+        guard let baseMatchedModel = candidateModels.first(where: { model in
+            model.searchNames.contains { compactModelToken($0) == compactModelToken(matchedString) }
+        }) ?? KnownDashcamCatalog.exactModelMention(matchedString) else {
+            result.diagnostics.append(ScanDiagnosticEntry(
+                stage: "catalog_osd_ocr_probe",
+                profileID: result.selectedProfile?.id,
+                profileName: result.selectedProfile?.displayName,
+                outcome: "matched_unresolved_catalog_model",
+                detail: "\(detail); matched OCR string \(matchedString)"
+            ))
+            return
+        }
+        let observedChannelRoles = observedChannelRoles(from: result.allFiles, sourceURL: sourceURL)
+        let matchedModel = refinedGenericCatalogOSDModel(
+            baseMatchedModel,
+            matchedString: matchedString,
+            candidateModels: candidateModels,
+            observedChannelRoles: observedChannelRoles,
+            allFiles: result.allFiles,
+            sourceURL: sourceURL
+        )
+
+        result.identifiedCamera = IdentifiedCamera(
+            manufacturer: matchedModel.manufacturer,
+            model: matchedModel.model,
+            evidence: ["OSD OCR match \"\(matchedString)\" from video frame"],
+            isSupported: false
+        )
+        result.diagnostics.append(ScanDiagnosticEntry(
+            stage: "catalog_osd_ocr_probe",
+            profileID: result.selectedProfile?.id,
+            profileName: result.selectedProfile?.displayName,
+            outcome: "matched_known_untrained_model",
+            detail: "\(detail); matched \(matchedModel.displayName) from OSD string \(matchedString)"
+        ))
+    }
+
+    private func refinedGenericCatalogOSDModel(
+        _ baseModel: KnownDashcamModel,
+        matchedString: String,
+        candidateModels: [KnownDashcamModel],
+        observedChannelRoles: Set<String>,
+        allFiles: [URL],
+        sourceURL: URL
+    ) -> KnownDashcamModel {
+        guard compactModelToken(baseModel.manufacturer) == "wolfbox" else { return baseModel }
+
+        let matchedToken = compactModelToken(matchedString)
+        let isG900Family = matchedToken.contains("g900") || compactModelToken(baseModel.model).contains("g900")
+        guard isG900Family else { return baseModel }
+
+        let observedThreeChannel = observedChannelRoles.count >= 3 &&
+            (observedChannelRoles.contains("interior") ||
+                observedChannelRoles.contains("cabin") ||
+                observedChannelRoles.contains("bumper") ||
+                observedChannelRoles.contains("channel_c"))
+        if observedThreeChannel {
+            if observedChannelRoles.contains("bumper"),
+               let bumper = catalogModel(
+                manufacturer: "Wolfbox",
+                modelText: "G900 TriPro Bumper",
+                candidateModels: candidateModels
+               ) {
+                return bumper
+            }
+            if (observedChannelRoles.contains("interior") || observedChannelRoles.contains("cabin")),
+               let cabin = catalogModel(
+                manufacturer: "Wolfbox",
+                modelText: "G900 TriPro Cabin",
+                candidateModels: candidateModels
+               ) {
+                return cabin
+            }
+            if let triPro = catalogModel(
+                manufacturer: "Wolfbox",
+                modelText: "G900 TriPro",
+                candidateModels: candidateModels
+            ) {
+                return triPro
+            }
+        }
+
+        if matchedToken.contains("g900pro") || wolfboxG900ProMediaFingerprint(allFiles: allFiles, sourceURL: sourceURL),
+           let pro = catalogModel(manufacturer: "Wolfbox", modelText: "G900 Pro", candidateModels: candidateModels) {
+            return pro
+        }
+
+        return baseModel
+    }
+
+    private func catalogModel(
+        manufacturer: String,
+        modelText: String,
+        candidateModels: [KnownDashcamModel]
+    ) -> KnownDashcamModel? {
+        let manufacturerToken = compactModelToken(manufacturer)
+        let modelToken = compactModelToken(modelText)
+        return candidateModels.first {
+            compactModelToken($0.manufacturer) == manufacturerToken &&
+                $0.searchNames.contains { compactModelToken($0) == modelToken }
+        } ?? KnownDashcamCatalog.exactModelMatch(manufacturer: manufacturer, modelText: modelText)
+    }
+
+    private func wolfboxG900ProMediaFingerprint(allFiles: [URL], sourceURL: URL) -> Bool {
+        guard let front = firstVideoDimensions(forChannel: "front", allFiles: allFiles, sourceURL: sourceURL),
+              let rear = firstVideoDimensions(forChannel: "rear", allFiles: allFiles, sourceURL: sourceURL) else {
+            return false
+        }
+
+        let frontIs4K = front.width >= 3800 && front.height >= 2100
+        let rearIs2_5K = rear.width >= 2500 && rear.width <= 2600 &&
+            rear.height >= 1400 && rear.height <= 1480
+        return frontIs4K && rearIs2_5K
+    }
+
+    private func firstVideoDimensions(
+        forChannel channel: String,
+        allFiles: [URL],
+        sourceURL: URL
+    ) -> (width: Int, height: Int)? {
+        for fileURL in allFiles {
+            let ext = fileURL.pathExtension.lowercased()
+            guard ["mp4", "mov"].contains(ext) else { continue }
+            let relativePath = fileURL.relativePath(from: sourceURL)
+            guard genericChannel(relativePath: relativePath, filename: fileURL.lastPathComponent) == channel else {
+                continue
+            }
+            if let dimensions = videoDimensions(for: fileURL) {
+                return dimensions
+            }
+        }
+        return nil
     }
 
     /// Finds front-channel sample videos matching the OSD spec's channels.

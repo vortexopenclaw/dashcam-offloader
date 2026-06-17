@@ -1,3 +1,3 @@
-- Fixes ambiguous `S1-4K` catalog hints so mixed folders do not identify as the wrong brand.
-- Adds safe Vueroid config metadata recognition for S1 4K Infinite, S1 QHD Infinite, and H1 cards.
-- Updates the Vueroid S1 4K Infinite catalog entry to cover observed 1CH, 2CH, and 3CH variants.
+- Adds generic OSD text recognition for untrained cards when the card shape gives a safe brand/family hint.
+- Improves Wolfbox G900-family identification from video overlays and channel/resolution evidence.
+- Keeps untrained cameras on the New Dashcam import path while showing the exact identified make/model when evidence is strong enough.
