@@ -50,7 +50,8 @@ struct CardScanner {
         return hasDashcamLikeEvidence(url)
     }
 
-    func scan(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
+    func scan(sourceURL requestedSourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
+        let sourceURL = try effectiveScanSourceURL(for: requestedSourceURL, profiles: profiles)
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let observedChannelRoles = observedChannelRoles(from: allFiles, sourceURL: sourceURL)
         let safeModelMetadataInfos = safeKnownModelMetadataInfos(
@@ -116,6 +117,15 @@ struct CardScanner {
                 detail: "No profile scored above zero"
             )
         ]
+        if sourceURL.standardizedFileURL.path != requestedSourceURL.standardizedFileURL.path {
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "source_root_resolution",
+                profileID: selectedProfile?.id,
+                profileName: selectedProfile?.displayName,
+                outcome: "using_nested_card_root",
+                detail: "Selected \(sourceURL.relativePath(from: requestedSourceURL)) as the most reliable card root inside \(requestedSourceURL.lastPathComponent)"
+            ))
+        }
         if let selectionIssue, let topCandidate {
             diagnostics.append(ScanDiagnosticEntry(
                 stage: "profile_selection_guard",
@@ -184,6 +194,117 @@ struct CardScanner {
             clips: clips,
             diagnostics: diagnostics
         )
+    }
+
+    private func effectiveScanSourceURL(for sourceURL: URL, profiles: [DashcamProfile]) throws -> URL {
+        let directFiles = try enumerateFiles(sourceURL: sourceURL)
+        if isReliableCardRoot(sourceURL: sourceURL, allFiles: directFiles, profiles: profiles) {
+            return sourceURL
+        }
+
+        guard let nested = bestNestedCardRoot(in: sourceURL, profiles: profiles) else {
+            return sourceURL
+        }
+
+        return nested
+    }
+
+    private func bestNestedCardRoot(in sourceURL: URL, profiles: [DashcamProfile]) -> URL? {
+        var best: (url: URL, score: Int)?
+
+        for candidateRoot in nestedCardRootCandidates(in: sourceURL) {
+            guard let allFiles = try? enumerateFiles(sourceURL: candidateRoot),
+                  !allFiles.isEmpty else { continue }
+
+            let reliabilityScore = cardRootReliabilityScore(
+                sourceURL: candidateRoot,
+                allFiles: allFiles,
+                profiles: profiles
+            )
+            guard reliabilityScore >= 100 else { continue }
+
+            if best == nil ||
+                reliabilityScore > best!.score ||
+                (reliabilityScore == best!.score &&
+                    candidateRoot.path.count < best!.url.path.count) {
+                best = (candidateRoot, reliabilityScore)
+            }
+        }
+
+        return best?.url
+    }
+
+    private func nestedCardRootCandidates(in sourceURL: URL) -> [URL] {
+        guard let enumerator = fileManager.enumerator(
+            at: sourceURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [],
+            errorHandler: { _, _ in true }
+        ) else {
+            return []
+        }
+
+        var candidates: [URL] = []
+        var seen = Set<String>()
+
+        for case let url as URL in enumerator {
+            let relativePath = url.relativePath(from: sourceURL)
+            if shouldSkipTraversal(relativePath: relativePath) {
+                enumerator.skipDescendants()
+                continue
+            }
+
+            let depth = relativePath.split(separator: "/").count
+            if depth > 4 {
+                enumerator.skipDescendants()
+                continue
+            }
+
+            let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+            guard values?.isDirectory == true else { continue }
+            guard hasDashcamLikeEvidence(url) else { continue }
+
+            let path = url.standardizedFileURL.path
+            if seen.insert(path).inserted {
+                candidates.append(url.standardizedFileURL)
+            }
+            if candidates.count >= 80 { break }
+        }
+
+        return candidates
+    }
+
+    private func isReliableCardRoot(sourceURL: URL, allFiles: [URL], profiles: [DashcamProfile]) -> Bool {
+        cardRootReliabilityScore(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles) >= 100
+    }
+
+    private func cardRootReliabilityScore(sourceURL: URL, allFiles: [URL], profiles: [DashcamProfile]) -> Int {
+        let observedChannelRoles = observedChannelRoles(from: allFiles, sourceURL: sourceURL)
+        let safeModelMetadataInfo = safeKnownModelMetadataInfos(
+            sourceURL: sourceURL,
+            observedChannelRoles: observedChannelRoles
+        ).first { $0.matchedModel != nil }
+        let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
+        guard let top = candidates.first,
+              top.confidence != .low,
+              profileSelectionIssue(
+                top,
+                allCandidates: candidates,
+                sourceURL: sourceURL,
+                safeModelMetadataInfo: safeModelMetadataInfo
+              ) == nil else {
+            return 0
+        }
+
+        let safeModelBonus: Int
+        if let matchedModel = safeModelMetadataInfo?.matchedModel,
+           profile(top.profile, matchesKnownModel: matchedModel) {
+            safeModelBonus = 200
+        } else {
+            safeModelBonus = 0
+        }
+
+        return top.score + safeModelBonus
     }
 
     private func catalogCapabilityDiagnostics(
@@ -577,6 +698,7 @@ struct CardScanner {
     /// result unchanged.
     func scanWithOSD(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
         var result = try scan(sourceURL: sourceURL, profiles: profiles)
+        let scanSourceURL = result.sourceURL
 
         guard let top = result.candidates.first else {
             result.diagnostics.append(ScanDiagnosticEntry(
@@ -586,7 +708,7 @@ struct CardScanner {
                 outcome: "skipped_no_candidates",
                 detail: "No profile candidates available for OSD OCR"
             ))
-            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
+            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: scanSourceURL)
             return result
         }
 
@@ -602,7 +724,7 @@ struct CardScanner {
                 outcome: "skipped_no_ocr_competition",
                 detail: "Top score \(top.score), confidence \(top.confidence.rawValue); closeCompetition \(hasCompetition), osdSiblingCandidates \(osdCandidateCount)"
             ))
-            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
+            augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: scanSourceURL)
             return result
         }
 
@@ -707,15 +829,15 @@ struct CardScanner {
         }
 
         result.candidates = updatedCandidates
-        let observedChannelRoles = observedChannelRoles(from: result.allFiles, sourceURL: sourceURL)
+        let observedChannelRoles = observedChannelRoles(from: result.allFiles, sourceURL: scanSourceURL)
         let safeModelMetadataInfo = safeKnownModelMetadataInfos(
-            sourceURL: sourceURL,
+            sourceURL: scanSourceURL,
             observedChannelRoles: observedChannelRoles
         ).first { $0.matchedModel != nil }
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
             selectedProfile: result.selectedProfile,
-            sourceURL: sourceURL,
+            sourceURL: scanSourceURL,
             safeModelMetadataInfo: safeModelMetadataInfo
         )
 
@@ -724,12 +846,12 @@ struct CardScanner {
             profileSelectionIssue(
                 $0,
                 allCandidates: updatedCandidates,
-                sourceURL: sourceURL,
+                sourceURL: scanSourceURL,
                 safeModelMetadataInfo: safeModelMetadataInfo
             )
         }
         if let updatedSelectionIssue, let newTop = updatedCandidates.first {
-            let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: sourceURL))
+            let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: scanSourceURL))
             result.selectedProfile = DashcamProfile.genericNewDashcam
             result.clips = parkingPatternResult.clips
             result.identifiedCamera = nil
@@ -752,14 +874,14 @@ struct CardScanner {
                   newTop.confidence != .low,
                   newTop.profile.id != result.selectedProfile?.id {
             result.selectedProfile = newTop.profile
-            result.clips = classifyWithParkingPatterns(files: result.allFiles, sourceURL: sourceURL, profile: newTop.profile).clips
+            result.clips = classifyWithParkingPatterns(files: result.allFiles, sourceURL: scanSourceURL, profile: newTop.profile).clips
         } else if result.selectedProfile == nil {
             if let newTop = updatedCandidates.first, newTop.confidence != .low {
                 result.selectedProfile = newTop.profile
             }
         }
 
-        augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: sourceURL)
+        augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: scanSourceURL)
         return result
     }
 

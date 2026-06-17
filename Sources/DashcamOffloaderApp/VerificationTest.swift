@@ -1847,6 +1847,47 @@ enum VerificationTest {
                 return false
             }
 
+            let mixedArchiveSource = temp.appendingPathComponent("mixed-submission-archive", isDirectory: true)
+            let nestedVueroidSource = mixedArchiveSource.appendingPathComponent("S1-4K", isDirectory: true)
+            try FileManager.default.createDirectory(at: nestedVueroidSource.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: nestedVueroidSource.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: nestedVueroidSource.appendingPathComponent("PARK", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: nestedVueroidSource.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
+            try Data("S1-4K-INFINITE V1.5.5\u{0}S1-4K-INFINITE".utf8).write(to: nestedVueroidSource.appendingPathComponent("CONFIG/config.bin"))
+            try Data(repeating: 6, count: 1024).write(to: nestedVueroidSource.appendingPathComponent("INF/20260101_123000_INF_F_N.mp4"))
+            try Data(repeating: 7, count: 1024).write(to: nestedVueroidSource.appendingPathComponent("PARK/20260101_124000_PRK_F_N.mp4"))
+            try Data(repeating: 8, count: 1024).write(to: nestedVueroidSource.appendingPathComponent("PEVENT/20260101_125000_PVT_F_N.mp4"))
+
+            try FileManager.default.createDirectory(
+                at: mixedArchiveSource.appendingPathComponent("A329S/DCIM/Movie", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: mixedArchiveSource.appendingPathComponent("comparison-images", isDirectory: true),
+                withIntermediateDirectories: true
+            )
+            try Data(repeating: 9, count: 1024).write(to: mixedArchiveSource.appendingPathComponent("A329S/DCIM/Movie/20260101_130000_F.MP4"))
+            try Data(repeating: 10, count: 512).write(to: mixedArchiveSource.appendingPathComponent("comparison-images/frame.jpg"))
+            try Data(repeating: 11, count: 512).write(to: mixedArchiveSource.appendingPathComponent("project.psd"))
+
+            let nestedVueroidScan = try scanner.scan(sourceURL: mixedArchiveSource, profiles: profiles)
+            guard nestedVueroidScan.sourceURL.lastPathComponent == "S1-4K",
+                  nestedVueroidScan.candidates.first?.profile.id == "vueroid-s1-4k-infinite",
+                  nestedVueroidScan.identifiedCamera?.manufacturer == "Vueroid",
+                  nestedVueroidScan.identifiedCamera?.model == "S1 4K Infinite",
+                  nestedVueroidScan.identifiedCamera?.isSupported == true else {
+                print("VERIFY FAIL: mixed archive did not resolve nested Vueroid card root: source=\(nestedVueroidScan.sourceURL.path), top=\(String(describing: nestedVueroidScan.candidates.first?.profile.id)), identified=\(String(describing: nestedVueroidScan.identifiedCamera))")
+                return false
+            }
+            guard nestedVueroidScan.diagnostics.contains(where: {
+                $0.stage == "source_root_resolution" &&
+                    $0.outcome == "using_nested_card_root" &&
+                    $0.detail.contains("S1-4K")
+            }) else {
+                print("VERIFY FAIL: nested Vueroid scan did not record source root resolution")
+                return false
+            }
+
             let unknownVueroidSource = temp.appendingPathComponent("unknown-vueroid-family", isDirectory: true)
             for folder in ["EVENT", "INF", "PARK", "PEVENT", "USER"] {
                 try FileManager.default.createDirectory(
