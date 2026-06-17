@@ -1,3 +1,3 @@
-- Adds generic TeslaCam USB recognition for RecentClips, SavedClips, and SentryClips.
-- Detects Tesla front, rear/back, left/right repeater, and left/right pillar camera channels.
-- Infers TeslaCam 4-camera vs 6-camera configurations from observed safe channel filenames while avoiding exact vehicle-model claims.
+- Fixes ambiguous `S1-4K` catalog hints so mixed folders do not identify as the wrong brand.
+- Adds safe Vueroid config metadata recognition for S1 4K Infinite, S1 QHD Infinite, and H1 cards.
+- Updates the Vueroid S1 4K Infinite catalog entry to cover observed 1CH, 2CH, and 3CH variants.
