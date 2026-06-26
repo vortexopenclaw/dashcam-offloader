@@ -2,3 +2,6 @@
 - Records the requested source name, effective source name, and relative nested-card path in sanitized feedback scans.
 - Keeps clean Vueroid S1 4K Infinite cards recognized as the trained profile while SSD/archive scans stay generic unless a reliable nested card root is found.
 - Adds regression coverage for Vueroid S1 4K recognition and remote-learning snapshots from a nested mixed submission.
+- Adds a hosted privacy policy for feedback and camera-learning submissions.
+- Links the privacy policy from Feedback and Help add support for this dashcam.
+- Adds feedback endpoint rate limiting and security.txt support on the Cloudflare Workers.

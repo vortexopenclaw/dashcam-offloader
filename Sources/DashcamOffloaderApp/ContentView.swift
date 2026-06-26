@@ -1,6 +1,10 @@
 import AppKit
 import SwiftUI
 
+private enum AppLinks {
+    static let privacyPolicyURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/privacy")!
+}
+
 private extension DateFormatter {
     static let dashcamOffloaderCreatedColumn: DateFormatter = {
         let formatter = DateFormatter()
@@ -1308,6 +1312,9 @@ struct FeedbackSheet: View {
                 .foregroundStyle(.secondary)
             }
 
+            Link("Privacy Policy", destination: AppLinks.privacyPolicyURL)
+                .font(.caption)
+
             if !viewModel.feedbackMessage.isEmpty {
                 Text(viewModel.feedbackMessage)
                     .font(.caption)
@@ -1467,6 +1474,9 @@ struct CardLearningSheet: View {
             Text("This sends only a sanitized description of the card structure so we can add support for your camera. It does not upload your videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, or other personally identifying information.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            Link("Privacy Policy", destination: AppLinks.privacyPolicyURL)
+                .font(.caption)
 
             if !viewModel.feedbackMessage.isEmpty {
                 Text(viewModel.feedbackMessage)

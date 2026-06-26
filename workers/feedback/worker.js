@@ -11,10 +11,33 @@ const MAX_SETTING_SNAPSHOTS = 20;
 const MAX_SETTING_VALUES = 40;
 const MAX_TRAINING_FIELD_LENGTH = 1000;
 const MAX_BODY_BYTES = 1024 * 1024;
+const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
+const RATE_LIMIT_MAX_POSTS = 20;
+const SECURITY_TXT = `Contact: mailto:security@vortexradar.com
+Contact: https://www.vortexradar.com/security-contact/
+Preferred-Languages: en
+Canonical: https://www.vortexradar.com/.well-known/security.txt
+Policy: https://www.vortexradar.com/security-contact/
+Expires: 2027-06-17T23:59:59Z
+`;
+
+function securityTxtResponse(method) {
+  return new Response(method === "HEAD" ? null : SECURITY_TXT, {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "public, max-age=86400",
+      "access-control-allow-origin": "*",
+    },
+  });
+}
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/.well-known/security.txt" && ["GET", "HEAD"].includes(request.method)) {
+      return securityTxtResponse(request.method);
+    }
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: responseHeaders(request, env) });
@@ -26,6 +49,17 @@ export default {
 
     if (request.method !== "POST") {
       return json({ error: "method_not_allowed" }, 405, request, env);
+    }
+
+    const rateLimit = await checkRateLimit(request, env);
+    if (!rateLimit.ok) {
+      return json(
+        { error: "rate_limited" },
+        429,
+        request,
+        env,
+        { "Retry-After": String(rateLimit.retryAfterSeconds) }
+      );
     }
 
     const contentLength = Number(request.headers.get("Content-Length") || "0");
@@ -67,6 +101,45 @@ export default {
     return json({ ok: true, id }, 202, request, env);
   },
 };
+
+async function checkRateLimit(request, env) {
+  if (!env.FEEDBACK_KV) {
+    return { ok: true };
+  }
+
+  const now = Date.now();
+  const windowStart = Math.floor(now / (RATE_LIMIT_WINDOW_SECONDS * 1000));
+  const clientID = await hashedClientID(request);
+  const key = `rate/${windowStart}/${clientID}`;
+  const current = Number(await env.FEEDBACK_KV.get(key) || "0");
+
+  if (current >= RATE_LIMIT_MAX_POSTS) {
+    const nextWindowAt = (windowStart + 1) * RATE_LIMIT_WINDOW_SECONDS * 1000;
+    return {
+      ok: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((nextWindowAt - now) / 1000)),
+    };
+  }
+
+  await env.FEEDBACK_KV.put(key, String(current + 1), {
+    expirationTtl: RATE_LIMIT_WINDOW_SECONDS * 2,
+  });
+
+  return { ok: true };
+}
+
+async function hashedClientID(request) {
+  const rawClient = request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("X-Forwarded-For") ||
+    "unknown";
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(rawClient)
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 function validateFeedback(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -632,10 +705,13 @@ function hasStorageBinding(env) {
   return Boolean(env.FEEDBACK_BUCKET || env.FEEDBACK_KV);
 }
 
-function json(value, status = 200, request, env) {
+function json(value, status = 200, request, env, extraHeaders = {}) {
   return new Response(JSON.stringify(value), {
     status,
-    headers: responseHeaders(request, env),
+    headers: {
+      ...responseHeaders(request, env),
+      ...extraHeaders,
+    },
   });
 }
 

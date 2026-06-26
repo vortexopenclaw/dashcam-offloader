@@ -164,6 +164,8 @@ Learn Card submissions ask for manufacturer, model, camera channel count, what e
 
 The scan summary includes safe structure and fingerprinting details such as exact camera identification when the app can derive it confidently, root folders, folder summaries, extension counts, representative filenames, safe support-file names, timestamp-source counts, inferred parking-pattern counts, and representative video specs when the app can read them locally. It does not upload videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, full settings dumps, or other personally identifying information.
 
+Privacy policy: https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/privacy
+
 The receiving Cloudflare Worker scaffold lives in `workers/feedback/`. Configure either an R2 bucket binding named `FEEDBACK_BUCKET` or a KV namespace binding named `FEEDBACK_KV`, then deploy the Worker.
 
 Maintainers can review private stored submissions with `scripts/review-feedback-submissions.py`. It loads Cloudflare credentials from the OpenClaw workspace environment and redacts contact fields in output.
