@@ -19,6 +19,15 @@ jobs:
         id: buildapp
         run: bash scripts/build-macos-app.sh
 
+      - name: Run verification
+        id: repoverify
+        run: swift run DashcamOffloader --verify
+
+      - name: Verify built app
+        id: appverify
+        run: |
+          "build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --verify
+
       - name: Zip app
         id: package
         run: |
@@ -106,10 +115,12 @@ jobs:
             --arg attempt "$GITHUB_RUN_ATTEMPT" \
             --arg jobStatus "${{ job.status }}" \
             --arg build "${{ steps.buildapp.outcome }}" \
+            --arg repoVerify "${{ steps.repoverify.outcome }}" \
+            --arg appVerify "${{ steps.appverify.outcome }}" \
             --arg zip "${{ steps.package.outcome }}" \
             --arg githubRelease "${{ steps.ghrelease.outcome }}" \
             --arg cloudflare "${{ steps.cloudflare.outcome }}" \
-            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, zip:$zip, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
+            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, repoVerify:$repoVerify, appVerify:$appVerify, zip:$zip, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
           CONTENT=$(printf '%s' "$STATUS_JSON" | base64)
           EXISTING_SHA=$(gh api "repos/$GITHUB_REPOSITORY/contents/release-status.json?ref=ci-status" --jq .sha 2>/dev/null || true)
           if [ -n "$EXISTING_SHA" ]; then
