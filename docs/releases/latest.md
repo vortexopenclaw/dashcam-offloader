@@ -1,7 +1,4 @@
-- Roots remote learning payloads at the scanner's effective card root, so SSD/archive submissions do not mix unrelated folder evidence into a nested trained card.
-- Records the requested source name, effective source name, and relative nested-card path in sanitized feedback scans.
-- Keeps clean Vueroid S1 4K Infinite cards recognized as the trained profile while SSD/archive scans stay generic unless a reliable nested card root is found.
-- Adds regression coverage for Vueroid S1 4K recognition and remote-learning snapshots from a nested mixed submission.
-- Adds a hosted privacy policy for feedback and camera-learning submissions.
-- Links the privacy policy from Feedback and Help add support for this dashcam.
-- Adds feedback endpoint rate limiting and security.txt support on the Cloudflare Workers.
+- Updates are now always verified against their published checksum before installing.
+- Clearer error message when a downloaded update cannot be unpacked.
+- Every published build now passes full verification during the release process before it goes out.
+- The ZIP still includes only the main app.
