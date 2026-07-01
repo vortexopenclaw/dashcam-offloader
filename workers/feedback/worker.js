@@ -109,7 +109,7 @@ async function checkRateLimit(request, env) {
 
   const now = Date.now();
   const windowStart = Math.floor(now / (RATE_LIMIT_WINDOW_SECONDS * 1000));
-  const clientID = await hashedClientID(request);
+  const clientID = await hashedClientID(request, env);
   const key = `rate/${windowStart}/${clientID}`;
   const current = Number(await env.FEEDBACK_KV.get(key) || "0");
 
@@ -128,13 +128,15 @@ async function checkRateLimit(request, env) {
   return { ok: true };
 }
 
-async function hashedClientID(request) {
-  const rawClient = request.headers.get("CF-Connecting-IP") ||
-    request.headers.get("X-Forwarded-For") ||
-    "unknown";
+async function hashedClientID(request, env) {
+  const rawClient = request.headers.get("CF-Connecting-IP") || "unknown";
+  return clientFingerprint(rawClient, String(env.RATE_LIMIT_SALT || ""));
+}
+
+async function clientFingerprint(rawClient, salt) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(rawClient)
+    new TextEncoder().encode(`${salt}:${rawClient}`)
   );
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -741,3 +743,14 @@ function allowedOrigin(request, env) {
 
   return configured.includes(origin) ? origin : configured[0];
 }
+
+export {
+  validateFeedback,
+  sanitizeFeedback,
+  sanitizeScan,
+  sanitizePath,
+  safePathList,
+  isSensitiveSettingPair,
+  isSafeSettingPair,
+  clientFingerprint,
+};
