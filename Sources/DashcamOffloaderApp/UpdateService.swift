@@ -50,7 +50,7 @@ struct AppUpdateManifest: Codable, Equatable, Sendable {
                 .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()
-                .replacingOccurrences(of: "’", with: "'")
+                .replacingOccurrences(of: "\u{2019}", with: "'")
             return normalizedLine.isEmpty || normalizedLine == "what's new"
         }
         let cleanedNotes = cleanedLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -67,7 +67,9 @@ enum UpdateServiceError: LocalizedError {
     case currentAppBundleUnavailable
     case invalidManifestResponse
     case invalidDownloadResponse
+    case manifestMissingChecksum
     case checksumMismatch(expected: String, actual: String)
+    case updateExtractionFailed
     case updateAppNotFound
     case installerLaunchFailed
 
@@ -79,8 +81,12 @@ enum UpdateServiceError: LocalizedError {
             return "The update server did not return a valid update manifest."
         case .invalidDownloadResponse:
             return "The update download failed."
+        case .manifestMissingChecksum:
+            return "The update could not be verified because the update manifest is missing its checksum."
         case let .checksumMismatch(expected, actual):
             return "The downloaded update did not match the expected checksum. Expected \(expected), got \(actual)."
+        case .updateExtractionFailed:
+            return "The downloaded update could not be unpacked."
         case .updateAppNotFound:
             return "The downloaded update did not contain Dashcam Offloader.app."
         case .installerLaunchFailed:
@@ -128,7 +134,17 @@ struct UpdateService: @unchecked Sendable {
         return !remoteBuild.isEmpty
     }
 
+    static func requiredChecksum(for manifest: AppUpdateManifest) throws -> String {
+        let value = manifest.sha256?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        guard !value.isEmpty else {
+            throw UpdateServiceError.manifestMissingChecksum
+        }
+        return value
+    }
+
     func downloadAndStageUpdate(_ manifest: AppUpdateManifest) async throws -> URL {
+        let expectedChecksum = try Self.requiredChecksum(for: manifest)
+
         let (downloadedURL, response) = try await session.download(from: manifest.downloadURL)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
@@ -142,11 +158,9 @@ struct UpdateService: @unchecked Sendable {
         try fileManager.createDirectory(at: stagingRoot, withIntermediateDirectories: true)
         try fileManager.moveItem(at: downloadedURL, to: zipURL)
 
-        if let expected = manifest.sha256?.lowercased(), !expected.isEmpty {
-            let actual = try sha256Hex(for: zipURL)
-            guard actual == expected else {
-                throw UpdateServiceError.checksumMismatch(expected: expected, actual: actual)
-            }
+        let actualChecksum = try sha256Hex(for: zipURL)
+        guard actualChecksum == expectedChecksum else {
+            throw UpdateServiceError.checksumMismatch(expected: expectedChecksum, actual: actualChecksum)
         }
 
         try fileManager.createDirectory(at: extractedURL, withIntermediateDirectories: true)
@@ -308,7 +322,7 @@ struct UpdateService: @unchecked Sendable {
         try process.run()
         process.waitUntilExit()
         if process.terminationStatus != 0 {
-            throw UpdateServiceError.invalidDownloadResponse
+            throw UpdateServiceError.updateExtractionFailed
         }
     }
 

@@ -12,7 +12,7 @@ struct DashcamOffloaderApp: App {
             Foundation.exit(result ? 0 : 1)
         }
         if CommandLine.arguments.contains("--verify") || CommandLine.arguments.contains("--smoke-test") {
-            let result = VerificationTest.run()
+            let result = VerificationTest.run() && UpdateChecksumVerification.run()
             Foundation.exit(result ? 0 : 1)
         }
     }
