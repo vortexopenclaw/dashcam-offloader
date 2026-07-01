@@ -28,7 +28,8 @@ Security notes:
 - Prefer R2 for durable records; KV is acceptable for simple testing.
 - Set `ALLOWED_ORIGINS` if browser clients are added later. The Mac app is not browser-CORS constrained.
 - Keep payloads small. The Worker rejects bodies over 1 MB.
-- Rate limiting allows 20 feedback or learning submissions per client per hour. Client addresses are hashed before rate-limit counters are stored in KV.
+- Rate limiting allows 20 feedback or learning submissions per client per hour. Client addresses are salted and hashed before rate-limit counters are stored in KV.
+- Set a `RATE_LIMIT_SALT` secret (`wrangler secret put RATE_LIMIT_SALT`) so stored rate-limit fingerprints cannot be reversed by brute-forcing the address space. Without the secret the Worker still runs but falls back to unsalted hashing.
 - Treat stored submissions as private user data and avoid public buckets.
 - Do not put Cloudflare credentials or bucket names in the Mac app.
 
@@ -37,6 +38,14 @@ Storage:
 - Bind `FEEDBACK_BUCKET` to an R2 bucket for durable JSON records.
 - Or bind `FEEDBACK_KV` to a KV namespace for simpler storage. The deployed Worker also uses `FEEDBACK_KV` for privacy-preserving rate-limit counters.
 - If neither binding exists, the Worker logs the JSON record for local development.
+
+Tests:
+
+```bash
+node --test workers/feedback/worker.test.mjs
+```
+
+The Verify workflow runs the sanitizer tests on every feature-branch push.
 
 Review:
 
