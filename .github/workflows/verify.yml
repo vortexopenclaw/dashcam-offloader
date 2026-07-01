@@ -37,6 +37,9 @@ jobs:
       - name: Check feedback worker syntax
         run: node --check workers/feedback/worker.js
 
+      - name: Test feedback worker sanitizer
+        run: node --test workers/feedback/worker.test.mjs
+
       - name: Check review script syntax
         run: python3 -m py_compile scripts/review-feedback-submissions.py
 
