@@ -12,8 +12,14 @@ struct DashcamOffloaderApp: App {
             Foundation.exit(result ? 0 : 1)
         }
         if CommandLine.arguments.contains("--verify") || CommandLine.arguments.contains("--smoke-test") {
-            let result = VerificationTest.run() && UpdateChecksumVerification.run()
-            Foundation.exit(result ? 0 : 1)
+            guard VerificationTest.run() && UpdateChecksumVerification.run() else {
+                Foundation.exit(1)
+            }
+            Task {
+                let result = await CopyExecutorVerification.run()
+                Foundation.exit(result ? 0 : 1)
+            }
+            RunLoop.current.run()
         }
     }
 
