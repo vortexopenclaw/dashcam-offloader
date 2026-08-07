@@ -1,0 +1,52 @@
+id: ottocast-ottosafe-cam
+manufacturer: Ottocast
+model: OttoSafe Cam
+status: experimental
+confidence: medium
+confidence_note: "One real 2-channel card-learning submission. Driving and G-sensor emergency clips are sampled; manual-event and parking behavior remain unverified."
+channel_variants:
+  - channels: 2
+    roles: [front, rear]
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles: [front, rear]
+detection:
+  high_confidence:
+    - folders:
+        required_all: [norm, back_norm, emr, back_emr, Photo]
+      note: "Observed on the submitted OttoSafe Cam card."
+    - filename_pattern:
+        regex: '^\d{4}_\d{2}_\d{2}_\d{6}_\d{2}(?:_b)?\.TS$'
+      note: "Observed OttoSafe timestamp and sequence naming pattern."
+  supporting:
+    - volume_label: OttoSafe
+folders:
+  - path: norm
+    mode: continuous
+  - path: back_norm
+    mode: continuous
+  - path: emr
+    mode: event
+  - path: back_emr
+    mode: event
+  - path: Photo
+    mode: photo
+filename_patterns:
+  - pattern: '^(\d{4})_(\d{2})_(\d{2})_(\d{6})_(\d{2})\.TS$'
+    timestamp:
+      format: YYYY_MM_DD_HHMMSS
+    modes: {}
+  - pattern: '^(\d{4})_(\d{2})_(\d{2})_(\d{6})_(\d{2})_b\.TS$'
+    timestamp:
+      format: YYYY_MM_DD_HHMMSS
+    channels:
+      b: rear
+channels:
+  F: front
+  B: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
