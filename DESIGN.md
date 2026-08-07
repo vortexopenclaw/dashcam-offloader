@@ -103,7 +103,9 @@ mounted NAS share, rather than silently scanning the entire mounted share.
 
 **Design:** Mounted-volume discovery continues to list each volume root in the
 sidebar. A folder selected in the source picker is now retained exactly as the
-source URL, whether it is on a local card or a network-mounted volume. Eject
+source URL, whether it is on a local card or a network-mounted volume. An
+explicit selection disables nested-card-root recovery, so a scan cannot swap
+the chosen NAS subfolder for a different camera tree it finds below it. Eject
 and auto-eject still resolve that selected URL to its containing volume, so
 the safety behavior for physical cards is unchanged.
 
@@ -114,8 +116,9 @@ volume-root normalization.
 
 **Success checks:** A manually selected path such as
 `/Volumes/Dashcams/Camera/2026-08-07` stays that exact path through source
-creation; mounted-volume sidebar discovery and ejection resolution still use
-the volume root.
+creation and scanning, without switching to a nested camera root;
+mounted-volume sidebar discovery and ejection resolution still use the volume
+root.
 
 ## 2026-08-07 Security hardening
 

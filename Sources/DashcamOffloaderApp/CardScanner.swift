@@ -4,8 +4,16 @@ import Foundation
 struct CardScanner {
     let fileManager = FileManager.default
 
-    func scan(sourceURL requestedSourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
-        let sourceURL = try effectiveScanSourceURL(for: requestedSourceURL, profiles: profiles)
+    func scan(
+        sourceURL requestedSourceURL: URL,
+        profiles: [DashcamProfile],
+        allowNestedCardRootDiscovery: Bool = true
+    ) throws -> ScanResult {
+        let sourceURL = try effectiveScanSourceURL(
+            for: requestedSourceURL,
+            profiles: profiles,
+            allowNestedCardRootDiscovery: allowNestedCardRootDiscovery
+        )
         let allFiles = try enumerateFiles(sourceURL: sourceURL)
         let observedChannelRoles = observedChannelRoles(from: allFiles, sourceURL: sourceURL)
         let safeModelMetadataInfos = safeKnownModelMetadataInfos(
@@ -150,7 +158,16 @@ struct CardScanner {
         )
     }
 
-    private func effectiveScanSourceURL(for sourceURL: URL, profiles: [DashcamProfile]) throws -> URL {
+    private func effectiveScanSourceURL(
+        for sourceURL: URL,
+        profiles: [DashcamProfile],
+        allowNestedCardRootDiscovery: Bool
+    ) throws -> URL {
+        // A folder picked by the user is an explicit boundary. Nested-root
+        // recovery is useful for imported archives, but must never replace a
+        // deliberate NAS/card subdirectory with another camera tree.
+        guard allowNestedCardRootDiscovery else { return sourceURL.standardizedFileURL }
+
         let directFiles = try enumerateFiles(sourceURL: sourceURL)
         if isReliableCardRoot(sourceURL: sourceURL, allFiles: directFiles, profiles: profiles) {
             return sourceURL
@@ -650,8 +667,16 @@ struct CardScanner {
     /// profile's score by 80, re-sorts the candidates, and re-selects the
     /// winner. OSD probing is best-effort, a failed probe leaves the original
     /// result unchanged.
-    func scanWithOSD(sourceURL: URL, profiles: [DashcamProfile]) throws -> ScanResult {
-        var result = try scan(sourceURL: sourceURL, profiles: profiles)
+    func scanWithOSD(
+        sourceURL: URL,
+        profiles: [DashcamProfile],
+        allowNestedCardRootDiscovery: Bool = true
+    ) throws -> ScanResult {
+        var result = try scan(
+            sourceURL: sourceURL,
+            profiles: profiles,
+            allowNestedCardRootDiscovery: allowNestedCardRootDiscovery
+        )
         let scanSourceURL = result.sourceURL
 
         guard let top = result.candidates.first else {

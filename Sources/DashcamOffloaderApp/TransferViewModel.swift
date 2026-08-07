@@ -774,7 +774,11 @@ final class TransferViewModel: ObservableObject {
             guard let self else { return }
             do {
                 let scanResult = try await Task.detached {
-                    try CardScanner().scanWithOSD(sourceURL: selectedSource.url, profiles: profiles)
+                    try CardScanner().scanWithOSD(
+                        sourceURL: selectedSource.url,
+                        profiles: profiles,
+                        allowNestedCardRootDiscovery: false
+                    )
                 }.value
                 self.detectionCandidates = scanResult.candidates
                 self.identifiedCamera = scanResult.identifiedCamera

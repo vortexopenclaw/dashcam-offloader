@@ -1885,6 +1885,18 @@ enum VerificationTest {
                 print("VERIFY FAIL: nested Vueroid scan did not record source root resolution")
                 return false
             }
+
+            let explicitlyScopedScan = try scanner.scan(
+                sourceURL: mixedArchiveSource,
+                profiles: profiles,
+                allowNestedCardRootDiscovery: false
+            )
+            guard explicitlyScopedScan.sourceURL.standardizedFileURL == mixedArchiveSource.standardizedFileURL,
+                  explicitlyScopedScan.clips.contains(where: { $0.sourceURL.path.contains("S1-4K/") }),
+                  explicitlyScopedScan.clips.contains(where: { $0.sourceURL.path.contains("A329S/") }) else {
+                print("VERIFY FAIL: explicit source scope changed to a nested camera root")
+                return false
+            }
             let nestedVueroidLearningSnapshot = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
