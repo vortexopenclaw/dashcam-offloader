@@ -71,6 +71,79 @@ The eventual implementation should split into these layers:
 - Do not rely on volume label alone for model detection.
 - Always support dry run before copy.
 
+## 2026-07-23 Preliminary regular-video importer
+
+**Objective:** Let the existing Dashcam Offloader act as a safe first-stage
+importer for ordinary camera footage while keeping the dashcam card workflow
+intact. This is the bridge to the future media-organizer flow, not an attempt
+to infer projects, label media, rename files, or build edit timelines yet.
+
+**Design:** Add an explicit import-mode selector with `Dashcam Footage` as the
+default and `Regular Video` as a separate route. Regular Video asks the user
+to select a camera-media folder, scans it through the existing generic-media
+fallback, and uses the existing review and verified-copy plan. The mode only
+changes source language and selection behavior; it never changes a source
+file. Dashcam-specific learning and ejection remain existing app controls and
+will be scoped out of the regular-video route in a later UX pass.
+
+**Risks and rollback:** Generic scanning can include a mix of ordinary clips
+and photos, so the existing file-type review remains the acceptance boundary.
+This first slice intentionally does not claim topic, speaker, A-roll, B-roll,
+or project classification. Switching back to Dashcam Footage restores the
+current card-focused flow without modifying any media.
+
+**Success checks:** The app compiles and its verification suite passes. The UI
+exposes both modes, regular-video selection opens a folder picker, and source
+copy safety remains unchanged.
+
+## 2026-08-07 NAS subfolder source selection
+
+**Objective:** Let a user deliberately choose a dashcam-footage subfolder on a
+mounted NAS share, rather than silently scanning the entire mounted share.
+
+**Design:** Mounted-volume discovery continues to list each volume root in the
+sidebar. A folder selected in the source picker is now retained exactly as the
+source URL, whether it is on a local card or a network-mounted volume. Eject
+and auto-eject still resolve that selected URL to its containing volume, so
+the safety behavior for physical cards is unchanged.
+
+**Risk and rollback:** Selecting a narrower folder can intentionally omit
+footage outside it. The selected path is displayed in the UI and scanning stays
+read-only. Restoring the previous whole-share behavior is a one-line return to
+volume-root normalization.
+
+**Success checks:** A manually selected path such as
+`/Volumes/Dashcams/Camera/2026-08-07` stays that exact path through source
+creation; mounted-volume sidebar discovery and ejection resolution still use
+the volume root.
+
+## 2026-08-07 Security hardening
+
+**Objective:** Close the update-chain, NAS-ejection, feedback privacy/abuse,
+and copy-integrity risks found in the security review without weakening the
+copy-only contract.
+
+**Design:** In-app updates accept only a Developer ID-signed bundle whose Team
+Identifier matches the Team ID embedded in the running app; checksum-only
+validation is not trusted. Release builds must be Developer ID signed, while
+ad-hoc local builds intentionally cannot install updates. Eject actions are
+limited to local removable volumes, never network shares or a manually chosen
+subdirectory. Feedback is size-limited while streaming, rate-limited by a
+Durable Object, opt-in for ordinary feedback, and excludes user-controlled
+filenames, paths, and volume names. Copying computes SHA-256 for each regular
+file after copy and before skipping an existing destination file; a same-size
+mismatch is left untouched and reported as a conflict.
+
+**Risks and rollback:** Developer ID credentials must be configured in GitHub
+Actions before a release can publish an update-capable build. Until then, users
+can still download releases manually, and the app safely refuses in-app update
+installation. Hashing adds local disk I/O proportional to copied footage.
+
+**Success checks:** Verification proves the signed-update requirement and
+installer behavior, same-size-different-content destinations fail safely,
+feedback tests cover redaction and bounded reads, and NAS sources are not
+ejectable.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:

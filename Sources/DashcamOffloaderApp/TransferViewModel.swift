@@ -4,6 +4,7 @@ import Foundation
 
 @MainActor
 final class TransferViewModel: ObservableObject {
+    @Published var importMode: ImportMode = .dashcamFootage
     @Published var profiles: [DashcamProfile] = []
     @Published var mountedSources: [MountedSource] = []
     @Published var selectedSource: MountedSource?
@@ -595,14 +596,26 @@ final class TransferViewModel: ObservableObject {
         }
     }
 
+    func setImportMode(_ mode: ImportMode) {
+        guard importMode != mode else { return }
+        importMode = mode
+        selectedSource = nil
+        clearSourceDerivedState(for: nil)
+        statusMessage = mode == .dashcamFootage
+            ? "Choose a dashcam card or folder"
+            : "Choose a folder containing regular camera video"
+    }
+
     func chooseSourceFolder() {
         let panel = NSOpenPanel()
-        panel.title = "Choose dashcam card or folder"
+        panel.title = importMode.sourcePickerTitle
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
-        panel.directoryURL = selectedSource?.url ?? URL(fileURLWithPath: "/Volumes", isDirectory: true)
+        panel.directoryURL = selectedSource?.url ?? (importMode == .dashcamFootage
+            ? URL(fileURLWithPath: "/Volumes", isDirectory: true)
+            : FileManager.default.homeDirectoryForCurrentUser)
 
         if panel.runModal() == .OK, let url = panel.url {
             let source = sourceWithCustomName(scanner.mountedSource(forUserSelectedURL: url))
@@ -677,7 +690,7 @@ final class TransferViewModel: ObservableObject {
         }
 
         let volumeURL = sourceVolumeURL(for: source.url)
-        if volumeURL.path.hasPrefix("/Volumes/") {
+        if isEjectableRemovableVolume(volumeURL) {
             statusMessage = "Ejecting \(source.name)..."
             Task { [weak self, source, volumeURL] in
                 do {
@@ -1069,8 +1082,8 @@ final class TransferViewModel: ObservableObject {
         }
 
         let volumeURL = sourceVolumeURL(for: sourceURL)
-        guard volumeURL.path.hasPrefix("/Volumes/") else {
-            return "Auto-eject skipped because the source is not a mounted card volume"
+        guard isEjectableRemovableVolume(volumeURL) else {
+            return "Auto-eject skipped because the source is not a removable card volume"
         }
 
         do {
@@ -1087,6 +1100,16 @@ final class TransferViewModel: ObservableObject {
             return sourceURL
         }
         return URL(fileURLWithPath: "/Volumes/\(components[2])", isDirectory: true)
+    }
+
+    private func isEjectableRemovableVolume(_ volumeURL: URL) -> Bool {
+        guard volumeURL.path.hasPrefix("/Volumes/"),
+              let values = try? volumeURL.resourceValues(forKeys: [.volumeIsLocalKey, .volumeIsRemovableKey]),
+              values.volumeIsLocal == true,
+              values.volumeIsRemovable == true else {
+            return false
+        }
+        return true
     }
 
     private func isOutputDirectorySource(_ source: MountedSource) -> Bool {
@@ -1280,13 +1303,12 @@ final class TransferViewModel: ObservableObject {
         }
 
         return FeedbackScanSnapshot(
-            volumeName: selectedSource?.name ?? "Unknown",
-            requestedSourceName: selectedSource?.name,
-            effectiveSourceName: sourceRoot?.lastPathComponent,
-            effectiveSourceRelativePath: effectiveSourceRelativePath(
-                requestedSourceRoot: requestedSourceRoot,
-                effectiveSourceRoot: sourceRoot
-            ),
+            // Feedback must never transmit user-controlled source names,
+            // folder paths, or filenames. Structure is represented by counts.
+            volumeName: "",
+            requestedSourceName: nil,
+            effectiveSourceName: nil,
+            effectiveSourceRelativePath: nil,
             identifiedCamera: identifiedCamera,
             selectedProfileID: selectedProfile?.id,
             selectedProfileName: selectedProfile?.displayName,
@@ -1304,18 +1326,18 @@ final class TransferViewModel: ObservableObject {
             timestampSourceCounts: timestampSourceCounts,
             suspiciousTimestampItems: eligibleClips.filter(\.hasSuspiciousTimestamp).count,
             inferredParkingPatternCounts: inferredParkingPatternCounts,
-            sampleRelativePaths: Array(safeSamples),
-            rootFolders: Array(rootFolders.prefix(40)),
-            folderSamples: Array(folderSamples),
-            directorySummaries: makeDirectorySummaries(sourceRoot: sourceRoot),
-            folderSummaries: makeFolderSummaries(from: safeFiles, sourceRoot: sourceRoot),
-            filenameSamples: Array(filenameSamples),
-            filenamePatternSummaries: makeFilenamePatternSummaries(from: safeFiles, sourceRoot: sourceRoot),
-            filenameSequenceSummaries: makeFilenameSequenceSummaries(from: safeFiles, sourceRoot: sourceRoot),
-            supportFileSamples: Array(supportFileSamples),
-            ignoredSupportFileSamples: Array(ignoredSupportFileSamples),
-            clipGroupSummaries: makeClipGroupSummaries(from: safeEligibleClips, sourceRoot: sourceRoot),
-            videoSpecSamples: videoSpecSamples,
+            sampleRelativePaths: [],
+            rootFolders: [],
+            folderSamples: [],
+            directorySummaries: [],
+            folderSummaries: [],
+            filenameSamples: [],
+            filenamePatternSummaries: [],
+            filenameSequenceSummaries: [],
+            supportFileSamples: [],
+            ignoredSupportFileSamples: [],
+            clipGroupSummaries: [],
+            videoSpecSamples: [],
             videoSpecSummaries: videoSpecSummaries,
             settingSnapshots: Array(settingSnapshots),
             candidates: Array(candidates),

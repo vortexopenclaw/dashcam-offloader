@@ -35,7 +35,7 @@ const PRIVACY_POLICY_HTML = `<!doctype html>
 <body>
   <main>
     <h1>Dashcam Offloader Privacy Policy</h1>
-    <p class="updated">Last updated: June 26, 2026</p>
+    <p class="updated">Last updated: August 7, 2026</p>
 
     <p>Dashcam Offloader is a Mac app that helps copy dashcam and camera footage from a memory card to a folder you choose. The app is designed to keep your footage local and to collect as little data as practical.</p>
 
@@ -48,11 +48,11 @@ const PRIVACY_POLICY_HTML = `<!doctype html>
       <li>Your feedback message and optional contact email or handle.</li>
       <li>The app version and submission timestamp.</li>
       <li>User-entered camera manufacturer, model, channel count, channel descriptions, and notes.</li>
-      <li>A sanitized card-structure summary, such as root folders, folder summaries, extension counts, representative filenames, filename patterns, timestamp-source counts, safe support-file names, and local media technical summaries.</li>
+      <li>Only when you opt in, anonymous scan statistics such as file counts, extension counts, recording-mode counts, timestamp-source counts, camera-profile candidates, and aggregate media technical summaries.</li>
     </ul>
 
     <h2>What we do not upload</h2>
-    <p>Feedback and learning submissions are designed not to upload videos, photos, GPS traces, route data, serial numbers, Wi-Fi details, cloud account fields, device IDs, full settings dumps, license plates, or other personally identifying information. The app sanitizes submissions before upload, and the receiving Worker runs a second sanitization pass before storage.</p>
+    <p>Feedback and learning submissions are designed not to upload videos, photos, GPS traces, route data, serial numbers, Wi-Fi details, cloud account fields, device IDs, full settings dumps, license plates, source names, folder paths, filenames, or other personally identifying information. The app sanitizes submissions before upload, and the receiving Worker runs a second sanitization pass before storage.</p>
 
     <h2>Where submissions are stored</h2>
     <p>Feedback and learning submissions are received by a Cloudflare Worker and stored privately in Cloudflare storage controlled by Vortex Radar. Stored submissions are used to troubleshoot the app, improve camera detection, add or refine dashcam profiles, and respond to users who provide contact information.</p>

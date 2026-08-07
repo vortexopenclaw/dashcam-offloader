@@ -30,6 +30,7 @@ struct AppUpdateManifest: Codable, Equatable, Sendable {
     var assetKey: String?
     var downloadURL: URL
     var sha256: String?
+    var signature: String? = nil
     var minimumMacOSVersion: String?
     var publishedAt: String?
     var channel: String?
@@ -68,9 +69,11 @@ enum UpdateServiceError: LocalizedError {
     case invalidManifestResponse
     case invalidDownloadResponse
     case manifestMissingChecksum
+    case manifestSignatureInvalid
     case checksumMismatch(expected: String, actual: String)
     case updateExtractionFailed
     case updateAppNotFound
+    case updateSignatureInvalid
     case installerLaunchFailed
 
     var errorDescription: String? {
@@ -83,12 +86,16 @@ enum UpdateServiceError: LocalizedError {
             return "The update download failed."
         case .manifestMissingChecksum:
             return "The update could not be verified because the update manifest is missing its checksum."
+        case .manifestSignatureInvalid:
+            return "The update manifest was not signed by Dashcam Offloader."
         case let .checksumMismatch(expected, actual):
             return "The downloaded update did not match the expected checksum. Expected \(expected), got \(actual)."
         case .updateExtractionFailed:
             return "The downloaded update could not be unpacked."
         case .updateAppNotFound:
             return "The downloaded update did not contain Dashcam Offloader.app."
+        case .updateSignatureInvalid:
+            return "The downloaded update was not signed by the expected developer."
         case .installerLaunchFailed:
             return "The updater could not launch the installer."
         }
@@ -104,6 +111,8 @@ struct UpdateService: @unchecked Sendable {
     var fileManager: FileManager = .default
     var currentBuild: AppBuildInfo = .current()
     var currentBundleURL: URL = Bundle.main.bundleURL
+
+    private static let updateManifestPublicKey = "TvHSMSTOwVWYFeo7FVL13w+Iw3wjrMkJCg4/GdSQqOI="
 
     func fetchManifest() async throws -> AppUpdateManifest {
         let (data, response) = try await session.data(from: manifestURL)
@@ -143,6 +152,7 @@ struct UpdateService: @unchecked Sendable {
     }
 
     func downloadAndStageUpdate(_ manifest: AppUpdateManifest) async throws -> URL {
+        try Self.validateManifestSignature(manifest)
         let expectedChecksum = try Self.requiredChecksum(for: manifest)
 
         let (downloadedURL, response) = try await session.download(from: manifest.downloadURL)
@@ -302,7 +312,6 @@ struct UpdateService: @unchecked Sendable {
           exit 72
         fi
 
-        /usr/bin/xattr -dr com.apple.quarantine "$CURRENT_APP" 2>/dev/null || true
         /usr/bin/open -n "$CURRENT_APP"
         rm -rf "$BACKUP_APP"
         rm -rf "$STAGING_ROOT"
@@ -324,6 +333,35 @@ struct UpdateService: @unchecked Sendable {
         if process.terminationStatus != 0 {
             throw UpdateServiceError.updateExtractionFailed
         }
+    }
+
+    static func validateManifestSignature(_ manifest: AppUpdateManifest) throws {
+        guard let signatureText = manifest.signature,
+              let signature = Data(base64Encoded: signatureText),
+              let publicKeyData = Data(base64Encoded: updateManifestPublicKey),
+              let publicKey = try? Curve25519.Signing.PublicKey(rawRepresentation: publicKeyData),
+              let sha256 = manifest.sha256?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !sha256.isEmpty else {
+            throw UpdateServiceError.manifestSignatureInvalid
+        }
+        let assetKey = manifest.assetKey ?? ""
+        let payload = "\(manifest.version)\n\(manifest.build)\n\(assetKey)\n\(sha256)"
+        guard publicKey.isValidSignature(signature, for: Data(payload.utf8)) else {
+            throw UpdateServiceError.manifestSignatureInvalid
+        }
+    }
+
+    private func runProcessCapturingOutput(_ path: String, arguments: [String]) throws -> (status: Int32, output: String) {
+        let process = Process()
+        let pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        process.standardOutput = pipe
+        process.standardError = pipe
+        try process.run()
+        process.waitUntilExit()
+        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        return (process.terminationStatus, output)
     }
 
     private static func shellSingleQuoted(_ value: String) -> String {

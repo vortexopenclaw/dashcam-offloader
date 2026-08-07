@@ -59,6 +59,10 @@ enum VerificationTest {
                 print("VERIFY FAIL: release notes summary did not strip duplicate What's New heading")
                 return false
             }
+            guard (try? UpdateService.validateManifestSignature(matchingManifest)) == nil else {
+                print("VERIFY FAIL: update manifest signature should be mandatory")
+                return false
+            }
             let destinationDefaultsName = "DashcamOffloaderVerify-\(UUID().uuidString)"
             guard let destinationDefaults = UserDefaults(suiteName: destinationDefaultsName) else {
                 print("VERIFY FAIL: could not create isolated destination defaults")
@@ -146,6 +150,12 @@ enum VerificationTest {
                   ManufacturerDisplayFormatter.displayName(for: "DJI") == "DJI",
                   IdentifiedCamera(manufacturer: "BlackVue", model: "Elite 9", evidence: [], isSupported: true).displayName == "Blackvue Elite 9" else {
                 print("VERIFY FAIL: manufacturer display casing regression")
+                return false
+            }
+            guard ImportMode.dashcamFootage.displayName == "Dashcam Footage",
+                  ImportMode.regularVideo.displayName == "Regular Video",
+                  ImportMode.regularVideo.sourcePickerTitle == "Choose regular video folder" else {
+                print("VERIFY FAIL: regular-video import mode labels regressed")
                 return false
             }
             guard let n4ProSProfile = profiles.first(where: { $0.id == "vantrue-n4-pro-s" }),
@@ -244,9 +254,9 @@ enum VerificationTest {
             let blackVueCardSource = scanner.mountedSource(
                 forUserSelectedURL: URL(fileURLWithPath: "/Volumes/BLACKVUE/BlackVue/Record", isDirectory: true)
             )
-            guard blackVueCardSource.url.path == "/Volumes/BLACKVUE",
-                  blackVueCardSource.name == "BLACKVUE" else {
-                print("VERIFY FAIL: nested volume selection did not normalize to card root: \(blackVueCardSource.url.path)")
+            guard blackVueCardSource.url.path == "/Volumes/BLACKVUE/BlackVue/Record",
+                  blackVueCardSource.name == "Record" else {
+                print("VERIFY FAIL: nested volume selection did not keep its exact source path: \(blackVueCardSource.url.path)")
                 return false
             }
             let manualFolderSource = scanner.mountedSource(forUserSelectedURL: source)
@@ -1327,23 +1337,11 @@ enum VerificationTest {
                 return viewModel.makeFeedbackScanSnapshot()
             }
             guard let wolfboxLearningSnapshot,
-                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
-                      $0.path == "front_photo" &&
-                          $0.directPlaceholderFileCount == 1 &&
-                          $0.directHiddenFileCount == 1
-                  }),
-                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
-                      $0.path == "rear_photo" &&
-                          $0.directPlaceholderFileCount == 1 &&
-                          $0.directHiddenFileCount == 1
-                  }),
-                  wolfboxLearningSnapshot.directorySummaries.contains(where: {
-                      $0.path == "." &&
-                          $0.childDirectoryCount >= 6
-                  }),
-                  wolfboxLearningSnapshot.folderSamples.contains("front_photo"),
-                  wolfboxLearningSnapshot.folderSamples.contains("rear_photo") else {
-                print("VERIFY FAIL: Wolfbox remote learning snapshot did not preserve placeholder-only photo folders: \(wolfboxLearningSnapshot?.directorySummaries ?? [])")
+                  wolfboxLearningSnapshot.scannedFiles > 0,
+                  wolfboxLearningSnapshot.directorySummaries.isEmpty,
+                  wolfboxLearningSnapshot.folderSamples.isEmpty,
+                  wolfboxLearningSnapshot.sampleRelativePaths.isEmpty else {
+                print("VERIFY FAIL: Wolfbox learning snapshot did not preserve statistics while redacting paths")
                 return false
             }
             let hiddenWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, hasG900Pro: Bool) in
@@ -1897,14 +1895,13 @@ enum VerificationTest {
                 return viewModel.makeFeedbackScanSnapshot()
             }
             guard let nestedVueroidLearningSnapshot,
-                  nestedVueroidLearningSnapshot.effectiveSourceName == "S1-4K",
-                  nestedVueroidLearningSnapshot.effectiveSourceRelativePath == "S1-4K",
-                  nestedVueroidLearningSnapshot.rootFolders.contains("CONFIG"),
-                  nestedVueroidLearningSnapshot.rootFolders.contains("INF"),
-                  !nestedVueroidLearningSnapshot.rootFolders.contains("A329S"),
-                  nestedVueroidLearningSnapshot.directorySummaries.contains(where: { $0.path == "CONFIG" }),
-                  nestedVueroidLearningSnapshot.sampleRelativePaths.contains("CONFIG/config.bin") else {
-                print("VERIFY FAIL: nested Vueroid learning snapshot used outer archive evidence: \(String(describing: nestedVueroidLearningSnapshot))")
+                  nestedVueroidLearningSnapshot.selectedProfileID == "vueroid-s1-4k-infinite",
+                  nestedVueroidLearningSnapshot.effectiveSourceName == nil,
+                  nestedVueroidLearningSnapshot.effectiveSourceRelativePath == nil,
+                  nestedVueroidLearningSnapshot.rootFolders.isEmpty,
+                  nestedVueroidLearningSnapshot.directorySummaries.isEmpty,
+                  nestedVueroidLearningSnapshot.sampleRelativePaths.isEmpty else {
+                print("VERIFY FAIL: nested Vueroid learning snapshot retained a source identifier or path")
                 return false
             }
 

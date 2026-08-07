@@ -27,6 +27,9 @@ enum CopyExecutorVerification {
         guard try await verifiesSkipExisting(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
+        guard try await verifiesSameSizeDestinationConflict(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
         guard try await verifiesMergedExportSkipExisting(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
@@ -65,7 +68,7 @@ enum CopyExecutorVerification {
         let source = sourceRoot.appendingPathComponent("skip-existing.MP4")
         let destination = destinationRoot.appendingPathComponent("skip-existing.MP4")
         try Data(repeating: 2, count: 1024).write(to: source)
-        try Data("already here".utf8).write(to: destination)
+        try Data(repeating: 2, count: 1024).write(to: destination)
 
         let result = await runCopy(
             sourceRoot: sourceRoot,
@@ -78,8 +81,28 @@ enum CopyExecutorVerification {
         guard result.mediaItems.count == 1,
               result.mediaItems.first?.status == .skipped,
               result.mediaItems.first?.message == "Already in destination",
-              destinationData == Data("already here".utf8) else {
+              destinationData == Data(repeating: 2, count: 1024) else {
             print("VERIFY FAIL: copy executor did not skip an existing file without overwriting")
+            return false
+        }
+        return true
+    }
+
+    private static func verifiesSameSizeDestinationConflict(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let source = sourceRoot.appendingPathComponent("same-size-conflict.MP4")
+        let destination = destinationRoot.appendingPathComponent("same-size-conflict.MP4")
+        try Data(repeating: 6, count: 1024).write(to: source)
+        try Data(repeating: 7, count: 1024).write(to: destination)
+
+        let result = await runCopy(
+            sourceRoot: sourceRoot,
+            destinationRoot: destinationRoot,
+            items: [item(source: source, relativePath: "same-size-conflict.MP4", destination: destination, expectedSize: 1024)]
+        )
+        guard result.mediaItems.first?.status == .failed,
+              result.mediaItems.first?.message == CopyError.destinationConflict.localizedDescription,
+              try Data(contentsOf: destination) == Data(repeating: 7, count: 1024) else {
+            print("VERIFY FAIL: copy executor did not preserve a same-size destination conflict")
             return false
         }
         return true

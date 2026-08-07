@@ -181,6 +181,27 @@ struct MountedSource: Identifiable, Hashable, Sendable {
     }
 }
 
+enum ImportMode: String, CaseIterable, Identifiable {
+    case dashcamFootage
+    case regularVideo
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .dashcamFootage: "Dashcam Footage"
+        case .regularVideo: "Regular Video"
+        }
+    }
+
+    var sourcePickerTitle: String {
+        switch self {
+        case .dashcamFootage: "Choose dashcam card or folder"
+        case .regularVideo: "Choose regular video folder"
+        }
+    }
+}
+
 struct DetectionCandidate: Identifiable, Hashable, Sendable {
     var id: String { profile.id }
     var profile: DashcamProfile

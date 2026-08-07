@@ -2,6 +2,15 @@ name = "dashcam-offloader-feedback"
 main = "worker.js"
 compatibility_date = "2026-06-08"
 
+[durable_objects]
+bindings = [
+  { name = "FEEDBACK_RATE_LIMITER", class_name = "FeedbackRateLimiter" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["FeedbackRateLimiter"]
+
 [[kv_namespaces]]
 binding = "FEEDBACK_KV"
 id = "39129dc4017b48c6bd8b8f4848b25c76"

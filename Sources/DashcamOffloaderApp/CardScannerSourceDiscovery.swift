@@ -32,10 +32,8 @@ extension CardScanner {
 
     func mountedSource(forUserSelectedURL url: URL) -> MountedSource {
         let standardizedURL = url.standardizedFileURL
-        if let volumeURL = mountedVolumeRoot(containing: standardizedURL) {
-            return MountedSource(url: volumeURL, name: volumeURL.lastPathComponent)
-        }
-
+        // A picker choice is intentional. Keep a selected NAS/card subfolder
+        // narrow instead of expanding it to the mounted volume root.
         return MountedSource(url: standardizedURL, name: standardizedURL.lastPathComponent)
     }
 

@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="Dashcam Offloader"
 PRODUCT_NAME="DashcamOffloader"
 CONFIGURATION="${1:-release}"
+SIGNING_IDENTITY="${DEVELOPER_ID_APPLICATION:-}"
+UPDATE_SIGNING_TEAM_ID="${DASHCAM_OFFLOADER_SIGNING_TEAM_ID:-}"
 APP_DIR="$ROOT_DIR/build/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
@@ -48,6 +50,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <string>1</string>
   <key>DashcamOffloaderBuildCommit</key>
   <string>$BUILD_COMMIT</string>
+  <key>DashcamOffloaderUpdateSigningTeamID</key>
+  <string>$UPDATE_SIGNING_TEAM_ID</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSHighResolutionCapable</key>
@@ -57,5 +61,14 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 PLIST
 
 chmod +x "$MACOS_DIR/$PRODUCT_NAME"
-codesign --force --deep --sign - "$APP_DIR"
+if [[ -n "$SIGNING_IDENTITY" ]]; then
+  if [[ -z "$UPDATE_SIGNING_TEAM_ID" ]]; then
+    echo "DASHCAM_OFFLOADER_SIGNING_TEAM_ID is required with DEVELOPER_ID_APPLICATION." >&2
+    exit 64
+  fi
+  codesign --force --deep --options runtime --sign "$SIGNING_IDENTITY" "$APP_DIR"
+else
+  # Local builds remain usable, but the updater refuses ad-hoc-signed bundles.
+  codesign --force --deep --sign - "$APP_DIR"
+fi
 echo "$APP_DIR"

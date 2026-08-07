@@ -1,5 +1,6 @@
 @preconcurrency import AVFoundation
 import Foundation
+import CryptoKit
 
 struct CopyExecutor {
     var progressHandler: @MainActor (CopyProgress) -> Void
@@ -154,6 +155,9 @@ struct CopyExecutor {
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
 
         if fileManager.fileExists(atPath: destination.path) {
+            guard try filesHaveMatchingSHA256(sourceURL, destination) else {
+                throw CopyError.destinationConflict
+            }
             return false
         }
 
@@ -183,8 +187,28 @@ struct CopyExecutor {
         guard copiedSize == expectedSize else {
             throw CopyError.sizeVerificationFailed
         }
+        guard try filesHaveMatchingSHA256(sourceURL, destination) else {
+            throw CopyError.checksumVerificationFailed
+        }
         didFinishWriting = true
         return true
+    }
+
+    private func filesHaveMatchingSHA256(_ firstURL: URL, _ secondURL: URL) throws -> Bool {
+        try sha256Hex(for: firstURL) == sha256Hex(for: secondURL)
+    }
+
+    private func sha256Hex(for url: URL) throws -> String {
+        let input = try FileHandle(forReadingFrom: url)
+        defer { try? input.close() }
+        var hasher = SHA256()
+        while true {
+            if Task.isCancelled { throw CancellationError() }
+            let data = input.readData(ofLength: 1024 * 1024)
+            guard !data.isEmpty else { break }
+            hasher.update(data: data)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     private func concatenateVideoItem(
@@ -305,12 +329,18 @@ struct CopyRunResult: Hashable, Sendable {
 
 enum CopyError: LocalizedError {
     case sizeVerificationFailed
+    case checksumVerificationFailed
+    case destinationConflict
     case videoConcatenationFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .sizeVerificationFailed:
             return "Copied file size did not match source"
+        case .checksumVerificationFailed:
+            return "Copied file contents did not match source"
+        case .destinationConflict:
+            return "A different file with this name already exists in the destination"
         case .videoConcatenationFailed(let message):
             return "Could not combine video clips: \(message)"
         }

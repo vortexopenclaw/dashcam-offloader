@@ -162,7 +162,7 @@ The app includes Feedback and Learn Card buttons in the toolbar. Users can submi
 
 Learn Card submissions ask for manufacturer, model, camera channel count, what each channel records, optional notes, and optional contact. They attach a sanitized description of the card structure so new camera support can be added or existing camera support can be expanded for different channel layouts, parking modes, resolutions, bitrates, firmware, and recording settings.
 
-The scan summary includes safe structure and fingerprinting details such as exact camera identification when the app can derive it confidently, root folders, folder summaries, extension counts, representative filenames, safe support-file names, timestamp-source counts, inferred parking-pattern counts, and representative video specs when the app can read them locally. It does not upload videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, full settings dumps, or other personally identifying information.
+Scan statistics are opt-in for ordinary feedback and are included for explicit camera-learning submissions. They include aggregate counts, camera-profile candidates, sanitized setting fields, and aggregate media technical summaries. They never include source names, folder paths, filenames, videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, or full settings dumps.
 
 Privacy policy: https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/privacy
 

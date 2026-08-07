@@ -70,6 +70,7 @@ jobs:
           ZIP_PATH: ${{ steps.package.outputs.zip_path }}
           ZIP_SHA256: ${{ steps.package.outputs.sha256 }}
           SHORT_SHA: ${{ steps.package.outputs.short_sha }}
+          UPDATE_SIGNING_KEY: ${{ secrets.DASHCAM_OFFLOADER_UPDATE_SIGNING_KEY }}
         run: |
           set -euo pipefail
 
@@ -83,10 +84,16 @@ jobs:
           RELEASE_NOTES_URL="https://github.com/${{ github.repository }}/releases/tag/latest"
           RELEASE_NOTES_JSON="$(jq -Rs . docs/releases/latest.md)"
           PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          if [[ -z "${UPDATE_SIGNING_KEY:-}" ]]; then
+            echo "Update-signing key is not configured." >&2
+            exit 1
+          fi
 
           npx --yes wrangler@latest r2 bucket create "$BUCKET" || true
           npx --yes wrangler@latest r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
+          SIGNING_PAYLOAD="$VERSION"$'\n'"$SHORT_SHA"$'\n'"$ASSET_KEY"$'\n'"$ZIP_SHA256"
+          SIGNATURE="$(UPDATE_SIGNING_KEY="$UPDATE_SIGNING_KEY" SIGNING_PAYLOAD="$SIGNING_PAYLOAD" swift -e 'import CryptoKit; import Foundation; let key = try Curve25519.Signing.PrivateKey(rawRepresentation: Data(base64Encoded: ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"]!)!); print(key.signature(for: Data(ProcessInfo.processInfo.environment["SIGNING_PAYLOAD"]!.utf8)).base64EncodedString())')"
           cat > build/latest.json <<JSON
           {
             "version": "$VERSION",
@@ -98,6 +105,7 @@ jobs:
             "assetKey": "$ASSET_KEY",
             "downloadURL": "$DOWNLOAD_URL",
             "sha256": "$ZIP_SHA256",
+            "signature": "$SIGNATURE",
             "minimumMacOSVersion": "14.0",
             "publishedAt": "$PUBLISHED_AT",
             "channel": "latest"

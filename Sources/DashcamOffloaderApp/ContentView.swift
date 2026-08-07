@@ -84,10 +84,25 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top)
 
+            Picker("Import", selection: Binding(
+                get: { viewModel.importMode },
+                set: { viewModel.setImportMode($0) }
+            )) {
+                ForEach(ImportMode.allCases) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+
             Button {
                 viewModel.chooseSourceFolder()
             } label: {
-                Label("Choose Memory Card...", systemImage: "externaldrive")
+                Label(viewModel.importMode == .dashcamFootage
+                    ? "Choose Memory Card..."
+                    : "Choose Video Folder...",
+                    systemImage: viewModel.importMode == .dashcamFootage
+                        ? "externaldrive" : "folder")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -99,8 +114,11 @@ struct ContentView: View {
             ))
             .font(.caption)
             .padding(.horizontal)
+            .disabled(viewModel.importMode == .regularVideo)
 
-            Text(viewModel.showAllVolumes ? "Showing all mounted volumes." : "Only showing locations that look like dashcam footage sources.")
+            Text(viewModel.importMode == .regularVideo
+                ? "Choose a folder of camera footage. The app only copies from it."
+                : (viewModel.showAllVolumes ? "Showing all mounted volumes." : "Only showing locations that look like dashcam footage sources."))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal)
@@ -212,7 +230,7 @@ struct ContentView: View {
     }
 
     private var sourceSection: some View {
-        GroupBox("1. Pick Your Memory Card") {
+        GroupBox(viewModel.importMode == .dashcamFootage ? "1. Pick Your Memory Card" : "1. Pick Your Video Folder") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -220,7 +238,9 @@ struct ContentView: View {
                             .font(.subheadline)
                             .textSelection(.enabled)
                             .lineLimit(2)
-                        Text("Choose the card from your dashcam. The app only reads from the card and never changes it.")
+                        Text(viewModel.importMode == .dashcamFootage
+                            ? "Choose the card from your dashcam. The app only reads from the card and never changes it."
+                            : "Choose a folder of regular camera footage. The app only reads from it and never changes it.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -228,7 +248,7 @@ struct ContentView: View {
                     Button {
                         viewModel.chooseSourceFolder()
                     } label: {
-                        Label("Choose", systemImage: "externaldrive")
+                        Label("Choose", systemImage: viewModel.importMode == .dashcamFootage ? "externaldrive" : "folder")
                     }
                 }
 
@@ -280,8 +300,8 @@ struct ContentView: View {
         HStack(spacing: 12) {
             workflowStep(
                 number: 1,
-                title: "Pick card",
-                detail: viewModel.selectedSource?.name ?? "Choose the memory card",
+                title: viewModel.importMode == .dashcamFootage ? "Pick card" : "Pick video folder",
+                detail: viewModel.selectedSource?.name ?? (viewModel.importMode == .dashcamFootage ? "Choose the memory card" : "Choose the video folder"),
                 complete: viewModel.selectedSource != nil
             )
             workflowStep(
@@ -1299,8 +1319,12 @@ struct FeedbackSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Toggle("Include sanitized scan summary", isOn: $includeScan)
+            Toggle("Include anonymous scan statistics", isOn: $includeScan)
                 .disabled(!viewModel.scanSummary.hasScan)
+
+            Text("Optional statistics exclude source names, folder paths, and filenames.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             if viewModel.scanSummary.hasScan {
                 HStack(spacing: 14) {
@@ -1343,7 +1367,7 @@ struct FeedbackSheet: View {
         .padding(24)
         .frame(width: 560)
         .onAppear {
-            includeScan = viewModel.scanSummary.hasScan
+            includeScan = false
             viewModel.feedbackMessage = ""
         }
     }

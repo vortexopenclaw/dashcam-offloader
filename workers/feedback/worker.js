@@ -69,13 +69,12 @@ export default {
 
     let body;
     try {
-      body = await request.json();
-    } catch {
+      body = await readJSONBody(request);
+    } catch (error) {
+      if (error instanceof RangeError) {
+        return json({ error: "payload_too_large" }, 413, request, env);
+      }
       return json({ error: "invalid_json" }, 400, request, env);
-    }
-
-    if (JSON.stringify(body).length > MAX_BODY_BYTES) {
-      return json({ error: "payload_too_large" }, 413, request, env);
     }
 
     const validation = validateFeedback(body);
@@ -103,29 +102,59 @@ export default {
 };
 
 async function checkRateLimit(request, env) {
-  if (!env.FEEDBACK_KV) {
-    return { ok: true };
+  if (!env.FEEDBACK_RATE_LIMITER) {
+    return { ok: false, retryAfterSeconds: RATE_LIMIT_WINDOW_SECONDS };
   }
 
-  const now = Date.now();
-  const windowStart = Math.floor(now / (RATE_LIMIT_WINDOW_SECONDS * 1000));
   const clientID = await hashedClientID(request, env);
-  const key = `rate/${windowStart}/${clientID}`;
-  const current = Number(await env.FEEDBACK_KV.get(key) || "0");
+  const response = await env.FEEDBACK_RATE_LIMITER.get(clientID).fetch("https://rate-limit/check", {
+    method: "POST",
+  });
+  return response.json();
+}
 
-  if (current >= RATE_LIMIT_MAX_POSTS) {
-    const nextWindowAt = (windowStart + 1) * RATE_LIMIT_WINDOW_SECONDS * 1000;
-    return {
-      ok: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((nextWindowAt - now) / 1000)),
-    };
+export class FeedbackRateLimiter {
+  constructor(state) {
+    this.state = state;
   }
 
-  await env.FEEDBACK_KV.put(key, String(current + 1), {
-    expirationTtl: RATE_LIMIT_WINDOW_SECONDS * 2,
-  });
+  async fetch() {
+    const now = Date.now();
+    const windowStart = Math.floor(now / (RATE_LIMIT_WINDOW_SECONDS * 1000));
+    const result = await this.state.storage.transaction(async (storage) => {
+      const stored = await storage.get("current");
+      const current = stored?.windowStart === windowStart ? stored : { windowStart, count: 0 };
+      if (current.count >= RATE_LIMIT_MAX_POSTS) {
+        const nextWindowAt = (windowStart + 1) * RATE_LIMIT_WINDOW_SECONDS * 1000;
+        return { ok: false, retryAfterSeconds: Math.max(1, Math.ceil((nextWindowAt - now) / 1000)) };
+      }
+      current.count += 1;
+      await storage.put("current", current);
+      return { ok: true };
+    });
+    return Response.json(result);
+  }
+}
 
-  return { ok: true };
+async function readJSONBody(request) {
+  const reader = request.body?.getReader();
+  if (!reader) throw new Error("missing_body");
+  const chunks = [];
+  let byteLength = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    byteLength += value.byteLength;
+    if (byteLength > MAX_BODY_BYTES) throw new RangeError("payload_too_large");
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 async function hashedClientID(request, env) {
@@ -219,10 +248,7 @@ function sanitizeTraining(training) {
 
 function sanitizeScan(scan) {
   return {
-    volumeName: stringValue(scan.volumeName),
-    requestedSourceName: optionalString(scan.requestedSourceName),
-    effectiveSourceName: optionalString(scan.effectiveSourceName),
-    effectiveSourceRelativePath: optionalString(scan.effectiveSourceRelativePath),
+    // Names and paths can be personal data on NAS and regular-video imports.
     identifiedCamera: sanitizeIdentifiedCamera(scan.identifiedCamera),
     selectedProfileID: optionalString(scan.selectedProfileID),
     selectedProfileName: optionalString(scan.selectedProfileName),
@@ -240,30 +266,7 @@ function sanitizeScan(scan) {
     timestampSourceCounts: countMap(scan.timestampSourceCounts),
     suspiciousTimestampItems: numberValue(scan.suspiciousTimestampItems),
     inferredParkingPatternCounts: countMap(scan.inferredParkingPatternCounts),
-    sampleRelativePaths: safePathList(scan.sampleRelativePaths, MAX_SAMPLE_PATHS),
-    rootFolders: safePathList(scan.rootFolders, 40),
-    folderSamples: safePathList(scan.folderSamples, MAX_SAMPLE_PATHS),
-    directorySummaries: Array.isArray(scan.directorySummaries)
-      ? scan.directorySummaries.slice(0, MAX_DIRECTORY_SUMMARIES).map(sanitizeDirectorySummary).filter(Boolean)
-      : [],
-    folderSummaries: Array.isArray(scan.folderSummaries)
-      ? scan.folderSummaries.slice(0, 80).map(sanitizeFolderSummary).filter(Boolean)
-      : [],
-    filenameSamples: safePathList(scan.filenameSamples, MAX_SAMPLE_PATHS),
-    filenamePatternSummaries: Array.isArray(scan.filenamePatternSummaries)
-      ? scan.filenamePatternSummaries.slice(0, MAX_FILENAME_PATTERN_SUMMARIES).map(sanitizeFilenamePatternSummary).filter(Boolean)
-      : [],
-    filenameSequenceSummaries: Array.isArray(scan.filenameSequenceSummaries)
-      ? scan.filenameSequenceSummaries.slice(0, MAX_FILENAME_SEQUENCE_SUMMARIES).map(sanitizeFilenameSequenceSummary).filter(Boolean)
-      : [],
-    supportFileSamples: safePathList(scan.supportFileSamples, 40),
-    ignoredSupportFileSamples: safePathList(scan.ignoredSupportFileSamples, 60),
-    clipGroupSummaries: Array.isArray(scan.clipGroupSummaries)
-      ? scan.clipGroupSummaries.slice(0, MAX_CLIP_GROUP_SUMMARIES).map(sanitizeClipGroupSummary).filter(Boolean)
-      : [],
-    videoSpecSamples: Array.isArray(scan.videoSpecSamples)
-      ? scan.videoSpecSamples.slice(0, MAX_VIDEO_SPEC_SAMPLES).map(sanitizeVideoSpecSample).filter(Boolean)
-      : [],
+    videoSpecSamples: [],
     videoSpecSummaries: Array.isArray(scan.videoSpecSummaries)
       ? scan.videoSpecSummaries.slice(0, MAX_VIDEO_SPEC_SUMMARIES).map(sanitizeVideoSpecSummary).filter(Boolean)
       : [],

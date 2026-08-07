@@ -73,6 +73,9 @@ test("sanitizeScan strips unsafe setting values and keeps safe ones", () => {
   const snapshot = scan.settingSnapshots[0];
   assert.deepEqual(Object.keys(snapshot.safeValues).sort(), ["model", "resolution"]);
   assert.deepEqual(snapshot.keys, ["model"]);
+  assert.equal("volumeName" in scan, false);
+  assert.equal("sampleRelativePaths" in scan, false);
+  assert.equal("filenameSamples" in scan, false);
 });
 
 test("sanitizeFeedback trims message and preserves kind", () => {
