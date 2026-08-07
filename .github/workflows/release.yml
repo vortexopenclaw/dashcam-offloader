@@ -93,7 +93,7 @@ jobs:
           npx --yes wrangler@latest r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
           SIGNING_PAYLOAD="$VERSION"$'\n'"$SHORT_SHA"$'\n'"$ASSET_KEY"$'\n'"$ZIP_SHA256"
-          SIGNATURE="$(UPDATE_SIGNING_KEY="$UPDATE_SIGNING_KEY" SIGNING_PAYLOAD="$SIGNING_PAYLOAD" swift -e 'import CryptoKit; import Foundation; let key = try Curve25519.Signing.PrivateKey(rawRepresentation: Data(base64Encoded: ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"]!)!); print(key.signature(for: Data(ProcessInfo.processInfo.environment["SIGNING_PAYLOAD"]!.utf8)).base64EncodedString())')"
+          SIGNATURE="$(UPDATE_SIGNING_KEY="$UPDATE_SIGNING_KEY" SIGNING_PAYLOAD="$SIGNING_PAYLOAD" swift -e 'import CryptoKit; import Foundation; let key = try Curve25519.Signing.PrivateKey(rawRepresentation: Data(base64Encoded: ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"]!)!); print(try key.signature(for: Data(ProcessInfo.processInfo.environment["SIGNING_PAYLOAD"]!.utf8)).base64EncodedString())')"
           cat > build/latest.json <<JSON
           {
             "version": "$VERSION",
