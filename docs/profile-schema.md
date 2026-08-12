@@ -32,6 +32,8 @@ folders:
     prefix: REC
 filename_patterns:
   - pattern: "^REC_(\\d{8})_(\\d{6})_([A-Z]+(?:_[A-Z]+)?)\\.MP4$"
+    # Use when a filename pattern has no channel token, but the channel is known.
+    default_channel: front
 channels:
   F: front
   R: rear
@@ -67,6 +69,13 @@ Detection evidence should be separated by strength:
 - `high_confidence` - explicit model strings or model-specific files.
 - `supporting` - folder/filename structures, manuals, volume label.
 - `negative` - signals that should reject this profile.
+
+## Filename Channel Defaults
+
+Use `default_channel` inside a filename-pattern entry when every filename
+matching that pattern belongs to a known channel but the filename has no
+channel capture token. Pattern `channels` mappings still take precedence when
+a filename contains a channel token.
 
 ## Multiplexed Video
 

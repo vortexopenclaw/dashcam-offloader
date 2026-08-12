@@ -103,6 +103,7 @@ struct FilenamePattern: Hashable, Sendable {
     var regexPattern: String
     var modeMap: [String: String]
     var channelMap: [String: String]
+    var defaultChannel: String? = nil
     var timestampFormat: TimestampFormat
 }
 

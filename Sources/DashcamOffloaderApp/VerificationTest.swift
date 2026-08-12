@@ -251,6 +251,27 @@ enum VerificationTest {
             try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
 
             let scanner = CardScanner()
+            let ottoSafeSource = temp.appendingPathComponent("OttoSafe", isDirectory: true)
+            for folder in ["norm", "back_norm", "emr", "back_emr", "Photo"] {
+                try FileManager.default.createDirectory(
+                    at: ottoSafeSource.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            try Data(repeating: 81, count: 1024).write(to: ottoSafeSource.appendingPathComponent("norm/2026_08_12_064857_01.TS"))
+            try Data(repeating: 82, count: 1024).write(to: ottoSafeSource.appendingPathComponent("back_norm/2026_08_12_064857_01_b.TS"))
+            try Data(repeating: 83, count: 1024).write(to: ottoSafeSource.appendingPathComponent("emr/2026_08_12_064900_02.TS"))
+            try Data(repeating: 84, count: 1024).write(to: ottoSafeSource.appendingPathComponent("back_emr/2026_08_12_064900_02_b.TS"))
+            let ottoSafeScan = try scanner.scan(sourceURL: ottoSafeSource, profiles: profiles)
+            guard ottoSafeScan.selectedProfile?.id == "ottocast-ottosafe-cam",
+                  ottoSafeScan.clips.first(where: { $0.relativePath.hasPrefix("norm/") })?.channel == "front",
+                  ottoSafeScan.clips.first(where: { $0.relativePath.hasPrefix("emr/") })?.channel == "front",
+                  ottoSafeScan.clips.first(where: { $0.relativePath.hasPrefix("back_norm/") })?.channel == "rear",
+                  ottoSafeScan.clips.first(where: { $0.relativePath.hasPrefix("back_emr/") })?.channel == "rear" else {
+                let observedChannels = ottoSafeScan.clips.map { "\($0.relativePath):\($0.channel)" }.sorted()
+                print("VERIFY FAIL: OttoSafe non-_b clips should be Front and _b clips should be Rear: profile=\(ottoSafeScan.selectedProfile?.id ?? "nil"), channels=\(observedChannels)")
+                return false
+            }
             let blackVueCardSource = scanner.mountedSource(
                 forUserSelectedURL: URL(fileURLWithPath: "/Volumes/BLACKVUE/BlackVue/Record", isDirectory: true)
             )

@@ -138,6 +138,7 @@ enum ProfileParser {
         var currentPattern: String?
         var modeMap: [String: String] = [:]
         var channelMap: [String: String] = [:]
+        var defaultChannel: String?
         var currentMap: String?
         var timestampFormat = TimestampFormat.unknown
 
@@ -149,11 +150,13 @@ enum ProfileParser {
                 regexPattern: normalized,
                 modeMap: modeMap,
                 channelMap: channelMap,
+                defaultChannel: defaultChannel,
                 timestampFormat: timestampFormat
             ))
             currentPattern = nil
             modeMap = [:]
             channelMap = [:]
+            defaultChannel = nil
             currentMap = nil
             timestampFormat = .unknown
         }
@@ -180,6 +183,8 @@ enum ProfileParser {
                 currentMap = "modes"
             } else if trimmed == "channels:" {
                 currentMap = "channels"
+            } else if trimmed.hasPrefix("default_channel:") {
+                defaultChannel = cleanValue(String(trimmed.dropFirst("default_channel:".count)))
             } else if trimmed.hasPrefix("format:") {
                 let value = cleanValue(String(trimmed.dropFirst("format:".count))) ?? ""
                 timestampFormat = parseTimestampFormat(value)

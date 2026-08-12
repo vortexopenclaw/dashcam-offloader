@@ -147,6 +147,23 @@ installer behavior, same-size-different-content destinations fail safely,
 feedback tests cover redaction and bounded reads, and NAS sources are not
 ejectable.
 
+## 2026-08-12 OttoSafe front-channel classification
+
+**Objective:** Classify OttoSafe Cam `norm` and `emr` clips without the `_b`
+suffix as Front rather than Unknown, while retaining `_b` clips as Rear.
+
+**Design:** Allow a profile filename pattern to declare `default_channel` for
+patterns that have no channel token. Explicit channel-token mappings still
+win. The OttoSafe profile assigns Front only to its non-`_b` timestamp pattern.
+
+**Risks and rollback:** The default applies only after that exact pattern
+matches, so it cannot relabel arbitrary files. Removing the profile field
+restores the prior Unknown behavior.
+
+**Success checks:** A real-card-shaped OttoSafe fixture detects the OttoSafe
+profile, classifies normal and emergency non-`_b` clips as Front, and keeps
+`_b` clips as Rear.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:

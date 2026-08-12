@@ -1242,6 +1242,8 @@ struct CardScanner {
                 }
                 if let mappedChannel = firstMappedValue(in: groups.sorted { $0.count > $1.count }, map: mergedChannelMap(profile: profile, pattern: pattern)) {
                     channel = physicalChannelLabel(from: mappedChannel)
+                } else if let defaultChannel = pattern.defaultChannel {
+                    channel = physicalChannelLabel(from: defaultChannel)
                 }
                 if channel == "unknown", profile.channels.count == 1, let onlyChannel = profile.channels.values.first {
                     channel = physicalChannelLabel(from: onlyChannel)
