@@ -1,0 +1,90 @@
+id: blackvue-dr970x-lte-plus
+manufacturer: BlackVue
+model: DR970X LTE Plus
+status: validated
+channel_variants:
+  - channels: 1
+    roles: [front]
+    validation: real_card_sampled
+  - channels: 2
+    roles: [front, rear]
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles: [front, rear]
+source_notes:
+  - docs/card-profiles/blackvue-dr970x-lte-plus.md
+detection:
+  high_confidence:
+    - path: BlackVue/Config/version.bin
+      contains: "model = DR970X LTE Plus"
+    - path: BlackVue/Config/micom_version.bin
+      contains: "model = DR970X LTE Plus"
+  folder_structure:
+    required: [BlackVue/Record, BlackVue/Config]
+  privacy:
+    do_not_read:
+      - BlackVue/Config/config.ini
+      - BlackVue/Config/bt_ssid.bin
+      - BlackVue/Config/modem_revision.bin
+    do_not_log:
+      - WiFi SSIDs
+      - WiFi passwords
+      - Cloud credentials
+      - Bluetooth identifiers
+      - Modem identifiers
+folders:
+  - path: BlackVue/Record
+    mode: mixed_recordings
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([NEMP])([FR])\\.mp4$"
+    applies_to: [BlackVue/Record]
+    case_sensitive: true
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+    modes:
+      N: normal
+      E: event
+      M: manual
+      P: parking
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+grouping:
+  keys: [date, time, mode]
+  expected_sets:
+    two_channel: [F, R]
+observed_media:
+  front:
+    codec: HEVC
+    resolution: 3840x2160
+    fps: 30
+    bitrate: approximately 61 Mbps
+  rear:
+    codec: HEVC
+    resolution: 1920x1080
+    fps: 30
+    bitrate: approximately 11 Mbps
+firmware:
+  observed_version: "2.007"
+  observed_revision: 1584
+  micom_version: "2.00"
+  config_path: BlackVue/Config/version.bin
+exclude:
+  - BlackVue/Config/**
+  - BlackVue/System/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - .Trashes/**
+  - "._*"
+notes:
+  - "Real 2CH cards were sampled before and after the firmware 2 update."
+  - "Detection uses exact model metadata and intentionally ignores firmware version and user-changeable network names."
+  - "Network, cloud, Bluetooth, and LTE modem identifiers are private and excluded."

@@ -24,6 +24,15 @@ struct KnownDashcamModel: Hashable, Sendable {
 /// Internal model knowledge used for learning prefill and future candidate
 /// hints. Entries here are not supported camera profiles.
 enum KnownDashcamCatalog {
+    private static let submittedManualChoiceKeys: Set<String> = [
+        "miofive|s1ultra",
+        "wolfbox|g900pro"
+    ]
+
+    static func hasSubmittedCardScan(_ model: KnownDashcamModel) -> Bool {
+        submittedManualChoiceKeys.contains("\(compact(model.manufacturer))|\(compact(model.model))")
+    }
+
     private static let genericVolumeLabels: Set<String> = [
         "blackvue",
         "dashcam",

@@ -140,9 +140,14 @@ limitations of each profile.
 **BlackVue**
 - BlackVue DR770X Box: 3CH, app submission and archive samples
 - BlackVue DR970X Plus: 2CH, real card sampled
+- BlackVue DR970X LTE Plus: 2CH, real cards sampled across firmware 1.x and 2.x
 - BlackVue Elite 8: 2CH, real card sampled
 - BlackVue Elite 9: 2CH, real card sampled
 - BlackVue Elite 10: 2CH, remote card scan with exact metadata and normal/impact Front/Rear filename evidence
+
+The camera picker also includes Miofive S1 Ultra and Wolfbox G900 Pro as
+manual choices from submitted card scans. Their cards do not contain unique,
+safe model evidence, so the app does not auto-identify them yet.
 
 **Cansonic**
 - Cansonic UltraDash Z3+ Standard Edition: dual front lens (wide + telephoto) + optional rear (R1), footage sampled

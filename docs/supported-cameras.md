@@ -31,6 +31,9 @@ which applies.
   parking filename behavior still need a newer remote scan or real card.
 - BlackVue DR770X Box - profile drafted from a real app-submitted Learn Card package and private archive direct camera clips. 3-channel evidence (F/O/R = front/interior/rear), 1080p H.264 NAS samples, BlackVue-style mode/channel suffixes.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
+- BlackVue DR970X LTE Plus - validated from real 2CH cards before and after
+  firmware 2. Exact safe model metadata distinguishes it from non-LTE and Box
+  siblings; network and LTE modem identifiers remain excluded.
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).
 - VIOFO A229 Plus - profile drafted from one real 3CH sample card (fresh format). 2K front and rear, 1080P interior.
 - VIOFO A229 Ultra - profile drafted from a private archive sample (no direct card scan). 4K front and rear, 1080P interior. OSD OCR confirmed.
@@ -54,6 +57,13 @@ which applies.
 - Escort MAXcam 360c - profile drafted from one real card. Single-channel front only. Combined radar detector + dashcam. Footage in Normal/MAXcam360c/. Filename pattern YYYYMMDD_NNNN_VID.MOV. GPS and g-sensor sidecars (_gps.bin, _gsensor.bin) appear after GPS lock.
 - DJI Mini 3 Pro - profile drafted from one real card. Single-channel drone. DCIM/100MEDIA/ layout. Filename pattern DJI_####.MP4 with shared global sequence across video and photo. SRT telemetry sidecar paired with every clip.
 - Sony A7 III (ILCE-7M3) - profile drafted from two real cards (one video+photo, one video-only). Mirrorless camera using Sony M4ROOT/XAVC S format. Model detected via PRIVATE/M4ROOT/MEDIAPRO.XML systemKind field. Video codec confirmed H.264 (AVC_3840_2160_HP@L51). Photos are ARW raw files. DCIM/ absent on video-only cards.
+
+## Submitted Manual Choices
+
+- Miofive S1 Ultra and Wolfbox G900 Pro are available in the camera picker
+  because usable card scans were submitted for both. Their observed card data
+  does not include unique, privacy-safe model evidence, so they remain manual
+  choices instead of automatic profiles.
 - BlackVue Elite 8 - profile drafted from one real 2CH sample card and official BlackVue Elite 8 manual. Both front and rear at 2K QHD (2560x1440) @ 30fps H.264. Detected via config.ini ap_ssid field (BlackVueElite8-). Filename pattern matches Elite 9 family.
 - DJI RC (RM330) - profile drafted from one real card. Companion device (remote controller), not a camera. Android-based, runs DJI Fly (dji.go.v5). Detected via Android/data/dji.go.v5/ folder structure. Primary content is live-view OcuSync transmission caches (MediaCaches/). Full-resolution drone footage stays on the drone's own microSD.
 - VIOFO WM1 - private archive sample with OSD OCR confirmed. Single-channel pattern: YYYYMMDDHHMMSS_SEQUENCE, with P suffix observed for parking.

@@ -72,6 +72,10 @@ struct ContentView: View {
                 viewModel.refreshSourcesAfterActivation()
             }
         }
+        .onChange(of: viewModel.selectedSource?.id) { _, _ in
+            selectedProfileBrand = nil
+            selectedCatalogModel = nil
+        }
         .task {
             viewModel.startInitialSourceDiscovery()
             viewModel.startInitialUpdateCheck()
@@ -527,25 +531,13 @@ struct ContentView: View {
     }
 
     private var activeProfileBrand: String? {
-        if let selectedCatalogModel {
-            return selectedCatalogModel.brand
-        }
-        if let selectedProfile = viewModel.selectedProfile,
-           selectedProfile.id != DashcamProfile.genericNewDashcam.id {
-            return selectedProfile.displayManufacturer
-        }
-        if let identifiedCamera = viewModel.identifiedCamera,
-           !identifiedCamera.isSupported {
-            return identifiedCamera.displayManufacturer
-        }
-        if let selectedProfileBrand,
-           viewModel.cameraModelsByBrand.contains(where: { $0.brand == selectedProfileBrand }) {
-            return selectedProfileBrand
-        }
-        if let selectedProfile = viewModel.selectedProfile {
-            return selectedProfile.displayManufacturer
-        }
-        return nil
+        CameraSelectionPresentation.activeBrand(
+            explicitBrand: selectedProfileBrand,
+            catalogBrand: selectedCatalogModel?.brand,
+            selectedProfile: viewModel.selectedProfile,
+            identifiedCamera: viewModel.identifiedCamera,
+            availableBrands: Set(viewModel.cameraModelsByBrand.map(\.brand))
+        )
     }
 
     private var modelsForActiveBrand: [CameraModelChoice] {

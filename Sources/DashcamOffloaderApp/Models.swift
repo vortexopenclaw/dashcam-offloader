@@ -1,5 +1,25 @@
 import Foundation
 
+enum CameraSelectionPresentation {
+    static func activeBrand(
+        explicitBrand: String?,
+        catalogBrand: String?,
+        selectedProfile: DashcamProfile?,
+        identifiedCamera: IdentifiedCamera?,
+        availableBrands: Set<String>
+    ) -> String? {
+        if let catalogBrand { return catalogBrand }
+        if let explicitBrand, availableBrands.contains(explicitBrand) { return explicitBrand }
+        if let selectedProfile, selectedProfile.id != DashcamProfile.genericNewDashcam.id {
+            return selectedProfile.displayManufacturer
+        }
+        if let identifiedCamera, !identifiedCamera.isSupported {
+            return identifiedCamera.displayManufacturer
+        }
+        return selectedProfile?.displayManufacturer
+    }
+}
+
 enum ManufacturerDisplayFormatter {
     static func displayName(for manufacturer: String) -> String {
         switch manufacturer.lowercased() {

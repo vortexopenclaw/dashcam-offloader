@@ -116,6 +116,33 @@ paths; packaged apps contain required runtime dependencies, include the CSP and
 updater-disabled metadata, and launch from a clean location. Public GitHub and
 Cloudflare artifacts must match reviewed local bytes before release.
 
+## 2026-08-13 Camera Selector And Scan Inventory Refresh
+
+**Objective:** Keep brand/model selection responsive during scanning and after
+the app resumes from idle, while incorporating every previously sampled camera
+whose evidence supports either a trained profile or an explicit manual choice.
+
+**Design:** An explicit brand choice takes precedence over the last detected
+profile in the selector presentation. Each scan carries a generation and the
+manual-profile revision present when it started. A stale scan cannot update a
+newer source, and a scan that finishes after a manual camera choice preserves
+that choice while classifying the completed file list with it. Previously
+submitted but not uniquely auto-detectable Miofive S1 Ultra and Wolfbox G900
+Pro scans become visible manual catalog choices. The real sampled BlackVue
+DR970X LTE Plus profile is restored from the earlier profile branch using only
+exact safe model metadata and excluding network/modem settings.
+
+**Risks and rollback:** Manual selection can intentionally override automatic
+detection, which is the expected user action. Stale-scan rejection changes only
+results from scans that are no longer current. Removing the added profile and
+sampled-choice list restores the prior catalog without changing generic import.
+
+**Success checks:** A selector fixture proves a new brand wins over a detected
+brand. A scan-resolution fixture proves a manual model selected after scan
+start wins over the detected result. A real-card-shaped LTE Plus fixture must
+select only the LTE Plus profile and classify F/R footage. The full verifier,
+privacy gate, build, and packaged-app verification must pass.
+
 ## Architecture Sketch
 
 The eventual implementation should split into these layers:

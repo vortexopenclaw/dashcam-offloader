@@ -152,6 +152,42 @@ enum VerificationTest {
                 print("VERIFY FAIL: manufacturer display casing regression")
                 return false
             }
+            guard let detectedBlackVueProfile = profiles.first(where: { $0.id == "blackvue-dr770x-box" }),
+                  let manuallySelectedViofoProfile = profiles.first(where: { $0.id == "viofo-a229-pro" }) else {
+                print("VERIFY FAIL: selector regression fixtures require BlackVue and VIOFO profiles")
+                return false
+            }
+            let explicitBrandAfterDetection = CameraSelectionPresentation.activeBrand(
+                explicitBrand: "Viofo",
+                catalogBrand: nil,
+                selectedProfile: detectedBlackVueProfile,
+                identifiedCamera: IdentifiedCamera(
+                    manufacturer: "BlackVue",
+                    model: "DR770X Box",
+                    evidence: [],
+                    isSupported: true
+                ),
+                availableBrands: ["Blackvue", "Viofo"]
+            )
+            guard explicitBrandAfterDetection == "Viofo" else {
+                print("VERIFY FAIL: explicit brand selection did not override the previously detected camera")
+                return false
+            }
+            guard TransferViewModel.profileAfterCompletedScan(
+                detectedProfile: detectedBlackVueProfile,
+                currentProfile: manuallySelectedViofoProfile,
+                profileRevisionAtScanStart: 4,
+                currentProfileRevision: 5
+            )?.id == manuallySelectedViofoProfile.id,
+            TransferViewModel.profileAfterCompletedScan(
+                detectedProfile: detectedBlackVueProfile,
+                currentProfile: manuallySelectedViofoProfile,
+                profileRevisionAtScanStart: 5,
+                currentProfileRevision: 5
+            )?.id == detectedBlackVueProfile.id else {
+                print("VERIFY FAIL: scan completion did not preserve a newer manual camera selection")
+                return false
+            }
             guard ImportMode.dashcamFootage.displayName == "Dashcam Footage",
                   ImportMode.regularVideo.displayName == "Regular Video",
                   ImportMode.regularVideo.sourcePickerTitle == "Choose regular video folder" else {
@@ -1023,6 +1059,27 @@ enum VerificationTest {
                 return false
             }
 
+            let dr970xLTEPlusSource = temp.appendingPathComponent("BLACKVUE-LTE-PLUS", isDirectory: true)
+            try FileManager.default.createDirectory(at: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = DR970X LTE Plus\nversion = 2.007\nrevision = 1584\n".utf8).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("model = DR970X LTE Plus\nversion = 2.00\n".utf8).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data(repeating: 41, count: 1024).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Record/20260616_103000_NF.mp4"))
+            try Data(repeating: 42, count: 1024).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Record/20260616_103000_NR.mp4"))
+            try Data(repeating: 43, count: 1024).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Record/20260616_103100_PF.mp4"))
+            try Data(repeating: 44, count: 1024).write(to: dr970xLTEPlusSource.appendingPathComponent("BlackVue/Record/20260616_103100_PR.mp4"))
+            let dr970xLTEPlusScan = try scanner.scan(sourceURL: dr970xLTEPlusSource, profiles: profiles)
+            guard dr970xLTEPlusScan.selectedProfile?.id == "blackvue-dr970x-lte-plus",
+                  dr970xLTEPlusScan.identifiedCamera?.manufacturer == "BlackVue",
+                  dr970xLTEPlusScan.identifiedCamera?.model == "DR970X LTE Plus",
+                  dr970xLTEPlusScan.identifiedCamera?.isSupported == true,
+                  Set(dr970xLTEPlusScan.clips.map(\.channel)) == ["front", "rear"],
+                  dr970xLTEPlusScan.clips.filter({ $0.relativePath.contains("_N") }).allSatisfy({ $0.mode == "normal" }),
+                  dr970xLTEPlusScan.clips.filter({ $0.relativePath.contains("_P") }).allSatisfy({ $0.mode == "parking" }) else {
+                print("VERIFY FAIL: real-card-shaped DR970X LTE Plus scan did not select and classify the exact profile: profile=\(dr970xLTEPlusScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: dr970xLTEPlusScan.identifiedCamera)), clips=\(dr970xLTEPlusScan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted()), diagnostics=\(dr970xLTEPlusScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
             let untrainedThinkwareSource = temp.appendingPathComponent("THINKWARE", isDirectory: true)
             try FileManager.default.createDirectory(at: untrainedThinkwareSource.appendingPathComponent("SETTING/lang", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: untrainedThinkwareSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
@@ -1484,16 +1541,40 @@ enum VerificationTest {
                 print("VERIFY FAIL: Wolfbox learning snapshot did not preserve statistics while redacting paths")
                 return false
             }
-            let hiddenWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, hasG900Pro: Bool) in
+            let genericManualSelectionClipCount = MainActor.assumeIsolated { () -> Int in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                viewModel.loadScanResultForVerification(
+                    source: MountedSource(url: wolfboxRealCardSource, name: "NO NAME"),
+                    scanResult: wolfboxRealCardScan
+                )
+                viewModel.selectProfile(.genericNewDashcam)
+                return viewModel.clips.count
+            }
+            guard genericManualSelectionClipCount == wolfboxRealCardScan.clips.count,
+                  genericManualSelectionClipCount > 0 else {
+                print("VERIFY FAIL: choosing a submitted catalog-only camera discarded generic scan results")
+                return false
+            }
+            let submittedManualSelectorState = MainActor.assumeIsolated { () -> (wolfboxModels: [String], wolfboxManual: Bool, miofiveModels: [String], miofiveManual: Bool) in
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
                 let wolfboxGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Wolfbox" }
                 let g900Pro = wolfboxGroup?.models.first { $0.model == "G900 Pro" }
-                return (wolfboxGroup != nil, g900Pro != nil)
+                let miofiveGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Miofive" }
+                let s1Ultra = miofiveGroup?.models.first { $0.model == "S1 Ultra" }
+                return (
+                    wolfboxGroup?.models.map(\.model) ?? [],
+                    g900Pro?.isCatalogOnly == true && g900Pro?.profile == nil,
+                    miofiveGroup?.models.map(\.model) ?? [],
+                    s1Ultra?.isCatalogOnly == true && s1Ultra?.profile == nil
+                )
             }
-            guard !hiddenWolfboxSelectorState.hasBrand,
-                  !hiddenWolfboxSelectorState.hasG900Pro else {
-                print("VERIFY FAIL: Wolfbox catalog-only models should stay hidden before exact card identification: \(hiddenWolfboxSelectorState)")
+            guard submittedManualSelectorState.wolfboxModels == ["G900 Pro"],
+                  submittedManualSelectorState.wolfboxManual,
+                  submittedManualSelectorState.miofiveModels == ["S1 Ultra"],
+                  submittedManualSelectorState.miofiveManual else {
+                print("VERIFY FAIL: submitted-but-not-auto-detectable cameras should remain available as exact manual choices: \(submittedManualSelectorState)")
                 return false
             }
             let identifiedWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, models: [String], hasG900Pro: Bool, isCatalogOnly: Bool) in

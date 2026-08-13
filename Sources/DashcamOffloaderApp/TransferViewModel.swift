@@ -52,6 +52,8 @@ final class TransferViewModel: ObservableObject {
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
     private var copyTask: Task<Void, Never>?
     private var customSourceNames: [MountedSource.ID: String] = [:]
+    private var scanGeneration = 0
+    private var profileSelectionRevision = 0
     private static let automaticUpdateChecksKey = "DashcamOffloaderAutomaticUpdateChecksEnabled"
     nonisolated private static let lastDownloadDestinationPathKey = "DashcamOffloaderLastDownloadDestinationPath"
 
@@ -254,6 +256,9 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func shouldExposeCatalogChoice(_ model: KnownDashcamModel) -> Bool {
+        if KnownDashcamCatalog.hasSubmittedCardScan(model) {
+            return true
+        }
         guard let identifiedCamera,
               !identifiedCamera.isSupported,
               let matchedModel = KnownDashcamCatalog.exactModelMatch(
@@ -722,6 +727,9 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func clearSourceDerivedState(for source: MountedSource?) {
+        scanGeneration += 1
+        profileSelectionRevision += 1
+        isScanning = false
         copyProgress = CopyProgress()
         detectionCandidates = []
         identifiedCamera = nil
@@ -760,6 +768,9 @@ final class TransferViewModel: ObservableObject {
             return
         }
 
+        scanGeneration += 1
+        let generation = scanGeneration
+        let profileRevisionAtStart = profileSelectionRevision
         isScanning = true
         statusMessage = "Scanning \(selectedSource.name)..."
         copyPlan = nil
@@ -780,13 +791,30 @@ final class TransferViewModel: ObservableObject {
                         allowNestedCardRootDiscovery: false
                     )
                 }.value
+                guard generation == self.scanGeneration,
+                      self.selectedSource?.id == selectedSource.id else { return }
+                let manuallySelectedProfile = Self.profileAfterCompletedScan(
+                    detectedProfile: scanResult.selectedProfile,
+                    currentProfile: self.selectedProfile,
+                    profileRevisionAtScanStart: profileRevisionAtStart,
+                    currentProfileRevision: self.profileSelectionRevision
+                )
                 self.detectionCandidates = scanResult.candidates
                 self.identifiedCamera = scanResult.identifiedCamera
-                self.selectedProfile = scanResult.selectedProfile
+                self.selectedProfile = manuallySelectedProfile
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
                 self.lastEffectiveScanSourceURL = scanResult.sourceURL
-                self.clips = scanResult.clips
+                if self.profileSelectionRevision != profileRevisionAtStart,
+                   let manuallySelectedProfile {
+                    self.clips = self.classifiedClips(
+                        files: scanResult.allFiles,
+                        sourceURL: scanResult.sourceURL,
+                        profile: manuallySelectedProfile
+                    )
+                } else {
+                    self.clips = scanResult.clips
+                }
                 self.resetFiltersForCurrentClips()
                 let footageClips = self.footageClips
                 self.scanSummary = ScanSummary(
@@ -803,10 +831,36 @@ final class TransferViewModel: ObservableObject {
                 self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) downloadable items"
                 self.rebuildPlan()
             } catch {
+                guard generation == self.scanGeneration else { return }
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
             }
-            self.isScanning = false
+            if generation == self.scanGeneration {
+                self.isScanning = false
+            }
         }
+    }
+
+    nonisolated static func profileAfterCompletedScan(
+        detectedProfile: DashcamProfile?,
+        currentProfile: DashcamProfile?,
+        profileRevisionAtScanStart: Int,
+        currentProfileRevision: Int
+    ) -> DashcamProfile? {
+        currentProfileRevision == profileRevisionAtScanStart ? detectedProfile : currentProfile
+    }
+
+    private func classifiedClips(files: [URL], sourceURL: URL, profile: DashcamProfile) -> [ClipItem] {
+        if profile.id == DashcamProfile.genericNewDashcam.id {
+            return scanner.classifyGenericallyWithParkingPatterns(
+                files: files,
+                sourceURL: sourceURL
+            ).clips
+        }
+        return scanner.classifyWithParkingPatterns(
+            files: files,
+            sourceURL: sourceURL,
+            profile: profile
+        ).clips
     }
 
     func loadScanResultForVerification(source: MountedSource, scanResult: ScanResult) {
@@ -833,10 +887,17 @@ final class TransferViewModel: ObservableObject {
     }
 
     func selectProfile(_ profile: DashcamProfile) {
+        profileSelectionRevision += 1
         selectedProfile = profile
         guard let selectedSource else { return }
+        guard !lastScannedFiles.isEmpty else {
+            statusMessage = isScanning
+                ? "Selected \(profile.displayName). The current scan will use this camera."
+                : "Selected \(profile.displayName)"
+            return
+        }
         let sourceRoot = lastEffectiveScanSourceURL ?? selectedSource.url
-        clips = scanner.classifyWithParkingPatterns(files: lastScannedFiles, sourceURL: sourceRoot, profile: profile).clips
+        clips = classifiedClips(files: lastScannedFiles, sourceURL: sourceRoot, profile: profile)
         resetFiltersForCurrentClips()
         rebuildPlan()
     }

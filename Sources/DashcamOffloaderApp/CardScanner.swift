@@ -22,7 +22,15 @@ struct CardScanner {
         )
         let primarySafeModelMetadataInfo = safeModelMetadataInfos.first { $0.matchedModel != nil }
         let genericCardShapeHints = genericCardShapeHints(sourceURL: sourceURL, allFiles: allFiles)
-        let candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
+        var candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
+        if let matchedModel = primarySafeModelMetadataInfo?.matchedModel,
+           let exactModelIndex = candidates.firstIndex(where: {
+               profile($0.profile, matchesKnownModel: matchedModel)
+           }),
+           exactModelIndex != candidates.startIndex {
+            let exactModelCandidate = candidates.remove(at: exactModelIndex)
+            candidates.insert(exactModelCandidate, at: candidates.startIndex)
+        }
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap {
             profileSelectionIssue(
@@ -1298,6 +1306,10 @@ struct CardScanner {
 
     func classifyWithParkingPatterns(files: [URL], sourceURL: URL, profile: DashcamProfile) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
         inferParkingPatterns(in: classify(files: files, sourceURL: sourceURL, profile: profile))
+    }
+
+    func classifyGenericallyWithParkingPatterns(files: [URL], sourceURL: URL) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
+        inferParkingPatterns(in: classifyGenerically(files: files, sourceURL: sourceURL))
     }
 
     func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {
