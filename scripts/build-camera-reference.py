@@ -43,7 +43,8 @@ PRIVATE_KEYS = {
     "cloud_credentials",
 }
 PRIVATE_OUTPUT_PATTERNS = {
-    "local or personal filesystem path": re.compile(r"/(?:Volumes|Users|home)/"),
+    "local volume path": re.compile(r"/Volumes/"),
+    "personal home path": re.compile(r"(?:/Users/|/home/|C:\\\\Users\\\\)"),
     "submission identifier": re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", re.I),
     "private IPv4 address": re.compile(r"(?<![a-z0-9])(?:192\.168|10|172\.(?:1[6-9]|2[0-9]|3[01]))(?:\.[0-9]{1,3}){2,3}(?![a-z0-9])", re.I),
     "private owner name": re.compile(r"\bAriel(?:\s+Bravy)?\b", re.I),
