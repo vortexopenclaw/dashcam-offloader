@@ -28,15 +28,18 @@ files, show progress, stop an active download, skip matching duplicates, check
 for updates, submit feedback, and submit card-learning packages for new cameras
 or supported cameras with unobserved setups.
 
-A cross-platform desktop foundation lives in `desktop/`. It currently provides
-the generic, read-only import workflow for Apple Silicon Macs, Intel Macs,
-Linux, and Windows. Profile detection/classification parity is still in
-progress, so the signed macOS SwiftUI release remains the authoritative build.
+The Electron experiment in `desktop/` proved the generic importer on Apple
+Silicon and Intel Macs, Linux, and Windows, but is now retired as a release
+architecture. Its bundled Chromium/Node runtime is too large and creates an
+unnecessary dependency and security surface for this utility. Do not use or
+redistribute the published Electron beta.
 
-Automatic updates are disabled in the unsigned cross-platform beta. They will
-only be enabled after each platform's artifacts are signed and the update
-channel has passed release-chain verification. The signed SwiftUI macOS app
-continues to use its separately verified update manifest.
+The replacement is a Tauri 2 shell with a Rust offload engine. It will use the
+operating system's maintained webview instead of packaging a browser, keep all
+filesystem access behind capability-scoped Rust commands, and require signed
+platform packages plus signed updater artifacts. The native SwiftUI app
+remains the supported macOS reference until the replacement reaches verified
+feature parity.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 

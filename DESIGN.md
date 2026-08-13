@@ -26,7 +26,63 @@ The main workflow is offload first: insert card or cards, choose the destination
   Linux, and Windows. Platform packaging may differ, but behavior and the
   source-card safety contract must not.
 
-## 2026-08-13 Cross-Platform Desktop Foundation
+## 2026-08-13 Lightweight Cross-Platform Replacement
+
+**Decision:** Electron is retired as the release architecture. It proved the
+generic cross-platform workflow, but bundling Chromium and Node makes the
+114 MB compressed / approximately 277 MB installed macOS application
+disproportionate to a utility whose application code is only about 2.2 MB.
+The Electron prototype in `desktop/` remains historical reference until its
+tested behavior is ported, but it must not produce another public release.
+
+**Replacement:** Build the shared desktop application with Tauri 2 and a Rust
+offload engine. Tauri uses the webview already supplied and patched by macOS,
+Windows, or Linux rather than packaging a browser engine. The installed app
+therefore contains the product's compiled Rust code and local interface assets,
+not Chromium or a Node runtime. The existing HTML/CSS presentation can be
+ported without giving it direct filesystem access.
+
+All source discovery, profile detection, classification, planning, hashing,
+copying, and update decisions live in Rust. The interface receives only
+display-safe records and opaque capability identifiers. It cannot submit file
+paths or arbitrary copy plans. Remote navigation, popups, remote scripts, and
+unneeded Tauri/plugin permissions remain disabled. Updates stay disabled until
+each platform artifact is OS-signed and the mandatory Tauri update signature
+and complete release channel have passed verification.
+
+The native SwiftUI app remains the macOS reference until the Tauri application
+reaches feature parity. The eventual release target is one shared Tauri/Rust
+implementation for macOS arm64, macOS x86_64, Windows x86_64, and Linux
+x86_64, avoiding two permanent product implementations.
+
+**Alternatives rejected:** A fully native Rust renderer such as egui removes
+the webview boundary entirely, but currently trades away native appearance,
+API stability, and complete cross-platform accessibility. Slint provides a
+compiled native UI but does not currently list Intel macOS among its tested
+desktop targets. Tauri is the strongest balance of size, migration effort,
+accessibility through native web controls, signed updates, and maintenance
+burden for this application.
+
+**Acceptance gates:** Measure actual artifacts rather than relying on framework
+marketing. Target a macOS ZIP below 20 MB and reject any package containing an
+Electron/Chromium or Node runtime. The Rust engine must pass the existing
+source-read-only, destination containment, verified-copy, duplicate, conflict,
+privacy-redaction, and scan-race fixtures on all four target combinations.
+Platform packages must pass dependency audit, malware/static analysis,
+signature/notarization checks, clean-machine launch, and signed-update
+verification before publication.
+
+**Sources:** Tauri documents that it uses the operating system webview instead
+of bundling one, exposes capability-scoped frontend/backend boundaries, and
+requires cryptographic signatures for updater artifacts:
+`https://v2.tauri.app/start/`, `https://v2.tauri.app/security/`, and
+`https://v2.tauri.app/plugin/updater/`.
+
+## 2026-08-13 Superseded Electron Cross-Platform Foundation
+
+**Status:** Superseded by the Tauri/Rust decision above. This section records
+the prototype contract and is not authorization to publish another Electron
+artifact.
 
 **Objective:** Replace the macOS-only product constraint with a shared desktop
 application that can be packaged for Apple Silicon Macs, Intel Macs, Linux,
