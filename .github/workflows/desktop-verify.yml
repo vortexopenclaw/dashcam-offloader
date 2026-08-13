@@ -32,6 +32,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: desktop/package-lock.json
+      - name: Check repository privacy
+        run: bash ../scripts/privacy-audit.sh
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm test

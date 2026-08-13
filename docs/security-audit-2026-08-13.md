@@ -55,6 +55,9 @@ commits should use a repository-scoped GitHub no-reply address.
   Dependabot security updates, automated security fixes, and required SHA
   pinning are not enabled. Changing these public repository settings requires
   owner approval.
+- **Regression prevention:** CI now rejects personal home paths, private IPs,
+  private network hostnames, private keys, Bitcoin addresses, unapproved email
+  addresses, and commits that do not use a GitHub no-reply author address.
 
 ## Release Gate
 

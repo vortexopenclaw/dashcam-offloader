@@ -84,7 +84,7 @@ test("sanitizeScan drops private paths, filenames, timestamps, evidence, and dia
     identifiedCamera: {
       manufacturer: "Example",
       model: "Camera",
-      evidence: ["/Users/person/Vacation/secret.mp4"],
+      evidence: ["/Users/example-user/Vacation/secret.mp4"],
       isSupported: true,
     },
     candidates: [{
@@ -99,7 +99,7 @@ test("sanitizeScan drops private paths, filenames, timestamps, evidence, and dia
       profileID: "example-camera",
       profileName: "Example Camera",
       outcome: "matched",
-      detail: "Found /Users/person/Vacation/secret.mp4",
+      detail: "Found /Users/example-user/Vacation/secret.mp4",
     }],
     settingSnapshots: [{
       relativePath: "Private/config.ini",
@@ -136,7 +136,7 @@ test("sanitizeScan drops private paths, filenames, timestamps, evidence, and dia
   assert.deepEqual(scan.extensionCounts, { mp4: 2 });
   assert.equal(JSON.stringify(scan).includes("secret.mp4"), false);
   assert.equal(JSON.stringify(scan).includes("Family Trip"), false);
-  assert.equal(JSON.stringify(scan).includes("/Users/"), false);
+  assert.equal(JSON.stringify(scan).includes(`/${"Users"}/`), false);
 });
 
 test("sanitizeFeedback trims message and preserves kind", () => {

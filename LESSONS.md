@@ -24,3 +24,7 @@
 - Passing source tests does not prove a distributable Electron app is safe. Verify the packaged runtime version, production dependencies inside `app.asar`, strict bundle signature, updater-disabled metadata, and a clean-location launch.
 - Renderer IPC must use main-process-owned folder capabilities and copy-plan tokens. Never accept renderer-supplied absolute file paths or copy plans.
 - Do not enable in-app installation for unsigned desktop artifacts. Sign each platform's artifacts and verify the complete update chain first.
+- Repository privacy checks must cover current trees, commit metadata, public
+  release assets, issues, and comments. Third-party framework strings must be
+  compared with the official upstream artifact before classifying them as
+  personal data.
