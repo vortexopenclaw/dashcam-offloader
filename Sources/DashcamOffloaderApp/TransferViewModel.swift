@@ -1755,17 +1755,27 @@ final class TransferViewModel: ObservableObject {
         let videoClips = clips.filter(\.isVideo)
         guard !videoClips.isEmpty else { return [] }
 
-        if videoClips.count <= 64 {
-            return videoClips.sorted { lhs, rhs in
-                if lhs.timestamp != rhs.timestamp {
-                    return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
-                }
-                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
-            }
-        }
-
         var selected: [ClipItem] = []
         var seenKeys: Set<String> = []
+        let maximumSamples = 64
+
+        // A card can keep recordings from more than one resolution or frame-rate
+        // setting in the same folder. Select one file from every observed
+        // technical configuration before filling the remaining slots with
+        // timestamp/size representatives. This keeps a Learn Card submission
+        // useful when a rare configuration would otherwise be skipped.
+        let technicalGroups = Dictionary(grouping: videoClips) { clip in
+            "\(videoSpecBucketKey(for: clip))\u{1f}\(videoTechnicalSignature(for: clip))"
+        }
+        for key in technicalGroups.keys.sorted() {
+            guard let representative = technicalGroups[key]?.sorted(by: videoClipOrder).first,
+                  seenKeys.insert(representative.id).inserted else {
+                continue
+            }
+            selected.append(representative)
+            if selected.count >= maximumSamples { return selected }
+        }
+
         let grouped = Dictionary(grouping: videoClips) { clip in
             let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
             let pattern = clip.inferredParkingPattern?.rawValue ?? "none"
@@ -1790,19 +1800,40 @@ final class TransferViewModel: ObservableObject {
             for sample in bucketSamples.compactMap({ $0 }) {
                 guard seenKeys.insert(sample.id).inserted else { continue }
                 selected.append(sample)
-                if selected.count >= 64 { break }
+                if selected.count >= maximumSamples { break }
             }
-            if selected.count >= 64 { break }
+            if selected.count >= maximumSamples { break }
         }
 
         if selected.count < 8 {
             for clip in videoClips where !selected.contains(clip) {
                 selected.append(clip)
-                if selected.count >= 64 { break }
+                if selected.count >= maximumSamples { break }
             }
         }
 
         return selected
+    }
+
+    private func videoClipOrder(_ lhs: ClipItem, _ rhs: ClipItem) -> Bool {
+        if lhs.timestamp != rhs.timestamp {
+            return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
+        }
+        return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
+    }
+
+    private func videoTechnicalSignature(for clip: ClipItem) -> String {
+        let asset = AVURLAsset(url: clip.sourceURL)
+        guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+            return "unreadable"
+        }
+        let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
+        let width = Int(abs(naturalSize.width).rounded())
+        let height = Int(abs(naturalSize.height).rounded())
+        let frameRate = videoTrack.nominalFrameRate > 0
+            ? String(format: "%.1f", videoTrack.nominalFrameRate)
+            : "unknown"
+        return "\(codecName(for: videoTrack) ?? "unknown")|\(width)x\(height)|\(frameRate)"
     }
 
     private func makeVideoSpecSamples(from clips: [ClipItem], sourceRoot: URL?) -> [FeedbackVideoSpecSample] {

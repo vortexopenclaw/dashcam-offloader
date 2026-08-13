@@ -206,6 +206,30 @@ selection option without affecting generic importing.
 F/R continuous and folder-based recording behavior. Catalog checks distinguish
 ARC 700, ARC 800, and ARC 900 configuration support.
 
+## 2026-08-12 ARC 800 direct-card intake coverage
+
+**Objective:** Ensure an initial Learn Card scan retains evidence for every
+video configuration present on a card, including rare resolution or frame-rate
+variants in an otherwise uniform recording folder.
+
+**Design:** The direct ARC 800 card scan confirmed the safe `ARC800` marker,
+all documented top-level recording folders, and a real QHD30 Front/FHD30 Rear
+pair in addition to the previously submitted 4K30 Front/FHD30 Rear footage.
+Use the card's actual `Safety_Box` casing. Before applying normal timestamp and
+file-size sampling, Learn Card metadata selects one video per
+folder/mode/channel/codec/resolution/frame-rate signature. Only technical
+metadata is read; videos and user-controlled names remain excluded from the
+submission.
+
+**Risks and rollback:** Reading a video track for each clip adds bounded
+read-only scan time, especially for a large card, but prevents a configuration
+from being silently absent from the learning summary. Removing the technical
+representative pass restores prior sampling behavior.
+
+**Success checks:** A real-card-shaped ARC fixture classifies `Safety_Box` as
+saved footage. The catalog records observed QHD30 alongside documented QHD60,
+and the standard verifier passes.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:

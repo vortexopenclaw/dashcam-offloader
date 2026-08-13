@@ -35,7 +35,7 @@ folders:
     mode: parking_event
   - path: manual_rec
     mode: manual
-  - path: safety_box
+  - path: Safety_Box
     mode: saved
   - path: sos_rec
     mode: sos

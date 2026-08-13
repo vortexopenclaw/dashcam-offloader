@@ -9,8 +9,9 @@ which applies.
 
 - Thinkware ARC 800 - validated from an app-submitted 2CH card scan, safe
   `.SETTING/dashcam.inf` model marker, OSD recognition, and the official
-  manual. Front/rear `REC`/`EVT`/`MOT`/`PAK`/`MAN` filename behavior is
-  classified; see `docs/card-profiles/thinkware-arc-800.md`.
+  manual. A direct card scan additionally observed QHD30 Front/FHD30 Rear;
+  QHD60 Front is documented. Front/rear `REC`/`EVT`/`MOT`/`PAK`/`MAN` filename
+  behavior is classified; see `docs/card-profiles/thinkware-arc-800.md`.
 - Thinkware ARC 700 - manual-backed seed profile. F/R continuous naming and
   all recording folders are documented; an actual card is still required for
   exact detection and unobserved prefix/bitrate behavior.

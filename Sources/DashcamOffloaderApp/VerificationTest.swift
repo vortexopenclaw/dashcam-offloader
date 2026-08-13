@@ -217,7 +217,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO12 Black")?.channelResolutions["primary"] == "5.3K60, 4K120, 2.7K240",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO")?.channelResolutions["primary"] == "4K30, 2.7K60, 1080p60",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelRoles == ["360_primary"],
-                  KnownDashcamCatalog.exactModelMention("model=ARC800", manufacturer: "Thinkware")?.model == "ARC 800",
+                  KnownDashcamCatalog.exactModelMention("model=ARC800", manufacturer: "Thinkware")?.channelResolutions["front"] == "4K30, QHD30, QHD60",
                   KnownDashcamCatalog.exactModelMention("model=ARC700", manufacturer: "Thinkware")?.channelResolutions["front"] == "4K30, QHD45",
                   KnownDashcamCatalog.exactModelMention("model=ARC900", manufacturer: "Thinkware")?.channelResolutions["rear"] == "QHD30, FHD60",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
@@ -302,7 +302,7 @@ enum VerificationTest {
                 return false
             }
             let arc800Source = temp.appendingPathComponent("Thinkware ARC 800", isDirectory: true)
-            for folder in [".SETTING", "cont_rec", "evt_rec", "motion_timelapse_rec", "parking_rec", "manual_rec", "safety_box", "sos_rec"] {
+            for folder in [".SETTING", "cont_rec", "evt_rec", "motion_timelapse_rec", "parking_rec", "manual_rec", "Safety_Box", "sos_rec"] {
                 try FileManager.default.createDirectory(
                     at: arc800Source.appendingPathComponent(folder, isDirectory: true),
                     withIntermediateDirectories: true
@@ -317,6 +317,7 @@ enum VerificationTest {
             try Data(repeating: 88, count: 1024).write(to: arc800Source.appendingPathComponent("motion_timelapse_rec/MOT_20260812_223500_R.MP4"))
             try Data(repeating: 89, count: 1024).write(to: arc800Source.appendingPathComponent("parking_rec/PAK_20260812_223600_F.MP4"))
             try Data(repeating: 90, count: 1024).write(to: arc800Source.appendingPathComponent("manual_rec/MAN_20260812_223700_R.MP4"))
+            try Data(repeating: 91, count: 1024).write(to: arc800Source.appendingPathComponent("Safety_Box/SAVED_20260812_223800_F.MP4"))
             let arc800Scan = try scanner.scan(sourceURL: arc800Source, profiles: profiles)
             guard arc800Scan.selectedProfile?.id == "thinkware-arc-800",
                   arc800Scan.identifiedCamera?.model == "ARC 800",
@@ -325,7 +326,8 @@ enum VerificationTest {
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("EVT_") })?.mode == "driving_event",
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("MOT_") })?.isParkingFootage == true,
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("PAK_") })?.isParkingFootage == true,
-                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("MAN_") })?.mode == "manual" else {
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("MAN_") })?.mode == "manual",
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("SAVED_") })?.mode == "saved" else {
                 print("VERIFY FAIL: ARC 800 card scan did not select the exact profile and classify front/rear recording modes: profile=\(arc800Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: arc800Scan.identifiedCamera)), clips=\(arc800Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
                 return false
             }

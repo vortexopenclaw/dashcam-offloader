@@ -145,7 +145,7 @@ limitations of each profile.
 
 **Thinkware**
 - Thinkware ARC 700: 2CH, manual-backed profile. Manual selection until a real card provides exact detection evidence.
-- Thinkware ARC 800: 2CH, validated real-card profile with safe `ARC800` metadata recognition. Supports documented 4K30 and QHD60 Front configurations.
+- Thinkware ARC 800: 2CH, validated real-card profile with safe `ARC800` metadata recognition. Observed 4K30 and QHD30 Front configurations; QHD60 Front is documented.
 - Thinkware ARC 900: 2CH, manual-backed profile. Manual selection until a real card provides exact detection evidence.
 - Thinkware U3000: 2CH, real card sampled
 - Thinkware U3000 Pro: real card sampled

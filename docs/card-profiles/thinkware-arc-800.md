@@ -21,7 +21,7 @@ English manual dated 2026-06-23.
 - `motion_timelapse_rec` holds parking motion-detection or time-lapse video.
 - `parking_rec` holds parking impact video.
 - `manual_rec` holds manual recordings.
-- `safety_box` holds videos the user has saved in-camera.
+- `Safety_Box` holds videos the user has saved in-camera.
 - `sos_rec` holds optional SOS recordings.
 - `.parking_rec_sec` was present on the sampled card. Its full-resolution
   twin folder is `parking_rec`; it is imported as footage but its exact
@@ -43,9 +43,13 @@ unobserved channel.
 
 ## Video Configurations
 
-The submitted footage was 4K30 Front plus FHD30 Rear. The official manual also
-documents QHD60 Front plus FHD30 Rear. This is a supported configuration, not
-an observed bitrate or resolution on the submitted card.
+The initial submitted footage was 4K30 Front plus FHD30 Rear. A subsequent
+read-only direct-card scan also found a QHD30 Front clip paired with FHD30
+Rear. The official manual additionally documents QHD60 Front plus FHD30 Rear.
+
+The Learn Card summary now retains a representative file for every observed
+codec/resolution/frame-rate configuration inside each recording bucket, so a
+rare setting such as the QHD30 clip cannot be omitted by generic sampling.
 
 ## Reference
 

@@ -89,7 +89,7 @@ enum KnownDashcamCatalog {
         model("Thinkware", "Q200", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "ARC", channels: 2, roles: ["front", "rear"], notes: "ARC-family OSD alone is not an exact model signal."),
         model("Thinkware", "ARC 700", aliases: ["ARC700"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30, QHD45", "rear": "QHD30"]),
-        model("Thinkware", "ARC 800", aliases: ["ARC800"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30, QHD60", "rear": "FHD30"]),
+        model("Thinkware", "ARC 800", aliases: ["ARC800"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30, QHD30, QHD60", "rear": "FHD30"]),
         model("Thinkware", "ARC 900", aliases: ["ARC900"], channels: 2, roles: ["front", "rear"], resolutions: ["front": "4K30, QHD60", "rear": "QHD30, FHD60"]),
         model("Thinkware", "T700", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "F790", channels: 2, roles: ["front", "rear"]),
