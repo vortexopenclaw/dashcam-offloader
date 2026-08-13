@@ -165,7 +165,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: Vantrue N4 Pro S profile did not load A/B/C channel labels")
                 return false
             }
-            guard KnownDashcamCatalog.models.count >= 170,
+            guard KnownDashcamCatalog.models.count >= 180,
                   KnownDashcamCatalog.exactVolumeLabelMatch("N4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("Nexus 4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("E360 ACE")?.channelRoles == ["panoramic_front", "rear"],
@@ -225,6 +225,8 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMention("model=F70PRO", manufacturer: "Thinkware")?.channelResolutions["front"] == "FHD 1080p",
                   KnownDashcamCatalog.exactModelMention("FWA329TW.bin", manufacturer: "VIOFO")?.model == "A329TW",
                   KnownDashcamCatalog.exactModelMention("DR970X-2CH LTE Plus II", manufacturer: "BlackVue")?.model == "DR970X 2CH LTE Plus II",
+                  KnownDashcamCatalog.exactModelMention("S1PROMAX_Setting.exe", manufacturer: "Vantrue")?.model == "S1 Pro Max",
+                  KnownDashcamCatalog.exactModelMention("Device=N1PRO", manufacturer: "Vantrue")?.model == "N1 Pro",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false

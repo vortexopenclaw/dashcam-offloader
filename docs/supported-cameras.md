@@ -71,13 +71,14 @@ which applies.
 
 ## Recognized, Not Yet Profile-Supported
 
-The catalog can identify additional Thinkware, BlackVue, and VIOFO models only
+The catalog can identify additional Thinkware, BlackVue, VIOFO, and Vantrue models only
 when a card exposes exact model metadata or a model-coded support/firmware
 filename. These cards
 stay on the generic, read-only import flow until card-layout evidence supports
 a dedicated profile. The current catalog and evidence boundaries are recorded
 in `docs/research/thinkware-model-recognition.md` and
-`docs/research/blackvue-viofo-model-recognition.md`.
+`docs/research/blackvue-viofo-model-recognition.md`, and
+`docs/research/vantrue-model-recognition.md`.
 
 ## Intake Queue
 

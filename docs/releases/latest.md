@@ -1,5 +1,10 @@
 # Dashcam Offloader 0.1.1
 
+- Expanded Vantrue catalog recognition from its official collection and
+  manuals. Added manual-listed models are catalog-only unless their card
+  layout has been verified; ambiguous channel and resolution details remain
+  intentionally unspecified.
+
 - Expanded BlackVue and VIOFO catalog recognition with current manual-backed
   model variants. VIOFO model-coded firmware filenames can now safely identify
   an untrained catalog model while retaining generic, read-only import.
