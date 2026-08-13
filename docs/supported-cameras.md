@@ -1,6 +1,11 @@
 # Supported Cameras
 
-## Seeded
+## Supported Camera Profiles
+
+Every camera below has a bundled profile. Support can be automatic when the
+card provides unique identifying evidence, or manual-selection support when
+the card layout is shared with sibling cameras. The individual entries state
+which applies.
 
 - Thinkware ARC 800 - validated from an app-submitted 2CH card scan, safe
   `.SETTING/dashcam.inf` model marker, OSD recognition, and the official

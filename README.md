@@ -85,12 +85,25 @@ swift run DashcamOffloader --verify
 - Learn Card workflow for new models and alternate known-camera setups, excluding private identifiers and video content by default
 - Feedback submission for bug reports, feature requests, card learning, and optional sanitized scan summaries
 
-## Seed Profiles
+## Supported Cameras
+
+The app currently ships 52 camera profiles. “Supported” means the app has a
+profile that can safely identify or classify that camera's media. Exact
+automatic model recognition requires unique on-card evidence; where that is
+not yet available, the profile remains available for manual selection. See
+[the detailed support status](docs/supported-cameras.md) for the evidence and
+limitations of each profile.
 
 **Botslab**
 - Botslab G980H: 4CH, app submission and real card sampled. Detected from `MISC/G980HMCN5291.TXT`; generic `360CARDVR` cards should remain unrecognized unless exact model evidence is present.
 
+**70mai**
+- 70mai M310: 1CH, real card and archive samples
+- 70mai 4K Omni X800: 2CH, app submission and real card sampled
+- 70mai T800: 3CH, app submissions and real card samples
+
 **BlackVue**
+- BlackVue DR770X Box: 3CH, app submission and archive samples
 - BlackVue DR970X Plus: 2CH, real card sampled
 - BlackVue Elite 8: 2CH, real card sampled
 - BlackVue Elite 9: 2CH, real card sampled
@@ -106,32 +119,62 @@ swift run DashcamOffloader --verify
 - DJI Mini 3 Pro: 1CH drone, real card sampled
 - DJI RC (RM330): companion device (remote controller), real card sampled. Controller microSD only; full-res drone footage is on the drone's own card.
 
+**GoPro**
+- GoPro HERO9 Black: 1CH action camera, real cards sampled
+- GoPro HERO / MAX Camera: generic GoPro fallback profile
+
 **Escort**
 - Escort M1: 1CH, real card sampled
 - Escort M2: 1CH, real card sampled
 - Escort MAXcam 360c: 1CH, real card sampled. Combined radar detector + dashcam.
 
+**Nextbase**
+- Nextbase 622GW: front/rear filename pattern profile
+
+**Ottocast**
+- Ottocast OttoSafe Cam: front/rear normal and emergency clips classified
+
+**Rove**
+- Rove R2-4K Pro: 1CH, app submission and documentation
+
 **Sony**
 - Sony A7 III (ILCE-7M3): 1CH mirrorless camera, real card sampled. Video + photos.
 
+**Tesla**
+- TeslaCam: generic Tesla dashcam profile
+
 **Thinkware**
+- Thinkware ARC 700: 2CH, manual-backed profile. Manual selection until a real card provides exact detection evidence.
+- Thinkware ARC 800: 2CH, validated real-card profile with safe `ARC800` metadata recognition. Supports documented 4K30 and QHD60 Front configurations.
+- Thinkware ARC 900: 2CH, manual-backed profile. Manual selection until a real card provides exact detection evidence.
 - Thinkware U3000: 2CH, real card sampled
 - Thinkware U3000 Pro: real card sampled
+- Thinkware U1000: front/rear filename pattern profile
+- Thinkware U1000 Plus: front/rear filename pattern profile
 
 **Vantrue**
 - Vantrue E1 Pro: 1CH, real card sampled
+- Vantrue E360: multi-channel filename pattern profile
+- Vantrue N4: 3CH filename pattern profile
 - Vantrue N4 Pro S: 3CH, real card sampled
 - Vantrue N4 S: 3CH, real card sampled
+- Vantrue N5: 4CH filename pattern profile
 
 **VIOFO**
 - VIOFO A119 Mini 2: 1CH, real card sampled
 - VIOFO A119M Pro: 1CH, footage sampled
+- VIOFO A129 Duo: 2CH filename pattern profile
+- VIOFO A129 Plus Duo: 2CH filename pattern profile
+- VIOFO A129 Pro: 2CH filename pattern profile
 - VIOFO A139 Pro: 3CH, footage sampled
 - VIOFO A229 Plus: 3CH, real card sampled
 - VIOFO A229 Pro: 3CH, real card sampled
 - VIOFO A229 Ultra: 3CH, footage sampled, OSD OCR confirmed
 - VIOFO A329S: 3CH, real card sampled
 - VIOFO A329T: telephoto variant, official references only
+- VIOFO T130: 3CH filename pattern profile
+- VIOFO VS1: 1CH filename pattern profile
+- VIOFO WM1: 1CH filename pattern profile
 
 **Vueroid**
 - Vueroid H1: 1CH front variant, confirmed from app submission and real card sample
