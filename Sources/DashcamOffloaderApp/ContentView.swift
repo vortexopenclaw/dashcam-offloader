@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 private enum AppLinks {
+    static let githubRepositoryURL = URL(string: "https://github.com/vortexopenclaw/dashcam-offloader")!
     static let privacyPolicyURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/privacy")!
 }
 
@@ -215,6 +216,7 @@ struct ContentView: View {
                     header
                     workflowSection
                     updateSection
+                    aboutSection
                     sourceSection
                     detectionSection
                     destinationSection
@@ -373,6 +375,20 @@ struct ContentView: View {
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
             }
+        }
+    }
+
+    private var aboutSection: some View {
+        GroupBox("About") {
+            HStack {
+                Text("Dashcam Offloader is open source.")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Link(destination: AppLinks.githubRepositoryURL) {
+                    Label("View on GitHub", systemImage: "arrow.up.right.square")
+                }
+            }
+            .padding(8)
         }
     }
 

@@ -1,5 +1,7 @@
 # Dashcam Offloader 0.1.1
 
+- Added an About section with a direct link to the public GitHub repository.
+
 - Expanded Vantrue catalog recognition from its official collection and
   manuals. Added manual-listed models are catalog-only unless their card
   layout has been verified; ambiguous channel and resolution details remain
