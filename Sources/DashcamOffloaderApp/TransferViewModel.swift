@@ -6,6 +6,7 @@ import Foundation
 final class TransferViewModel: ObservableObject {
     @Published var importMode: ImportMode = .dashcamFootage
     @Published var profiles: [DashcamProfile] = []
+    @Published var cameraReferences: [CameraReference] = []
     @Published var mountedSources: [MountedSource] = []
     @Published var selectedSource: MountedSource?
     @Published var destinationURL: URL?
@@ -602,7 +603,8 @@ final class TransferViewModel: ObservableObject {
 
         do {
             profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
-            statusMessage = "Loaded \(profiles.count) profiles"
+            cameraReferences = try CameraReferenceStore.load()
+            statusMessage = "Loaded \(profiles.count) profiles and \(cameraReferences.count) camera references"
         } catch {
             statusMessage = "Profile load failed: \(error.localizedDescription)"
         }

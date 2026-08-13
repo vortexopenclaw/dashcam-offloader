@@ -23,6 +23,8 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BIN_PATH" "$MACOS_DIR/$PRODUCT_NAME"
 cp -R "$ROOT_DIR/profiles" "$RESOURCES_DIR/Profiles"
+mkdir -p "$RESOURCES_DIR/CameraReference"
+cp "$ROOT_DIR/reference/cameras.json" "$RESOURCES_DIR/CameraReference/cameras.json"
 cp "$ROOT_DIR/assets/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST

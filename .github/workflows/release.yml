@@ -19,6 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
+      - name: Verify generated camera reference
+        run: |
+          python3 -m pip install --disable-pip-version-check -r requirements-reference.txt
+          bash scripts/verify-camera-reference.sh
+
       - name: Build app
         id: buildapp
         run: bash scripts/build-macos-app.sh
