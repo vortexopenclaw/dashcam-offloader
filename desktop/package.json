@@ -1,0 +1,44 @@
+{
+  "name": "dashcam-offloader-desktop",
+  "version": "0.2.0",
+  "author": "Vortex Radar",
+  "private": true,
+  "description": "Cross-platform, read-only dashcam footage offloader",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "package:mac": "electron-builder --mac --x64 --arm64",
+    "package:linux": "electron-builder --linux AppImage deb",
+    "package:win": "electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "com.vortexradar.dashcam-offloader",
+    "productName": "Dashcam Offloader",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "../assets/AppIcon.icns"
+    },
+    "linux": {
+      "category": "Utility"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "allowScripts": {
+    "electron@38.8.6": true
+  }
+}

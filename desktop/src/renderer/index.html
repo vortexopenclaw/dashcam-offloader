@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashcam Offloader</title>
+    <style>
+      :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { margin: 0; background: Canvas; color: CanvasText; }
+      main { max-width: 900px; margin: 0 auto; padding: 32px; }
+      h1 { margin-bottom: 4px; } .muted { color: GrayText; }
+      section { border: 1px solid color-mix(in srgb, CanvasText 18%, Canvas); border-radius: 12px; padding: 20px; margin-top: 20px; }
+      button { padding: 9px 13px; font: inherit; } button.primary { background: #0a73d9; color: white; border: 0; border-radius: 6px; }
+      .path { display: block; margin: 10px 0; overflow-wrap: anywhere; } #items { max-height: 260px; overflow: auto; padding-left: 20px; }
+      #status { font-weight: 600; } .warning { color: #b54708; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Dashcam Offloader</h1>
+      <p class="muted">Cross-platform foundation. It reads your source and only copies files you approve.</p>
+      <section>
+        <h2>1. Choose source</h2>
+        <button id="source-button">Choose memory card or video folder</button>
+        <span id="source-path" class="path muted">No source selected</span>
+      </section>
+      <section>
+        <h2>2. Choose download folder</h2>
+        <button id="destination-button">Choose download folder</button>
+        <span id="destination-path" class="path muted">No download folder selected</span>
+      </section>
+      <section>
+        <h2>3. Review and download</h2>
+        <p id="summary" class="muted">Select a source to find eligible media.</p>
+        <ul id="items"></ul>
+        <button id="download-button" class="primary" disabled>Download selected media</button>
+        <p id="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <script src="renderer.js"></script>
+  </body>
+</html>

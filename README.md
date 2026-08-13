@@ -18,7 +18,20 @@ Official builds are published by Vortex Radar. Unofficial builds, forks, ports, 
 
 ## Current Status
 
-This project now has a first native macOS SwiftUI prototype in addition to the research/profile database. The app can load YAML profiles, scan a selected card or folder, detect likely dashcam profiles, classify clips, filter by mode/channel/date presets, preview and trim the download queue, copy to a chosen destination, organize downloads into one folder or by clip type, date, or camera, optionally append custom text to copied video filenames, optionally preserve camera settings/log files, show progress, stop an active download, skip matching duplicates, check/install app updates, submit feedback, and submit card-learning packages for new cameras or supported cameras with unobserved setups.
+This project has a native macOS SwiftUI app in addition to the research/profile
+database. It can load YAML profiles, scan a selected card or folder, detect
+likely dashcam profiles, classify clips, filter by mode/channel/date presets,
+preview and trim the download queue, copy to a chosen destination, organize
+downloads into one folder or by clip type, date, or camera, optionally append
+custom text to copied video filenames, optionally preserve camera settings/log
+files, show progress, stop an active download, skip matching duplicates, check
+for updates, submit feedback, and submit card-learning packages for new cameras
+or supported cameras with unobserved setups.
+
+A cross-platform desktop foundation lives in `desktop/`. It currently provides
+the generic, read-only import workflow for Apple Silicon Macs, Intel Macs,
+Linux, and Windows. Profile detection/classification parity is still in
+progress, so the signed macOS SwiftUI release remains the authoritative build.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
@@ -63,6 +76,23 @@ Run the built-in scanner/planner verification test:
 
 ```bash
 swift run DashcamOffloader --verify
+```
+
+## Run The Cross-Platform Foundation
+
+Requires a current Node.js installation.
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+Run its platform-neutral verification suite with:
+
+```bash
+cd desktop
+npm test
 ```
 
 ## Initial Scope

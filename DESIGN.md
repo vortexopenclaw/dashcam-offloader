@@ -22,7 +22,49 @@ The main workflow is offload first: insert card or cards, choose the destination
 - Preserve enough metadata to audit every copy later.
 - Start with a CLI/profile engine, then add a Mac GUI.
 - Make new-camera intake a first-class workflow, not a private developer-only process.
-- Keep Windows possible later, but do not optimize for it now.
+- Ship the same safe offload workflow on Apple Silicon Macs, Intel Macs,
+  Linux, and Windows. Platform packaging may differ, but behavior and the
+  source-card safety contract must not.
+
+## 2026-08-13 Cross-Platform Desktop Foundation
+
+**Objective:** Replace the macOS-only product constraint with a shared desktop
+application that can be packaged for Apple Silicon Macs, Intel Macs, Linux,
+and Windows, without weakening the established copy-only source-card contract.
+
+**Design:** Keep the current SwiftUI app as the verified macOS reference while
+the cross-platform application is built in `desktop/`. It uses Electron's
+native file-picker and desktop shell APIs, plus a small Node-based offload
+engine. The renderer can request a source folder and destination folder, scan
+only eligible media, present a review queue, and copy only after the user
+confirms. The engine rejects a destination inside the selected source, never
+writes to the source, sanitizes output names to basenames, skips an identical
+existing file, and treats a size/checksum conflict as a non-destructive error.
+
+The first cross-platform slice deliberately provides the generic safe-import
+path. The existing profile detector, classifier, learning workflow, updater,
+and macOS-specific eject behavior remain in the Swift reference app until they
+are ported behind shared platform-neutral interfaces. This avoids claiming
+profile parity before it exists.
+
+Electron Builder produces distinct artifacts: macOS arm64, macOS x64, Linux
+AppImage and Debian packages, and Windows NSIS/portable packages. CI runs the
+engine's deterministic verification on macOS, Ubuntu, and Windows. A public
+release is gated on profile-parity verification and signed/notarized platform
+artifacts, so the current macOS distribution path remains authoritative during
+the foundation phase.
+
+**Risks and rollback:** The new desktop shell adds an npm/Electron toolchain
+and has generic-only classification initially. It is isolated under `desktop/`
+and does not change the Swift build, published update manifest, or existing
+macOS app. Removing that directory and its workflow cleanly rolls back the
+foundation without affecting current releases.
+
+**Success checks:** The desktop verification suite must pass on the local
+platform and in a three-OS CI matrix. It must prove source media discovery,
+destination-within-source rejection, verified copy, identical-file skip, and
+same-size-different-content conflict handling. Packaging configuration must
+declare macOS arm64/x64, Linux, and Windows targets.
 
 ## Architecture Sketch
 
