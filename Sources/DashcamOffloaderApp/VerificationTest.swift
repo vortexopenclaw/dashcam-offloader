@@ -267,6 +267,21 @@ enum VerificationTest {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false
             }
+            let supportedCameraTechnicalDetails = MainActor.assumeIsolated { () -> KnownDashcamModel? in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                return viewModel.cameraModelsByBrand
+                    .first(where: { $0.brand == "Thinkware" })?
+                    .models.first(where: { $0.model == "ARC 800" })?
+                    .knownModel
+            }
+            guard supportedCameraTechnicalDetails?.channels == 2,
+                  supportedCameraTechnicalDetails?.channelRoles == ["front", "rear"],
+                  supportedCameraTechnicalDetails?.channelResolutions["front"] == "4K30, QHD30, QHD60",
+                  supportedCameraTechnicalDetails?.channelResolutions["rear"] == "FHD30" else {
+                print("VERIFY FAIL: a supported camera choice did not retain its structured technical details")
+                return false
+            }
 
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-verify-\(UUID().uuidString)", isDirectory: true)
@@ -1556,7 +1571,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: choosing a submitted catalog-only camera discarded generic scan results")
                 return false
             }
-            let submittedManualSelectorState = MainActor.assumeIsolated { () -> (wolfboxModels: [String], wolfboxManual: Bool, miofiveModels: [String], miofiveManual: Bool) in
+            let submittedManualSelectorState = MainActor.assumeIsolated { () -> (wolfboxModels: [String], wolfboxManual: Bool, wolfboxDetails: Bool, miofiveModels: [String], miofiveManual: Bool, miofiveDetails: Bool) in
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
                 let wolfboxGroup = viewModel.cameraModelsByBrand.first { $0.brand == "Wolfbox" }
@@ -1566,15 +1581,23 @@ enum VerificationTest {
                 return (
                     wolfboxGroup?.models.map(\.model) ?? [],
                     g900Pro?.isCatalogOnly == true && g900Pro?.profile == nil,
+                    g900Pro?.knownModel?.channelSensors["front"] == "Sony STARVIS 2 IMX678" &&
+                        g900Pro?.knownModel?.channelResolutions["rear"] == "2.5K" &&
+                        g900Pro?.knownModel?.parkingModes.isEmpty == false,
                     miofiveGroup?.models.map(\.model) ?? [],
-                    s1Ultra?.isCatalogOnly == true && s1Ultra?.profile == nil
+                    s1Ultra?.isCatalogOnly == true && s1Ultra?.profile == nil,
+                    s1Ultra?.knownModel?.channels == 2 &&
+                        s1Ultra?.knownModel?.channelResolutions["front"] == "4K30" &&
+                        s1Ultra?.knownModel?.parkingModes.isEmpty == false
                 )
             }
             guard submittedManualSelectorState.wolfboxModels == ["G900 Pro"],
                   submittedManualSelectorState.wolfboxManual,
+                  submittedManualSelectorState.wolfboxDetails,
                   submittedManualSelectorState.miofiveModels == ["S1 Ultra"],
-                  submittedManualSelectorState.miofiveManual else {
-                print("VERIFY FAIL: submitted-but-not-auto-detectable cameras should remain available as exact manual choices: \(submittedManualSelectorState)")
+                  submittedManualSelectorState.miofiveManual,
+                  submittedManualSelectorState.miofiveDetails else {
+                print("VERIFY FAIL: submitted manual choices should retain their structured technical details: \(submittedManualSelectorState)")
                 return false
             }
             let identifiedWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, models: [String], hasG900Pro: Bool, isCatalogOnly: Bool) in

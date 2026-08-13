@@ -9,7 +9,7 @@
 ## Other References Checked
 
 - Vortex Radar A329S/T multiplexing walkthrough: <https://www.youtube.com/watch?v=p5WVjVqX1xI>
-- 2026-06-09 Dashcam Offloader app learning scan from Ariel's A329T.
+- 2026-06-09 Dashcam Offloader app learning scan from a real A329T card.
 - VIOFO parking-mode overview: <https://www.viofo.com/blogs/viofo-car-dash-camera-guide-faq-and-news/everything-you-need-to-know-about-parking-mode>
 - VIOFO A329S low-power/hybrid parking-mode overview: <https://www.viofo.com/blogs/viofo-car-dash-camera-guide-faq-and-news/highlights-of-the-a329s-series-what-are-low-power-impact-mode-hybrid-parking-mode>
 

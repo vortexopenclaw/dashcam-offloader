@@ -12,7 +12,7 @@ MEDIA_EXTENSIONS = {".mp4", ".mov", ".avi"}
 
 def raw_name(path: Path) -> str:
     stem = path.stem
-    # Ariel often appends human descriptions after the original dashcam token.
+    # Archive folder names may append human descriptions after the original dashcam token.
     # Keep only the camera-looking filename prefix for private-safe pattern work.
     return stem.split(" ", 1)[0]
 

@@ -479,6 +479,12 @@ struct ContentView: View {
                     }
                     .fixedSize(horizontal: true, vertical: false)
 
+                    if let activeCameraChoice,
+                       let technicalDetails = activeCameraChoice.knownModel {
+                        Divider()
+                        cameraTechnicalDetails(technicalDetails, choice: activeCameraChoice)
+                    }
+
                     if shouldShowLearnCardPrompt {
                         Divider()
                         HStack {
@@ -560,6 +566,83 @@ struct ContentView: View {
             return nil
         }
         return selectedProfile.model
+    }
+
+    private var activeCameraChoice: CameraModelChoice? {
+        guard let activeProfileModelTitle else { return nil }
+        return modelsForActiveBrand.first { $0.model == activeProfileModelTitle }
+    }
+
+    @ViewBuilder
+    private func cameraTechnicalDetails(
+        _ details: KnownDashcamModel,
+        choice: CameraModelChoice
+    ) -> some View {
+        DisclosureGroup("Camera technical details") {
+            VStack(alignment: .leading, spacing: 8) {
+                cameraDetailRow(
+                    "Support",
+                    choice.isCatalogOnly
+                        ? "Manual selection; exact automatic detection is not yet verified"
+                        : "Camera profile included"
+                )
+                if let channels = details.channels {
+                    cameraDetailRow("Channels", String(channels))
+                }
+                if !details.channelRoles.isEmpty {
+                    cameraDetailRow(
+                        "Camera positions",
+                        details.channelRoles.map(cameraRoleLabel).joined(separator: ", ")
+                    )
+                }
+                ForEach(orderedCameraDetails(details.channelResolutions, roles: details.channelRoles), id: \.key) { item in
+                    cameraDetailRow("\(cameraRoleLabel(item.key)) video", item.value)
+                }
+                ForEach(orderedCameraDetails(details.channelSensors, roles: details.channelRoles), id: \.key) { item in
+                    cameraDetailRow("\(cameraRoleLabel(item.key)) sensor", item.value)
+                }
+                if !details.sensorNotes.isEmpty {
+                    cameraDetailRow("Hardware notes", details.sensorNotes.joined(separator: ", "))
+                }
+                if !details.parkingModes.isEmpty {
+                    cameraDetailRow("Parking features", details.parkingModes.joined(separator: ", "))
+                }
+                Text("Specifications show currently documented or observed configurations. Camera settings and regional variants can differ.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+            }
+            .padding(.top, 8)
+        }
+        .font(.caption)
+    }
+
+    private func cameraDetailRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(label)
+                .foregroundStyle(.secondary)
+                .frame(width: 110, alignment: .leading)
+            Text(value)
+                .textSelection(.enabled)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func orderedCameraDetails(
+        _ values: [String: String],
+        roles: [String]
+    ) -> [(key: String, value: String)] {
+        let roleOrder = Dictionary(uniqueKeysWithValues: roles.enumerated().map { ($0.element, $0.offset) })
+        return values.map { (key: $0.key, value: $0.value) }.sorted { lhs, rhs in
+            let lhsRank = roleOrder[lhs.key] ?? Int.max
+            let rhsRank = roleOrder[rhs.key] ?? Int.max
+            if lhsRank != rhsRank { return lhsRank < rhsRank }
+            return lhs.key.localizedStandardCompare(rhs.key) == .orderedAscending
+        }
+    }
+
+    private func cameraRoleLabel(_ role: String) -> String {
+        role.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     private func compactProfileMenu(

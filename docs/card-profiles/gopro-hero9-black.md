@@ -62,7 +62,7 @@ Useful observed/default behavior:
 - HERO9 5K30 high-bitrate chapters are approximately 4 GB, around five minutes per chapter.
 - HERO9 5-minute looping creates one-minute chapters.
 - The user's loop chunks can share a four-character prefix such as `GXAB` or `GXAD`, followed by adjacent sequence numbers.
-- Ariel commonly uses 4K30 five-minute loops for radar detector driving captures.
+- One sampled workflow uses 4K30 five-minute loops for driving captures.
 
 ## Loop Combining
 

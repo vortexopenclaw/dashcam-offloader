@@ -15,7 +15,7 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
 
-The GitHub `latest` release is intentionally deleted and recreated on each publish after the lightweight `latest` tag is moved. Do not change this back to `gh release edit` plus asset replacement: GitHub preserves the old `published_at` timestamp when editing a release, and Ariel uses the release page age as an at-a-glance freshness check.
+The GitHub `latest` release is intentionally deleted and recreated on each publish after the lightweight `latest` tag is moved. Do not change this back to `gh release edit` plus asset replacement: GitHub preserves the old `published_at` timestamp when editing a release, and the release page age is used as an at-a-glance freshness check.
 
 Before publishing, update `docs/releases/latest.md` with short, user-facing notes for the current build. Keep it relative to the latest build, not a rolling changelog. Write about new features and benefits, not implementation details; it is fine to say "bug fixes" instead of listing every fix. Put older context in docs or memory, not in the GitHub `latest` release body. The release workflow uses this file for the GitHub `latest` release body and embeds the same text in the Cloudflare update manifest as `releaseNotes`. The app should link to release notes from update UI instead of showing the notes inline in the update prompt.
 
@@ -65,7 +65,7 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 
 ## Current Scanner Rules
 
-- UI-facing manufacturer display must use Ariel's preferred casing: `Blackvue`, `Viofo`, `DJI`, and `GoPro`. Do not show `BlackVue` in the model picker or identified-camera UI, even when source folders, docs, or official brand pages use that spelling.
+- UI-facing manufacturer display uses the product's preferred casing: `Blackvue`, `Viofo`, `DJI`, and `GoPro`. Do not show `BlackVue` in the model picker or identified-camera UI, even when source folders, docs, or official brand pages use that spelling.
 - Prefer explicit model evidence over folders: model strings, safe config fragments, OSD proof, distinctive filename/channel tokens, and known marker files.
 - Folder-only evidence can identify a family or brand, but should not force a specific sibling model.
 - Same-brand sibling guard: when multiple profiles match shared structure and there is no distinctive model clue, fall back to `generic-new-dashcam`.
@@ -123,6 +123,6 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
 - The main app window should appear before mounted-card scans and permission prompts block the user.
 - Improve Camera Support should be draggable. Camera channel examples should be placeholder text, not prefilled white text.
 - Filter changes should not leave stale items in Review and Download when the selected modes/channels become empty.
-- Destination files are never overwritten. A same-name file at the destination means "already downloaded": single copies and merged loop exports skip it and report "already in destination" instead of failing. Ariel's rule: there should never be two different files with identical names, so no size comparison or rename fallback is needed.
+- Destination files are never overwritten. A same-name file at the destination means "already downloaded": single copies and merged loop exports skip it and report "already in destination" instead of failing. Product rule: there should never be two different files with identical names, so no size comparison or rename fallback is needed.
 - The review queue flags how many queued files already exist at the chosen destination before downloading. The Last Run summary shows copied count/size, already-in-destination count, failed count, the destination path, and a Retry Failed action.
 - Download organization is controlled by `FilterState.outputOrganizationMode`: `oneFolder`, `byClipType` default, `byDate`, or `byCamera`. Date folders must preserve rough filesystem dates and suspicious camera-clock labels instead of flattening them into normal dates.

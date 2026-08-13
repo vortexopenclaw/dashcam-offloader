@@ -35,14 +35,14 @@ source_notes:
   - docs/research/viofo-a329s.md
 platform_notes: >
   Shares a similar folder and filename family with VIOFO A229-series cards, but
-  Ariel confirmed A329S uses a different processor/internal platform. Do not
+  First-party testing confirmed A329S uses a different processor/internal platform. Do not
   inherit A229 codec, bitrate, or transcode assumptions without direct A329S
   clip validation.
 resolutions:
   F: 3840x2160
   I: 2560x1440
   R: 2560x1440
-  notes: 3CH layout confirmed by Ariel; codec and bitrate should be remeasured from direct A329S camera files.
+  notes: 3CH layout confirmed by first-party testing; codec and bitrate should be remeasured from direct A329S camera files.
 detection:
   high_confidence:
     - method: osd_ocr

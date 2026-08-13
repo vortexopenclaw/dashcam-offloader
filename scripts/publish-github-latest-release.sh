@@ -48,7 +48,7 @@ test -f "$ZIP_PATH"
 
 # Move the lightweight latest tag first, then recreate the mutable latest
 # release. GitHub keeps the original published_at timestamp when a release is
-# edited, and Ariel relies on the release-page age as a quick freshness signal.
+# edited, and the release-page age is used as a quick freshness signal.
 git tag -f latest "$FULL_SHA"
 run_with_retries git push --force origin latest
 

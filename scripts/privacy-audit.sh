@@ -19,6 +19,7 @@ check_tracked_pattern "private IPv4 address" '(192\.168\.[0-9]{1,3}\.[0-9]{1,3}|
 check_tracked_pattern "private network hostname" 'tail[0-9]+\.ts\.net'
 check_tracked_pattern "private key material" 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY'
 check_tracked_pattern "Bitcoin address" 'bc1[ac-hj-np-z02-9]{20,}'
+check_tracked_pattern "private owner name" '\bAriel(?:\s+Bravy)?\b'
 
 unexpected_emails="$({
   git grep -I -h -P -o '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' -- ':!desktop/package-lock.json' ':!scripts/privacy-audit.sh' || true

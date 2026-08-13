@@ -84,7 +84,7 @@ Temporary 3CH card scanned read-only at `/Volumes/Untitled` on 2026-06-08:
 - Media count: 6225 MP4 files and 3 JPG files.
 - Normal loop recordings: 210 complete F/I/R triplets in `DCIM/Movie`.
 - Parking recordings: 1866 complete PF/PI/PR triplets in `DCIM/Movie/Parking`.
-  Ariel confirmed these are auto event detection clips triggered by motion/impact,
+  First-party testing confirmed these are auto event detection clips triggered by motion/impact,
   not time-lapse or low-bitrate samples.
 - Locked recordings: 1 complete F/I/R triplet in `DCIM/Movie/RO`.
 - Photos: 1 complete F/I/R triplet in `DCIM/Photo`.

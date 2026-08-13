@@ -205,10 +205,15 @@ final class TransferViewModel: ObservableObject {
         for profile in profiles {
             let brand = profile.displayManufacturer
             let key = Self.cameraModelKey(profile.model)
+            let knownModel = KnownDashcamCatalog.exactModelMatch(
+                manufacturer: profile.manufacturer,
+                modelText: profile.model
+            )
             grouped[brand, default: [:]][key] = CameraModelChoice(
                 brand: brand,
                 model: profile.model,
                 profile: profile,
+                knownModel: knownModel,
                 isCatalogOnly: false
             )
         }
@@ -221,6 +226,7 @@ final class TransferViewModel: ObservableObject {
                     brand: brand,
                     model: model.model,
                     profile: nil,
+                    knownModel: model,
                     isCatalogOnly: true
                 )
             }
@@ -239,6 +245,7 @@ final class TransferViewModel: ObservableObject {
                     brand: brand,
                     model: identifiedCamera.model,
                     profile: nil,
+                    knownModel: nil,
                     isCatalogOnly: true
                 )
             }

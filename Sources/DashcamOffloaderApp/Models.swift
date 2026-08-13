@@ -88,6 +88,7 @@ struct CameraModelChoice: Hashable, Sendable {
     var brand: String
     var model: String
     var profile: DashcamProfile?
+    var knownModel: KnownDashcamModel?
     var isCatalogOnly: Bool
 }
 

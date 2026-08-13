@@ -199,6 +199,25 @@ start wins over the detected result. A real-card-shaped LTE Plus fixture must
 select only the LTE Plus profile and classify F/R footage. The full verifier,
 privacy gate, build, and packaged-app verification must pass.
 
+## 2026-08-13 Camera Technical Details Presentation
+
+**Objective:** Make the structured technical catalog visible for the selected
+camera instead of reducing each catalog entry to only its brand and model.
+
+**Design:** Each camera choice carries its exact known-model record when one is
+available. The Camera Detection section exposes a compact disclosure containing
+support state, channel count and positions, per-channel resolutions and
+sensors, hardware notes, and parking features. Only structured user-safe fields
+are shown; internal research notes and detection evidence are not rendered.
+Missing values remain absent rather than being guessed, and the UI explains
+that settings and regional variants can differ.
+
+**Privacy and verification:** Remove personal source attribution from tracked
+catalog/profile/research text and make the privacy regression gate reject the
+owner's personal name. Selector fixtures must prove that supported and manual
+camera choices retain their structured details. The Swift verifier, privacy
+gate, build, and packaged-app verifier must pass.
+
 ## Architecture Sketch
 
 The eventual implementation should split into these layers:
