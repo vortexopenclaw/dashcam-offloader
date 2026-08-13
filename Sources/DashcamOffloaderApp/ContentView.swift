@@ -19,8 +19,6 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject var viewModel: TransferViewModel
     @State private var isFeedbackPresented = false
-    @State private var isCameraLibraryPresented = false
-    @State private var cameraLibraryInitialSelectionID: String?
     @State private var cardLearningWindow: NSWindow?
     @State private var showDownloadOptions = true
     @State private var showDownloadFilters = true
@@ -59,13 +57,6 @@ struct ContentView: View {
             }
             .help("Send a bug report, feature request, or other feedback.")
             Button {
-                cameraLibraryInitialSelectionID = activeCameraChoice?.profile?.id
-                isCameraLibraryPresented = true
-            } label: {
-                Label("Camera Library", systemImage: "books.vertical")
-            }
-            .help("Browse camera folders, filenames, recording modes, video specifications, manuals, and research sources.")
-            Button {
                 viewModel.checkForUpdates(userInitiated: true)
             } label: {
                 Label("Check for Updates", systemImage: "arrow.down.circle")
@@ -75,12 +66,6 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $isCameraLibraryPresented) {
-            CameraLibraryView(
-                references: viewModel.cameraReferences,
-                initialSelectionID: cameraLibraryInitialSelectionID
-            )
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -626,13 +611,6 @@ struct ContentView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .padding(.top, 2)
-                if choice.profile != nil {
-                    Button("View full camera reference") {
-                        cameraLibraryInitialSelectionID = choice.profile?.id
-                        isCameraLibraryPresented = true
-                    }
-                    .buttonStyle(.link)
-                }
             }
             .padding(.top, 8)
         }

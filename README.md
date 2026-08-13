@@ -28,14 +28,6 @@ files, show progress, stop an active download, skip matching duplicates, check
 for updates, submit feedback, and submit card-learning packages for new cameras
 or supported cameras with unobserved setups.
 
-The toolbar's **Camera Library** opens the research database without requiring
-a memory card. It provides searchable camera pages for folder layouts,
-filename rules and tokens, separate driving and parking behavior, measured
-codec/resolution/frame-rate/bitrate samples, evidence level, caveats, and
-direct manual or research links. The app currently exposes 66 reference
-entries, including 54 complete or partial offloader profiles plus measured
-video-only research that has not yet become a card profile.
-
 The Electron experiment in `desktop/` proved the generic importer on Apple
 Silicon and Intel Macs, Linux, and Windows, but is now retired as a release
 architecture. Its bundled Chromium/Node runtime is too large and creates an
@@ -133,7 +125,7 @@ npm test
 
 ## Supported Cameras
 
-The app currently ships 54 camera profiles. “Supported” means the app has a
+The app currently ships 52 camera profiles. “Supported” means the app has a
 profile that can safely identify or classify that camera's media. Exact
 automatic model recognition requires unique on-card evidence; where that is
 not yet available, the profile remains available for manual selection. See
@@ -248,9 +240,6 @@ safe model evidence, so the app does not auto-identify them yet.
 - `docs/supported-cameras.md` - support status tracker
 - `docs/card-profiles/` - human-readable camera notes
 - `profiles/` - machine-readable camera profiles
-- `reference/cameras.json` - generated privacy-safe data used by the Camera Library and future cross-platform frontend
-- `scripts/build-camera-reference.py` - regenerates the shared reference from profiles and linked research notes
-- `requirements-reference.txt` - pinned authoring dependency for regenerating and verifying the shared reference
 - `scripts/review-feedback-submissions.py` - private Cloudflare submission review helper
 - `workers/feedback/` - Cloudflare Worker endpoint for feedback submissions
 

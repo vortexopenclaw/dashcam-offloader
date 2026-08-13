@@ -24,11 +24,6 @@ jobs:
       - name: Check repository privacy
         run: bash scripts/privacy-audit.sh
 
-      - name: Verify generated camera reference
-        run: |
-          python3 -m pip install --disable-pip-version-check -r requirements-reference.txt
-          bash scripts/verify-camera-reference.sh
-
       - name: Build
         run: swift build
 

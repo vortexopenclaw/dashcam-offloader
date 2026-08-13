@@ -218,31 +218,6 @@ owner's personal name. Selector fixtures must prove that supported and manual
 camera choices retain their structured details. The Swift verifier, privacy
 gate, build, and packaged-app verifier must pass.
 
-## 2026-08-13 Camera Reference Library
-
-**Objective:** Make the repository's camera research a first-class product
-surface instead of hiding it behind the offload selector. A user must be able
-to browse and search every researched camera without inserting a card.
-
-**Design:** A deterministic generation step converts the heterogeneous profile YAML
-and linked research documents into one privacy-safe, versioned JSON reference.
-The application presents it in a dedicated Camera Library with manufacturer and
-model search, evidence/support state, channel variants, separate driving and
-parking folder behavior, filename patterns and token mappings, technical video
-facts including available measured resolution/codec/frame-rate/bitrate data,
-parking capabilities, caveats, and direct manual/research/source links. Unknown
-fields remain visibly absent; measured-video-only entries are clearly marked
-and catalog-only names without research evidence are not misrepresented as
-researched cameras. This JSON is shared product data that the future Tauri
-frontend can consume without reimplementing YAML interpretation.
-
-**Privacy and verification:** The generated reference omits detection secrets,
-device identifiers, serials, GPS coordinates, network names, local sample paths,
-submission IDs, and raw internal evidence. Tests must require every loadable
-profile to have a reference record and prove representative driving, parking,
-filename, bitrate, and manual-link data. The packaged app must contain the
-generated index and pass the full app and privacy verification suite.
-
 ## Architecture Sketch
 
 The eventual implementation should split into these layers:

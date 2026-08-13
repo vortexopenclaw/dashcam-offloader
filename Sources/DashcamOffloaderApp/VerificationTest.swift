@@ -9,52 +9,6 @@ enum VerificationTest {
             }
 
             let profiles = try ProfileStore(profilesDirectory: profilesURL).loadProfiles()
-            let cameraReferences = try CameraReferenceStore.load()
-            guard cameraReferences.count >= profiles.count,
-                  Set(profiles.map(\.id)).isSubset(of: Set(cameraReferences.map(\.id))) else {
-                print("VERIFY FAIL: camera reference index is missing or stale")
-                return false
-            }
-            guard let dr970xLTEReference = cameraReferences.first(where: { $0.id == "blackvue-dr970x-lte-plus" }),
-                  dr970xLTEReference.folders.contains(where: { $0.path == "BlackVue/Record" }),
-                  dr970xLTEReference.filenamePatterns.contains(where: {
-                      $0.pattern.contains("[NEMP]") &&
-                          $0.modes["N"] == "normal" &&
-                          $0.modes["P"] == "parking" &&
-                          $0.channels["F"] == "front" &&
-                          $0.channels["R"] == "rear"
-                  }),
-                  dr970xLTEReference.technicalFacts.contains(where: {
-                      $0.label == "observed_media › front › bitrate" && $0.value.contains("61 Mbps")
-                  }),
-                  dr970xLTEReference.technicalFacts.contains(where: {
-                      $0.label == "observed_media › rear › resolution" && $0.value == "1920x1080"
-                  }),
-                  dr970xLTEReference.parkingRecordingModes.contains("parking") else {
-                print("VERIFY FAIL: DR970X LTE Plus reference omitted recording layout or measured video specifications")
-                return false
-            }
-            guard let a229ProReference = cameraReferences.first(where: { $0.id == "viofo-a229-pro" }),
-                  a229ProReference.videoSamples.contains(where: {
-                      $0.channel == "F (front)" && $0.mode == "driving" && $0.resolution == "3840x2160" && $0.bitrate.contains("36.0 Mbps")
-                  }),
-                  a229ProReference.videoSamples.contains(where: {
-                      $0.channel == "PF" && $0.mode == "parking" && $0.bitrate.contains("4.1 Mbps")
-                  }),
-                  cameraReferences.contains(where: {
-                      $0.id == "metadata-only-blackvue-dr900s-2ch" && !$0.videoSamples.isEmpty
-                  }) else {
-                print("VERIFY FAIL: camera library omitted mode-specific measured video metadata")
-                return false
-            }
-            guard let arc900Reference = cameraReferences.first(where: { $0.id == "thinkware-arc-900" }),
-                  arc900Reference.drivingFolders.contains(where: { $0.path == "cont_rec" }),
-                  arc900Reference.parkingFolders.contains(where: { $0.path == "motion_rec" }),
-                  arc900Reference.parkingFolders.contains(where: { $0.path == "parking_rec" }),
-                  arc900Reference.manualLinks.contains(where: { $0.url.lowercased().contains("arc900_manual") }) else {
-                print("VERIFY FAIL: ARC 900 reference omitted driving/parking folders or its manual link")
-                return false
-            }
             guard profiles.contains(where: { $0.id == "vantrue-e1-pro" }) else {
                 print("VERIFY FAIL: missing Vantrue E1 Pro profile")
                 return false

@@ -39,7 +39,7 @@ detection:
         - VT-N4S.bin
         - VT-RC09.bin
         - VT-RC18.bin
-      note: "Manually added for firmware update; not present by default"
+        note: "Manually added for firmware update; not present by default"
     - channel_count:
         note: "User-configurable (1CH/2CH/3CH modes)"
     - file_sizes:
