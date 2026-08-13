@@ -107,6 +107,7 @@ limitations of each profile.
 - BlackVue DR970X Plus: 2CH, real card sampled
 - BlackVue Elite 8: 2CH, real card sampled
 - BlackVue Elite 9: 2CH, real card sampled
+- BlackVue Elite 10: 2CH, remote card scan with exact metadata and normal/impact Front/Rear filename evidence
 
 **Cansonic**
 - Cansonic UltraDash Z3+ Standard Edition: dual front lens (wide + telephoto) + optional rear (R1), footage sampled

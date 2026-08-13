@@ -1,0 +1,55 @@
+id: blackvue-elite-10
+manufacturer: BlackVue
+model: Elite 10
+status: seed
+confidence: high
+confidence_note: "Verified from a remote Learn Card submission with exact ELITE 10 config metadata and 1,290 BlackVue recording filenames. Codec, resolution, bitrate, and parking filename behavior remain unobserved."
+source_notes:
+  - docs/card-profiles/blackvue-elite-10.md
+channel_variants:
+  - channels: 2
+    roles: [front, rear]
+    validation: remote_card_scan
+sampled_variant:
+  channels: 2
+  roles: [front, rear]
+detection:
+  high_confidence:
+    - path: BlackVue/Config/version.bin
+      exists: true
+    - path: BlackVue/Config/micom_version.bin
+      exists: true
+    - path: BlackVue/Config/smart_gsensor_version.bin
+      exists: true
+  supporting:
+    - folder: BlackVue/Record
+folders:
+  - path: BlackVue/Record
+    mode: mixed_recordings
+  - path: BlackVue/Config
+    mode: model_and_settings
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([NI])([FR])\\.mp4$"
+    applies_to:
+      - BlackVue/Record
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    mode_group: 3
+    channel_group: 4
+    modes:
+      N: normal
+      I: impact_event
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - BlackVue/Config/**
+  - BlackVue/System/**

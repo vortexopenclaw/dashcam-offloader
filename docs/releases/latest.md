@@ -1,5 +1,7 @@
 # Dashcam Offloader 0.1.1
 
+- Added BlackVue Elite 10 support from its remote card scan: exact model
+  metadata plus normal and impact Front/Rear recording classification.
 - Improved Learn Card media summaries so every observed video
   codec/resolution/frame-rate configuration is retained, rather than only
   generic per-folder representatives.

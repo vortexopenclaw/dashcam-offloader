@@ -976,32 +976,43 @@ enum VerificationTest {
                 return false
             }
 
-            let untrainedElite10Source = temp.appendingPathComponent("BLACKVUE", isDirectory: true)
-            try FileManager.default.createDirectory(at: untrainedElite10Source.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: untrainedElite10Source.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
-            try Data("model = ELITE 10 v1.000(rev100)\nversion = 1.000\n".utf8).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Config/version.bin"))
-            try Data(repeating: 37, count: 1024).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NF.mp4"))
-            try Data(repeating: 38, count: 1024).write(to: untrainedElite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NR.mp4"))
-            let untrainedElite10Scan = try scanner.scan(sourceURL: untrainedElite10Source, profiles: profiles)
-            guard untrainedElite10Scan.selectedProfile?.id == "generic-new-dashcam",
-                  untrainedElite10Scan.identifiedCamera?.manufacturer == "BlackVue",
-                  untrainedElite10Scan.identifiedCamera?.model == "Elite 10",
-                  untrainedElite10Scan.identifiedCamera?.isSupported == false,
-                  Set(untrainedElite10Scan.clips.map(\.channel)) == ["front", "rear"] else {
-                print("VERIFY FAIL: untrained BlackVue Elite 10 metadata should identify known model while staying generic: profile=\(untrainedElite10Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedElite10Scan.identifiedCamera)), channels=\(Set(untrainedElite10Scan.clips.map(\.channel)).sorted())")
+            let elite10Source = temp.appendingPathComponent("BLACKVUE", isDirectory: true)
+            guard let elite10Profile = profiles.first(where: { $0.id == "blackvue-elite-10" }),
+                  elite10Profile.detectionRules.contains(where: { $0.path == "BlackVue/Config/version.bin" && $0.exists == true }) else {
+                print("VERIFY FAIL: BlackVue Elite 10 profile did not load its safe-metadata detection rule: \(profiles.first(where: { $0.id == "blackvue-elite-10" }).map { "\($0.detectionRules)" } ?? "missing")")
                 return false
             }
-            guard untrainedElite10Scan.diagnostics.contains(where: {
+            try FileManager.default.createDirectory(at: elite10Source.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: elite10Source.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = ELITE 10 v1.000(rev100)\nversion = 1.000\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("model = ELITE 10 v1.000(rev100)\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data("model = ELITE 10 v1.000(rev100)\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/smart_gsensor_version.bin"))
+            try Data(repeating: 37, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NF.mp4"))
+            try Data(repeating: 38, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NR.mp4"))
+            try Data(repeating: 39, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102900_IF.mp4"))
+            try Data(repeating: 40, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102900_IR.mp4"))
+            let elite10Scan = try scanner.scan(sourceURL: elite10Source, profiles: profiles)
+            guard elite10Scan.selectedProfile?.id == "blackvue-elite-10",
+                  elite10Scan.identifiedCamera?.manufacturer == "BlackVue",
+                  elite10Scan.identifiedCamera?.model == "Elite 10",
+                  elite10Scan.identifiedCamera?.isSupported == true,
+                  Set(elite10Scan.clips.map(\.channel)) == ["front", "rear"],
+                  elite10Scan.clips.filter({ $0.filename.hasPrefix("N") }).allSatisfy({ $0.mode == "normal" }),
+                  elite10Scan.clips.filter({ $0.filename.hasPrefix("I") }).allSatisfy({ $0.mode == "impact_event" }) else {
+                print("VERIFY FAIL: remote-card-shaped BlackVue Elite 10 scan did not select the exact profile or classify normal/impact F/R clips: profile=\(elite10Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite10Scan.identifiedCamera)), clips=\(elite10Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
+                return false
+            }
+            guard elite10Scan.diagnostics.contains(where: {
                 $0.stage == "blackvue_config_metadata" &&
                     $0.outcome == "parsed_safe_fields" &&
                     $0.detail.localizedCaseInsensitiveContains("Elite 10")
             }),
-            untrainedElite10Scan.diagnostics.contains(where: {
-                $0.stage == "profile_selection_guard" &&
-                    $0.outcome == "selected_generic_new_card" &&
-                    $0.detail.contains("BlackVue Elite 10")
+            elite10Scan.diagnostics.contains(where: {
+                $0.stage == "profile_scoring" &&
+                    $0.outcome == "selected_initial" &&
+                    $0.profileID == "blackvue-elite-10"
             }) else {
-                print("VERIFY FAIL: untrained BlackVue Elite 10 scan did not record metadata and guard diagnostics: \(untrainedElite10Scan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                print("VERIFY FAIL: BlackVue Elite 10 scan did not record metadata and exact-profile diagnostics: \(elite10Scan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }
 

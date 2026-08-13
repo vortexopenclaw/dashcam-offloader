@@ -26,6 +26,9 @@ which applies.
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.
+- BlackVue Elite 10 - 2CH remote-card scan. Exact config metadata plus normal
+  and impact Front/Rear filenames are classified; media specifications and
+  parking filename behavior still need a newer remote scan or real card.
 - BlackVue DR770X Box - profile drafted from a real app-submitted Learn Card package and private archive direct camera clips. 3-channel evidence (F/O/R = front/interior/rear), 1080p H.264 NAS samples, BlackVue-style mode/channel suffixes.
 - BlackVue DR970X Plus - profile drafted from one real 2CH sample card. Firmware v2.008.
 - VIOFO A229 Pro - profile drafted from one real 3CH sample card and official VIOFO A229 Pro manual (V26.01.09).

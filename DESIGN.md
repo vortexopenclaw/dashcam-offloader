@@ -230,6 +230,28 @@ representative pass restores prior sampling behavior.
 saved footage. The catalog records observed QHD30 alongside documented QHD60,
 and the standard verifier passes.
 
+## 2026-08-12 BlackVue Elite 10 remote-card profile
+
+**Objective:** Convert the existing remote Elite 10 card evidence into an
+exactly identified supported profile without inventing media properties the
+older submission did not record.
+
+**Design:** The 2026-06-09 submission proves exact `ELITE 10` model text in
+`BlackVue/Config/version.bin`, the BlackVue Record/Config layout, and 1,290
+MP4 records using normal `NF`/`NR` and impact `IF`/`IR` Front/Rear pairs.
+Use only those metadata paths for high-confidence selection and map only the
+observed N/I tokens. Keep codec, resolution, bitrate, duration, and parking
+filename behavior unclaimed until a newer sanitized submission or real card
+provides them.
+
+**Risks and rollback:** Elite family layouts are shared, so exact config
+metadata is mandatory. The profile must not inherit Elite 8/9 media claims.
+Removing the profile returns Elite 10 cards to safe generic import.
+
+**Success checks:** A real-submission-shaped fixture with `ELITE 10` metadata
+selects only the Elite 10 profile, maps NF/NR to Front/Rear normal clips, and
+maps IF/IR to Front/Rear impact events.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:
