@@ -1,8 +1,17 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+const packageMetadata = require("../package.json");
+const { createAccessController, publicCopyResult } = require("./access-controller");
+const { assertTrustedSender } = require("./ipc-security");
 const { executeCopy, planCopy, scanSource } = require("./offload-engine");
 const { checkForUpdates, configureUpdatePrompts } = require("./update-controller");
+
+const access = createAccessController();
+const updatesEnabled = app.isPackaged && packageMetadata.updateEnabled === true;
+const rendererPath = path.join(__dirname, "renderer", "index.html");
+const rendererURL = pathToFileURL(rendererPath).href;
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -10,22 +19,60 @@ function createWindow() {
     height: 760,
     minWidth: 860,
     minHeight: 620,
-    webPreferences: { contextIsolation: true, preload: path.join(__dirname, "preload.js") }
+    webPreferences: {
+      allowRunningInsecureContent: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
+      sandbox: true,
+      webSecurity: true
+    }
   });
-  window.loadFile(path.join(__dirname, "renderer", "index.html"));
+  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  window.webContents.on("will-navigate", (event) => event.preventDefault());
+  window.loadFile(rendererPath);
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle("choose-folder", async (_event, title) => {
-    const result = await dialog.showOpenDialog({ title, properties: ["openDirectory"] });
-    return result.canceled ? null : result.filePaths[0];
+  app.on("web-contents-created", (_event, contents) => {
+    contents.session.setPermissionCheckHandler(() => false);
+    contents.session.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   });
-  ipcMain.handle("scan-source", (_event, sourcePath) => scanSource(sourcePath));
-  ipcMain.handle("copy-plan", (_event, sourcePath, destinationPath, media) => planCopy(sourcePath, destinationPath, media));
-  ipcMain.handle("execute-copy", async (event, plan) => executeCopy(plan, (progress) => event.sender.send("copy-progress", progress)));
-  ipcMain.handle("check-for-updates", () => checkForUpdates({ updater: autoUpdater, log: console.info }));
+  ipcMain.handle("choose-folder", async (event, kind) => {
+    assertTrustedSender(event, rendererURL);
+    if (!new Set(["source", "destination"]).has(kind)) throw new Error("Invalid folder type.");
+    const title = kind === "source" ? "Choose a memory card or video folder" : "Choose a download folder";
+    const result = await dialog.showOpenDialog({ title, properties: ["openDirectory"] });
+    return result.canceled ? null : access.approveFolder(kind, result.filePaths[0]);
+  });
+  ipcMain.handle("scan-source", (event, sourceToken) => {
+    assertTrustedSender(event, rendererURL);
+    return access.scanApprovedSource(sourceToken, scanSource);
+  });
+  ipcMain.handle("copy-plan", (event, sourceToken, destinationToken) => {
+    assertTrustedSender(event, rendererURL);
+    return access.createCopyPlan(sourceToken, destinationToken, planCopy);
+  });
+  ipcMain.handle("execute-copy", async (event, token) => {
+    assertTrustedSender(event, rendererURL);
+    const result = await executeCopy(access.consumeCopyPlan(token), (progress) => {
+      event.sender.send("copy-progress", {
+        index: progress.index,
+        total: progress.total,
+        status: progress.status,
+        filename: progress.item.filename
+      });
+    });
+    return publicCopyResult(result);
+  });
+  ipcMain.handle("check-for-updates", (event) => {
+    assertTrustedSender(event, rendererURL);
+    return updatesEnabled
+      ? checkForUpdates({ updater: autoUpdater, log: console.info })
+      : { supported: false };
+  });
   createWindow();
-  if (app.isPackaged) {
+  if (updatesEnabled) {
     configureUpdatePrompts({ updater: autoUpdater, dialog, log: console.info });
     void checkForUpdates({ updater: autoUpdater, log: console.info });
   }

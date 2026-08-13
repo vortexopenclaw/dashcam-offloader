@@ -33,6 +33,14 @@ test("rejects a destination inside the source", async (t) => {
   assert.throws(() => planCopy(source, path.join(source, "downloads"), media), /outside the source/);
 });
 
+test("rejects a renderer-forged source outside the approved root", async (t) => {
+  const { root, source, destination } = await fixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const media = await scanSource(source);
+  media[0].sourcePath = path.join(root, "not-approved.mp4");
+  assert.throws(() => planCopy(source, destination, media), /outside the approved source/);
+});
+
 test("copies, verifies, skips identical files, and preserves conflicts", async (t) => {
   const { root, source, destination } = await fixture();
   t.after(() => fs.rm(root, { recursive: true, force: true }));

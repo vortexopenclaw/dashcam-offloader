@@ -33,10 +33,10 @@ the generic, read-only import workflow for Apple Silicon Macs, Intel Macs,
 Linux, and Windows. Profile detection/classification parity is still in
 progress, so the signed macOS SwiftUI release remains the authoritative build.
 
-Packaged desktop builds check for updates at launch. When a newer
-platform-specific build is available, the app prompts before downloading and
-prompts again before restarting to install it. Development builds do not check
-the update service.
+Automatic updates are disabled in the unsigned cross-platform beta. They will
+only be enabled after each platform's artifacts are signed and the update
+channel has passed release-chain verification. The signed SwiftUI macOS app
+continues to use its separately verified update manifest.
 
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 

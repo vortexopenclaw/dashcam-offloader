@@ -87,7 +87,7 @@ export default {
     const record = {
       id,
       receivedAt,
-      source: "dashcam-offloader-mac",
+      source: "dashcam-offloader-app",
       ...sanitizeFeedback(body),
     };
 
@@ -102,7 +102,8 @@ export default {
 };
 
 async function checkRateLimit(request, env) {
-  if (!env.FEEDBACK_RATE_LIMITER) {
+  const salt = String(env.RATE_LIMIT_SALT || "");
+  if (!env.FEEDBACK_RATE_LIMITER || salt.length < 32) {
     return { ok: false, retryAfterSeconds: RATE_LIMIT_WINDOW_SECONDS };
   }
 
@@ -321,7 +322,7 @@ function sanitizeIdentifiedCamera(camera) {
   return {
     manufacturer,
     model,
-    evidence: stringList(camera.evidence, 12),
+    evidence: [],
     isSupported: Boolean(camera.isSupported),
   };
 }
@@ -397,13 +398,8 @@ function sanitizeClipGroupSummary(summary) {
     return null;
   }
 
-  const folder = sanitizePath(summary.folder || ".");
-  if (!folder) {
-    return null;
-  }
-
   return {
-    folder,
+    folder: ".",
     extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
     mode: optionalString(summary.mode),
     displayMode: optionalString(summary.displayMode),
@@ -415,10 +411,10 @@ function sanitizeClipGroupSummary(summary) {
     totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
     minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
     maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
-    firstTimestamp: optionalString(summary.firstTimestamp),
-    lastTimestamp: optionalString(summary.lastTimestamp),
+    firstTimestamp: null,
+    lastTimestamp: null,
     timestampSourceCounts: countMap(summary.timestampSourceCounts),
-    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 8),
+    sampleRelativePaths: [],
   };
 }
 
@@ -427,13 +423,8 @@ function sanitizeVideoSpecSample(sample) {
     return null;
   }
 
-  const relativePath = sanitizePath(sample.relativePath);
-  if (!relativePath) {
-    return null;
-  }
-
   return {
-    relativePath,
+    relativePath: "",
     extensionLowercased: stringValue(sample.extensionLowercased).toLowerCase(),
     fileSizeBytes: nullableNumber(sample.fileSizeBytes),
     mode: optionalString(sample.mode),
@@ -455,13 +446,8 @@ function sanitizeVideoSpecSummary(summary) {
     return null;
   }
 
-  const folder = sanitizePath(summary.folder || ".");
-  if (!folder) {
-    return null;
-  }
-
   return {
-    folder,
+    folder: ".",
     extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
     mode: optionalString(summary.mode),
     displayMode: optionalString(summary.displayMode),
@@ -472,10 +458,10 @@ function sanitizeVideoSpecSummary(summary) {
     totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
     minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
     maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
-    firstTimestamp: optionalString(summary.firstTimestamp),
-    lastTimestamp: optionalString(summary.lastTimestamp),
+    firstTimestamp: null,
+    lastTimestamp: null,
     timestampSourceCounts: countMap(summary.timestampSourceCounts),
-    sampleRelativePaths: safePathList(summary.sampleRelativePaths, 10),
+    sampleRelativePaths: [],
     sampleCodecs: stringList(summary.sampleCodecs, 6),
     sampleResolutions: stringList(summary.sampleResolutions, 6),
     sampleFrameRates: numberList(summary.sampleFrameRates, 6),
@@ -514,7 +500,7 @@ function sanitizeSettingSnapshot(snapshot) {
   }
 
   return {
-    relativePath: sanitizePath(snapshot.relativePath),
+    relativePath: "",
     keys,
     safeValues,
   };
@@ -522,23 +508,21 @@ function sanitizeSettingSnapshot(snapshot) {
 
 function sanitizeCandidate(candidate) {
   return {
-    profileID: stringValue(candidate.profileID),
-    profileName: stringValue(candidate.profileName),
+    profileID: aggregateKey(candidate.profileID),
+    profileName: aggregateKey(candidate.profileName),
     score: numberValue(candidate.score),
     confidence: stringValue(candidate.confidence),
-    evidence: Array.isArray(candidate.evidence)
-      ? candidate.evidence.slice(0, 8).map(stringValue)
-      : [],
+    evidence: [],
   };
 }
 
 function sanitizeScanDiagnostic(diagnostic) {
   return {
-    stage: stringValue(diagnostic.stage),
+    stage: aggregateKey(diagnostic.stage),
     profileID: optionalString(diagnostic.profileID),
     profileName: optionalString(diagnostic.profileName),
-    outcome: stringValue(diagnostic.outcome),
-    detail: stringValue(diagnostic.detail),
+    outcome: aggregateKey(diagnostic.outcome),
+    detail: "",
   };
 }
 
@@ -549,9 +533,17 @@ function countMap(value) {
 
   const result = {};
   for (const [key, count] of Object.entries(value)) {
-    result[stringValue(key)] = numberValue(count);
+    const safeKey = aggregateKey(key);
+    if (safeKey) result[safeKey] = numberValue(count);
   }
   return result;
+}
+
+function aggregateKey(value) {
+  const key = stringValue(value).trim().slice(0, 64);
+  if (!key || isSensitiveSettingPair(key, "")) return "";
+  if (/[@/\\]/.test(key) || /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(key)) return "";
+  return /^[\p{L}\p{N}][\p{L}\p{N} ._+()\[\]-]*$/u.test(key) ? key : "";
 }
 
 function stringValue(value) {
@@ -590,7 +582,7 @@ function stringList(value, limit) {
   }
   return value
     .slice(0, limit)
-    .map(stringValue)
+    .map(aggregateKey)
     .filter((item) => item.length > 0);
 }
 
@@ -605,7 +597,8 @@ function numberList(value, limit) {
 }
 
 function optionalString(value) {
-  return typeof value === "string" && value.length > 0 ? value.slice(0, 1000) : null;
+  const result = aggregateKey(value);
+  return result || null;
 }
 
 function numberValue(value) {

@@ -57,9 +57,10 @@ the foundation phase.
 Packaged desktop builds check the platform-specific update feed at launch.
 When an update exists, the app asks before downloading it and asks again before
 restarting to install it. Development builds do not query the update service.
-The public Worker serves Electron's platform metadata and assets below the
-separate `dashcam-offloader/desktop/` object prefix, so a desktop build can
-never mistake the existing Swift macOS ZIP for its own update.
+The public Worker reserves Electron's platform metadata and assets below the
+separate `dashcam-offloader/desktop/` object prefix. Unsigned desktop builds do
+not query or install from that feed. The feed can be enabled only after signed
+artifacts and the complete release chain pass verification.
 
 **Risks and rollback:** The new desktop shell adds an npm/Electron toolchain
 and has generic-only classification initially. It is isolated under `desktop/`
@@ -72,6 +73,48 @@ platform and in a three-OS CI matrix. It must prove source media discovery,
 destination-within-source rejection, verified copy, identical-file skip, and
 same-size-different-content conflict handling. Packaging configuration must
 declare macOS arm64/x64, Linux, and Windows targets.
+
+## 2026-08-13 Privacy And Security Audit
+
+**Objective:** Verify that the app, public repository, update/feedback Workers,
+CI, and downloadable artifacts do not expose private user data or create an
+unnecessary path to arbitrary file access, code execution, or unsafe updates.
+
+**Design:** Treat the renderer as untrusted even though it loads only bundled
+HTML. The main process owns user-approved source/destination capabilities,
+retains full scan/copy paths, and gives the renderer only display-safe media
+metadata and opaque plan identifiers. Explicitly sandbox the renderer, deny
+navigation, popup windows, and runtime permissions, and enforce a restrictive
+Content Security Policy. Hash large media with streaming I/O instead of loading
+whole videos into memory.
+
+Feedback remains opt-in. Server-side sanitization is the final privacy boundary
+and must discard volume names, folder paths, filenames, timestamps, raw model
+evidence, diagnostics details, and other user-controlled card strings, even if
+an older client submits them. Technical aggregates may retain bounded counts,
+codec, resolution, frame-rate, bitrate, and duration ranges. Rate limiting must
+fail closed without a strong salt.
+
+Desktop in-app installation remains disabled until release artifacts are
+platform-signed and the update channel has a verified release process. An
+unsigned test build may offer a manual release check later, but must not silently
+trust or install a mutable feed. Dependencies and CI actions are pinned to
+reviewed versions/commits, and public history is scanned separately from the
+working tree because deleting a file does not remove it from Git history.
+
+**Risks and rollback:** Capability-scoped IPC can reject workflows that bypass
+the app's folder pickers; those paths are intentionally unsupported. Stricter
+feedback redaction reduces diagnostic detail but preserves the technical data
+needed for profile development. Disabling unsigned in-app updates temporarily
+removes convenience from beta builds while avoiding an unverifiable installer.
+
+**Success checks:** Dependency audit has no known vulnerabilities; secret and
+static-analysis scans return no confirmed findings; privacy fixtures prove that
+paths, filenames, timestamps, evidence, diagnostic details, contact-like values,
+and coordinates are removed; IPC tests reject unapproved and renderer-forged
+paths; packaged apps contain required runtime dependencies, include the CSP and
+updater-disabled metadata, and launch from a clean location. Public GitHub and
+Cloudflare artifacts must match reviewed local bytes before release.
 
 ## Architecture Sketch
 

@@ -1205,9 +1205,6 @@ final class TransferViewModel: ObservableObject {
         let requestedSourceRoot = selectedSource?.url
         let sourceRoot = lastEffectiveScanSourceURL ?? requestedSourceRoot
         let safeFiles = lastScannedFiles.filter { isSafeTrainingSample($0, sourceRoot: sourceRoot) }
-        let safeSamples = safeFiles
-            .prefix(80)
-            .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
 
         let extensionCounts = Dictionary(grouping: safeFiles) { url in
             let ext = url.pathExtension.lowercased()
@@ -1247,37 +1244,6 @@ final class TransferViewModel: ObservableObject {
         }
             .mapValues(\.count)
 
-        let rootFolders = Set(safeFiles.compactMap { url -> String? in
-            let relativePath = sanitizedRelativePath(for: url, sourceRoot: sourceRoot)
-            return relativePath.split(separator: "/").first.map(String.init)
-        })
-        .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-
-        let folderSamples = Set(safeFiles.compactMap { url -> String? in
-            let relativePath = sanitizedRelativePath(for: url, sourceRoot: sourceRoot)
-            guard let slashIndex = relativePath.lastIndex(of: "/") else { return nil }
-            return String(relativePath[..<slashIndex])
-        })
-        .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-        .prefix(80)
-
-        let filenameSamples = safeFiles
-            .map(\.lastPathComponent)
-            .uniquedPreservingOrder()
-            .prefix(80)
-
-        let supportFileSamples = safeFiles
-            .filter { !isMediaLikeFile($0) }
-            .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
-            .uniquedPreservingOrder()
-            .prefix(40)
-        let ignoredSupportFileSamples = safeFiles
-            .filter { fileURL in
-                !isMediaLikeFile(fileURL) || isPotentialSettingsFile(fileURL, sourceRoot: sourceRoot)
-            }
-            .map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }
-            .uniquedPreservingOrder()
-            .prefix(60)
         let safeClipSourcePaths = Set(safeFiles.map(\.standardizedFileURL.path))
         let safeEligibleClips = eligibleClips.filter { clip in
             safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
@@ -1290,11 +1256,39 @@ final class TransferViewModel: ObservableObject {
             from: safeEligibleClips.filter(\.isVideo),
             samples: videoSpecSamples,
             sourceRoot: sourceRoot
-        )
+        ).map { summary in
+            FeedbackVideoSpecSummary(
+                folder: ".",
+                extensionLowercased: summary.extensionLowercased,
+                mode: summary.mode,
+                displayMode: summary.displayMode,
+                outputCategory: summary.outputCategory,
+                channel: summary.channel,
+                inferredParkingPattern: summary.inferredParkingPattern,
+                fileCount: summary.fileCount,
+                totalFileSizeBytes: summary.totalFileSizeBytes,
+                minFileSizeBytes: summary.minFileSizeBytes,
+                maxFileSizeBytes: summary.maxFileSizeBytes,
+                firstTimestamp: nil,
+                lastTimestamp: nil,
+                timestampSourceCounts: summary.timestampSourceCounts,
+                sampleRelativePaths: [],
+                sampleCodecs: summary.sampleCodecs,
+                sampleResolutions: summary.sampleResolutions,
+                sampleFrameRates: summary.sampleFrameRates,
+                sampleBitrateMin: summary.sampleBitrateMin,
+                sampleBitrateMax: summary.sampleBitrateMax,
+                sampleDurationMin: summary.sampleDurationMin,
+                sampleDurationMax: summary.sampleDurationMax
+            )
+        }
         let settingSnapshots = safeFiles
             .filter { isPotentialSettingsFile($0, sourceRoot: sourceRoot) }
             .prefix(20)
             .compactMap { makeSettingSnapshot(for: $0, sourceRoot: sourceRoot) }
+            .map { snapshot in
+                FeedbackSettingSnapshot(relativePath: "", keys: snapshot.keys, safeValues: snapshot.safeValues)
+            }
 
         let candidates = detectionCandidates.prefix(8).map { candidate in
             FeedbackCandidateSnapshot(
@@ -1302,7 +1296,25 @@ final class TransferViewModel: ObservableObject {
                 profileName: candidate.profile.displayName,
                 score: candidate.score,
                 confidence: candidate.confidence.rawValue,
-                evidence: candidate.evidence.map(sanitizeEvidence)
+                evidence: []
+            )
+        }
+
+        let feedbackIdentifiedCamera = identifiedCamera.map { camera in
+            IdentifiedCamera(
+                manufacturer: camera.manufacturer,
+                model: camera.model,
+                evidence: [],
+                isSupported: camera.isSupported
+            )
+        }
+        let feedbackDiagnostics = lastScanDiagnostics.prefix(40).map { diagnostic in
+            ScanDiagnosticEntry(
+                stage: diagnostic.stage,
+                profileID: diagnostic.profileID,
+                profileName: diagnostic.profileName,
+                outcome: diagnostic.outcome,
+                detail: ""
             )
         }
 
@@ -1313,7 +1325,7 @@ final class TransferViewModel: ObservableObject {
             requestedSourceName: nil,
             effectiveSourceName: nil,
             effectiveSourceRelativePath: nil,
-            identifiedCamera: identifiedCamera,
+            identifiedCamera: feedbackIdentifiedCamera,
             selectedProfileID: selectedProfile?.id,
             selectedProfileName: selectedProfile?.displayName,
             scannedFiles: scanSummary.scannedFiles,
@@ -1345,7 +1357,7 @@ final class TransferViewModel: ObservableObject {
             videoSpecSummaries: videoSpecSummaries,
             settingSnapshots: Array(settingSnapshots),
             candidates: Array(candidates),
-            scanDiagnostics: Array(lastScanDiagnostics.prefix(40))
+            scanDiagnostics: Array(feedbackDiagnostics)
         )
     }
 
@@ -2293,11 +2305,6 @@ final class TransferViewModel: ObservableObject {
             .trimmingCharacters(in: CharacterSet(charactersIn: "\"' ").union(.newlines))
             .prefix(80)
             .description
-    }
-
-    private func sanitizeEvidence(_ evidence: String) -> String {
-        guard let selectedSource else { return evidence }
-        return evidence.replacingOccurrences(of: selectedSource.url.path, with: "[source]")
     }
 
     private func appVersionString() -> String {

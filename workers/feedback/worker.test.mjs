@@ -78,6 +78,67 @@ test("sanitizeScan strips unsafe setting values and keeps safe ones", () => {
   assert.equal("filenameSamples" in scan, false);
 });
 
+test("sanitizeScan drops private paths, filenames, timestamps, evidence, and diagnostics", () => {
+  const scan = sanitizeScan({
+    volumeName: "Personal NAS",
+    identifiedCamera: {
+      manufacturer: "Example",
+      model: "Camera",
+      evidence: ["/Users/person/Vacation/secret.mp4"],
+      isSupported: true,
+    },
+    candidates: [{
+      profileID: "example-camera",
+      profileName: "Example Camera",
+      score: 90,
+      confidence: "high",
+      evidence: ["Family Trip/secret.mp4"],
+    }],
+    scanDiagnostics: [{
+      stage: "detection",
+      profileID: "example-camera",
+      profileName: "Example Camera",
+      outcome: "matched",
+      detail: "Found /Users/person/Vacation/secret.mp4",
+    }],
+    settingSnapshots: [{
+      relativePath: "Private/config.ini",
+      keys: ["model"],
+      safeValues: { model: "Camera" },
+    }],
+    videoSpecSummaries: [{
+      folder: "Family Trip",
+      extensionLowercased: ".mp4",
+      fileCount: 2,
+      firstTimestamp: "2026-08-13T12:34:56Z",
+      lastTimestamp: "2026-08-13T12:36:56Z",
+      sampleRelativePaths: ["Family Trip/home-address.mp4"],
+      sampleCodecs: ["h264"],
+      sampleResolutions: ["3840x2160"],
+    }],
+    extensionCounts: {
+      mp4: 2,
+      "person@example.com": 1,
+      "Private/clip": 1,
+      "123e4567-e89b-12d3-a456-426614174000": 1,
+    },
+  });
+
+  assert.deepEqual(scan.identifiedCamera.evidence, []);
+  assert.deepEqual(scan.candidates[0].evidence, []);
+  assert.equal(scan.scanDiagnostics[0].detail, "");
+  assert.equal(scan.settingSnapshots[0].relativePath, "");
+  assert.equal(scan.videoSpecSummaries[0].folder, ".");
+  assert.equal(scan.videoSpecSummaries[0].firstTimestamp, null);
+  assert.equal(scan.videoSpecSummaries[0].lastTimestamp, null);
+  assert.deepEqual(scan.videoSpecSummaries[0].sampleRelativePaths, []);
+  assert.deepEqual(scan.videoSpecSummaries[0].sampleCodecs, ["h264"]);
+  assert.deepEqual(scan.extensionCounts, { mp4: 2 });
+  assert.equal(JSON.stringify(scan).includes("secret.mp4"), false);
+  assert.equal(JSON.stringify(scan).includes("Family Trip"), false);
+  assert.equal(JSON.stringify(scan).includes("/Users/"), false);
+});
+
 test("sanitizeFeedback trims message and preserves kind", () => {
   const record = sanitizeFeedback({ kind: "bug", message: "  it broke  ", contact: " a@b.c " });
   assert.equal(record.kind, "bug");

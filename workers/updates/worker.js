@@ -36,12 +36,12 @@ const PRIVACY_POLICY_HTML = `<!doctype html>
 <body>
   <main>
     <h1>Dashcam Offloader Privacy Policy</h1>
-    <p class="updated">Last updated: August 7, 2026</p>
+    <p class="updated">Last updated: August 13, 2026</p>
 
-    <p>Dashcam Offloader is a Mac app that helps copy dashcam and camera footage from a memory card to a folder you choose. The app is designed to keep your footage local and to collect as little data as practical.</p>
+    <p>Dashcam Offloader is a desktop app that helps copy dashcam and camera footage from a memory card to a folder you choose. The app is designed to keep your footage local and to collect as little data as practical.</p>
 
     <h2>Local card scanning</h2>
-    <p>When you scan a card, Dashcam Offloader reads folder names, filenames, file sizes, timestamps, selected safe camera metadata, and selected media technical details so it can identify the camera and plan downloads. This scanning happens on your Mac. Videos, photos, GPS traces, and other card contents are not uploaded during normal scanning or downloading.</p>
+    <p>When you scan a card, Dashcam Offloader reads folder names, filenames, file sizes, timestamps, selected safe camera metadata, and selected media technical details so it can identify the camera and plan downloads. This scanning happens locally on your device. Videos, photos, GPS traces, and other card contents are not uploaded during normal scanning or downloading. The app has no automatic analytics or telemetry.</p>
 
     <h2>Feedback and learning submissions</h2>
     <p>If you choose to send feedback or help add support for a dashcam, the app may send a sanitized submission to Vortex Radar's Cloudflare Worker endpoint. Submissions may include:</p>
@@ -92,6 +92,8 @@ function privacyPolicyResponse(method) {
       "access-control-allow-origin": "*",
       "referrer-policy": "no-referrer",
       "x-content-type-options": "nosniff",
+      "content-security-policy": "default-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      "x-frame-options": "DENY",
     },
   });
 }

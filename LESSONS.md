@@ -13,3 +13,14 @@
 - For Cloudflare Worker endpoints, verify repo config plus the actual deploy/account state before changing app production URLs.
 - If the user has not activated a Worker subdomain or route, keep endpoint work separate from scanner/copy fallback work.
 - Endpoint verification must use the exact Worker service URL and a real storage check. On 2026-06-08, the app-submitted DR770X Box training record proved the active feedback service is `dashcam-offloader-feedback.vortexradar.workers.dev`; the stale `dashcam-offloader-feedback.vortexopenclaw.workers.dev` hostname failed DNS.
+
+## 2026-08-13 Privacy Promises Need Outgoing-Payload Tests
+
+- A UI statement that filenames and folder paths are excluded is not proof. Test the complete client payload and the server-side stored record with deliberately private-looking paths, filenames, timestamps, evidence, and diagnostics.
+- Treat server-side sanitization as the final privacy boundary because old or modified clients can submit fields that a current client no longer creates.
+
+## 2026-08-13 Packaged Desktop Security Is A Separate Release Gate
+
+- Passing source tests does not prove a distributable Electron app is safe. Verify the packaged runtime version, production dependencies inside `app.asar`, strict bundle signature, updater-disabled metadata, and a clean-location launch.
+- Renderer IPC must use main-process-owned folder capabilities and copy-plan tokens. Never accept renderer-supplied absolute file paths or copy plans.
+- Do not enable in-app installation for unsigned desktop artifacts. Sign each platform's artifacts and verify the complete update chain first.

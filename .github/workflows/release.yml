@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Build app
         id: buildapp
@@ -89,8 +89,8 @@ jobs:
             exit 1
           fi
 
-          npx --yes wrangler@latest r2 bucket create "$BUCKET" || true
-          npx --yes wrangler@latest r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
+          npx --yes wrangler@4.122.0 r2 bucket create "$BUCKET" || true
+          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
           SIGNING_PAYLOAD="$VERSION"$'\n'"$SHORT_SHA"$'\n'"$ASSET_KEY"$'\n'"$ZIP_SHA256"
           SIGNATURE="$(UPDATE_SIGNING_KEY="$UPDATE_SIGNING_KEY" SIGNING_PAYLOAD="$SIGNING_PAYLOAD" swift -e 'import CryptoKit; import Foundation; let key = try Curve25519.Signing.PrivateKey(rawRepresentation: Data(base64Encoded: ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"]!)!); print(try key.signature(for: Data(ProcessInfo.processInfo.environment["SIGNING_PAYLOAD"]!.utf8)).base64EncodedString())')"
@@ -112,8 +112,8 @@ jobs:
           }
           JSON
 
-          npx --yes wrangler@latest r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
-          npx --yes wrangler@latest deploy --config workers/updates/wrangler.toml
+          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
+          npx --yes wrangler@4.122.0 deploy --config workers/updates/wrangler.toml
 
       - name: Record release outcome
         if: always()

@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const fsSync = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 
@@ -25,8 +26,13 @@ function safeRelativePath(relativePath) {
 }
 
 async function sha256(filePath) {
-  const contents = await fs.readFile(filePath);
-  return crypto.createHash("sha256").update(contents).digest("hex");
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = fsSync.createReadStream(filePath);
+    stream.on("error", reject);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => resolve(hash.digest("hex")));
+  });
 }
 
 async function scanSource(sourcePath) {
@@ -35,13 +41,18 @@ async function scanSource(sourcePath) {
   if (!rootStat.isDirectory()) throw new Error("The selected source must be a folder.");
 
   const media = [];
-  async function visit(directoryPath) {
+  const pendingDirectories = [root];
+  let visitedEntries = 0;
+  while (pendingDirectories.length > 0) {
+    const directoryPath = pendingDirectories.pop();
     const entries = await fs.readdir(directoryPath, { withFileTypes: true });
     for (const entry of entries) {
+      visitedEntries += 1;
+      if (visitedEntries > 500000) throw new Error("The selected source contains too many entries to scan safely.");
       if (entry.name.startsWith(".")) continue;
       const entryPath = path.join(directoryPath, entry.name);
       if (entry.isDirectory()) {
-        if (!EXCLUDED_DIRECTORIES.has(entry.name.toLowerCase())) await visit(entryPath);
+        if (!EXCLUDED_DIRECTORIES.has(entry.name.toLowerCase())) pendingDirectories.push(entryPath);
         continue;
       }
       if (!entry.isFile() || !MEDIA_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
@@ -55,7 +66,6 @@ async function scanSource(sourcePath) {
       });
     }
   }
-  await visit(root);
   return media.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 }
 
@@ -63,7 +73,10 @@ function planCopy(sourcePath, destinationPath, media) {
   const source = path.resolve(sourcePath);
   const destination = path.resolve(destinationPath);
   if (isPathWithin(destination, source)) throw new Error("Choose a download folder outside the source card or folder.");
-  return media.map((item) => ({ ...item, destinationPath: path.join(destination, safeRelativePath(item.relativePath)) }));
+  return media.map((item) => {
+    if (!isPathWithin(item.sourcePath, source)) throw new Error("A planned source file is outside the approved source folder.");
+    return { ...item, destinationPath: path.join(destination, safeRelativePath(item.relativePath)) };
+  });
 }
 
 async function executeCopy(plan, onProgress = () => {}) {
