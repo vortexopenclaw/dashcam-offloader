@@ -69,6 +69,14 @@ which applies.
 - Vantrue N5 - filename-only seed from private archive samples. 4-channel A/B/C/D pattern: YYYYMMDD_HHMMSS_SEQUENCE_MODE_CHANNEL.
 - Vantrue E360 - filename-only seed from private archive samples. Panoramic A channel plus C channel observed.
 
+## Recognized, Not Yet Profile-Supported
+
+The catalog can identify additional Thinkware models only when a card exposes
+exact model metadata or a model-coded support/firmware filename. These cards
+stay on the generic, read-only import flow until card-layout evidence supports
+a dedicated profile. The current catalog and evidence boundaries are recorded
+in `docs/research/thinkware-model-recognition.md`.
+
 ## Intake Queue
 
 - Nextbase iQ - private archive folder did not include enough raw camera filenames for a profile.

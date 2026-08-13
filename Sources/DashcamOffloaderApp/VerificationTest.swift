@@ -165,7 +165,7 @@ enum VerificationTest {
                 print("VERIFY FAIL: Vantrue N4 Pro S profile did not load A/B/C channel labels")
                 return false
             }
-            guard KnownDashcamCatalog.models.count >= 140,
+            guard KnownDashcamCatalog.models.count >= 155,
                   KnownDashcamCatalog.exactVolumeLabelMatch("N4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("Nexus 4 Pro S")?.model == "N4 Pro S",
                   KnownDashcamCatalog.exactVolumeLabelMatch("E360 ACE")?.channelRoles == ["panoramic_front", "rear"],
@@ -220,6 +220,9 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMention("model=ARC800", manufacturer: "Thinkware")?.channelResolutions["front"] == "4K30, QHD30, QHD60",
                   KnownDashcamCatalog.exactModelMention("model=ARC700", manufacturer: "Thinkware")?.channelResolutions["front"] == "4K30, QHD45",
                   KnownDashcamCatalog.exactModelMention("model=ARC900", manufacturer: "Thinkware")?.channelResolutions["rear"] == "QHD30, FHD60",
+                  KnownDashcamCatalog.exactModelMention("Device Name: F200PRO", manufacturer: "Thinkware")?.model == "F200 Pro",
+                  KnownDashcamCatalog.exactModelMention("model=QN200LX", manufacturer: "Thinkware")?.model == "QN200",
+                  KnownDashcamCatalog.exactModelMention("model=F70PRO", manufacturer: "Thinkware")?.channelResolutions["front"] == "FHD 1080p",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false
@@ -1032,6 +1035,27 @@ enum VerificationTest {
                           $0.detail.contains("U3000PRO")
                   }) else {
                 print("VERIFY FAIL: untrained Thinkware safe metadata should identify known catalog model while staying generic: profile=\(untrainedThinkwareScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedThinkwareScan.identifiedCamera)), diagnostics=\(untrainedThinkwareScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let firmwareOnlyThinkwareSource = temp.appendingPathComponent("THINKWARE-FIRMWARE", isDirectory: true)
+            try FileManager.default.createDirectory(at: firmwareOnlyThinkwareSource.appendingPathComponent("cont_rec", isDirectory: true), withIntermediateDirectories: true)
+            try Data(repeating: 41, count: 1024).write(to: firmwareOnlyThinkwareSource.appendingPathComponent("F200PRO_pkg.bin"))
+            try Data(repeating: 42, count: 1024).write(to: firmwareOnlyThinkwareSource.appendingPathComponent("cont_rec/REC_20260616_103100_F.MP4"))
+            let firmwareOnlyThinkwareScan = try scanner.scan(sourceURL: firmwareOnlyThinkwareSource, profiles: [])
+            guard firmwareOnlyThinkwareScan.selectedProfile?.id == "generic-new-dashcam",
+                  firmwareOnlyThinkwareScan.identifiedCamera?.manufacturer == "Thinkware",
+                  firmwareOnlyThinkwareScan.identifiedCamera?.model == "F200 Pro",
+                  firmwareOnlyThinkwareScan.identifiedCamera?.isSupported == false,
+                  firmwareOnlyThinkwareScan.diagnostics.contains(where: {
+                      $0.stage == "safe_model_metadata" &&
+                          $0.detail.contains("F200PRO_pkg.bin") &&
+                          $0.detail.contains("F200 Pro")
+                  }) else {
+                print("VERIFY FAIL: Thinkware model-coded firmware filename should identify an untrained model while staying generic")
+                print("Firmware-only Thinkware profile: \(firmwareOnlyThinkwareScan.selectedProfile?.id ?? "nil")")
+                print("Firmware-only Thinkware identified: \(String(describing: firmwareOnlyThinkwareScan.identifiedCamera))")
+                print("Firmware-only Thinkware diagnostics: \(firmwareOnlyThinkwareScan.diagnostics.map { $0.stage + ":" + $0.outcome + ":" + $0.detail })")
                 return false
             }
 

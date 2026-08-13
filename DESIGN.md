@@ -71,6 +71,30 @@ The eventual implementation should split into these layers:
 - Do not rely on volume label alone for model detection.
 - Always support dry run before copy.
 
+## 2026-08-13 Thinkware Catalog Recognition
+
+**Objective:** Identify a broader set of Thinkware cards when they provide
+exact model metadata, without pretending that every identified model has a
+trained folder/filename profile.
+
+**Design:** The internal catalog stores canonical Thinkware model names,
+common no-space aliases, documented channel expectations, and high-level
+resolution hints. The scanner accepts exact model values from existing
+Thinkware settings metadata first, then optional model-coded firmware/support
+filenames at the card root or in `SETTING/`. A catalog match supplies a
+known-model hint only. Unless a bundled profile independently matches, the
+card remains on the generic, read-only import path.
+
+**Risk and rollback:** A user can leave a firmware package for another model
+on a card, so filename evidence is deliberately weaker than settings metadata
+and cannot select a profile by itself. Removing the filename fallback retains
+the catalog and existing settings-based recognition.
+
+**Success checks:** All documented aliases resolve to the canonical catalog
+model; exact settings and model-coded support filenames identify an untrained
+model; an untrained Thinkware card still uses generic import rather than an
+unrelated bundled profile.
+
 ## 2026-07-23 Preliminary regular-video importer
 
 **Objective:** Let the existing Dashcam Offloader act as a safe first-stage

@@ -259,11 +259,11 @@ extension CardScanner {
         }
 
         let settingFolderURL = sourceURL.appendingPathComponent("SETTING", isDirectory: true)
-        guard let settingFiles = try? fileManager.contentsOfDirectory(
+        let settingFiles = (try? fileManager.contentsOfDirectory(
             at: settingFolderURL,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
-        ) else { return nil }
+        )) ?? []
 
         for fileURL in settingFiles {
             let filename = fileURL.lastPathComponent
@@ -277,6 +277,28 @@ extension CardScanner {
                 firmwareVersion: nil,
                 sourcePath: "SETTING/\(filename)",
                 valueLabel: "model-coded support filename",
+                stage: "safe_model_metadata"
+            )
+        }
+
+        let rootFiles = (try? fileManager.contentsOfDirectory(
+            at: sourceURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        for fileURL in rootFiles {
+            let filename = fileURL.lastPathComponent
+            let extensionName = fileURL.pathExtension.lowercased()
+            guard ["bin", "pkg", "zip", "exe"].contains(extensionName),
+                  let matchedModel = KnownDashcamCatalog.exactModelMention(filename, manufacturer: "Thinkware") else {
+                continue
+            }
+            return SafeModelMetadataInfo(
+                manufacturer: "Thinkware",
+                modelText: matchedModel.model,
+                firmwareVersion: nil,
+                sourcePath: filename,
+                valueLabel: "model-coded firmware/support filename",
                 stage: "safe_model_metadata"
             )
         }
