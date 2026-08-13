@@ -1,4 +1,5 @@
 # Dashcam Offloader 0.1.1
 
-- Fixed OttoSafe Cam footage classification. Front clips now appear as Front
-  instead of Unknown, while rear clips remain correctly labeled Rear.
+- Added Thinkware ARC 800 support. The app now recognizes the camera from its
+  card metadata and organizes front/rear driving, event, manual, and parking
+  footage correctly.

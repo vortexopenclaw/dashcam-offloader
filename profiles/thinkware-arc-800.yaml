@@ -1,0 +1,68 @@
+id: thinkware-arc-800
+manufacturer: Thinkware
+model: ARC 800
+status: validated
+confidence: high
+confidence_note: "Verified from an app-submitted 2-channel card scan, safe ARC800 model metadata, OSD OCR, and the official ARC 800 manual."
+source_notes:
+  - docs/card-profiles/thinkware-arc-800.md
+channel_variants:
+  - channels: 1
+    roles: [front]
+    validation: official_reference
+  - channels: 2
+    roles: [front, rear]
+    validation: real_card_sampled
+sampled_variant:
+  channels: 2
+  roles: [front, rear]
+detection:
+  high_confidence:
+    - path: .SETTING/dashcam.inf
+      contains: ARC800
+  supporting:
+    - folders:
+        required_all: [cont_rec, evt_rec, motion_timelapse_rec, parking_rec, manual_rec, safety_box, sos_rec]
+      note: "Official ARC 800 manual file-storage layout, confirmed by the submitted card."
+folders:
+  - path: cont_rec
+    mode: continuous
+  - path: evt_rec
+    mode: driving_event
+  - path: motion_timelapse_rec
+    mode: parking_motion_or_timelapse
+  - path: parking_rec
+    mode: parking_event
+  - path: manual_rec
+    mode: manual
+  - path: safety_box
+    mode: saved
+  - path: sos_rec
+    mode: sos
+  - path: .parking_rec_sec
+    mode: parking_secondary
+filename_patterns:
+  - pattern: '^(REC|EVT|MOT|PAK|PAS|MAN)_(\d{8})_(\d{6})_([FR])\.MP4$'
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    modes:
+      REC: continuous
+      EVT: driving_event
+      MOT: parking_motion_or_timelapse
+      PAK: parking_event
+      PAS: parking_event_secondary
+      MAN: manual
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - .SETTING/**
+  - THUMBNAIL/**
+  - driveinfo/**
+  - .TWSYS/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"

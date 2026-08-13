@@ -227,6 +227,22 @@ extension CardScanner {
     }
 
     func safeThinkwareModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let arcSettingsPath = ".SETTING/dashcam.inf"
+        let arcSettingsURL = sourceURL.appendingPathComponent(arcSettingsPath)
+        if fileManager.fileExists(atPath: arcSettingsURL.path),
+           let raw = evidenceText(at: arcSettingsURL),
+           let modelText = firstVersionValue(in: raw, keys: ["model"]),
+           KnownDashcamCatalog.exactModelMention(modelText, manufacturer: "Thinkware") != nil {
+            return SafeModelMetadataInfo(
+                manufacturer: "Thinkware",
+                modelText: modelText,
+                firmwareVersion: firstVersionValue(in: raw, keys: ["fwver", "firmware version", "version"]),
+                sourcePath: arcSettingsPath,
+                valueLabel: "model",
+                stage: "safe_model_metadata"
+            )
+        }
+
         let versionPath = "SETTING/lang/ver.dat"
         let versionURL = sourceURL.appendingPathComponent(versionPath)
         if fileManager.fileExists(atPath: versionURL.path),

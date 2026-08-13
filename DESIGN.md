@@ -164,6 +164,26 @@ restores the prior Unknown behavior.
 profile, classifies normal and emergency non-`_b` clips as Front, and keeps
 `_b` clips as Rear.
 
+## 2026-08-12 Thinkware ARC 800 profile
+
+**Objective:** Recognize and classify a real Thinkware ARC 800 card without
+mistaking its shared Thinkware folder and filename structure for a U3000-family
+camera.
+
+**Design:** Use the card's safe `.SETTING/dashcam.inf` `ARC800` model value as
+the exact profile and catalog signal. Folder names and `REC`/`EVT`/`MOT`/`PAK`/
+`MAN` filename tokens classify recording type and `F`/`R` maps the 2CH card to
+Front/Rear. The official manual confirms the folder semantics and supported
+1CH/2CH configurations; its metadata is not used to guess unseen filenames.
+
+**Risks and rollback:** Shared Thinkware structures alone remain insufficient
+for exact model selection. The profile only becomes high confidence with the
+observed safe model marker, and deleting the profile restores generic import.
+
+**Success checks:** A representative ARC 800 fixture containing the safe model
+marker and observed folders selects exactly Thinkware ARC 800, preserves F/R,
+and correctly classifies continuous, event, manual, and parking footage.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:

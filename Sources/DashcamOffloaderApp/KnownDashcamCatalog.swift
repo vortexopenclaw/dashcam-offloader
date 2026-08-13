@@ -87,7 +87,7 @@ enum KnownDashcamCatalog {
         model("Thinkware", "Q850", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "Q800 Pro", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "Q200", channels: 2, roles: ["front", "rear"]),
-        model("Thinkware", "ARC", channels: 2, roles: ["front", "rear"]),
+        model("Thinkware", "ARC 800", aliases: ["ARC", "ARC800"], channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "T700", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "F790", channels: 2, roles: ["front", "rear"]),
         model("Thinkware", "F70 Pro", channels: 1, roles: ["front"]),

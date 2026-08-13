@@ -2,6 +2,10 @@
 
 ## Seeded
 
+- Thinkware ARC 800 - validated from an app-submitted 2CH card scan, safe
+  `.SETTING/dashcam.inf` model marker, OSD recognition, and the official
+  manual. Front/rear `REC`/`EVT`/`MOT`/`PAK`/`MAN` filename behavior is
+  classified; see `docs/card-profiles/thinkware-arc-800.md`.
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
 - Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
 - Botslab G980H - profile drafted from an app learning submission and real 4CH card sample. Detected from `MISC/G980HMCN5291.TXT`; unknown `360CARDVR` cards should not be assigned this model without exact marker evidence.

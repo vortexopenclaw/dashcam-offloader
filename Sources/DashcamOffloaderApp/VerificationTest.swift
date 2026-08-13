@@ -217,6 +217,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO12 Black")?.channelResolutions["primary"] == "5.3K60, 4K120, 2.7K240",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO")?.channelResolutions["primary"] == "4K30, 2.7K60, 1080p60",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelRoles == ["360_primary"],
+                  KnownDashcamCatalog.exactModelMention("model=ARC800", manufacturer: "Thinkware")?.model == "ARC 800",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false
@@ -251,6 +252,34 @@ enum VerificationTest {
             try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
 
             let scanner = CardScanner()
+            let arc800Source = temp.appendingPathComponent("Thinkware ARC 800", isDirectory: true)
+            for folder in [".SETTING", "cont_rec", "evt_rec", "motion_timelapse_rec", "parking_rec", "manual_rec", "safety_box", "sos_rec"] {
+                try FileManager.default.createDirectory(
+                    at: arc800Source.appendingPathComponent(folder, isDirectory: true),
+                    withIntermediateDirectories: true
+                )
+            }
+            try "{\"model\": \"ARC800\", \"fwver\": \"v1.01.00\"}".data(using: .utf8)?.write(
+                to: arc800Source.appendingPathComponent(".SETTING/dashcam.inf")
+            )
+            try Data(repeating: 85, count: 1024).write(to: arc800Source.appendingPathComponent("cont_rec/REC_20260812_223300_F.MP4"))
+            try Data(repeating: 86, count: 1024).write(to: arc800Source.appendingPathComponent("cont_rec/REC_20260812_223300_R.MP4"))
+            try Data(repeating: 87, count: 1024).write(to: arc800Source.appendingPathComponent("evt_rec/EVT_20260812_223400_F.MP4"))
+            try Data(repeating: 88, count: 1024).write(to: arc800Source.appendingPathComponent("motion_timelapse_rec/MOT_20260812_223500_R.MP4"))
+            try Data(repeating: 89, count: 1024).write(to: arc800Source.appendingPathComponent("parking_rec/PAK_20260812_223600_F.MP4"))
+            try Data(repeating: 90, count: 1024).write(to: arc800Source.appendingPathComponent("manual_rec/MAN_20260812_223700_R.MP4"))
+            let arc800Scan = try scanner.scan(sourceURL: arc800Source, profiles: profiles)
+            guard arc800Scan.selectedProfile?.id == "thinkware-arc-800",
+                  arc800Scan.identifiedCamera?.model == "ARC 800",
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("REC_") && $0.filename.hasSuffix("_F.MP4") })?.channel == "front",
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("REC_") && $0.filename.hasSuffix("_R.MP4") })?.channel == "rear",
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("EVT_") })?.mode == "driving_event",
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("MOT_") })?.isParkingFootage == true,
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("PAK_") })?.isParkingFootage == true,
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("MAN_") })?.mode == "manual" else {
+                print("VERIFY FAIL: ARC 800 card scan did not select the exact profile and classify front/rear recording modes: profile=\(arc800Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: arc800Scan.identifiedCamera)), clips=\(arc800Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
+                return false
+            }
             let ottoSafeSource = temp.appendingPathComponent("OttoSafe", isDirectory: true)
             for folder in ["norm", "back_norm", "emr", "back_emr", "Photo"] {
                 try FileManager.default.createDirectory(
