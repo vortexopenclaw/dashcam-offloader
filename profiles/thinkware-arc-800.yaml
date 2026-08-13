@@ -22,7 +22,7 @@ detection:
       contains: ARC800
   supporting:
     - folders:
-        required_all: [cont_rec, evt_rec, motion_timelapse_rec, parking_rec, manual_rec, safety_box, sos_rec]
+        required_all: [cont_rec, evt_rec, motion_timelapse_rec, parking_rec, manual_rec, Safety_Box, sos_rec]
       note: "Official ARC 800 manual file-storage layout, confirmed by the submitted card."
 folders:
   - path: cont_rec
