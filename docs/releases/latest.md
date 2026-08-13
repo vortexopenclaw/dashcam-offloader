@@ -1,5 +1,9 @@
 # Dashcam Offloader 0.1.1
 
+- Expanded BlackVue and VIOFO catalog recognition with current manual-backed
+  model variants. VIOFO model-coded firmware filenames can now safely identify
+  an untrained catalog model while retaining generic, read-only import.
+
 - Expanded safe Thinkware model recognition: current comparison models, common
   compact aliases, and preliminary channel/resolution hints now identify cards
   from exact settings metadata or model-coded support/firmware filenames.

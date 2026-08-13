@@ -34,6 +34,7 @@ extension CardScanner {
             safeGoProModelMetadataInfo(sourceURL: sourceURL),
             safeBlackVueModelMetadataInfo(sourceURL: sourceURL),
             safeThinkwareModelMetadataInfo(sourceURL: sourceURL),
+            safeVIOFOModelMetadataInfo(sourceURL: sourceURL),
             safeVantrueModelMetadataInfo(sourceURL: sourceURL),
             safeVueroidModelMetadataInfo(sourceURL: sourceURL),
             safeCommonBrandModelMetadataInfo(sourceURL: sourceURL, manufacturer: "Miofive"),
@@ -325,6 +326,30 @@ extension CardScanner {
                 firmwareVersion: nil,
                 sourcePath: "GPS/\(filename)",
                 valueLabel: "model-coded settings filename",
+                stage: "safe_model_metadata"
+            )
+        }
+        return nil
+    }
+
+    func safeVIOFOModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        let rootFiles = (try? fileManager.contentsOfDirectory(
+            at: sourceURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        for fileURL in rootFiles {
+            let filename = fileURL.lastPathComponent
+            guard ["bin", "fw", "zip"].contains(fileURL.pathExtension.lowercased()),
+                  let matchedModel = KnownDashcamCatalog.exactModelMention(filename, manufacturer: "VIOFO") else {
+                continue
+            }
+            return SafeModelMetadataInfo(
+                manufacturer: "VIOFO",
+                modelText: matchedModel.model,
+                firmwareVersion: nil,
+                sourcePath: filename,
+                valueLabel: "model-coded firmware filename",
                 stage: "safe_model_metadata"
             )
         }
