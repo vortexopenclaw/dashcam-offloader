@@ -184,6 +184,28 @@ observed safe model marker, and deleting the profile restores generic import.
 marker and observed folders selects exactly Thinkware ARC 800, preserves F/R,
 and correctly classifies continuous, event, manual, and parking footage.
 
+## 2026-08-12 Thinkware ARC family seed profiles
+
+**Objective:** Make ARC 700 and ARC 900 available for safe manual selection
+from their official manuals, while keeping automatic exact detection limited to
+the card evidence that actually proves a model.
+
+**Design:** Each seed profile maps only its manual-confirmed recording folders,
+the documented `REC_YYYYMMDD_HHMMSS_F/R.MP4` continuous naming, and F/R
+channels. ARC 700 uses `motion_timelapse_rec`; ARC 900 uses `motion_rec` and
+adds `sos_rec`. Both models have manual-confirmed resolution options in the
+catalog, but no bitrate claims. The ARC 800 catalog now records its documented
+QHD60 Front option separately from the observed 4K30 submission.
+
+**Risks and rollback:** The shared Thinkware layout is insufficient for exact
+model recognition, so a scan stays generic until model-specific card metadata
+or comparable evidence appears. Deleting either profile removes its manual
+selection option without affecting generic importing.
+
+**Success checks:** Fixtures load each profile and classify its documented
+F/R continuous and folder-based recording behavior. Catalog checks distinguish
+ARC 700, ARC 800, and ARC 900 configuration support.
+
 ## Profile Confidence
 
 Profiles should expose confidence levels:

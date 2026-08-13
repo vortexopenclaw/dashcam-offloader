@@ -218,6 +218,8 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "HERO")?.channelResolutions["primary"] == "4K30, 2.7K60, 1080p60",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelRoles == ["360_primary"],
                   KnownDashcamCatalog.exactModelMention("model=ARC800", manufacturer: "Thinkware")?.model == "ARC 800",
+                  KnownDashcamCatalog.exactModelMention("model=ARC700", manufacturer: "Thinkware")?.channelResolutions["front"] == "4K30, QHD45",
+                  KnownDashcamCatalog.exactModelMention("model=ARC900", manufacturer: "Thinkware")?.channelResolutions["rear"] == "QHD30, FHD60",
                   KnownDashcamCatalog.exactModelMatch(manufacturer: "GoPro", modelText: "MAX2")?.channelResolutions["360_primary"]?.contains("4K100 360") == true else {
                 print("VERIFY FAIL: internal known dashcam catalog missing expected aliases or channel hints")
                 return false
@@ -252,6 +254,53 @@ enum VerificationTest {
             try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
 
             let scanner = CardScanner()
+            guard let arc700Profile = profiles.first(where: { $0.id == "thinkware-arc-700" }),
+                  let arc900Profile = profiles.first(where: { $0.id == "thinkware-arc-900" }) else {
+                print("VERIFY FAIL: ARC 700/900 manual-backed seed profiles did not load")
+                return false
+            }
+            let arc700Source = temp.appendingPathComponent("Thinkware ARC 700", isDirectory: true)
+            for folder in ["cont_rec", "evt_rec", "manual_rec", "motion_timelapse_rec", "parking_rec"] {
+                try FileManager.default.createDirectory(at: arc700Source.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            let arc700Files = [
+                arc700Source.appendingPathComponent("cont_rec/REC_20260812_223300_F.MP4"),
+                arc700Source.appendingPathComponent("evt_rec/EVT_20260812_223400_R.MP4"),
+                arc700Source.appendingPathComponent("manual_rec/MAN_20260812_223500_F.MP4"),
+                arc700Source.appendingPathComponent("motion_timelapse_rec/MOT_20260812_223600_R.MP4"),
+                arc700Source.appendingPathComponent("parking_rec/PAK_20260812_223700_F.MP4")
+            ]
+            for (index, fileURL) in arc700Files.enumerated() {
+                try Data(repeating: UInt8(91 + index), count: 1024).write(to: fileURL)
+            }
+            let arc700Clips = scanner.classify(files: arc700Files, sourceURL: arc700Source, profile: arc700Profile)
+            guard Set(arc700Clips.map(\.channel)) == ["front", "rear"],
+                  arc700Clips.first(where: { $0.filename.hasPrefix("EVT_") })?.mode == "driving_event",
+                  arc700Clips.first(where: { $0.filename.hasPrefix("MAN_") })?.mode == "manual",
+                  arc700Clips.first(where: { $0.filename.hasPrefix("MOT_") })?.isParkingFootage == true,
+                  arc700Clips.first(where: { $0.filename.hasPrefix("PAK_") })?.isParkingFootage == true else {
+                print("VERIFY FAIL: ARC 700 manual layout did not classify F/R and recording folders: \(arc700Clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
+                return false
+            }
+            let arc900Source = temp.appendingPathComponent("Thinkware ARC 900", isDirectory: true)
+            for folder in ["cont_rec", "evt_rec", "motion_rec", "parking_rec", "manual_rec", "sos_rec"] {
+                try FileManager.default.createDirectory(at: arc900Source.appendingPathComponent(folder, isDirectory: true), withIntermediateDirectories: true)
+            }
+            let arc900Files = [
+                arc900Source.appendingPathComponent("cont_rec/REC_20260812_223300_F.MP4"),
+                arc900Source.appendingPathComponent("motion_rec/MOT_20260812_223600_R.MP4"),
+                arc900Source.appendingPathComponent("sos_rec/SOS_20260812_223700_F.MP4")
+            ]
+            for (index, fileURL) in arc900Files.enumerated() {
+                try Data(repeating: UInt8(96 + index), count: 1024).write(to: fileURL)
+            }
+            let arc900Clips = scanner.classify(files: arc900Files, sourceURL: arc900Source, profile: arc900Profile)
+            guard Set(arc900Clips.map(\.channel)) == ["front", "rear"],
+                  arc900Clips.first(where: { $0.filename.hasPrefix("MOT_") })?.isParkingFootage == true,
+                  arc900Clips.first(where: { $0.filename.hasPrefix("SOS_") })?.mode == "sos" else {
+                print("VERIFY FAIL: ARC 900 manual layout did not classify F/R and recording folders: \(arc900Clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
+                return false
+            }
             let arc800Source = temp.appendingPathComponent("Thinkware ARC 800", isDirectory: true)
             for folder in [".SETTING", "cont_rec", "evt_rec", "motion_timelapse_rec", "parking_rec", "manual_rec", "safety_box", "sos_rec"] {
                 try FileManager.default.createDirectory(

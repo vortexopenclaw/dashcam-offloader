@@ -1,0 +1,43 @@
+id: thinkware-arc-900
+manufacturer: Thinkware
+model: ARC 900
+status: seed
+confidence: medium
+confidence_note: "Official manual confirms folders, REC filename structure, F/R channels, and 2CH specifications. A real card is still needed for exact model metadata and unobserved filename prefixes."
+source_notes:
+  - docs/card-profiles/thinkware-arc-900.md
+channel_variants:
+  - channels: 2
+    roles: [front, rear]
+    validation: official_reference
+folders:
+  - path: cont_rec
+    mode: continuous
+  - path: evt_rec
+    mode: driving_event
+  - path: motion_rec
+    mode: parking_motion_or_timelapse
+  - path: parking_rec
+    mode: parking_event
+  - path: manual_rec
+    mode: manual
+  - path: sos_rec
+    mode: sos
+filename_patterns:
+  - pattern: '^REC_(\d{8})_(\d{6})_([FR])\.MP4$'
+    timestamp:
+      format: YYYYMMDD_HHMMSS
+    channels:
+      F: front
+      R: rear
+channels:
+  F: front
+  R: rear
+exclude:
+  - SETTING/**
+  - THUMBNAIL/**
+  - driveinfo/**
+  - .TWSYS/**
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"

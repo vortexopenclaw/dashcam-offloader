@@ -41,6 +41,12 @@ The sampled card was 2-channel. The manual documents 1CH and 2CH video
 configurations, so the profile supports an F-only card without inventing an
 unobserved channel.
 
+## Video Configurations
+
+The submitted footage was 4K30 Front plus FHD30 Rear. The official manual also
+documents QHD60 Front plus FHD30 Rear. This is a supported configuration, not
+an observed bitrate or resolution on the submitted card.
+
 ## Reference
 
 - Official manual: <https://download2.inavi.com/dashcam/ARC800/manual/arc800_manual_english_20260623.pdf>

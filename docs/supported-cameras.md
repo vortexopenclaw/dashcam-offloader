@@ -6,6 +6,12 @@
   `.SETTING/dashcam.inf` model marker, OSD recognition, and the official
   manual. Front/rear `REC`/`EVT`/`MOT`/`PAK`/`MAN` filename behavior is
   classified; see `docs/card-profiles/thinkware-arc-800.md`.
+- Thinkware ARC 700 - manual-backed seed profile. F/R continuous naming and
+  all recording folders are documented; an actual card is still required for
+  exact detection and unobserved prefix/bitrate behavior.
+- Thinkware ARC 900 - manual-backed seed profile. F/R continuous naming and
+  all recording folders are documented; an actual card is still required for
+  exact detection and unobserved prefix/bitrate behavior.
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
 - Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
 - Botslab G980H - profile drafted from an app learning submission and real 4CH card sample. Detected from `MISC/G980HMCN5291.TXT`; unknown `360CARDVR` cards should not be assigned this model without exact marker evidence.
