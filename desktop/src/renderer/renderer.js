@@ -16,6 +16,12 @@ function renderMedia() {
   byId("summary").textContent = `${state.media.length} eligible media file${state.media.length === 1 ? "" : "s"} found. Hidden/system files and non-media files are excluded.`;
 }
 
+byId("update-button").addEventListener("click", async () => {
+  setStatus("Checking for updates...");
+  await window.offloader.checkForUpdates();
+  setStatus("Update check completed. You will be prompted if an update is available.");
+});
+
 byId("source-button").addEventListener("click", async () => {
   const selected = await window.offloader.chooseFolder("Choose a memory card or video folder");
   if (!selected) return;

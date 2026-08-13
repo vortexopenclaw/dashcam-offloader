@@ -54,6 +54,13 @@ release is gated on profile-parity verification and signed/notarized platform
 artifacts, so the current macOS distribution path remains authoritative during
 the foundation phase.
 
+Packaged desktop builds check the platform-specific update feed at launch.
+When an update exists, the app asks before downloading it and asks again before
+restarting to install it. Development builds do not query the update service.
+The public Worker serves Electron's platform metadata and assets below the
+separate `dashcam-offloader/desktop/` object prefix, so a desktop build can
+never mistake the existing Swift macOS ZIP for its own update.
+
 **Risks and rollback:** The new desktop shell adds an npm/Electron toolchain
 and has generic-only classification initially. It is isolated under `desktop/`
 and does not change the Swift build, published update manifest, or existing

@@ -1,4 +1,5 @@
 const MANIFEST_KEY = "dashcam-offloader/latest.json";
+const DESKTOP_UPDATE_PREFIX = "dashcam-offloader/desktop/";
 const PRIVACY_POLICY_PATH = "/dashcam-offloader/privacy";
 const SECURITY_TXT = `Contact: mailto:security@vortexradar.com
 Contact: https://www.vortexradar.com/security-contact/
@@ -168,6 +169,23 @@ export default {
       }
       return new Response(request.method === "HEAD" ? null : object.body, {
         headers: responseHeaders(object, "application/json; charset=utf-8"),
+      });
+    }
+
+    if (path.startsWith("/dashcam-offloader/desktop/")) {
+      const assetName = decodeURIComponent(path.slice("/dashcam-offloader/desktop/".length));
+      if (!assetName || assetName.includes("/") || assetName.includes("\\")) {
+        return notFound();
+      }
+      const object = await env.UPDATES_BUCKET.get(`${DESKTOP_UPDATE_PREFIX}${assetName}`);
+      if (!object) {
+        return notFound();
+      }
+      const contentType = assetName.endsWith(".yml")
+        ? "text/yaml; charset=utf-8"
+        : "application/octet-stream";
+      return new Response(request.method === "HEAD" ? null : object.body, {
+        headers: responseHeaders(object, contentType),
       });
     }
 

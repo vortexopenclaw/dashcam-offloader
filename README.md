@@ -33,6 +33,11 @@ the generic, read-only import workflow for Apple Silicon Macs, Intel Macs,
 Linux, and Windows. Profile detection/classification parity is still in
 progress, so the signed macOS SwiftUI release remains the authoritative build.
 
+Packaged desktop builds check for updates at launch. When a newer
+platform-specific build is available, the app prompts before downloading and
+prompts again before restarting to install it. Development builds do not check
+the update service.
+
 The prototype is local-only and keeps source cards read-only. It does not download firmware, modify `/Volumes/`, or upload files.
 
 Firmware filename knowledge is maintainer research only: public firmware downloads may be inspected outside the app to learn filename patterns, but the Mac app only compares filenames already present on a card as weak bonus evidence.

@@ -1,6 +1,8 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("node:path");
 const { executeCopy, planCopy, scanSource } = require("./offload-engine");
+const { checkForUpdates, configureUpdatePrompts } = require("./update-controller");
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -21,7 +23,12 @@ app.whenReady().then(() => {
   ipcMain.handle("scan-source", (_event, sourcePath) => scanSource(sourcePath));
   ipcMain.handle("copy-plan", (_event, sourcePath, destinationPath, media) => planCopy(sourcePath, destinationPath, media));
   ipcMain.handle("execute-copy", async (event, plan) => executeCopy(plan, (progress) => event.sender.send("copy-progress", progress)));
+  ipcMain.handle("check-for-updates", () => checkForUpdates({ updater: autoUpdater, log: console.info }));
   createWindow();
+  if (app.isPackaged) {
+    configureUpdatePrompts({ updater: autoUpdater, dialog, log: console.info });
+    void checkForUpdates({ updater: autoUpdater, log: console.info });
+  }
   app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 

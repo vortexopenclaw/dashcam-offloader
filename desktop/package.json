@@ -20,6 +20,12 @@
       "package.json"
     ],
     "asar": true,
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/desktop"
+      }
+    ],
     "mac": {
       "category": "public.app-category.utilities",
       "icon": "../assets/AppIcon.icns"
@@ -36,7 +42,8 @@
   },
   "devDependencies": {
     "electron": "^38.2.2",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "electron-updater": "^6.6.2"
   },
   "allowScripts": {
     "electron@38.8.6": true
