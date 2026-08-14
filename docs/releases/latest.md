@@ -1,29 +1,22 @@
-# Dashcam Offloader 0.1.1
+# Dashcam Offloader 0.1.2
 
-- Added an About section with a direct link to the public GitHub repository.
-
-- Expanded Vantrue catalog recognition from its official collection and
-  manuals. Added manual-listed models are catalog-only unless their card
-  layout has been verified; ambiguous channel and resolution details remain
-  intentionally unspecified.
-
-- Expanded BlackVue and VIOFO catalog recognition with current manual-backed
-  model variants. VIOFO model-coded firmware filenames can now safely identify
-  an untrained catalog model while retaining generic, read-only import.
-
-- Expanded safe Thinkware model recognition: current comparison models, common
-  compact aliases, and preliminary channel/resolution hints now identify cards
-  from exact settings metadata or model-coded support/firmware filenames.
-  Untrained models remain on the generic read-only importer.
-
-- Added BlackVue Elite 10 support from its remote card scan: exact model
-  metadata plus normal and impact Front/Rear recording classification.
-- Improved Learn Card media summaries so every observed video
-  codec/resolution/frame-rate configuration is retained, rather than only
-  generic per-folder representatives.
-- Recorded direct-card ARC 800 evidence for QHD30 Front/FHD30 Rear and the
-  exact `Safety_Box` folder spelling.
-- Added manual-backed Thinkware ARC 700 and ARC 900 profiles, including their
-  documented recording folders, Front/Rear clip naming, and parking behavior.
-- Added the ARC 800's documented QHD60 Front video configuration alongside the
-  4K30 footage observed on the submitted card.
+- Added every researched camera model to the manual picker. Supported profiles
+  and known models that still need a card scan appear in separate sections.
+- Known but unverified cameras stay on the generic read-only importer. The app
+  does not apply storage rules from a related camera merely because its name is
+  similar.
+- Added an optional card-verification prompt for known cameras that still need
+  evidence. The review shows file, mode, and channel counts plus grouped codec,
+  resolution, frame-rate, bitrate, duration, and allowlisted settings data.
+- Kept learning submissions privacy-safe. Source paths, folder paths, raw
+  filenames, timestamps, media, GPS, serial and network identifiers, and
+  credentials are excluded from the transmitted scan.
+- Fixed camera brand and model selection while sources are scanning and after
+  the app returns from idle. Manual choices now remain authoritative instead
+  of being overwritten by an older scan.
+- Restored exact BlackVue DR970X LTE Plus recognition from safe model metadata
+  and added its validated two-channel card profile.
+- Added clearer selected-camera technical details while keeping the larger
+  community technical reference separate from the offloader interface.
+- Hardened feedback sanitization, privacy checks, dependency pinning, and
+  release verification.

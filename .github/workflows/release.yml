@@ -65,7 +65,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           UPDATE_BASE_URL: ${{ vars.DASHCAM_OFFLOADER_UPDATE_BASE_URL || 'https://dashcam-offloader-updates.vortexradar.workers.dev' }}
           BUCKET: dashcam-offloader-updates
-          VERSION: 0.1.1
+          VERSION: 0.1.2
           ZIP_NAME: ${{ steps.package.outputs.zip_name }}
           ZIP_PATH: ${{ steps.package.outputs.zip_path }}
           ZIP_SHA256: ${{ steps.package.outputs.sha256 }}
