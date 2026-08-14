@@ -52,3 +52,8 @@
 - Verify a newly generated release manifest with the public key embedded in the
   packaged app before the first public write. A valid signature from the wrong
   private key otherwise creates a release that every installed client rejects.
+- Signature validity alone does not prove that a manifest describes the package
+  being released. The packaged app must also compare its identifier, version,
+  and commit with the generated manifest before publication.
+- Treat the live update manifest as the release activation pointer. Upload it
+  only after the unique archive, Worker, and human-facing release are ready.

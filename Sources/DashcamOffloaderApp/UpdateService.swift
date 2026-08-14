@@ -373,6 +373,17 @@ struct UpdateService: @unchecked Sendable {
         return try validatedManifestStructure(manifest)
     }
 
+    static func manifestMatchesPackagedBuild(
+        _ manifest: AppUpdateManifest,
+        bundleIdentifier: String?,
+        currentBuild: AppBuildInfo
+    ) -> Bool {
+        bundleIdentifier == updateBundleIdentifier
+            && currentBuild.version == manifest.version
+            && currentBuild.commit == manifest.build
+            && !currentBuild.build.isEmpty
+    }
+
     static func validatedManifestStructure(_ manifest: AppUpdateManifest) throws -> AppUpdateManifest {
         _ = try requiredChecksum(for: manifest)
         let version = manifest.version.trimmingCharacters(in: .whitespacesAndNewlines)

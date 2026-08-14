@@ -414,8 +414,10 @@ Update eligibility requires a strictly higher three-component release version,
 so replaying an older valid signed manifest cannot downgrade the app. Every
 release must therefore increment `CFBundleShortVersionString`. Before any
 public write, CI must create the signed manifest and verify it with the exact
-public key embedded in the packaged app. Cloudflare receives the verified
-archive and manifest before GitHub's mutable `latest` release is advanced.
+public key embedded in the packaged app, including an exact match to the
+packaged bundle identifier, release version, and build commit. CI stages the
+unique Cloudflare archive, deploys the Worker, publishes GitHub `latest`, and
+only then activates the update by replacing the live Cloudflare manifest.
 
 **Risks and rollback:** This deliberately authenticates publisher identity with
 the repository's Ed25519 release key rather than an unavailable Apple Developer
@@ -429,7 +431,10 @@ build commit. Older and same-version manifests do not offer an update, even if
 their signed build commit differs. Unsigned display/link fields are discarded
 or locally derived. A matching ad-hoc bundle passes when its archive hash and
 manifest signature are already trusted. The release workflow fails before
-publishing if the configured private key does not match the embedded public key.
+publishing if the configured private key does not match the embedded public key
+or the manifest does not describe the packaged app exactly. The live update
+manifest is the final public write, preventing earlier partial steps from
+activating an incomplete automatic update.
 The full Swift verifier, packaged-app verifier, strict signature check, privacy
 audit, dependency audit, and adjacent desktop/Worker tests must also pass.
 

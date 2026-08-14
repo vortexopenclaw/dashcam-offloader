@@ -39,7 +39,9 @@ commits should use a repository-scoped GitHub no-reply address.
   paths, or override the locally derived update name. Only a strictly higher
   signed semantic version is eligible, preventing replay of older signed
   releases. CI verifies each generated signature with the exact public key in
-  the packaged app before publishing.
+  the packaged app, requires the manifest to match that package's identifier,
+  version, and commit, and uploads the live manifest only after the other
+  release surfaces succeed.
 - **Critical release trust gap:** The unsigned beta failed strict signature
   verification and could not establish a trustworthy automatic update path.
   Automatic desktop updates are now disabled locally.

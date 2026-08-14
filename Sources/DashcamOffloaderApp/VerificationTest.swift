@@ -55,6 +55,22 @@ enum VerificationTest {
                 print("VERIFY FAIL: update availability comparison is wrong")
                 return false
             }
+            guard UpdateService.manifestMatchesPackagedBuild(
+                matchingManifest,
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                currentBuild: currentBuild
+            ), !UpdateService.manifestMatchesPackagedBuild(
+                newerManifest,
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                currentBuild: currentBuild
+            ), !UpdateService.manifestMatchesPackagedBuild(
+                matchingManifest,
+                bundleIdentifier: "com.example.wrong-app",
+                currentBuild: currentBuild
+            ) else {
+                print("VERIFY FAIL: release manifest/package identity comparison is wrong")
+                return false
+            }
             var headedReleaseNotesManifest = matchingManifest
             headedReleaseNotesManifest.releaseNotes = """
             ## What's New

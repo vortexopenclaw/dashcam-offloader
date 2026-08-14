@@ -94,8 +94,8 @@ jobs:
 
           "build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --verify-update-manifest build/latest.json
 
-      - name: Publish public Cloudflare update
-        id: cloudflare
+      - name: Stage Cloudflare archive and deploy Worker
+        id: cloudflarestage
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
@@ -109,7 +109,6 @@ jobs:
           npx --yes wrangler@4.122.0 r2 bucket create "$BUCKET" || true
           npx --yes wrangler@4.122.0 r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
-          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
           npx --yes wrangler@4.122.0 deploy --config workers/updates/wrangler.toml
 
       - name: Publish latest release
@@ -121,6 +120,16 @@ jobs:
             "${{ steps.package.outputs.zip_path }}" \
             "${{ steps.package.outputs.zip_name }}" \
             "${{ github.repository }}"
+
+      - name: Activate public update manifest
+        id: cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
+          BUCKET: dashcam-offloader-updates
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
 
       - name: Record release outcome
         if: always()
@@ -138,9 +147,10 @@ jobs:
             --arg appVerify "${{ steps.appverify.outcome }}" \
             --arg zip "${{ steps.package.outcome }}" \
             --arg manifest "${{ steps.manifest.outcome }}" \
+            --arg cloudflareStage "${{ steps.cloudflarestage.outcome }}" \
             --arg githubRelease "${{ steps.ghrelease.outcome }}" \
             --arg cloudflare "${{ steps.cloudflare.outcome }}" \
-            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, repoVerify:$repoVerify, appVerify:$appVerify, zip:$zip, manifest:$manifest, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
+            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, repoVerify:$repoVerify, appVerify:$appVerify, zip:$zip, manifest:$manifest, cloudflareStage:$cloudflareStage, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
           CONTENT=$(printf '%s' "$STATUS_JSON" | base64)
           EXISTING_SHA=$(gh api "repos/$GITHUB_REPOSITORY/contents/release-status.json?ref=ci-status" --jq .sha 2>/dev/null || true)
           if [ -n "$EXISTING_SHA" ]; then

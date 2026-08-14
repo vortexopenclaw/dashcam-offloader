@@ -48,7 +48,15 @@ enum UpdateManifestDiagnostic {
             let manifestURL = URL(fileURLWithPath: arguments[commandIndex + 1])
             let data = try Data(contentsOf: manifestURL)
             let manifest = try JSONDecoder().decode(AppUpdateManifest.self, from: data)
-            _ = try UpdateService.validatedManifest(manifest)
+            let validated = try UpdateService.validatedManifest(manifest)
+            guard UpdateService.manifestMatchesPackagedBuild(
+                validated,
+                bundleIdentifier: Bundle.main.bundleIdentifier,
+                currentBuild: .current()
+            ) else {
+                print("UPDATE MANIFEST FAIL: manifest does not match the packaged app")
+                return false
+            }
             print("UPDATE MANIFEST PASS")
             return true
         } catch {
