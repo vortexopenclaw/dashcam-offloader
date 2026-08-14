@@ -28,3 +28,14 @@
   release assets, issues, and comments. Third-party framework strings must be
   compared with the official upstream artifact before classifying them as
   personal data.
+
+## 2026-08-14 Security Documentation Is Not Enforcement
+
+- The native updater documented a Developer ID and Team Identifier gate and
+  defined an error for a rejected app signature, but no runtime call enforced
+  that gate. Audit the call site and add a must-reject fixture, not just a
+  helper, configuration field, error case, or design statement.
+- Treat mutable manifest display fields as hostile even when the manifest has
+  a valid signature. Any field used as a filesystem path must be independently
+  constrained, and extracted update entries must remain inside the staging
+  root after symbolic links are resolved.

@@ -113,6 +113,7 @@ struct UpdateService: @unchecked Sendable {
     var currentBundleURL: URL = Bundle.main.bundleURL
 
     private static let updateManifestPublicKey = "TvHSMSTOwVWYFeo7FVL13w+Iw3wjrMkJCg4/GdSQqOI="
+    private static let updateBundleIdentifier = "com.vortexopenclaw.dashcam-offloader"
 
     func fetchManifest() async throws -> AppUpdateManifest {
         let (data, response) = try await session.data(from: manifestURL)
@@ -155,6 +156,10 @@ struct UpdateService: @unchecked Sendable {
         try Self.validateManifestSignature(manifest)
         let expectedChecksum = try Self.requiredChecksum(for: manifest)
 
+        guard let archiveFilename = Self.safeArchiveFilename(manifest.assetName ?? "Dashcam-Offloader.zip") else {
+            throw UpdateServiceError.invalidManifestResponse
+        }
+
         let (downloadedURL, response) = try await session.download(from: manifest.downloadURL)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
@@ -163,8 +168,14 @@ struct UpdateService: @unchecked Sendable {
 
         let stagingRoot = fileManager.temporaryDirectory
             .appendingPathComponent("dashcam-offloader-update-\(UUID().uuidString)", isDirectory: true)
-        let zipURL = stagingRoot.appendingPathComponent(manifest.assetName ?? "Dashcam-Offloader.zip")
+        let zipURL = stagingRoot.appendingPathComponent(archiveFilename, isDirectory: false)
         let extractedURL = stagingRoot.appendingPathComponent("extracted", isDirectory: true)
+        var preserveStagingRoot = false
+        defer {
+            if !preserveStagingRoot {
+                try? fileManager.removeItem(at: stagingRoot)
+            }
+        }
         try fileManager.createDirectory(at: stagingRoot, withIntermediateDirectories: true)
         try fileManager.moveItem(at: downloadedURL, to: zipURL)
 
@@ -180,6 +191,15 @@ struct UpdateService: @unchecked Sendable {
         guard fileManager.fileExists(atPath: appURL.path) else {
             throw UpdateServiceError.updateAppNotFound
         }
+        let teamID = Bundle.main.object(forInfoDictionaryKey: "DashcamOffloaderUpdateSigningTeamID") as? String ?? ""
+        try Self.validateStagedAppSignature(
+            appURL,
+            extractedRootURL: extractedURL,
+            expectedTeamID: teamID,
+            expectedBundleIdentifier: Self.updateBundleIdentifier,
+            codesignRunner: runProcessCapturingOutput
+        )
+        preserveStagingRoot = true
         return appURL
     }
 
@@ -348,6 +368,73 @@ struct UpdateService: @unchecked Sendable {
         let payload = "\(manifest.version)\n\(manifest.build)\n\(assetKey)\n\(sha256)"
         guard publicKey.isValidSignature(signature, for: Data(payload.utf8)) else {
             throw UpdateServiceError.manifestSignatureInvalid
+        }
+    }
+
+    static func safeArchiveFilename(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed == URL(fileURLWithPath: trimmed).lastPathComponent,
+              trimmed != ".",
+              trimmed != "..",
+              trimmed.lowercased().hasSuffix(".zip") else {
+            return nil
+        }
+        return trimmed
+    }
+
+    static func developerIDRequirement(teamID: String, bundleIdentifier: String) -> String? {
+        let normalized = teamID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.range(of: #"^[A-Z0-9]{10}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        let normalizedBundleIdentifier = bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedBundleIdentifier.range(
+            of: #"^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$"#,
+            options: .regularExpression
+        ) != nil else {
+            return nil
+        }
+        return "identifier \"\(normalizedBundleIdentifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(normalized)\" and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
+    }
+
+    static func isContainedUpdateApp(_ appURL: URL, extractedRootURL: URL) -> Bool {
+        let root = extractedRootURL.resolvingSymlinksInPath().standardizedFileURL.path
+        let app = appURL.resolvingSymlinksInPath().standardizedFileURL.path
+        return app.hasPrefix(root + "/")
+    }
+
+    static func validateStagedAppSignature(
+        _ appURL: URL,
+        extractedRootURL: URL,
+        expectedTeamID: String,
+        expectedBundleIdentifier: String,
+        codesignRunner: (String, [String]) throws -> (status: Int32, output: String)
+    ) throws {
+        let values = try appURL.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true,
+              values.isSymbolicLink != true,
+              Self.isContainedUpdateApp(appURL, extractedRootURL: extractedRootURL),
+              let requirement = Self.developerIDRequirement(
+                  teamID: expectedTeamID,
+                  bundleIdentifier: expectedBundleIdentifier
+              ) else {
+            throw UpdateServiceError.updateSignatureInvalid
+        }
+
+        let result = try codesignRunner(
+            "/usr/bin/codesign",
+            [
+                "--verify",
+                "--deep",
+                "--strict",
+                "--verbose=2",
+                "-R=\(requirement)",
+                appURL.path,
+            ]
+        )
+        guard result.status == 0 else {
+            throw UpdateServiceError.updateSignatureInvalid
         }
     }
 

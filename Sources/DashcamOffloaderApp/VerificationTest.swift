@@ -63,6 +63,94 @@ enum VerificationTest {
                 print("VERIFY FAIL: update manifest signature should be mandatory")
                 return false
             }
+            guard UpdateService.safeArchiveFilename("Dashcam-Offloader-abc1234.zip") == "Dashcam-Offloader-abc1234.zip",
+                  UpdateService.safeArchiveFilename("../Dashcam-Offloader.zip") == nil,
+                  UpdateService.safeArchiveFilename("nested/Dashcam-Offloader.zip") == nil,
+                  UpdateService.safeArchiveFilename("Dashcam-Offloader.app") == nil else {
+                print("VERIFY FAIL: update archive filename validation regressed")
+                return false
+            }
+            guard let developerIDRequirement = UpdateService.developerIDRequirement(
+                teamID: "A1B2C3D4E5",
+                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader"
+            ),
+                  developerIDRequirement.contains("identifier \"com.vortexopenclaw.dashcam-offloader\""),
+                  developerIDRequirement.contains("anchor apple generic"),
+                  developerIDRequirement.contains("certificate leaf[subject.OU] = \"A1B2C3D4E5\""),
+                  developerIDRequirement.contains("1.2.840.113635.100.6.1.13"),
+                  UpdateService.developerIDRequirement(teamID: "", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
+                  UpdateService.developerIDRequirement(teamID: "WRONG-TEAM", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
+                  UpdateService.developerIDRequirement(teamID: "A1B2C3D4E5\"", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
+                  UpdateService.developerIDRequirement(teamID: "A1B2C3D4E5", bundleIdentifier: "bad\"identifier") == nil else {
+                print("VERIFY FAIL: Developer ID update requirement is not fail-closed")
+                return false
+            }
+            let extractedUpdateRoot = URL(fileURLWithPath: "/tmp/dashcam-update/extracted", isDirectory: true)
+            guard UpdateService.isContainedUpdateApp(
+                URL(fileURLWithPath: "/tmp/dashcam-update/extracted/Dashcam Offloader.app", isDirectory: true),
+                extractedRootURL: extractedUpdateRoot
+            ), !UpdateService.isContainedUpdateApp(
+                URL(fileURLWithPath: "/tmp/dashcam-update/extracted-escape/Dashcam Offloader.app", isDirectory: true),
+                extractedRootURL: extractedUpdateRoot
+            ) else {
+                print("VERIFY FAIL: staged update containment validation regressed")
+                return false
+            }
+            let stagedSignatureRoot = FileManager.default.temporaryDirectory
+                .appendingPathComponent("dashcam-offloader-signature-verify-\(UUID().uuidString)", isDirectory: true)
+            let stagedExtractedRoot = stagedSignatureRoot.appendingPathComponent("extracted", isDirectory: true)
+            let stagedApp = stagedExtractedRoot.appendingPathComponent("Dashcam Offloader.app", isDirectory: true)
+            let outsideApp = stagedSignatureRoot.appendingPathComponent("Outside.app", isDirectory: true)
+            let linkedApp = stagedExtractedRoot.appendingPathComponent("Linked.app", isDirectory: true)
+            defer { try? FileManager.default.removeItem(at: stagedSignatureRoot) }
+            try FileManager.default.createDirectory(at: stagedApp, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: outsideApp, withIntermediateDirectories: true)
+            try FileManager.default.createSymbolicLink(at: linkedApp, withDestinationURL: outsideApp)
+            let acceptingCodesign: (String, [String]) throws -> (status: Int32, output: String) = { path, arguments in
+                guard path == "/usr/bin/codesign",
+                      arguments.contains("--deep"),
+                      arguments.contains("--strict"),
+                      arguments.contains(where: {
+                          $0.hasPrefix("-R=identifier \"com.vortexopenclaw.dashcam-offloader\" and anchor apple generic") &&
+                              $0.contains("certificate leaf[subject.OU] = \"A1B2C3D4E5\"")
+                      }),
+                      !arguments.contains("--test-requirement"),
+                      arguments.last == stagedApp.path else {
+                    return (1, "unexpected codesign invocation")
+                }
+                return (0, "valid")
+            }
+            try UpdateService.validateStagedAppSignature(
+                stagedApp,
+                extractedRootURL: stagedExtractedRoot,
+                expectedTeamID: "A1B2C3D4E5",
+                expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                codesignRunner: acceptingCodesign
+            )
+            guard (try? UpdateService.validateStagedAppSignature(
+                stagedApp,
+                extractedRootURL: stagedExtractedRoot,
+                expectedTeamID: "",
+                expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                codesignRunner: acceptingCodesign
+            )) == nil,
+            (try? UpdateService.validateStagedAppSignature(
+                stagedApp,
+                extractedRootURL: stagedExtractedRoot,
+                expectedTeamID: "A1B2C3D4E5",
+                expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                codesignRunner: { _, _ in (1, "rejected") }
+            )) == nil,
+            (try? UpdateService.validateStagedAppSignature(
+                linkedApp,
+                extractedRootURL: stagedExtractedRoot,
+                expectedTeamID: "A1B2C3D4E5",
+                expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                codesignRunner: acceptingCodesign
+            )) == nil else {
+                print("VERIFY FAIL: staged update signature validation did not fail closed")
+                return false
+            }
             let destinationDefaultsName = "DashcamOffloaderVerify-\(UUID().uuidString)"
             guard let destinationDefaults = UserDefaults(suiteName: destinationDefaultsName) else {
                 print("VERIFY FAIL: could not create isolated destination defaults")

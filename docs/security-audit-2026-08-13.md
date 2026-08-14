@@ -27,6 +27,14 @@ commits should use a repository-scoped GitHub no-reply address.
 
 ## Findings And Local Remediation
 
+- **Native updater enforcement gap, fixed 2026-08-14:** The native updater's
+  design and error model required a Developer ID signature from the expected
+  Apple team, but the extracted app was never passed through that check. The
+  staging path now rejects unsafe archive names and symbolic-link app entries,
+  enforces extraction containment, and requires strict Apple-anchored Developer
+  ID verification for Dashcam Offloader's bundle identifier and the Team
+  Identifier embedded in the running app. Local ad-hoc builds have no Team
+  Identifier and therefore fail closed.
 - **Critical release trust gap:** The unsigned beta failed strict signature
   verification and could not establish a trustworthy automatic update path.
   Automatic desktop updates are now disabled locally.

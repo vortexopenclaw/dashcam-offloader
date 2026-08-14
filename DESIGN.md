@@ -393,6 +393,35 @@ installer behavior, same-size-different-content destinations fail safely,
 feedback tests cover redaction and bounded reads, and NAS sources are not
 ejectable.
 
+## 2026-08-14 Signed-update enforcement completion
+
+**Objective:** Make the documented Developer ID update gate an enforced runtime
+check. A signed manifest and matching archive checksum are necessary, but the
+app must still reject an extracted bundle that is unsigned, ad-hoc signed, or
+signed by a different Apple developer team.
+
+**Design:** Before returning a staged update, reject a symbolic-link app entry,
+require the extracted app to remain inside the private staging directory, and
+run strict deep `codesign` verification with an Apple-anchored requirement for
+both Dashcam Offloader's signed bundle identifier and the Team Identifier
+embedded in the running app. An empty embedded Team Identifier deliberately
+disables in-app installation for local ad-hoc builds.
+The existing signed-manifest and SHA-256 checks remain mandatory and run before
+archive extraction.
+
+**Risks and rollback:** Public builds without a configured Developer ID team
+cannot self-update, which is the intended fail-closed behavior. Manual downloads
+remain available. Removing the staged-bundle validation call restores the old
+checksum-only behavior but is not a safe release path.
+
+**Success checks:** Must-reject fixtures cover an empty or malformed expected
+Team Identifier, a malformed bundle identifier, a failed strict signature
+check, and a symbolic-link staged app. The exact `codesign -R=` command shape is
+tested, and a real ad-hoc package must fail the Apple-anchored product and team
+requirement.
+The full Swift verifier, packaged-app verifier, strict signature check, privacy
+audit, dependency audit, and adjacent desktop/Worker tests must also pass.
+
 ## 2026-08-12 OttoSafe front-channel classification
 
 **Objective:** Classify OttoSafe Cam `norm` and `emr` clips without the `_b`
