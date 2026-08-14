@@ -452,29 +452,7 @@ struct ContentView: View {
                             selectedCatalogModel = nil
                         }
 
-                        compactProfileMenu(
-                            title: activeProfileModelTitle,
-                            placeholder: "Model",
-                            options: modelsForActiveBrand.map(\.model),
-                            footerOptions: ["New model..."]
-                        ) { model in
-                            if model == "New model..." {
-                                selectedCatalogModel = nil
-                                viewModel.selectProfile(.genericNewDashcam)
-                                return
-                            }
-                            guard let choice = modelsForActiveBrand.first(where: { $0.model == model }) else {
-                                return
-                            }
-                            selectedProfileBrand = choice.brand
-                            if let profile = choice.profile {
-                                selectedCatalogModel = nil
-                                viewModel.selectProfile(profile)
-                            } else {
-                                selectedCatalogModel = choice
-                                viewModel.selectProfile(.genericNewDashcam)
-                            }
-                        }
+                        cameraModelMenu
                         .disabled(activeProfileBrand == nil)
                     }
                     .fixedSize(horizontal: true, vertical: false)
@@ -499,7 +477,7 @@ struct ContentView: View {
                             Button {
                                 presentCardLearningWindow()
                             } label: {
-                                Label("Submit Learning Data", systemImage: "graduationcap")
+                                Label("Review & Submit Card Scan", systemImage: "graduationcap")
                             }
                             .disabled(!viewModel.scanSummary.hasScan)
                         }
@@ -514,6 +492,13 @@ struct ContentView: View {
         guard viewModel.scanSummary.hasScan else {
             return "Waiting for a card scan"
         }
+        if let selectedCatalogModel {
+            return "Selected \(selectedCatalogModel.brand) \(selectedCatalogModel.model)"
+        }
+        if let identifiedCamera = viewModel.identifiedCamera,
+           !identifiedCamera.isSupported {
+            return "Likely \(identifiedCamera.displayName); card profile not verified"
+        }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             return "Unrecognized dashcam, generic download ready"
         }
@@ -526,6 +511,9 @@ struct ContentView: View {
     private var cameraDetectionDetail: String {
         guard viewModel.scanSummary.hasScan else {
             return "Choose a memory card and the app will look for videos and photos automatically."
+        }
+        if selectedCatalogModel != nil || viewModel.identifiedCamera?.isSupported == false {
+            return "This model is known, but its card layout is not fully verified. Generic download remains available without assuming model-specific rules."
         }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             return "The app can still download common dashcam videos and photos. Teaching the card is optional."
@@ -645,6 +633,57 @@ struct ContentView: View {
         role.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
+    private var cameraModelMenu: some View {
+        let supported = modelsForActiveBrand.filter { !$0.isCatalogOnly }
+        let needsCardScan = modelsForActiveBrand.filter(\.isCatalogOnly)
+
+        return Menu {
+            if !supported.isEmpty {
+                Section("Supported profiles") {
+                    ForEach(supported, id: \.model) { choice in
+                        Button(choice.model) {
+                            selectCameraChoice(choice)
+                        }
+                    }
+                }
+            }
+            if !needsCardScan.isEmpty {
+                Section("Known models · Need card scan") {
+                    ForEach(needsCardScan, id: \.model) { choice in
+                        Button(choice.model) {
+                            selectCameraChoice(choice)
+                        }
+                    }
+                }
+            }
+            Divider()
+            Button("New model...") {
+                selectedCatalogModel = nil
+                viewModel.selectProfile(.genericNewDashcam)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(activeProfileModelTitle ?? "Model")
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+        }
+        .menuStyle(.borderlessButton)
+    }
+
+    private func selectCameraChoice(_ choice: CameraModelChoice) {
+        selectedProfileBrand = choice.brand
+        if let profile = choice.profile {
+            selectedCatalogModel = nil
+            viewModel.selectProfile(profile)
+        } else {
+            selectedCatalogModel = choice
+            viewModel.selectProfile(.genericNewDashcam)
+        }
+    }
+
     private func compactProfileMenu(
         title: String?,
         placeholder: String,
@@ -712,6 +751,13 @@ struct ContentView: View {
     }
 
     private var learnCardPromptTitle: String {
+        if let selectedCatalogModel {
+            return "Help verify \(selectedCatalogModel.model)"
+        }
+        if let identifiedCamera = viewModel.identifiedCamera,
+           !identifiedCamera.isSupported {
+            return "Help verify \(identifiedCamera.model)"
+        }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
             return "Help add support for this dashcam"
         }
@@ -719,6 +765,9 @@ struct ContentView: View {
     }
 
     private var learnCardPromptDetail: String {
+        if selectedCatalogModel != nil || viewModel.identifiedCamera?.isSupported == false {
+            return "Optional. We know this model exists, but still need privacy-safe card evidence for its folders, filenames, channels, recording modes, resolutions, and bitrates. You can review everything before submitting."
+        }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id || viewModel.selectedProfile == nil {
             return "Optional. Downloading still works. Sharing this helps the app better understand this dashcam, including its recording modes, channels, and clip types."
         }
@@ -1476,6 +1525,7 @@ struct CardLearningSheet: View {
     @State private var channelDescription = ""
     @State private var notes = ""
     @State private var contact = ""
+    @State private var scanPreview: FeedbackScanSnapshot?
 
     private var canSubmit: Bool {
         viewModel.scanSummary.hasScan &&
@@ -1590,6 +1640,33 @@ struct CardLearningSheet: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            if let scanPreview {
+                DisclosureGroup("Review privacy-safe scan summary") {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("\(scanPreview.scannedFiles) files counted · \(scanPreview.copyableItems) downloadable · \(scanPreview.excludedItems) excluded")
+                        learningPreviewRow("Channels", counts: scanPreview.channelCounts)
+                        learningPreviewRow("Recording modes", counts: scanPreview.displayModeCounts)
+                        if !scanPreview.videoSpecSummaries.isEmpty {
+                            Text("Measured video groups")
+                                .fontWeight(.semibold)
+                            ForEach(Array(scanPreview.videoSpecSummaries.prefix(8).enumerated()), id: \.offset) { _, summary in
+                                Text(learningVideoSummary(summary))
+                            }
+                            if scanPreview.videoSpecSummaries.count > 8 {
+                                Text("+ \(scanPreview.videoSpecSummaries.count - 8) more measured groups")
+                            }
+                        }
+                        if !scanPreview.settingSnapshots.isEmpty {
+                            Text("\(scanPreview.settingSnapshots.count) allowlisted model/settings summary item(s)")
+                        }
+                        Text("Never shared: source or folder paths, raw filenames, recording timestamps, media, GPS, serials, network identifiers, or credentials.")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                    .padding(.top, 6)
+                }
+            }
+
             Link("Privacy Policy", destination: AppLinks.privacyPolicyURL)
                 .font(.caption)
 
@@ -1617,8 +1694,37 @@ struct CardLearningSheet: View {
         .frame(width: 620)
         .onAppear {
             viewModel.feedbackMessage = ""
+            scanPreview = viewModel.makeFeedbackScanSnapshot()
             prefillFromScanIfNeeded()
         }
+    }
+
+    @ViewBuilder
+    private func learningPreviewRow(_ label: String, counts: [String: Int]) -> some View {
+        if !counts.isEmpty {
+            Text("\(label): \(counts.keys.sorted().map { "\($0) \(counts[$0, default: 0])" }.joined(separator: ", "))")
+        }
+    }
+
+    private func learningVideoSummary(_ summary: FeedbackVideoSpecSummary) -> String {
+        var parts = [summary.displayMode, summary.channel]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        parts.append(contentsOf: summary.sampleCodecs)
+        parts.append(contentsOf: summary.sampleResolutions)
+        if !summary.sampleFrameRates.isEmpty {
+            parts.append(summary.sampleFrameRates.map { String(format: "%.1f FPS", $0) }.joined(separator: "/"))
+        }
+        if let minimum = summary.sampleBitrateMin, let maximum = summary.sampleBitrateMax {
+            parts.append(minimum == maximum
+                ? learningBitrate(minimum)
+                : "\(learningBitrate(minimum))–\(learningBitrate(maximum))")
+        }
+        return parts.isEmpty ? "\(summary.fileCount) video file(s)" : parts.joined(separator: " · ")
+    }
+
+    private func learningBitrate(_ bitsPerSecond: Int) -> String {
+        String(format: "%.1f Mbps", Double(bitsPerSecond) / 1_000_000)
     }
 
     private func prefillFromScanIfNeeded() {

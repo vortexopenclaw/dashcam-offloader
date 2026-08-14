@@ -282,6 +282,21 @@ enum VerificationTest {
                 print("VERIFY FAIL: a supported camera choice did not retain its structured technical details")
                 return false
             }
+            let missingCatalogChoices = MainActor.assumeIsolated { () -> [String] in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                return KnownDashcamCatalog.models.compactMap { knownModel in
+                    let brand = ManufacturerDisplayFormatter.displayName(for: knownModel.manufacturer)
+                    let choices = viewModel.cameraModelsByBrand.first { $0.brand == brand }?.models ?? []
+                    return choices.contains(where: { $0.model == knownModel.model })
+                        ? nil
+                        : knownModel.displayName
+                }
+            }
+            guard missingCatalogChoices.isEmpty else {
+                print("VERIFY FAIL: researched catalog models missing from the manual picker: \(missingCatalogChoices)")
+                return false
+            }
 
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-verify-\(UUID().uuidString)", isDirectory: true)
@@ -1591,13 +1606,15 @@ enum VerificationTest {
                         s1Ultra?.knownModel?.parkingModes.isEmpty == false
                 )
             }
-            guard submittedManualSelectorState.wolfboxModels == ["G900 Pro"],
+            guard submittedManualSelectorState.wolfboxModels.contains("G900 Pro"),
+                  submittedManualSelectorState.wolfboxModels.contains("G850"),
                   submittedManualSelectorState.wolfboxManual,
                   submittedManualSelectorState.wolfboxDetails,
-                  submittedManualSelectorState.miofiveModels == ["S1 Ultra"],
+                  submittedManualSelectorState.miofiveModels.contains("S1 Ultra"),
+                  submittedManualSelectorState.miofiveModels.contains("S1 Pro"),
                   submittedManualSelectorState.miofiveManual,
                   submittedManualSelectorState.miofiveDetails else {
-                print("VERIFY FAIL: submitted manual choices should retain their structured technical details: \(submittedManualSelectorState)")
+                print("VERIFY FAIL: the picker should include submitted and catalog-only models while retaining structured technical details: \(submittedManualSelectorState)")
                 return false
             }
             let identifiedWolfboxSelectorState = MainActor.assumeIsolated { () -> (hasBrand: Bool, models: [String], hasG900Pro: Bool, isCatalogOnly: Bool) in
@@ -1618,10 +1635,11 @@ enum VerificationTest {
                 )
             }
             guard identifiedWolfboxSelectorState.hasBrand,
-                  identifiedWolfboxSelectorState.models == ["G900 Pro"],
+                  identifiedWolfboxSelectorState.models.contains("G900 Pro"),
+                  identifiedWolfboxSelectorState.models.contains("G900 TriPro Cabin"),
                   identifiedWolfboxSelectorState.hasG900Pro,
                   identifiedWolfboxSelectorState.isCatalogOnly else {
-                print("VERIFY FAIL: only the exactly identified untrained Wolfbox model should appear in the camera selector: \(identifiedWolfboxSelectorState)")
+                print("VERIFY FAIL: all known Wolfbox models should remain selectable while the identified untrained model stays catalog-only: \(identifiedWolfboxSelectorState)")
                 return false
             }
 

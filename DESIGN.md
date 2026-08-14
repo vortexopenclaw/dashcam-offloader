@@ -26,6 +26,34 @@ The main workflow is offload first: insert card or cards, choose the destination
   Linux, and Windows. Platform packaging may differ, but behavior and the
   source-card safety contract must not.
 
+## Known Models And Card Verification
+
+Camera knowledge, automatic identification, and file-layout support are three
+separate capabilities. A model documented in a manual or reliable catalog must
+be selectable even when no card has been scanned, but selecting it must not
+silently apply storage rules borrowed from a related camera.
+
+The camera picker therefore includes:
+
+- supported profiles with card-validated or explicitly manual-backed rules;
+- known catalog models labeled as needing a card scan; and
+- a New model path for cameras not yet in the catalog.
+
+A catalog-only choice keeps the generic read-only importer active and records
+the user's chosen model for the optional learning submission. After a useful
+scan, the interface explains that the model is known but its card behavior is
+not verified, and offers a non-blocking Review & Submit Card Scan action.
+Downloading remains available whether the user submits, dismisses, or ignores
+that prompt.
+
+Learning submissions are opt-in and previewed before sending. The current safe
+payload includes aggregate file/mode/channel counts, allowlisted model/firmware
+facts, and grouped codec/resolution/FPS/bitrate/duration metadata. It excludes
+media bytes, GPS, serial and network identifiers, source/folder paths, raw
+filenames, timestamps, credentials, and other personal data. Exact card folder
+names and generalized filename patterns may be added only behind a dedicated
+on-device preview and redaction gate; they must not be restored implicitly.
+
 ## 2026-08-13 Lightweight Cross-Platform Replacement
 
 **Decision:** Electron is retired as the release architecture. It proved the

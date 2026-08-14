@@ -81,12 +81,15 @@ which applies.
 
 ## Recognized, Not Yet Profile-Supported
 
-The catalog can identify additional Thinkware, BlackVue, VIOFO, and Vantrue models only
-when a card exposes exact model metadata or a model-coded support/firmware
-filename. These cards
-stay on the generic, read-only import flow until card-layout evidence supports
-a dedicated profile. The current catalog and evidence boundaries are recorded
-in `docs/research/thinkware-model-recognition.md` and
+Every researched catalog model is available in the manual camera picker under
+`Known models · Need card scan`. Selecting one records the intended model for
+review and learning, but keeps the generic, read-only import flow active until
+card-layout evidence supports a dedicated profile. The app can also suggest a
+known model when exact safe metadata or a model-coded support/firmware filename
+is present. It does not treat a manual/catalog match as automatic support.
+
+The current catalog and evidence boundaries are recorded in
+`docs/research/thinkware-model-recognition.md` and
 `docs/research/blackvue-viofo-model-recognition.md`, and
 `docs/research/vantrue-model-recognition.md`.
 

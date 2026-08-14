@@ -218,7 +218,7 @@ final class TransferViewModel: ObservableObject {
             )
         }
 
-        for model in KnownDashcamCatalog.models where shouldExposeCatalogChoice(model) {
+        for model in KnownDashcamCatalog.models {
             let brand = ManufacturerDisplayFormatter.displayName(for: model.manufacturer)
             let key = Self.cameraModelKey(model.model)
             if grouped[brand, default: [:]][key] == nil {
@@ -260,23 +260,6 @@ final class TransferViewModel: ObservableObject {
                     }
                 )
             }
-    }
-
-    private func shouldExposeCatalogChoice(_ model: KnownDashcamModel) -> Bool {
-        if KnownDashcamCatalog.hasSubmittedCardScan(model) {
-            return true
-        }
-        guard let identifiedCamera,
-              !identifiedCamera.isSupported,
-              let matchedModel = KnownDashcamCatalog.exactModelMatch(
-                  manufacturer: identifiedCamera.manufacturer,
-                  modelText: identifiedCamera.model
-              ) else {
-            return false
-        }
-
-        return matchedModel.manufacturer == model.manufacturer &&
-            matchedModel.model == model.model
     }
 
     private func orderedChannelLabels(from values: some Sequence<String>) -> [String] {
