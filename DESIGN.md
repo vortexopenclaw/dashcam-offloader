@@ -372,21 +372,23 @@ root.
 and copy-integrity risks found in the security review without weakening the
 copy-only contract.
 
-**Design:** In-app updates accept only a Developer ID-signed bundle whose Team
-Identifier matches the Team ID embedded in the running app; checksum-only
-validation is not trusted. Release builds must be Developer ID signed, while
-ad-hoc local builds intentionally cannot install updates. Eject actions are
-limited to local removable volumes, never network shares or a manually chosen
-subdirectory. Feedback is size-limited while streaming, rate-limited by a
-Durable Object, opt-in for ordinary feedback, and excludes user-controlled
+**Design:** In-app updates require an Ed25519-signed manifest whose signed
+payload binds the release version, build, archive key, and SHA-256 checksum.
+The embedded public key is the publisher trust root because the project does
+not have an Apple Developer ID. After extraction, the ad-hoc code signature
+must pass strict integrity verification and the app's bundle identifier,
+version, and build commit must exactly match the signed manifest. Eject actions
+are limited to local removable volumes, never network shares or a manually
+chosen subdirectory. Feedback is size-limited while streaming, rate-limited by
+a Durable Object, opt-in for ordinary feedback, and excludes user-controlled
 filenames, paths, and volume names. Copying computes SHA-256 for each regular
 file after copy and before skipping an existing destination file; a same-size
 mismatch is left untouched and reported as a conflict.
 
-**Risks and rollback:** Developer ID credentials must be configured in GitHub
-Actions before a release can publish an update-capable build. Until then, users
-can still download releases manually, and the app safely refuses in-app update
-installation. Hashing adds local disk I/O proportional to copied footage.
+**Risks and rollback:** Protecting the separate Ed25519 manifest-signing key is
+critical because it authenticates update origin without Apple notarization.
+Ad-hoc signing does not remove Gatekeeper warnings for first installation.
+Hashing adds local disk I/O proportional to copied footage.
 
 **Success checks:** Verification proves the signed-update requirement and
 installer behavior, same-size-different-content destinations fail safely,
@@ -395,30 +397,26 @@ ejectable.
 
 ## 2026-08-14 Signed-update enforcement completion
 
-**Objective:** Make the documented Developer ID update gate an enforced runtime
-check. A signed manifest and matching archive checksum are necessary, but the
-app must still reject an extracted bundle that is unsigned, ad-hoc signed, or
-signed by a different Apple developer team.
+**Objective:** Complete runtime enforcement for the actual no-Developer-ID
+release model. A valid manifest signature and matching archive checksum must be
+followed by deterministic validation of the extracted app.
 
 **Design:** Before returning a staged update, reject a symbolic-link app entry,
 require the extracted app to remain inside the private staging directory, and
-run strict deep `codesign` verification with an Apple-anchored requirement for
-both Dashcam Offloader's signed bundle identifier and the Team Identifier
-embedded in the running app. An empty embedded Team Identifier deliberately
-disables in-app installation for local ad-hoc builds.
-The existing signed-manifest and SHA-256 checks remain mandatory and run before
-archive extraction.
+run strict deep `codesign` integrity verification. The extracted bundle must
+also report the exact Dashcam Offloader identifier, release version, and build
+commit contained in the signed manifest. The signed manifest and SHA-256 checks
+remain mandatory and run before archive extraction.
 
-**Risks and rollback:** Public builds without a configured Developer ID team
-cannot self-update, which is the intended fail-closed behavior. Manual downloads
-remain available. Removing the staged-bundle validation call restores the old
-checksum-only behavior but is not a safe release path.
+**Risks and rollback:** This deliberately authenticates publisher identity with
+the repository's Ed25519 release key rather than an unavailable Apple Developer
+ID. If that release key is lost, existing apps cannot trust newly signed update
+manifests. Manual downloads remain available.
 
-**Success checks:** Must-reject fixtures cover an empty or malformed expected
-Team Identifier, a malformed bundle identifier, a failed strict signature
-check, and a symbolic-link staged app. The exact `codesign -R=` command shape is
-tested, and a real ad-hoc package must fail the Apple-anchored product and team
-requirement.
+**Success checks:** Must-reject fixtures cover an unsafe archive name, escaped
+or symbolic-link staged app, failed strict code-integrity check, wrong bundle
+identifier, wrong version, and wrong build commit. A matching ad-hoc bundle
+passes when its archive hash and manifest signature are already trusted.
 The full Swift verifier, packaged-app verifier, strict signature check, privacy
 audit, dependency audit, and adjacent desktop/Worker tests must also pass.
 

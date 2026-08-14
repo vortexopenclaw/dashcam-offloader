@@ -31,9 +31,13 @@
 
 ## 2026-08-14 Security Documentation Is Not Enforcement
 
-- The native updater documented a Developer ID and Team Identifier gate and
-  defined an error for a rejected app signature, but no runtime call enforced
-  that gate. Audit the call site and add a must-reject fixture, not just a
+- The native updater documented a security gate that assumed an unavailable
+  Apple Developer ID. Verify that the proposed trust model matches the actual
+  release credentials before implementing it. For this project, the
+  Ed25519-signed manifest authenticates publisher origin, while strict ad-hoc
+  signature verification and exact bundle/version/build checks validate the
+  extracted package.
+- Audit the enforcement call site and add must-reject fixtures, not just a
   helper, configuration field, error case, or design statement.
 - Treat mutable manifest display fields as hostile even when the manifest has
   a valid signature. Any field used as a filesystem path must be independently

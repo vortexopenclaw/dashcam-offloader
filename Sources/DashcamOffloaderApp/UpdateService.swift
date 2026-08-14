@@ -73,7 +73,7 @@ enum UpdateServiceError: LocalizedError {
     case checksumMismatch(expected: String, actual: String)
     case updateExtractionFailed
     case updateAppNotFound
-    case updateSignatureInvalid
+    case updatePackageInvalid
     case installerLaunchFailed
 
     var errorDescription: String? {
@@ -94,8 +94,8 @@ enum UpdateServiceError: LocalizedError {
             return "The downloaded update could not be unpacked."
         case .updateAppNotFound:
             return "The downloaded update did not contain Dashcam Offloader.app."
-        case .updateSignatureInvalid:
-            return "The downloaded update was not signed by the expected developer."
+        case .updatePackageInvalid:
+            return "The downloaded update did not pass app identity and integrity verification."
         case .installerLaunchFailed:
             return "The updater could not launch the installer."
         }
@@ -191,12 +191,12 @@ struct UpdateService: @unchecked Sendable {
         guard fileManager.fileExists(atPath: appURL.path) else {
             throw UpdateServiceError.updateAppNotFound
         }
-        let teamID = Bundle.main.object(forInfoDictionaryKey: "DashcamOffloaderUpdateSigningTeamID") as? String ?? ""
-        try Self.validateStagedAppSignature(
+        try Self.validateStagedApp(
             appURL,
             extractedRootURL: extractedURL,
-            expectedTeamID: teamID,
             expectedBundleIdentifier: Self.updateBundleIdentifier,
+            expectedVersion: manifest.version,
+            expectedBuild: manifest.build,
             codesignRunner: runProcessCapturingOutput
         )
         preserveStagingRoot = true
@@ -383,43 +383,25 @@ struct UpdateService: @unchecked Sendable {
         return trimmed
     }
 
-    static func developerIDRequirement(teamID: String, bundleIdentifier: String) -> String? {
-        let normalized = teamID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalized.range(of: #"^[A-Z0-9]{10}$"#, options: .regularExpression) != nil else {
-            return nil
-        }
-        let normalizedBundleIdentifier = bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalizedBundleIdentifier.range(
-            of: #"^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$"#,
-            options: .regularExpression
-        ) != nil else {
-            return nil
-        }
-        return "identifier \"\(normalizedBundleIdentifier)\" and anchor apple generic and certificate leaf[subject.OU] = \"\(normalized)\" and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
-    }
-
     static func isContainedUpdateApp(_ appURL: URL, extractedRootURL: URL) -> Bool {
         let root = extractedRootURL.resolvingSymlinksInPath().standardizedFileURL.path
         let app = appURL.resolvingSymlinksInPath().standardizedFileURL.path
         return app.hasPrefix(root + "/")
     }
 
-    static func validateStagedAppSignature(
+    static func validateStagedApp(
         _ appURL: URL,
         extractedRootURL: URL,
-        expectedTeamID: String,
         expectedBundleIdentifier: String,
+        expectedVersion: String,
+        expectedBuild: String,
         codesignRunner: (String, [String]) throws -> (status: Int32, output: String)
     ) throws {
         let values = try appURL.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
         guard values.isDirectory == true,
               values.isSymbolicLink != true,
-              Self.isContainedUpdateApp(appURL, extractedRootURL: extractedRootURL),
-              let requirement = Self.developerIDRequirement(
-                  teamID: expectedTeamID,
-                  bundleIdentifier: expectedBundleIdentifier
-              ) else {
-            throw UpdateServiceError.updateSignatureInvalid
+              Self.isContainedUpdateApp(appURL, extractedRootURL: extractedRootURL) else {
+            throw UpdateServiceError.updatePackageInvalid
         }
 
         let result = try codesignRunner(
@@ -429,12 +411,22 @@ struct UpdateService: @unchecked Sendable {
                 "--deep",
                 "--strict",
                 "--verbose=2",
-                "-R=\(requirement)",
                 appURL.path,
             ]
         )
         guard result.status == 0 else {
-            throw UpdateServiceError.updateSignatureInvalid
+            throw UpdateServiceError.updatePackageInvalid
+        }
+
+        let normalizedVersion = expectedVersion.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedBuild = expectedBuild.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedVersion.isEmpty,
+              !normalizedBuild.isEmpty,
+              let bundle = Bundle(url: appURL),
+              bundle.bundleIdentifier == expectedBundleIdentifier,
+              bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == normalizedVersion,
+              bundle.object(forInfoDictionaryKey: "DashcamOffloaderBuildCommit") as? String == normalizedBuild else {
+            throw UpdateServiceError.updatePackageInvalid
         }
     }
 

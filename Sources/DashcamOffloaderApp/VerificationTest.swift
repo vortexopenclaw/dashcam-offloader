@@ -70,21 +70,6 @@ enum VerificationTest {
                 print("VERIFY FAIL: update archive filename validation regressed")
                 return false
             }
-            guard let developerIDRequirement = UpdateService.developerIDRequirement(
-                teamID: "A1B2C3D4E5",
-                bundleIdentifier: "com.vortexopenclaw.dashcam-offloader"
-            ),
-                  developerIDRequirement.contains("identifier \"com.vortexopenclaw.dashcam-offloader\""),
-                  developerIDRequirement.contains("anchor apple generic"),
-                  developerIDRequirement.contains("certificate leaf[subject.OU] = \"A1B2C3D4E5\""),
-                  developerIDRequirement.contains("1.2.840.113635.100.6.1.13"),
-                  UpdateService.developerIDRequirement(teamID: "", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
-                  UpdateService.developerIDRequirement(teamID: "WRONG-TEAM", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
-                  UpdateService.developerIDRequirement(teamID: "A1B2C3D4E5\"", bundleIdentifier: "com.vortexopenclaw.dashcam-offloader") == nil,
-                  UpdateService.developerIDRequirement(teamID: "A1B2C3D4E5", bundleIdentifier: "bad\"identifier") == nil else {
-                print("VERIFY FAIL: Developer ID update requirement is not fail-closed")
-                return false
-            }
             let extractedUpdateRoot = URL(fileURLWithPath: "/tmp/dashcam-update/extracted", isDirectory: true)
             guard UpdateService.isContainedUpdateApp(
                 URL(fileURLWithPath: "/tmp/dashcam-update/extracted/Dashcam Offloader.app", isDirectory: true),
@@ -103,52 +88,83 @@ enum VerificationTest {
             let outsideApp = stagedSignatureRoot.appendingPathComponent("Outside.app", isDirectory: true)
             let linkedApp = stagedExtractedRoot.appendingPathComponent("Linked.app", isDirectory: true)
             defer { try? FileManager.default.removeItem(at: stagedSignatureRoot) }
-            try FileManager.default.createDirectory(at: stagedApp, withIntermediateDirectories: true)
+            let stagedContents = stagedApp.appendingPathComponent("Contents", isDirectory: true)
+            try FileManager.default.createDirectory(at: stagedContents, withIntermediateDirectories: true)
+            let stagedInfo: [String: Any] = [
+                "CFBundleIdentifier": "com.vortexopenclaw.dashcam-offloader",
+                "CFBundleName": "Dashcam Offloader",
+                "CFBundlePackageType": "APPL",
+                "CFBundleShortVersionString": "0.1.2",
+                "CFBundleVersion": "2",
+                "DashcamOffloaderBuildCommit": "abc1234",
+            ]
+            let stagedInfoData = try PropertyListSerialization.data(
+                fromPropertyList: stagedInfo,
+                format: .xml,
+                options: 0
+            )
+            try stagedInfoData.write(to: stagedContents.appendingPathComponent("Info.plist"))
             try FileManager.default.createDirectory(at: outsideApp, withIntermediateDirectories: true)
             try FileManager.default.createSymbolicLink(at: linkedApp, withDestinationURL: outsideApp)
             let acceptingCodesign: (String, [String]) throws -> (status: Int32, output: String) = { path, arguments in
                 guard path == "/usr/bin/codesign",
                       arguments.contains("--deep"),
                       arguments.contains("--strict"),
-                      arguments.contains(where: {
-                          $0.hasPrefix("-R=identifier \"com.vortexopenclaw.dashcam-offloader\" and anchor apple generic") &&
-                              $0.contains("certificate leaf[subject.OU] = \"A1B2C3D4E5\"")
-                      }),
-                      !arguments.contains("--test-requirement"),
+                      !arguments.contains(where: { $0.hasPrefix("-R=") }),
                       arguments.last == stagedApp.path else {
                     return (1, "unexpected codesign invocation")
                 }
                 return (0, "valid")
             }
-            try UpdateService.validateStagedAppSignature(
+            try UpdateService.validateStagedApp(
                 stagedApp,
                 extractedRootURL: stagedExtractedRoot,
-                expectedTeamID: "A1B2C3D4E5",
                 expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                expectedVersion: "0.1.2",
+                expectedBuild: "abc1234",
                 codesignRunner: acceptingCodesign
             )
-            guard (try? UpdateService.validateStagedAppSignature(
+            guard (try? UpdateService.validateStagedApp(
                 stagedApp,
                 extractedRootURL: stagedExtractedRoot,
-                expectedTeamID: "",
                 expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                expectedVersion: "0.1.2",
+                expectedBuild: "wrong-build",
                 codesignRunner: acceptingCodesign
             )) == nil,
-            (try? UpdateService.validateStagedAppSignature(
+            (try? UpdateService.validateStagedApp(
                 stagedApp,
                 extractedRootURL: stagedExtractedRoot,
-                expectedTeamID: "A1B2C3D4E5",
+                expectedBundleIdentifier: "com.example.wrong-app",
+                expectedVersion: "0.1.2",
+                expectedBuild: "abc1234",
+                codesignRunner: acceptingCodesign
+            )) == nil,
+            (try? UpdateService.validateStagedApp(
+                stagedApp,
+                extractedRootURL: stagedExtractedRoot,
                 expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                expectedVersion: "9.9.9",
+                expectedBuild: "abc1234",
+                codesignRunner: acceptingCodesign
+            )) == nil,
+            (try? UpdateService.validateStagedApp(
+                stagedApp,
+                extractedRootURL: stagedExtractedRoot,
+                expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                expectedVersion: "0.1.2",
+                expectedBuild: "abc1234",
                 codesignRunner: { _, _ in (1, "rejected") }
             )) == nil,
-            (try? UpdateService.validateStagedAppSignature(
+            (try? UpdateService.validateStagedApp(
                 linkedApp,
                 extractedRootURL: stagedExtractedRoot,
-                expectedTeamID: "A1B2C3D4E5",
                 expectedBundleIdentifier: "com.vortexopenclaw.dashcam-offloader",
+                expectedVersion: "0.1.2",
+                expectedBuild: "abc1234",
                 codesignRunner: acceptingCodesign
             )) == nil else {
-                print("VERIFY FAIL: staged update signature validation did not fail closed")
+                print("VERIFY FAIL: staged update identity or integrity validation did not fail closed")
                 return false
             }
             let destinationDefaultsName = "DashcamOffloaderVerify-\(UUID().uuidString)"
