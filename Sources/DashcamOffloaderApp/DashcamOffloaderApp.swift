@@ -3,6 +3,10 @@ import SwiftUI
 @main
 struct DashcamOffloaderApp: App {
     init() {
+        if CommandLine.arguments.contains("--verify-update-manifest") {
+            let result = UpdateManifestDiagnostic.run(arguments: CommandLine.arguments)
+            Foundation.exit(result ? 0 : 1)
+        }
         if CommandLine.arguments.contains("--osd-probe") {
             let result = OSDDiagnostic.run(arguments: CommandLine.arguments)
             Foundation.exit(result ? 0 : 1)
@@ -29,6 +33,28 @@ struct DashcamOffloaderApp: App {
                 .frame(minWidth: 1180, minHeight: 720)
         }
         .windowStyle(.titleBar)
+    }
+}
+
+enum UpdateManifestDiagnostic {
+    static func run(arguments: [String]) -> Bool {
+        guard let commandIndex = arguments.firstIndex(of: "--verify-update-manifest"),
+              arguments.count > commandIndex + 1 else {
+            print("UPDATE MANIFEST FAIL: usage --verify-update-manifest <manifest-path>")
+            return false
+        }
+
+        do {
+            let manifestURL = URL(fileURLWithPath: arguments[commandIndex + 1])
+            let data = try Data(contentsOf: manifestURL)
+            let manifest = try JSONDecoder().decode(AppUpdateManifest.self, from: data)
+            _ = try UpdateService.validatedManifest(manifest)
+            print("UPDATE MANIFEST PASS")
+            return true
+        } catch {
+            print("UPDATE MANIFEST FAIL: \(error.localizedDescription)")
+            return false
+        }
     }
 }
 

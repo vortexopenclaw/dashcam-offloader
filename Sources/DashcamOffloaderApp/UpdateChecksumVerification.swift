@@ -20,7 +20,8 @@ enum UpdateChecksumVerification {
         var blankChecksumManifest = missingChecksumManifest
         blankChecksumManifest.sha256 = "   "
         var validChecksumManifest = missingChecksumManifest
-        validChecksumManifest.sha256 = " ABCDef0123 "
+        let normalizedChecksum = String(repeating: "abcdef0123456789", count: 4)
+        validChecksumManifest.sha256 = " \(normalizedChecksum.uppercased()) "
 
         guard (try? UpdateService.requiredChecksum(for: missingChecksumManifest)) == nil else {
             print("VERIFY FAIL: update staging should require a manifest checksum")
@@ -30,7 +31,7 @@ enum UpdateChecksumVerification {
             print("VERIFY FAIL: update staging should reject a blank manifest checksum")
             return false
         }
-        guard (try? UpdateService.requiredChecksum(for: validChecksumManifest)) == "abcdef0123" else {
+        guard (try? UpdateService.requiredChecksum(for: validChecksumManifest)) == normalizedChecksum else {
             print("VERIFY FAIL: update staging should trim and lowercase the manifest checksum")
             return false
         }

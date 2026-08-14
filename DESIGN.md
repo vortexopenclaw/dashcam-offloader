@@ -406,17 +406,30 @@ require the extracted app to remain inside the private staging directory, and
 run strict deep `codesign` integrity verification. The extracted bundle must
 also report the exact Dashcam Offloader identifier, release version, and build
 commit contained in the signed manifest. The signed manifest and SHA-256 checks
-remain mandatory and run before archive extraction.
+remain mandatory and run before archive extraction. Fields outside the legacy
+signature payload are not trusted: the archive filename is derived from the
+signed asset key, the display name is derived locally from signed version/build
+values, and download plus release-notes URLs must match fixed HTTPS allowlists.
+Update eligibility requires a strictly higher three-component release version,
+so replaying an older valid signed manifest cannot downgrade the app. Every
+release must therefore increment `CFBundleShortVersionString`. Before any
+public write, CI must create the signed manifest and verify it with the exact
+public key embedded in the packaged app. Cloudflare receives the verified
+archive and manifest before GitHub's mutable `latest` release is advanced.
 
 **Risks and rollback:** This deliberately authenticates publisher identity with
 the repository's Ed25519 release key rather than an unavailable Apple Developer
 ID. If that release key is lost, existing apps cannot trust newly signed update
 manifests. Manual downloads remain available.
 
-**Success checks:** Must-reject fixtures cover an unsafe archive name, escaped
-or symbolic-link staged app, failed strict code-integrity check, wrong bundle
-identifier, wrong version, and wrong build commit. A matching ad-hoc bundle
-passes when its archive hash and manifest signature are already trusted.
+**Success checks:** Must-reject fixtures cover a malformed checksum, unapproved
+download URL, unsafe archive name, escaped or symbolic-link staged app, failed
+strict code-integrity check, wrong bundle identifier, wrong version, and wrong
+build commit. Older and same-version manifests do not offer an update, even if
+their signed build commit differs. Unsigned display/link fields are discarded
+or locally derived. A matching ad-hoc bundle passes when its archive hash and
+manifest signature are already trusted. The release workflow fails before
+publishing if the configured private key does not match the embedded public key.
 The full Swift verifier, packaged-app verifier, strict signature check, privacy
 audit, dependency audit, and adjacent desktop/Worker tests must also pass.
 

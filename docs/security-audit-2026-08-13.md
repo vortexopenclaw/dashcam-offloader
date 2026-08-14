@@ -34,7 +34,12 @@ commits should use a repository-scoped GitHub no-reply address.
   strict ad-hoc code-integrity verification, and requires the exact Dashcam
   Offloader bundle identifier, version, and build commit from the signed
   manifest. The project has no Apple Developer ID, so publisher trust comes
-  from the separately managed Ed25519 release key.
+  from the separately managed Ed25519 release key. Mutable legacy-manifest
+  fields cannot redirect downloads or release-notes links, choose staging
+  paths, or override the locally derived update name. Only a strictly higher
+  signed semantic version is eligible, preventing replay of older signed
+  releases. CI verifies each generated signature with the exact public key in
+  the packaged app before publishing.
 - **Critical release trust gap:** The unsigned beta failed strict signature
   verification and could not establish a trustworthy automatic update path.
   Automatic desktop updates are now disabled locally.
@@ -79,5 +84,7 @@ A replacement desktop release must not be published until all of these pass:
 4. Packaged artifacts contain all runtime dependencies and pass strict
    signature checks.
 5. Each public artifact matches the reviewed local checksum.
-6. Automatic installation remains disabled until production code signing and
-   update-chain verification are complete for that platform.
+6. Electron/cross-platform automatic installation remains disabled until
+   production code signing and update-chain verification are complete for that
+   platform. The native macOS updater uses the separately documented signed
+   manifest and strict ad-hoc bundle-integrity model.

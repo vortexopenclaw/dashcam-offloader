@@ -36,7 +36,7 @@ struct AppUpdateManifest: Codable, Equatable, Sendable {
     var channel: String?
 
     var displayName: String {
-        releaseName ?? "Dashcam Offloader \(version) (\(build))"
+        "Dashcam Offloader \(version) (\(build))"
     }
 
     var releaseNotesSummary: String? {
@@ -105,6 +105,8 @@ enum UpdateServiceError: LocalizedError {
 struct UpdateService: @unchecked Sendable {
     static let production = UpdateService()
     static let defaultManifestURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/latest.json")!
+    private static let allowedDownloadURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest")!
+    private static let allowedReleaseNotesURL = URL(string: "https://github.com/vortexopenclaw/dashcam-offloader/releases/tag/latest")!
 
     var manifestURL: URL = defaultManifestURL
     var session: URLSession = .shared
@@ -121,7 +123,8 @@ struct UpdateService: @unchecked Sendable {
               (200..<300).contains(httpResponse.statusCode) else {
             throw UpdateServiceError.invalidManifestResponse
         }
-        return try JSONDecoder().decode(AppUpdateManifest.self, from: data)
+        let manifest = try JSONDecoder().decode(AppUpdateManifest.self, from: data)
+        return try Self.validatedManifest(manifest)
     }
 
     func isUpdateAvailable(_ manifest: AppUpdateManifest) -> Bool {
@@ -129,31 +132,25 @@ struct UpdateService: @unchecked Sendable {
     }
 
     static func isUpdateAvailable(manifest: AppUpdateManifest, currentBuild: AppBuildInfo) -> Bool {
-        let remoteBuild = manifest.build.trimmingCharacters(in: .whitespacesAndNewlines)
-        let localCommit = currentBuild.commit.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !remoteBuild.isEmpty, !localCommit.isEmpty {
-            return remoteBuild != localCommit
-        }
-
         let remoteVersion = manifest.version.trimmingCharacters(in: .whitespacesAndNewlines)
         let localVersion = currentBuild.version.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !remoteVersion.isEmpty, !localVersion.isEmpty {
-            return remoteVersion.compare(localVersion, options: .numeric) == .orderedDescending
+        guard let remoteComponents = semanticVersionComponents(remoteVersion),
+              let localComponents = semanticVersionComponents(localVersion) else {
+            return false
         }
-
-        return !remoteBuild.isEmpty
+        return localComponents.lexicographicallyPrecedes(remoteComponents)
     }
 
     static func requiredChecksum(for manifest: AppUpdateManifest) throws -> String {
         let value = manifest.sha256?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
-        guard !value.isEmpty else {
+        guard value.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil else {
             throw UpdateServiceError.manifestMissingChecksum
         }
         return value
     }
 
     func downloadAndStageUpdate(_ manifest: AppUpdateManifest) async throws -> URL {
-        try Self.validateManifestSignature(manifest)
+        let manifest = try Self.validatedManifest(manifest)
         let expectedChecksum = try Self.requiredChecksum(for: manifest)
 
         guard let archiveFilename = Self.safeArchiveFilename(manifest.assetName ?? "Dashcam-Offloader.zip") else {
@@ -369,6 +366,48 @@ struct UpdateService: @unchecked Sendable {
         guard publicKey.isValidSignature(signature, for: Data(payload.utf8)) else {
             throw UpdateServiceError.manifestSignatureInvalid
         }
+    }
+
+    static func validatedManifest(_ manifest: AppUpdateManifest) throws -> AppUpdateManifest {
+        try validateManifestSignature(manifest)
+        return try validatedManifestStructure(manifest)
+    }
+
+    static func validatedManifestStructure(_ manifest: AppUpdateManifest) throws -> AppUpdateManifest {
+        _ = try requiredChecksum(for: manifest)
+        let version = manifest.version.trimmingCharacters(in: .whitespacesAndNewlines)
+        let build = manifest.build.trimmingCharacters(in: .whitespacesAndNewlines)
+        let assetKey = manifest.assetKey?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let releasePrefix = "dashcam-offloader/releases/"
+        guard semanticVersionComponents(version) != nil,
+              !build.isEmpty,
+              manifest.downloadURL == allowedDownloadURL,
+              assetKey.hasPrefix(releasePrefix),
+              let archiveFilename = safeArchiveFilename(String(assetKey.dropFirst(releasePrefix.count))),
+              !archiveFilename.contains("/") else {
+            throw UpdateServiceError.invalidManifestResponse
+        }
+
+        var validated = manifest
+        validated.version = version
+        validated.build = build
+        validated.assetKey = assetKey
+        validated.assetName = archiveFilename
+        validated.releaseName = nil
+        validated.releaseNotes = nil
+        validated.releaseNotesURL = manifest.releaseNotesURL == allowedReleaseNotesURL
+            ? allowedReleaseNotesURL
+            : nil
+        return validated
+    }
+
+    private static func semanticVersionComponents(_ version: String) -> [Int]? {
+        guard version.range(of: #"^[0-9]+\.[0-9]+\.[0-9]+$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        let parts = version.split(separator: ".", omittingEmptySubsequences: false)
+        let components = parts.compactMap { Int($0) }
+        return components.count == 3 ? components : nil
     }
 
     static func safeArchiveFilename(_ value: String) -> String? {

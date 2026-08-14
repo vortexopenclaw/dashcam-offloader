@@ -43,3 +43,12 @@
   a valid signature. Any field used as a filesystem path must be independently
   constrained, and extracted update entries must remain inside the staging
   root after symbolic links are resolved.
+- When backward compatibility prevents expanding an existing signature payload,
+  derive mutable display/path fields from signed values or constrain them to
+  exact allowlists. Do not show or open an unsigned URL merely because other
+  fields in the same manifest are authenticated.
+- A signed manifest prevents forgery, not replay. Update eligibility must use a
+  signed monotonic version and reject both older and same-version manifests.
+- Verify a newly generated release manifest with the public key embedded in the
+  packaged app before the first public write. A valid signature from the wrong
+  private key otherwise creates a release that every installed client rejects.

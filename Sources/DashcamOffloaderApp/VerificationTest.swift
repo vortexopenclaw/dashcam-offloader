@@ -42,9 +42,16 @@ enum VerificationTest {
                 channel: "latest"
             )
             var newerManifest = matchingManifest
+            newerManifest.version = "0.1.1"
             newerManifest.build = "def5678"
+            var sameVersionDifferentBuild = matchingManifest
+            sameVersionDifferentBuild.build = "def5678"
+            var olderManifest = matchingManifest
+            olderManifest.version = "0.0.9"
             guard !UpdateService.isUpdateAvailable(manifest: matchingManifest, currentBuild: currentBuild),
-                  UpdateService.isUpdateAvailable(manifest: newerManifest, currentBuild: currentBuild) else {
+                  UpdateService.isUpdateAvailable(manifest: newerManifest, currentBuild: currentBuild),
+                  !UpdateService.isUpdateAvailable(manifest: sameVersionDifferentBuild, currentBuild: currentBuild),
+                  !UpdateService.isUpdateAvailable(manifest: olderManifest, currentBuild: currentBuild) else {
                 print("VERIFY FAIL: update availability comparison is wrong")
                 return false
             }
@@ -61,6 +68,33 @@ enum VerificationTest {
             }
             guard (try? UpdateService.validateManifestSignature(matchingManifest)) == nil else {
                 print("VERIFY FAIL: update manifest signature should be mandatory")
+                return false
+            }
+            var mutableFieldManifest = matchingManifest
+            mutableFieldManifest.sha256 = String(repeating: "a", count: 64)
+            mutableFieldManifest.downloadURL = URL(string: "https://dashcam-offloader-updates.vortexradar.workers.dev/dashcam-offloader/download/latest")!
+            mutableFieldManifest.releaseName = "Untrusted update name"
+            mutableFieldManifest.releaseNotes = "Untrusted release notes"
+            mutableFieldManifest.releaseNotesURL = URL(string: "https://example.com/phishing")
+            let sanitizedManifest = try UpdateService.validatedManifestStructure(mutableFieldManifest)
+            guard sanitizedManifest.displayName == "Dashcam Offloader 0.1.0 (abc1234)",
+                  sanitizedManifest.assetName == "Dashcam-Offloader-abc1234.zip",
+                  sanitizedManifest.releaseName == nil,
+                  sanitizedManifest.releaseNotes == nil,
+                  sanitizedManifest.releaseNotesURL == nil else {
+                print("VERIFY FAIL: unsigned update manifest fields were trusted by the interface or staging path")
+                return false
+            }
+            var unsafeDownloadManifest = mutableFieldManifest
+            unsafeDownloadManifest.downloadURL = URL(string: "https://example.com/update.zip")!
+            guard (try? UpdateService.validatedManifestStructure(unsafeDownloadManifest)) == nil else {
+                print("VERIFY FAIL: update manifest accepted an unapproved download endpoint")
+                return false
+            }
+            var malformedChecksumManifest = mutableFieldManifest
+            malformedChecksumManifest.sha256 = "not-a-checksum"
+            guard (try? UpdateService.validatedManifestStructure(malformedChecksumManifest)) == nil else {
+                print("VERIFY FAIL: update manifest accepted a malformed checksum")
                 return false
             }
             guard UpdateService.safeArchiveFilename("Dashcam-Offloader-abc1234.zip") == "Dashcam-Offloader-abc1234.zip",

@@ -13,7 +13,7 @@ This file is the cross-machine handoff source for agents working from GitHub. Do
 
 ## GitHub Publishing
 
-Pushes to `main` run `.github/workflows/release.yml`, which builds the app, replaces the `latest` GitHub release, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, and deploys `workers/updates/wrangler.toml`.
+Pushes to `main` run `.github/workflows/release.yml`, which builds the app, creates and verifies the signed update manifest with the packaged app's embedded public key, uploads the ZIP and `latest.json` to the `dashcam-offloader-updates` Cloudflare R2 bucket, deploys `workers/updates/wrangler.toml`, and then replaces the `latest` GitHub release. Missing or mismatched update credentials fail before any public write.
 
 The GitHub `latest` release is intentionally deleted and recreated on each publish after the lightweight `latest` tag is moved. Do not change this back to `gh release edit` plus asset replacement: GitHub preserves the old `published_at` timestamp when editing a release, and the release page age is used as an at-a-glance freshness check.
 

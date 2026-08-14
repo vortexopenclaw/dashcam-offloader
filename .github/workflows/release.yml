@@ -48,35 +48,23 @@ jobs:
             echo "short_sha=$SHORT_SHA"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Publish latest release
-        id: ghrelease
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          bash scripts/publish-github-latest-release.sh \
-            "${{ steps.package.outputs.zip_path }}" \
-            "${{ steps.package.outputs.zip_name }}" \
-            "${{ github.repository }}"
-
-      - name: Publish public Cloudflare update
-        id: cloudflare
+      - name: Prepare and verify signed update manifest
+        id: manifest
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           UPDATE_BASE_URL: ${{ vars.DASHCAM_OFFLOADER_UPDATE_BASE_URL || 'https://dashcam-offloader-updates.vortexradar.workers.dev' }}
-          BUCKET: dashcam-offloader-updates
-          VERSION: 0.1.2
+          VERSION: 0.1.3
           ZIP_NAME: ${{ steps.package.outputs.zip_name }}
-          ZIP_PATH: ${{ steps.package.outputs.zip_path }}
           ZIP_SHA256: ${{ steps.package.outputs.sha256 }}
           SHORT_SHA: ${{ steps.package.outputs.short_sha }}
           UPDATE_SIGNING_KEY: ${{ secrets.DASHCAM_OFFLOADER_UPDATE_SIGNING_KEY }}
         run: |
           set -euo pipefail
 
-          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-            echo "Skipping Cloudflare publish because dedicated Dashcam Offloader Cloudflare secrets are not configured."
-            exit 0
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" || -z "${UPDATE_SIGNING_KEY:-}" ]]; then
+            echo "Required update-publishing credentials are not configured." >&2
+            exit 1
           fi
 
           ASSET_KEY="dashcam-offloader/releases/$ZIP_NAME"
@@ -84,14 +72,6 @@ jobs:
           RELEASE_NOTES_URL="https://github.com/${{ github.repository }}/releases/tag/latest"
           RELEASE_NOTES_JSON="$(jq -Rs . docs/releases/latest.md)"
           PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          if [[ -z "${UPDATE_SIGNING_KEY:-}" ]]; then
-            echo "Update-signing key is not configured." >&2
-            exit 1
-          fi
-
-          npx --yes wrangler@4.122.0 r2 bucket create "$BUCKET" || true
-          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
-
           SIGNING_PAYLOAD="$VERSION"$'\n'"$SHORT_SHA"$'\n'"$ASSET_KEY"$'\n'"$ZIP_SHA256"
           SIGNATURE="$(UPDATE_SIGNING_KEY="$UPDATE_SIGNING_KEY" SIGNING_PAYLOAD="$SIGNING_PAYLOAD" swift -e 'import CryptoKit; import Foundation; let key = try Curve25519.Signing.PrivateKey(rawRepresentation: Data(base64Encoded: ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"]!)!); print(try key.signature(for: Data(ProcessInfo.processInfo.environment["SIGNING_PAYLOAD"]!.utf8)).base64EncodedString())')"
           cat > build/latest.json <<JSON
@@ -112,8 +92,35 @@ jobs:
           }
           JSON
 
+          "build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --verify-update-manifest build/latest.json
+
+      - name: Publish public Cloudflare update
+        id: cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
+          BUCKET: dashcam-offloader-updates
+          ZIP_PATH: ${{ steps.package.outputs.zip_path }}
+          ZIP_NAME: ${{ steps.package.outputs.zip_name }}
+          ASSET_KEY: dashcam-offloader/releases/${{ steps.package.outputs.zip_name }}
+        run: |
+          set -euo pipefail
+
+          npx --yes wrangler@4.122.0 r2 bucket create "$BUCKET" || true
+          npx --yes wrangler@4.122.0 r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
+
           npx --yes wrangler@4.122.0 r2 object put "$BUCKET/dashcam-offloader/latest.json" --file build/latest.json --content-type application/json --remote
           npx --yes wrangler@4.122.0 deploy --config workers/updates/wrangler.toml
+
+      - name: Publish latest release
+        id: ghrelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash scripts/publish-github-latest-release.sh \
+            "${{ steps.package.outputs.zip_path }}" \
+            "${{ steps.package.outputs.zip_name }}" \
+            "${{ github.repository }}"
 
       - name: Record release outcome
         if: always()
@@ -130,9 +137,10 @@ jobs:
             --arg repoVerify "${{ steps.repoverify.outcome }}" \
             --arg appVerify "${{ steps.appverify.outcome }}" \
             --arg zip "${{ steps.package.outcome }}" \
+            --arg manifest "${{ steps.manifest.outcome }}" \
             --arg githubRelease "${{ steps.ghrelease.outcome }}" \
             --arg cloudflare "${{ steps.cloudflare.outcome }}" \
-            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, repoVerify:$repoVerify, appVerify:$appVerify, zip:$zip, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
+            '{sha:$sha, runId:$runId, attempt:$attempt, jobStatus:$jobStatus, steps:{build:$build, repoVerify:$repoVerify, appVerify:$appVerify, zip:$zip, manifest:$manifest, githubRelease:$githubRelease, cloudflare:$cloudflare}, recordedAt:(now|todate)}')
           CONTENT=$(printf '%s' "$STATUS_JSON" | base64)
           EXISTING_SHA=$(gh api "repos/$GITHUB_REPOSITORY/contents/release-status.json?ref=ci-status" --jq .sha 2>/dev/null || true)
           if [ -n "$EXISTING_SHA" ]; then
