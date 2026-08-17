@@ -53,6 +53,15 @@ The app scanner should treat parking subtypes as inferred labels, not physical c
 - 2CH - front and telephoto. Official reference and user-confirmed channel roles.
 - 3CH - front, rear, and telephoto. Official reference and user-confirmed channel roles.
 
+## 2026-08-17 Maximum-Bitrate Card Evidence
+
+The resubmitted 3CH card confirms Front/Rear/Telephoto coverage at maximum
+bitrate. Normal driving was 4K30 H.264 front at approximately 65.5 Mbps and
+1440p30 H.264 rear/telephoto at approximately 27 Mbps. It also contained
+separate parking continuous/low-bitrate, impact-detection, protected, and
+photo groups. Parking continuous/low-bitrate was 4K30 front and 1440p30
+rear/telephoto at approximately 12.3 Mbps and 8.2 Mbps respectively.
+
 ## Multiplexed Video
 
 Official VIOFO A329T pages describe Multiplex Video as combining selected camera views, including the telephoto camera, into a single split-screen file.

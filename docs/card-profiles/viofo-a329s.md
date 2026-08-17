@@ -28,6 +28,12 @@ Confirmed A329S 3CH resolution layout:
 - Interior: 2560x1440
 - Rear: 2560x1440
 
+The 2026-08-17 user-submitted 2CH maximum-bitrate card confirms a Front/Rear
+configuration: 4K30 H.264 front at approximately 65.5 Mbps and 1440p30 H.264
+rear at approximately 27 Mbps. It contained normal driving, protected clips,
+and distinct parking continuous/low-bitrate, motion-detection, and
+impact-detection groups. A 2CH card can coexist with older 3CH footage.
+
 ## Card Layout
 
 Real-card observed:
