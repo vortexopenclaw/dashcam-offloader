@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @main
@@ -33,6 +34,13 @@ struct DashcamOffloaderApp: App {
                 .frame(minWidth: 1180, minHeight: 720)
         }
         .windowStyle(.titleBar)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Dashcam Offloader") {
+                    NSApp.orderFrontStandardAboutPanel(options: [:])
+                }
+            }
+        }
     }
 }
 

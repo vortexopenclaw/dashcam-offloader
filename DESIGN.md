@@ -497,6 +497,21 @@ selection option without affecting generic importing.
 F/R continuous and folder-based recording behavior. Catalog checks distinguish
 ARC 700, ARC 800, and ARC 900 configuration support.
 
+## 2026-08-17 About information belongs in the app menu
+
+**Objective:** Keep the main window focused on selecting a card, choosing a
+destination, and downloading footage. Version and product information must be
+available through the standard macOS application menu without occupying the
+primary workflow.
+
+**Design:** Replace the main-window About card with the standard
+`About Dashcam Offloader` menu command. The system About panel reads the
+packaged app's version and build values from `Info.plist`.
+
+**Success checks:** The main workflow contains no About section, the app-menu
+command compiles, and a packaged 0.1.4 app exposes its version and build in the
+standard About panel.
+
 ## 2026-08-17 Scan responsiveness for full cards
 
 **Objective:** Keep card scans responsive for real cards with thousands of
