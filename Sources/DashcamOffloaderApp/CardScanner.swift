@@ -726,6 +726,12 @@ struct CardScanner {
         let probe = OSDProbe()
         var updatedCandidates = result.candidates
 
+        // Several sibling profiles often share the same front-channel clips
+        // and OSD placement. Probe that shared sample once with every relevant
+        // model string, rather than decoding and OCRing it once per sibling.
+        // This keeps an A329S card scan bounded while preserving the exact
+        // model-specific evidence used to award the score.
+        var groupedCandidateIndices: [String: [Int]] = [:]
         for index in updatedCandidates.indices {
             let candidate = updatedCandidates[index]
             guard candidate.profile.id == top.profile.id || abs(top.score - candidate.score) <= 15 else {
@@ -751,19 +757,32 @@ struct CardScanner {
                 continue
             }
 
-            let sampleVideos = sampleVideos(
-                for: spec,
-                allFiles: result.allFiles
+            let key = "\(spec.stripPercent)|\(spec.probeChannels.map { $0.uppercased() }.sorted().joined(separator: ","))"
+            groupedCandidateIndices[key, default: []].append(index)
+        }
+
+        for indices in groupedCandidateIndices.values {
+            let specs = indices.compactMap { updatedCandidates[$0].profile.osdSpec }
+            guard let firstSpec = specs.first else { continue }
+            let combinedSpec = OSDSpec(
+                containsModelName: true,
+                matchStrings: specs.flatMap(\.matchStrings).uniquedPreservingOrder(),
+                stripPercent: firstSpec.stripPercent,
+                probeChannels: firstSpec.probeChannels
             )
-            let probeChannelList = spec.probeChannels.joined(separator: ",")
+            let sampleVideos = sampleVideos(for: combinedSpec, allFiles: result.allFiles)
+            let probeChannelList = combinedSpec.probeChannels.joined(separator: ",")
             guard !sampleVideos.isEmpty else {
-                result.diagnostics.append(ScanDiagnosticEntry(
-                    stage: "osd_ocr_probe",
-                    profileID: candidate.profile.id,
-                    profileName: candidate.profile.displayName,
-                    outcome: "skipped_no_sample_videos",
-                    detail: "No video matched probe channels \(probeChannelList)"
-                ))
+                for index in indices {
+                    let candidate = updatedCandidates[index]
+                    result.diagnostics.append(ScanDiagnosticEntry(
+                        stage: "osd_ocr_probe",
+                        profileID: candidate.profile.id,
+                        profileName: candidate.profile.displayName,
+                        outcome: "skipped_no_sample_videos",
+                        detail: "No video matched probe channels \(probeChannelList)"
+                    ))
+                }
                 continue
             }
 
@@ -772,10 +791,9 @@ struct CardScanner {
             var textCandidateCount = 0
             var matchedString: String?
             var videosChecked = 0
-
             for videoURL in sampleVideos {
                 videosChecked += 1
-                let probeResult = probe.probeWithDiagnostics(videoURL: videoURL, spec: spec)
+                let probeResult = probe.probeWithDiagnostics(videoURL: videoURL, spec: combinedSpec)
                 frameCount += probeResult.framesExtracted
                 framesWithText += probeResult.framesWithText
                 textCandidateCount += probeResult.textCandidateCount
@@ -786,25 +804,23 @@ struct CardScanner {
             }
 
             let detail = "videos \(videosChecked), frames \(frameCount), framesWithText \(framesWithText), textCandidates \(textCandidateCount)"
-            if let matched = matchedString {
-                updatedCandidates[index].score += 80
-                var evidence = updatedCandidates[index].evidence
-                evidence.insert("OSD OCR match \"\(matched)\"", at: 0)
-                updatedCandidates[index].evidence = Array(evidence.prefix(8))
-                updatedCandidates[index].confidence = confidenceLevel(for: updatedCandidates[index].score)
+            for index in indices {
+                let candidate = updatedCandidates[index]
+                let matchedCandidate = matchedString.map { matched in
+                    candidate.profile.osdSpec?.matchStrings.contains { $0.caseInsensitiveCompare(matched) == .orderedSame } == true
+                } ?? false
+                if matchedCandidate, let matchedString {
+                    updatedCandidates[index].score += 80
+                    var evidence = updatedCandidates[index].evidence
+                    evidence.insert("OSD OCR match \"\(matchedString)\"", at: 0)
+                    updatedCandidates[index].evidence = Array(evidence.prefix(8))
+                    updatedCandidates[index].confidence = confidenceLevel(for: updatedCandidates[index].score)
+                }
                 result.diagnostics.append(ScanDiagnosticEntry(
                     stage: "osd_ocr_probe",
                     profileID: candidate.profile.id,
                     profileName: candidate.profile.displayName,
-                    outcome: "matched",
-                    detail: detail
-                ))
-            } else {
-                result.diagnostics.append(ScanDiagnosticEntry(
-                    stage: "osd_ocr_probe",
-                    profileID: candidate.profile.id,
-                    profileName: candidate.profile.displayName,
-                    outcome: "no_match",
+                    outcome: matchedCandidate ? "matched" : "no_match",
                     detail: detail
                 ))
             }

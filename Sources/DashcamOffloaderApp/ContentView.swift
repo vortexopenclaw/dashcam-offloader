@@ -1781,6 +1781,7 @@ struct CardLearningSheet: View {
             message: message,
             contact: contact,
             includeScan: true,
+            scanSnapshot: scanPreview,
             training: training,
             successMessage: "Learning package submitted successfully.",
             onSuccess: {

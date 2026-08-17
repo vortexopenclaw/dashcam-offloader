@@ -54,7 +54,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           UPDATE_BASE_URL: ${{ vars.DASHCAM_OFFLOADER_UPDATE_BASE_URL || 'https://dashcam-offloader-updates.vortexradar.workers.dev' }}
-          VERSION: 0.1.4
+          VERSION: 0.1.5
           ZIP_NAME: ${{ steps.package.outputs.zip_name }}
           ZIP_SHA256: ${{ steps.package.outputs.sha256 }}
           SHORT_SHA: ${{ steps.package.outputs.short_sha }}

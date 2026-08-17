@@ -1222,6 +1222,7 @@ final class TransferViewModel: ObservableObject {
         message: String,
         contact: String,
         includeScan: Bool,
+        scanSnapshot: FeedbackScanSnapshot? = nil,
         training: CardTrainingDetails? = nil,
         successMessage: String = "Feedback submitted successfully.",
         onSuccess: (@MainActor () -> Void)? = nil
@@ -1242,7 +1243,10 @@ final class TransferViewModel: ObservableObject {
             appVersion: appVersionString(),
             createdAt: ISO8601DateFormatter().string(from: Date()),
             training: training,
-            scan: includeScan ? makeFeedbackScanSnapshot() : nil
+            // The learning window has already built the user-reviewed snapshot.
+            // Reusing it avoids reopening and inspecting the card a second time
+            // when the user presses Submit.
+            scan: includeScan ? (scanSnapshot ?? makeFeedbackScanSnapshot()) : nil
         )
 
         Task { [weak self, feedbackService] in
@@ -1830,23 +1834,10 @@ final class TransferViewModel: ObservableObject {
         var seenKeys: Set<String> = []
         let maximumSamples = 64
 
-        // A card can keep recordings from more than one resolution or frame-rate
-        // setting in the same folder. Select one file from every observed
-        // technical configuration before filling the remaining slots with
-        // timestamp/size representatives. This keeps a Learn Card submission
-        // useful when a rare configuration would otherwise be skipped.
-        let technicalGroups = Dictionary(grouping: videoClips) { clip in
-            "\(videoSpecBucketKey(for: clip))\u{1f}\(videoTechnicalSignature(for: clip))"
-        }
-        for key in technicalGroups.keys.sorted() {
-            guard let representative = technicalGroups[key]?.sorted(by: videoClipOrder).first,
-                  seenKeys.insert(representative.id).inserted else {
-                continue
-            }
-            selected.append(representative)
-            if selected.count >= maximumSamples { return selected }
-        }
-
+        // Do not open every video merely to decide which ones to inspect. On a
+        // large card that turns a small, privacy-safe submission into thousands
+        // of synchronous AVFoundation reads. Choose bounded representatives by
+        // already-scanned mode/channel/folder data, then inspect only those.
         let grouped = Dictionary(grouping: videoClips) { clip in
             let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
             let pattern = clip.inferredParkingPattern?.rawValue ?? "none"
@@ -1891,20 +1882,6 @@ final class TransferViewModel: ObservableObject {
             return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
         }
         return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
-    }
-
-    private func videoTechnicalSignature(for clip: ClipItem) -> String {
-        let asset = AVURLAsset(url: clip.sourceURL)
-        guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-            return "unreadable"
-        }
-        let naturalSize = videoTrack.naturalSize.applying(videoTrack.preferredTransform)
-        let width = Int(abs(naturalSize.width).rounded())
-        let height = Int(abs(naturalSize.height).rounded())
-        let frameRate = videoTrack.nominalFrameRate > 0
-            ? String(format: "%.1f", videoTrack.nominalFrameRate)
-            : "unknown"
-        return "\(codecName(for: videoTrack) ?? "unknown")|\(width)x\(height)|\(frameRate)"
     }
 
     private func makeVideoSpecSamples(from clips: [ClipItem], sourceRoot: URL?) -> [FeedbackVideoSpecSample] {
