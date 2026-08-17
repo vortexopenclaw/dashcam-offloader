@@ -32,7 +32,7 @@ folders:
   - path: motion_timelapse_rec
     mode: parking_motion_or_timelapse
   - path: parking_rec
-    mode: parking_event
+    mode: parking_impact_detection
   - path: manual_rec
     mode: manual
   - path: Safety_Box
@@ -49,7 +49,7 @@ filename_patterns:
       REC: continuous
       EVT: driving_event
       MOT: parking_motion_or_timelapse
-      PAK: parking_event
+      PAK: parking_impact_detection
       PAS: parking_event_secondary
       MAN: manual
     channels:

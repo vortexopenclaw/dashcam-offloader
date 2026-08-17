@@ -1,7 +1,10 @@
 import Foundation
 
 extension CardScanner {
-    func inferParkingPatterns(in clips: [ClipItem]) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
+    func inferParkingPatterns(
+        in clips: [ClipItem],
+        profileID: String? = nil
+    ) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
         let wolfboxContext = inferWolfboxContextualParkingPatterns(in: clips)
         var inferredByRelativePath = wolfboxContext.inferredByRelativePath
         var diagnostics = wolfboxContext.diagnostics
@@ -47,7 +50,11 @@ extension CardScanner {
                 continue
             }
 
-            let momentPatterns = inferParkingPatternsByMoment(moments, defaultPattern: defaultPattern ?? .motionDetection)
+            let momentPatterns = inferParkingPatternsByMoment(
+                moments,
+                defaultPattern: defaultPattern ?? .motionDetection,
+                profileID: profileID
+            )
             let patternCounts = Dictionary(grouping: momentPatterns.values, by: { $0 })
                 .mapValues(\.count)
 
@@ -316,7 +323,8 @@ extension CardScanner {
 
     func inferParkingPatternsByMoment(
         _ moments: [(key: Int, timestamp: Date, totalBytes: Int64)],
-        defaultPattern: ParkingPattern
+        defaultPattern: ParkingPattern,
+        profileID: String? = nil
     ) -> [Int: ParkingPattern] {
         var inferred: [Int: ParkingPattern] = [:]
 
@@ -332,7 +340,16 @@ extension CardScanner {
             if runEnd - runStart + 1 >= 4 {
                 let runMoments = Array(moments[runStart...runEnd])
                 let medianMomentSize = median(runMoments.map(\.totalBytes).map(Double.init)) ?? 0
-                let pattern: ParkingPattern = medianMomentSize <= 300_000_000 ? .continuousLowBitrate : .timelapse
+                let pattern: ParkingPattern
+                if profileID == "thinkware-arc-800" {
+                    // ARC 800 has motion detection, low-power impact events,
+                    // and timelapse parking, but no continuous low-bitrate
+                    // parking mode. Its compact recurring MOT clips are its
+                    // timelapse variant, not a generic low-bitrate stream.
+                    pattern = .timelapse
+                } else {
+                    pattern = medianMomentSize <= 300_000_000 ? .continuousLowBitrate : .timelapse
+                }
                 for index in runStart...runEnd {
                     inferred[moments[index].key] = pattern
                 }

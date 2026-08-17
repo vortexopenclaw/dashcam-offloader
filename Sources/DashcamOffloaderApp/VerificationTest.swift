@@ -567,10 +567,22 @@ enum VerificationTest {
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("REC_") && $0.filename.hasSuffix("_R.MP4") })?.channel == "rear",
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("EVT_") })?.mode == "driving_event",
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("MOT_") })?.isParkingFootage == true,
-                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("PAK_") })?.isParkingFootage == true,
+                  arc800Scan.clips.first(where: { $0.filename.hasPrefix("PAK_") })?.mode == "parking_impact_detection",
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("MAN_") })?.mode == "manual",
                   arc800Scan.clips.first(where: { $0.filename.hasPrefix("SAVED_") })?.mode == "saved" else {
                 print("VERIFY FAIL: ARC 800 card scan did not select the exact profile and classify front/rear recording modes: profile=\(arc800Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: arc800Scan.identifiedCamera)), clips=\(arc800Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
+                return false
+            }
+            let arc800TimelapseMoments: [(key: Int, timestamp: Date, totalBytes: Int64)] = (0..<4).map { offset in
+                (key: offset, timestamp: Date(timeIntervalSince1970: TimeInterval(offset * 60)), totalBytes: 5_000_000)
+            }
+            let arc800Patterns = scanner.inferParkingPatternsByMoment(
+                arc800TimelapseMoments,
+                defaultPattern: .motionDetection,
+                profileID: "thinkware-arc-800"
+            )
+            guard Set(arc800Patterns.values) == [.timelapse] else {
+                print("VERIFY FAIL: ARC 800 compact recurring parking clips must be timelapse, not continuous low bitrate: \(arc800Patterns)")
                 return false
             }
             let ottoSafeSource = temp.appendingPathComponent("OttoSafe", isDirectory: true)
