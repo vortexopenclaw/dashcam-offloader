@@ -109,7 +109,16 @@ jobs:
           npx --yes wrangler@4.122.0 r2 bucket create "$BUCKET" || true
           npx --yes wrangler@4.122.0 r2 object put "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
 
-          npx --yes wrangler@4.122.0 deploy --config workers/updates/wrangler.toml
+          for attempt in 1 2 3; do
+            if npx --yes wrangler@4.122.0 deploy --config workers/updates/wrangler.toml; then
+              break
+            fi
+            if [[ "$attempt" == "3" ]]; then
+              echo "Cloudflare Worker deployment failed after three attempts." >&2
+              exit 1
+            fi
+            sleep 10
+          done
 
       - name: Publish latest release
         id: ghrelease
