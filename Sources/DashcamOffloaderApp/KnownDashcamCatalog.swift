@@ -24,6 +24,12 @@ struct KnownDashcamModel: Hashable, Sendable {
 /// Internal model knowledge used for learning prefill and future candidate
 /// hints. Entries here are not supported camera profiles.
 enum KnownDashcamCatalog {
+    /// Retained for exact-card detection, but withheld from manual selection
+    /// until the product has a public release.
+    static func isManualSelectorExcluded(manufacturer: String, model: String) -> Bool {
+        compact(manufacturer) == "vueroid" && compact(model) == "h1"
+    }
+
     private static let genericVolumeLabels: Set<String> = [
         "blackvue",
         "dashcam",

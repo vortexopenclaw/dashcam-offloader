@@ -440,6 +440,10 @@ enum VerificationTest {
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
                 return KnownDashcamCatalog.models.compactMap { knownModel in
+                    guard !KnownDashcamCatalog.isManualSelectorExcluded(
+                        manufacturer: knownModel.manufacturer,
+                        model: knownModel.model
+                    ) else { return nil }
                     let brand = ManufacturerDisplayFormatter.displayName(for: knownModel.manufacturer)
                     let choices = viewModel.cameraModelsByBrand.first { $0.brand == brand }?.models ?? []
                     return choices.contains(where: { $0.model == knownModel.model })
@@ -449,6 +453,17 @@ enum VerificationTest {
             }
             guard missingCatalogChoices.isEmpty else {
                 print("VERIFY FAIL: researched catalog models missing from the manual picker: \(missingCatalogChoices)")
+                return false
+            }
+            let h1ManualSelectorState = MainActor.assumeIsolated { () -> Bool in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                return viewModel.cameraModelsByBrand
+                    .flatMap(\.models)
+                    .contains { $0.brand == "Vueroid" && $0.model == "H1" }
+            }
+            guard !h1ManualSelectorState else {
+                print("VERIFY FAIL: unreleased Vueroid H1 appears in the manual picker")
                 return false
             }
 
