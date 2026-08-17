@@ -1369,7 +1369,16 @@ struct CardScanner {
     }
 
     private func detectProfiles(sourceURL: URL, allFiles: [URL], profiles: [DashcamProfile]) -> [DetectionCandidate] {
-        profiles.compactMap { profile in
+        let sampleNames = representativeDetectionFilenames(from: allFiles)
+        // Detection evaluates each filename against patterns from many
+        // profiles. Build the small normalization list once so we do not
+        // repeatedly reconstruct Foundation URLs for the same filename.
+        let filenameCandidatesByName = sampleNames.map { name in
+            (name: name, candidates: filenameCandidates(for: name))
+        }
+        let observedChannelTokens = observedTrailingChannelTokens(from: sampleNames)
+
+        return profiles.compactMap { profile in
             var score = 0
             var evidence: [String] = []
 
@@ -1402,15 +1411,13 @@ struct CardScanner {
                 evidence.append("volume label \(sourceURL.lastPathComponent)")
             }
 
-            let sampleNames = representativeDetectionFilenames(from: allFiles)
             var totalFilenameMatches = 0
             var matchedChannelTokens = Set<String>()
-            let observedChannelTokens = observedTrailingChannelTokens(from: sampleNames)
             for pattern in profile.filenamePatterns {
                 guard let regex = try? NSRegularExpression(pattern: pattern.regexPattern) else { continue }
                 let channelMap = mergedChannelMap(profile: profile, pattern: pattern)
-                let matchCount = sampleNames.reduce(0) { count, name in
-                    let matched = filenameCandidates(for: name).contains { candidateName in
+                let matchCount = filenameCandidatesByName.reduce(0) { count, entry in
+                    let matched = entry.candidates.contains { candidateName in
                         let nsCandidate = candidateName as NSString
                         let range = NSRange(location: 0, length: nsCandidate.length)
                         guard let match = regex.firstMatch(in: candidateName, range: range) else { return false }

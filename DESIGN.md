@@ -497,6 +497,26 @@ selection option without affecting generic importing.
 F/R continuous and folder-based recording behavior. Catalog checks distinguish
 ARC 700, ARC 800, and ARC 900 configuration support.
 
+## 2026-08-17 Scan responsiveness for full cards
+
+**Objective:** Keep card scans responsive for real cards with thousands of
+files. A scan must not repeatedly reconstruct filename candidates while testing
+the same files against every profile pattern.
+
+**Design:** Build the filename-candidate list once per scan, then reuse it for
+every profile-pattern match. Detection rules, candidate ordering, confidence,
+and source-card read-only behavior remain unchanged. The UI continues to run
+the scanner outside the main actor; this change reduces the background work
+that delays the completed scan handoff.
+
+**Risks and rollback:** The cache must preserve each filename's existing
+candidate strings exactly. Removing the cache restores the prior matching path
+if a profile regression is found.
+
+**Success checks:** The full verifier must pass, and an ARC 800 direct-card
+scan must retain its Thinkware ARC 800 selection and complete materially faster
+than the pre-change baseline.
+
 ## 2026-08-12 ARC 800 direct-card intake coverage
 
 **Objective:** Ensure an initial Learn Card scan retains evidence for every
