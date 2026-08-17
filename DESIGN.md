@@ -6,6 +6,39 @@ Build a Mac-first open-source tool that automates and simplifies offloading dash
 
 The main workflow is offload first: insert card or cards, choose the destination, review what will be downloaded, then run a verified transfer. The app should also make it practical to learn unsupported dashcams and expand existing profiles, but learning is secondary to helping the user get their footage. If a card is unrecognized, the app should still offer a simple generic dashcam download path first, then optionally ask the user to teach the card.
 
+## 2026-08-17 Card-first workflow redesign
+
+**Objective:** Make the primary window follow the actual offload decision:
+pick a card, immediately see what the card contains and select the desired
+recording/file types, choose an output folder, then review and download. Do
+not make update settings, a decorative step tracker, or duplicated filters
+compete with that flow.
+
+**Design:** Remove the in-window update panel and step tracker. Put update and
+feedback controls behind a compact toolbar overflow menu. Combine detected
+camera information, scanned-card counts, file types, recording types, and
+channel choices in the first card-selection section. Keep dates, organization,
+settings/log copy, and other lower-frequency controls in a single advanced
+download-options disclosure. The output folder remains the second main
+decision, followed by the review/download queue.
+
+Storage volumes can be hidden persistently from the source list with a
+right-click action. The preference stores only the local volume root path in
+app preferences, never touches the volume, and provides an in-app restore
+control. Hidden volumes remain hidden even when the user temporarily requests
+all discoverable volumes.
+
+**Risks and rollback:** This changes presentation and source-list preferences
+only. It must not change scanner scope, the read-only source contract, profile
+detection, filter semantics, source ejection rules, or copying behavior.
+Removing the stored preference reveals a hidden volume again.
+
+**Success checks:** A scanned card exposes recording-type and file-type
+selection once, before choosing a destination. The destination and review
+flows still rebuild and copy correctly. Update checking remains reachable but
+is absent from the primary content. Hiding a volume survives source refresh;
+restoring it makes the same volume visible again.
+
 ## Design Principles
 
 - Never modify the source card.

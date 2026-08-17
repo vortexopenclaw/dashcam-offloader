@@ -37,6 +37,7 @@ final class TransferViewModel: ObservableObject {
     @Published var updateStatusMessage = ""
     @Published var isCheckingForUpdates = false
     @Published var availableUpdate: AppUpdateManifest?
+    @Published private(set) var hiddenSourceVolumePaths: Set<String> = []
 
     private let scanner = CardScanner()
     private let planner = CopyPlanner()
@@ -55,6 +56,7 @@ final class TransferViewModel: ObservableObject {
     private var scanGeneration = 0
     private var profileSelectionRevision = 0
     private static let automaticUpdateChecksKey = "DashcamOffloaderAutomaticUpdateChecksEnabled"
+    private static let hiddenSourceVolumePathsKey = "DashcamOffloaderHiddenSourceVolumePaths"
     nonisolated private static let lastDownloadDestinationPathKey = "DashcamOffloaderLastDownloadDestinationPath"
 
     init() {
@@ -62,6 +64,7 @@ final class TransferViewModel: ObservableObject {
             UserDefaults.standard.set(true, forKey: Self.automaticUpdateChecksKey)
         }
         automaticUpdateChecksEnabled = UserDefaults.standard.bool(forKey: Self.automaticUpdateChecksKey)
+        hiddenSourceVolumePaths = Set(UserDefaults.standard.stringArray(forKey: Self.hiddenSourceVolumePathsKey) ?? [])
         destinationURL = Self.restoredLastDownloadDestination()
         loadProfiles()
         startVolumeObservation()
@@ -362,11 +365,13 @@ final class TransferViewModel: ObservableObject {
         let previousSource = selectedSource
         let discoveredSources = scanner.discoverMountedSources(showAllVolumes: showAllVolumes)
             .filter { !isOutputDirectorySource($0) }
+            .filter { !isHiddenSourceVolume($0) }
             .map(sourceWithCustomName)
         let discoveredIDs = Set(discoveredSources.map(\.id))
         let manualSources = mountedSources
             .filter { !isMountedVolumeSource($0) }
             .filter { !isOutputDirectorySource($0) }
+            .filter { !isHiddenSourceVolume($0) }
             .filter { FileManager.default.fileExists(atPath: $0.url.path) }
             .filter { !discoveredIDs.contains($0.id) }
             .map(sourceWithCustomName)
@@ -626,6 +631,7 @@ final class TransferViewModel: ObservableObject {
                 statusMessage = "Choose a different source. The download folder is not shown as a card source."
                 return
             }
+            restoreSourceVolume(source)
             upsertMountedSource(source)
             selectSource(source, scanImmediately: true)
         }
@@ -686,6 +692,26 @@ final class TransferViewModel: ObservableObject {
         statusMessage = "Renamed source to \(trimmedName)"
     }
 
+    func hideSourceVolume(_ source: MountedSource) {
+        let volumePath = sourceVolumeURL(for: source.url).standardizedFileURL.path
+        hiddenSourceVolumePaths.insert(volumePath)
+        persistHiddenSourceVolumes()
+        removeSourceFromList(source, status: "Hidden \(source.name) from Sources")
+    }
+
+    func restoreSourceVolume(at volumePath: String) {
+        guard hiddenSourceVolumePaths.remove(volumePath) != nil else { return }
+        persistHiddenSourceVolumes()
+        refreshSources(userInitiated: true)
+        statusMessage = "Restored \(URL(fileURLWithPath: volumePath).lastPathComponent) to Sources"
+    }
+
+    var hiddenSourceVolumeNames: [(path: String, name: String)] {
+        hiddenSourceVolumePaths
+            .map { (path: $0, name: URL(fileURLWithPath: $0).lastPathComponent) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
     func ejectSource(_ source: MountedSource) {
         guard !copyProgress.isRunning else {
             statusMessage = "Stop the download before ejecting a source"
@@ -722,6 +748,20 @@ final class TransferViewModel: ObservableObject {
         }
 
         statusMessage = status
+    }
+
+    private func restoreSourceVolume(_ source: MountedSource) {
+        let volumePath = sourceVolumeURL(for: source.url).standardizedFileURL.path
+        guard hiddenSourceVolumePaths.remove(volumePath) != nil else { return }
+        persistHiddenSourceVolumes()
+    }
+
+    private func isHiddenSourceVolume(_ source: MountedSource) -> Bool {
+        hiddenSourceVolumePaths.contains(sourceVolumeURL(for: source.url).standardizedFileURL.path)
+    }
+
+    private func persistHiddenSourceVolumes() {
+        UserDefaults.standard.set(hiddenSourceVolumePaths.sorted(), forKey: Self.hiddenSourceVolumePathsKey)
     }
 
     private func clearSourceDerivedState(for source: MountedSource?) {

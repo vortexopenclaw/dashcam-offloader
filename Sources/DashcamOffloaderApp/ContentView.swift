@@ -20,7 +20,7 @@ struct ContentView: View {
     @State private var isFeedbackPresented = false
     @State private var cardLearningWindow: NSWindow?
     @State private var showDownloadOptions = true
-    @State private var showDownloadFilters = true
+    @State private var showDownloadFilters = false
     @State private var selectedProfileBrand: String?
     @State private var selectedCatalogModel: CameraModelChoice?
     @State private var reviewSortOrder: [KeyPathComparator<CopyPlanItem>] = [
@@ -49,19 +49,25 @@ struct ContentView: View {
                 Label("Download Folder", systemImage: "folder")
             }
             .help("Choose where downloaded footage should be saved.")
-            Button {
-                isFeedbackPresented = true
+            Menu {
+                Button {
+                    viewModel.checkForUpdates(userInitiated: true)
+                } label: {
+                    Label("Check for Updates", systemImage: "arrow.down.circle")
+                }
+                .disabled(viewModel.isCheckingForUpdates)
+
+                Divider()
+
+                Button {
+                    isFeedbackPresented = true
+                } label: {
+                    Label("Feedback", systemImage: "bubble.left.and.bubble.right")
+                }
             } label: {
-                Label("Feedback", systemImage: "bubble.left.and.bubble.right")
+                Label("More", systemImage: "ellipsis.circle")
             }
-            .help("Send a bug report, feature request, or other feedback.")
-            Button {
-                viewModel.checkForUpdates(userInitiated: true)
-            } label: {
-                Label("Check for Updates", systemImage: "arrow.down.circle")
-            }
-            .disabled(viewModel.isCheckingForUpdates)
-            .help("Check for a newer Dashcam Offloader build.")
+            .help("Updates and feedback")
         }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
@@ -161,6 +167,17 @@ struct ContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(viewModel.selectedSource == nil || viewModel.isScanning)
+
+                if !viewModel.hiddenSourceVolumeNames.isEmpty {
+                    Menu("Hidden storage volumes") {
+                        ForEach(viewModel.hiddenSourceVolumeNames, id: \.path) { volume in
+                            Button("Show \(volume.name)") {
+                                viewModel.restoreSourceVolume(at: volume.path)
+                            }
+                        }
+                    }
+                    .font(.caption)
+                }
             }
             .padding([.horizontal, .bottom])
         }
@@ -209,6 +226,13 @@ struct ContentView: View {
                 Label("Eject", systemImage: "eject")
             }
             .disabled(viewModel.copyProgress.isRunning)
+
+            Button {
+                viewModel.hideSourceVolume(source)
+            } label: {
+                Label("Hide from Sources", systemImage: "eye.slash")
+            }
+            .disabled(viewModel.copyProgress.isRunning)
         }
     }
 
@@ -217,10 +241,7 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
-                    workflowSection
-                    updateSection
                     sourceSection
-                    detectionSection
                     destinationSection
                     filtersSection
                     planSection
@@ -274,7 +295,10 @@ struct ContentView: View {
                         countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
                     }
 
-                    fileTypeToggles
+                    Divider()
+                    detectionSection
+                    Divider()
+                    cardSelectionControls
                 }
             }
             .padding(8)
@@ -298,117 +322,6 @@ struct ContentView: View {
                     .controlSize(.large)
             }
         }
-    }
-
-    private var workflowSection: some View {
-        HStack(spacing: 12) {
-            workflowStep(
-                number: 1,
-                title: viewModel.importMode == .dashcamFootage ? "Pick card" : "Pick video folder",
-                detail: viewModel.selectedSource?.name ?? (viewModel.importMode == .dashcamFootage ? "Choose the memory card" : "Choose the video folder"),
-                complete: viewModel.selectedSource != nil
-            )
-            workflowStep(
-                number: 2,
-                title: "Choose folder",
-                detail: viewModel.destinationURL?.lastPathComponent ?? "Where downloads go",
-                complete: viewModel.destinationURL != nil
-            )
-            workflowStep(
-                number: 3,
-                title: "Download",
-                detail: viewModel.destinationURL == nil ? "Choose folder first" : "\(viewModel.copyPlan?.selectedFileCount ?? 0) files ready",
-                complete: !(viewModel.copyPlan?.items.isEmpty ?? true)
-            )
-        }
-    }
-
-    private var updateSection: some View {
-        GroupBox("App Updates") {
-            HStack(alignment: .center, spacing: 12) {
-                Toggle("Check for updates automatically", isOn: $viewModel.automaticUpdateChecksEnabled)
-                    .toggleStyle(.checkbox)
-                Spacer()
-                if viewModel.isCheckingForUpdates {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-                if viewModel.availableUpdate != nil {
-                    Button {
-                        viewModel.installAvailableUpdate()
-                    } label: {
-                        Label("Install Update", systemImage: "square.and.arrow.down")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isCheckingForUpdates)
-                }
-                Button {
-                    viewModel.checkForUpdates(userInitiated: true)
-                } label: {
-                    Label("Check Now", systemImage: "arrow.clockwise")
-                }
-                .disabled(viewModel.isCheckingForUpdates)
-            }
-            .padding(8)
-
-            if !viewModel.updateStatusMessage.isEmpty {
-                Text(viewModel.updateStatusMessage)
-                    .font(.caption)
-                    .foregroundStyle(viewModel.updateStatusMessage.localizedCaseInsensitiveContains("failed") ? .red : .secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
-            }
-
-            if let update = viewModel.availableUpdate,
-               let releaseNotesURL = update.releaseNotesURL {
-                HStack {
-                    Label("Release notes are available for this update.", systemImage: "doc.text")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button {
-                        NSWorkspace.shared.open(releaseNotesURL)
-                    } label: {
-                        Label("Open Release Notes", systemImage: "arrow.up.right.square")
-                    }
-                    .font(.caption)
-                    .buttonStyle(.link)
-                }
-                .padding(.horizontal, 8)
-                .padding(.bottom, 8)
-            }
-        }
-    }
-
-    private func workflowStep(number: Int, title: String, detail: String, complete: Bool) -> some View {
-        HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(complete ? Color.accentColor : Color.secondary.opacity(0.18))
-                    .frame(width: 28, height: 28)
-                if complete {
-                    Image(systemName: "checkmark")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                } else {
-                    Text("\(number)")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
-                }
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(12)
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var detectionSection: some View {
@@ -822,9 +735,9 @@ struct ContentView: View {
     }
 
     private var filtersSection: some View {
-        GroupBox("What to Download") {
+        GroupBox("More Download Options") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("All detected videos are selected by default. Photos and extra logs stay off unless you choose them.")
+                Text("Recording and file types are selected with the card above. These options control dates, organization, and extra files.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -849,29 +762,6 @@ struct ContentView: View {
                                 get: { viewModel.filters.endDate },
                                 set: { viewModel.setCustomEndDate($0) }
                             ), displayedComponents: .date)
-                        }
-
-                        Divider()
-
-                        fileTypeToggles
-
-                        Divider()
-
-                        checkboxGrid(
-                            title: "Recording Types",
-                            values: viewModel.availableModes,
-                            selected: $viewModel.filters.selectedModes,
-                            display: { ClipItem.displayLabel(for: $0) },
-                            onChange: { viewModel.rebuildPlan() }
-                        )
-                        if viewModel.shouldShowChannelFilter {
-                            checkboxGrid(
-                                title: "Channels",
-                                values: viewModel.availableChannels,
-                                selected: $viewModel.filters.selectedChannels,
-                                display: { ClipItem.displayLabel(for: $0) },
-                                onChange: { viewModel.rebuildPlan() }
-                            )
                         }
 
                         if viewModel.shouldShowGoProLoopGroupOption {
@@ -984,7 +874,7 @@ struct ContentView: View {
     }
 
     private var planSection: some View {
-        GroupBox("3. Review and Download") {
+        GroupBox("Review and Download") {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files")
@@ -1247,6 +1137,33 @@ struct ContentView: View {
                 Text("Scan a source to choose file types.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var cardSelectionControls: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Choose Footage")
+                .font(.headline)
+            Text("Select exactly what you want from this card before choosing where to save it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            fileTypeToggles
+            checkboxGrid(
+                title: "Recording Types",
+                values: viewModel.availableModes,
+                selected: $viewModel.filters.selectedModes,
+                display: { ClipItem.displayLabel(for: $0) },
+                onChange: { viewModel.rebuildPlan() }
+            )
+            if viewModel.shouldShowChannelFilter {
+                checkboxGrid(
+                    title: "Channels",
+                    values: viewModel.availableChannels,
+                    selected: $viewModel.filters.selectedChannels,
+                    display: { ClipItem.displayLabel(for: $0) },
+                    onChange: { viewModel.rebuildPlan() }
+                )
             }
         }
     }
