@@ -39,6 +39,24 @@ flows still rebuild and copy correctly. Update checking remains reachable but
 is absent from the primary content. Hiding a volume survives source refresh;
 restoring it makes the same volume visible again.
 
+## 2026-08-17 Scan-selection clarification
+
+**Objective:** Remove the non-interactive recording-type summaries that look
+like controls. A user should see the detected camera and optional card-scan
+submission first, then make every footage-selection decision in one explicit,
+clickable area.
+
+**Design:** The card header shows only compact scan totals. Camera detection
+is the first post-scan section and keeps the review-and-submit action beside
+the detected or selected model. The following Footage section is the sole
+place that displays videos, photos, GPS logs, recording types, and channels.
+Shorten supporting copy throughout the primary path.
+
+**Success checks:** There is no second driving/parking or output-group display
+above the selectable controls. A scanned card keeps its camera model and card
+submission action visible before selectable footage types. File, mode, and
+channel changes still rebuild the download plan.
+
 ## Design Principles
 
 - Never modify the source card.

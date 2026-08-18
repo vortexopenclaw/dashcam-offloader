@@ -287,14 +287,6 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                    if !viewModel.scanSummary.sortedCategoryCounts.isEmpty {
-                        countChips(title: "Output Groups", counts: viewModel.scanSummary.sortedCategoryCounts)
-                    }
-
-                    if !viewModel.scanSummary.sortedModeCounts.isEmpty {
-                        countChips(title: "Recording Types", counts: viewModel.scanSummary.sortedModeCounts)
-                    }
-
                     Divider()
                     detectionSection
                     Divider()
@@ -325,7 +317,7 @@ struct ContentView: View {
     }
 
     private var detectionSection: some View {
-        GroupBox("Camera Detection") {
+        GroupBox("Camera") {
             VStack(alignment: .leading, spacing: 12) {
                 if viewModel.profiles.isEmpty {
                     Text("No profiles loaded")
@@ -374,7 +366,7 @@ struct ContentView: View {
                             Button {
                                 presentCardLearningWindow()
                             } label: {
-                                Label("Review & Submit Card Scan", systemImage: "graduationcap")
+                                Label("Review & Submit", systemImage: "graduationcap")
                             }
                             .disabled(!viewModel.scanSummary.hasScan)
                         }
@@ -407,18 +399,18 @@ struct ContentView: View {
 
     private var cameraDetectionDetail: String {
         guard viewModel.scanSummary.hasScan else {
-            return "Choose a memory card and the app will look for videos and photos automatically."
+            return "Choose a memory card to identify its footage."
         }
         if selectedCatalogModel != nil || viewModel.identifiedCamera?.isSupported == false {
-            return "This model is known, but its card layout is not fully verified. Generic download remains available without assuming model-specific rules."
+            return "Known model. The card layout still needs verification."
         }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
-            return "The app can still download common dashcam videos and photos. Teaching the card is optional."
+            return "Generic download is ready. Submitting the scan is optional."
         }
         if viewModel.selectedProfile != nil {
-            return "The app will organize footage using the detected camera profile. Learning data is optional if this setup has modes, channels, or settings we have not seen yet."
+            return "Detected profile ready. Submit this card only if it has new modes or settings."
         }
-        return "You can choose a profile manually, but the priority is still getting your footage copied."
+        return "Choose a camera, or download with generic detection."
     }
 
     private var activeProfileBrand: String? {
@@ -737,7 +729,7 @@ struct ContentView: View {
     private var filtersSection: some View {
         GroupBox("More Download Options") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Recording and file types are selected with the card above. These options control dates, organization, and extra files.")
+                Text("Dates, folders, and extras.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -1143,9 +1135,9 @@ struct ContentView: View {
 
     private var cardSelectionControls: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Choose Footage")
+            Text("Footage to Download")
                 .font(.headline)
-            Text("Select exactly what you want from this card before choosing where to save it.")
+            Text("Select what to copy from this card.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             fileTypeToggles
@@ -1291,23 +1283,6 @@ struct ContentView: View {
             return "Download Footage"
         }
         return "Download Selected"
-    }
-
-    private func countChips(title: String, counts: [(String, Int)]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption.bold())
-            FlowLayout(spacing: 8) {
-                ForEach(counts, id: \.0) { name, count in
-                    Text("\(name) \(count)")
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.secondary.opacity(0.12))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                }
-            }
-        }
     }
 
     private func confidenceColor(_ confidence: DetectionConfidence) -> Color {
