@@ -3085,6 +3085,240 @@
           "notice": "Published 3CH estimate. The rear-camera version and FPS are not specified."
         }
       ]
+    },
+    "cansonic-ultradash-z4-standard": {
+      "front": [
+        {
+          "id": "high",
+          "label": "High Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            }
+          ],
+          "minMbps": 31.1,
+          "maxMbps": 31.1,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at High Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        },
+        {
+          "id": "highest",
+          "label": "Highest Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.0,
+              "maxMbps": 41.0
+            }
+          ],
+          "minMbps": 31.0,
+          "maxMbps": 41.0,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at Highest Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "high",
+          "label": "High Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 11.7,
+              "maxMbps": 11.9
+            }
+          ],
+          "minMbps": 42.8,
+          "maxMbps": 43.0,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at High Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        },
+        {
+          "id": "highest",
+          "label": "Highest Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.0,
+              "maxMbps": 41.0
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 11.7,
+              "maxMbps": 11.9
+            }
+          ],
+          "minMbps": 42.7,
+          "maxMbps": 52.9,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at Highest Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        }
+      ],
+      "front-telephoto": [
+        {
+          "id": "high",
+          "label": "High Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            }
+          ],
+          "minMbps": 62.2,
+          "maxMbps": 62.2,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at High Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        },
+        {
+          "id": "highest",
+          "label": "Highest Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.0,
+              "maxMbps": 41.0
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 41.0
+            }
+          ],
+          "minMbps": 62.1,
+          "maxMbps": 82.0,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at Highest Quality. Selected-channel totals add the individual sampled rates.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        }
+      ],
+      "front-telephoto-rear": [
+        {
+          "id": "high",
+          "label": "High Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 31.1
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 11.7,
+              "maxMbps": 11.9
+            }
+          ],
+          "minMbps": 73.9,
+          "maxMbps": 74.10000000000001,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at High Quality. Includes Front, Telephoto and Rear recordings.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        },
+        {
+          "id": "highest",
+          "label": "Highest Quality",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.0,
+              "maxMbps": 41.0
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.1,
+              "maxMbps": 41.0
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 11.7,
+              "maxMbps": 11.9
+            }
+          ],
+          "minMbps": 73.8,
+          "maxMbps": 93.9,
+          "sourceType": "submitted-video",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/profiles/cansonic-ultradash-z4-standard.yaml",
+          "basis": "Measured video bitrates from submitted VIDEO-folder driving clips at Highest Quality. Includes Front, Telephoto and Rear recordings.",
+          "notice": "Video-bitrate estimate. Audio and file overhead can reduce recording time."
+        }
+      ]
     }
   },
   "additionalCameras": [
@@ -3756,6 +3990,80 @@
           "basis": "70mai regional FAQ gives about one hour of three-channel recording on 32 GB. Larger capacities are scaled proportionally. The FAQ does not identify the rear-camera bundle or FPS for this estimate."
         }
       ]
+    },
+    {
+      "id": "cansonic-ultradash-z4-standard",
+      "name": "Cansonic UltraDash Z4 Standard Edition",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 31.1,
+          "maxMbps": 31.1
+        },
+        {
+          "role": "telephoto",
+          "resolution": "3840x2160",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 31.1,
+          "maxMbps": 31.1
+        },
+        {
+          "role": "rear",
+          "resolution": "2560x1440",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 11.7,
+          "maxMbps": 11.9
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "cansonic-ultradash-z4-standard",
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 31.1,
+          "maxMbps": 31.1,
+          "basis": "Submitted driving-video measurements."
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 42.8,
+          "maxMbps": 43.0,
+          "basis": "Submitted driving-video measurements."
+        },
+        {
+          "id": "front-telephoto",
+          "roles": [
+            "front",
+            "telephoto"
+          ],
+          "minMbps": 62.2,
+          "maxMbps": 62.2,
+          "basis": "Submitted driving-video measurements."
+        },
+        {
+          "id": "front-telephoto-rear",
+          "roles": [
+            "front",
+            "telephoto",
+            "rear"
+          ],
+          "minMbps": 73.9,
+          "maxMbps": 74.10000000000001,
+          "basis": "Submitted driving-video measurements."
+        }
+      ]
     }
   ],
   "notes": {
@@ -3771,7 +4079,8 @@
     "papago-gosafe-760": "Front-only estimates. The two resolutions were recorded in different sessions.",
     "viofo-a119s": "These two 1080p60 samples use different recording rates. The range covers both, without assuming the same quality-menu selection.",
     "vueroid-s1-qhd-infinite": "30 fps data came from a three-camera setup. The 60 fps submission recorded only Front. Reduced-channel 30 fps results assume the same per-camera rate.",
-    "70mai-t800": "The published three-camera estimate does not specify whether the Rear camera is the 1080p or 4K version. Front-only FAQ figures conflict, so they are not included."
+    "70mai-t800": "The published three-camera estimate does not specify whether the Rear camera is the 1080p or 4K version. Front-only FAQ figures conflict, so they are not included.",
+    "cansonic-ultradash-z4-standard": "High and Highest Quality come from separate submitted card sessions. Highest Quality varied across the sampled clips, so its recording times are shown as a range."
   },
   "links": {
     "viofo-a229-pro": {

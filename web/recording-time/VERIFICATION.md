@@ -1,5 +1,34 @@
 # Verification
 
+## Stacked desktop/mobile rows and full coverage audit (latest, 2026-09-08)
+
+Quick interface review: native HTML/plain CSS, channel summary and recording-time
+table, existing selectors/photo slot. Typography and surfaces inspected in
+1100px desktop and 390px phone screenshots, plus the Cansonic range display.
+No icons or animations added. Performance reviewed in the CSS/data diff (no new
+runtime requests or dependencies). Keep numeric alignment and stable photo slots.
+The previous desktop strip required switching reading direction. It is now the
+same vertically stacked table as mobile, with larger desktop channel text.
+Rejected bar charts (exact values are the task), and additional side-by-side panels
+(the user prefers a single vertical reading order). No actionable polish findings
+within this requested scope. No new motion, so slowed-motion review not applicable.
+
+Code-quality self-review covered correctness, readability, architecture, security
+and performance. The change removes desktop CSS overrides, uses existing mode
+schema, preserves submitted-video caveats, and makes no access/publishing changes.
+Z4 values were cross-checked against VIDEO-folder entries in its maintained
+profile, not PROTECTED parking rows. Report matching preserves distinct Plus/LTE/
+Pro/Commercial variants and explicitly lists unmapped rows. Catalog and profile
+coverage were reviewed separately; 81 presets are not complete catalog coverage.
+
+Verification: 13 exporter tests and 5 calculation tests pass. Full browser suite
+passes all 81 cameras/settings, desktop/mobile row direction at 740/620/375/320px,
+photo switching, image failures, four-camera display, embed sizing and error paths.
+Fresh Vueroid and Z4 desktop/mobile captures were inspected at 1100/390px.
+No horizontal overflow or JS errors in checked paths. `git diff --check` passes.
+Verdict: Approve scoped change. Actual WordPress install/theme and physical phones
+not verified this revision. No merge or live-site update performed.
+
 ## Embed-first layout and exact-setup photos (latest, 2026-09-08)
 
 Supersedes the side-by-side details/time layout below. Recording details are a

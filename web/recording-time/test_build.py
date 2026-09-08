@@ -99,6 +99,18 @@ class ExportTests(unittest.TestCase):
                     self.assertNotIn(' · ', mode['label'])
                     self.assertNotIn(';', mode['basis'])
 
+    def test_z4_driving_quality_preserves_video_ranges_and_roles(self):
+        extra = json.loads((HERE / 'recording-modes.json').read_text())
+        data = add_recording_modes(extract(self.reference, self.catalog), extra)
+        camera = next(c for c in data['cameras'] if c['id'] == 'cansonic-ultradash-z4-standard')
+        high, highest = camera['setups'][-1]['modes']
+        self.assertEqual([c['role'] for c in high['channels']], ['front', 'telephoto', 'rear'])
+        self.assertAlmostEqual(high['maxMbps'], 74.1)
+        self.assertAlmostEqual(highest['minMbps'], 73.8)
+        self.assertAlmostEqual(highest['maxMbps'], 93.9)
+        self.assertTrue(all(m['sourceType'] == 'submitted-video' for m in [high, highest]))
+        self.assertIn('VIDEO-folder', high['basis'])
+
     def test_setup_photo_mappings_reject_unknown_or_duplicate_setups(self):
         for invalid in ['unknown-setup', 'front-rear']:
             extra = json.loads((HERE / 'recording-modes.json').read_text())

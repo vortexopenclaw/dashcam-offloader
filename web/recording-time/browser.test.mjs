@@ -141,15 +141,14 @@ try {
   assert.equal(await page.locator('figcaption').count(),0);
   await chooseCamera('viofo-a229-pro');
   assert.ok(!(await page.locator('#shopping-links').innerText()).includes('memory cards'));
-  // The summary precedes a horizontal desktop or vertical phone comparison.
+  // The summary precedes a vertical comparison at every viewport.
   for (const width of [740,620,375,320]) {
     await page.setViewportSize({width,height:1000});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const layout=await page.evaluate(()=>{const d=document.querySelector('.channel-summary').getBoundingClientRect();const t=document.querySelector('table').getBoundingClientRect();return {detailsRight:d.right,detailsBottom:d.bottom,tableLeft:t.left,tableTop:t.top};});
     assert.ok(layout.tableTop>=layout.detailsBottom);
     const cells=await page.locator('#rows tr').evaluateAll(rows=>rows.map(r=>{const b=r.getBoundingClientRect();return {x:b.x,y:b.y};}));
-    if(width===740) assert.ok(cells[1].x>cells[0].x && cells[1].y===cells[0].y);
-    else assert.ok(cells[1].y>cells[0].y);
+    assert.ok(cells[1].y>cells[0].y && cells[1].x===cells[0].x);
   }
   // Setup photos change without moving controls; slow obsolete loads cannot win.
   await chooseCamera('vueroid-s1-4k-infinite');

@@ -25,7 +25,7 @@ three reviewed VIOFO models. Exported JSON uses schema version 3.
 ## Catalog coverage and images
 
 The chart includes 63 cameras backed by recorded-file measurements, 16
-manufacturer-only models and one submitted-video-bitrate model. Where only Front footage exists, only that estimate
+manufacturer-only models and two submitted-video-bitrate models. Where only Front footage exists, only that estimate
 is offered. Reviewed driving-event samples are allowed for specific Vantrue
 models. Parking-only footage, ambiguous model identification and empty sample
 folders are not usable driving-rate evidence.
@@ -249,3 +249,16 @@ Unmatched configurations get no photo; they do not inherit a different kit.
 The fixed-size photo slot is retained, including missing/error/loading states.
 Images decode before display and obsolete async loads cannot replace the latest
 selected setup. Setup/source changes can still change text height naturally.
+
+## Stacked rows on every screen (September 8, latest)
+
+Desktop now uses the phone-style vertical table: each card size sits beside its
+recording time. Recording details also use one aligned row per channel on every
+screen. The fixed photo slot, native controls, navy palette and mobile sizing
+remain. This supersedes the five-column desktop comparison above.
+
+The [full coverage audit](COVERAGE.md) compares all 262 current app-catalog rows
+and all 68 maintained profiles, including explicit aliases and excluded/non-dashcam
+entries. Do not describe the calculator’s 81 presets as the complete app database.
+Cansonic UltraDash Z4 Standard has been added from driving-folder profile rates.
+The remaining exact model gaps and reasons are in the linked CSV.
