@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import zipfile
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -54,6 +55,10 @@ def build():
     for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'demo.html']:
         shutil.copyfile(HERE / name, out / name)
     (out / 'cameras.json').write_text(json.dumps(data, indent=2) + '\n')
+    with zipfile.ZipFile(out / 'vortex-recording-time.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.write(HERE / 'wordpress/vortex-recording-time.php', 'vortex-recording-time/vortex-recording-time.php')
+        for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'cameras.json']:
+            archive.write(out / name, 'vortex-recording-time/calculator/' + name)
     print(f'Built {len(data["cameras"])} measured presets in {out.relative_to(ROOT)}')
 
 

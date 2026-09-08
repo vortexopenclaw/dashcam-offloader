@@ -63,5 +63,9 @@ try {
 // Send dimensions only to the embedding page, never camera selections or inputs.
 const embedOrigin = (() => { try { return new URL(document.referrer).origin; } catch { return null; } })();
 if (parent !== window && embedOrigin) {
-  new ResizeObserver(() => parent.postMessage({type:'vr-recording-height', height:Math.ceil(document.documentElement.getBoundingClientRect().height)}, embedOrigin)).observe(document.documentElement);
+  const measure = () => parent.postMessage({type:'vr-recording-height', height:Math.ceil(document.documentElement.getBoundingClientRect().height)}, embedOrigin);
+  new ResizeObserver(measure).observe(document.documentElement);
+  window.addEventListener('message', event => {
+    if (event.source === parent && event.origin === embedOrigin && event.data?.type === 'vr-recording-measure') measure();
+  });
 }

@@ -58,13 +58,27 @@ try {
   await page.waitForFunction(height => document.querySelector('iframe').offsetHeight > height, before);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await page.screenshot({path:path.join(evidence,'embedded-mobile.png'),fullPage:true});
+  // WordPress can enqueue the loader after the iframe has finished loading.
+  await page.setContent(`<iframe data-vr-recording-time src="${url}/index.html" style="width:100%;height:1100px;border:0"></iframe>`);
+  await page.frameLocator('iframe').locator('#form').waitFor({state:'visible'});
+  await page.addScriptTag({url:`${url}/embed.js`});
+  await page.waitForFunction(() => document.querySelector('iframe').style.height !== '1100px');
+  const measuredHeight = await page.locator('iframe').evaluate(el => el.offsetHeight);
+  await page.evaluate(() => window.postMessage({type:'vr-recording-height',height:5999}, location.origin));
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('iframe').evaluate(el => el.offsetHeight), measuredHeight);
+  // The inline standalone loader remains repeatable within a post.
+  await page.setContent('<div id="one"></div><div id="two"></div>');
+  await page.addScriptTag({url:`${url}/embed.js`});
+  await page.addScriptTag({url:`${url}/embed.js`});
+  assert.equal(await page.locator('iframe').count(), 2);
   await page.route('**/cameras.json', route => route.fulfill({status:503,body:'unavailable'}));
   await page.goto(url);
   await page.locator('#form').waitFor({state:'visible'});
   assert.match(await page.locator('#loading').innerText(), /custom total bitrate/);
   assert.match(await page.locator('#result').innerText(), /9 hr 0 min/);
   assert.deepEqual(errors, []);
-  console.log('Browser checks passed: desktop, mobile, inverse, partitions, ranges, custom, invalid inputs, iframe resizing, missing-data fallback; no JS errors.');
+  console.log('Browser checks passed: desktop, mobile, inverse, partitions, ranges, custom, invalid inputs, iframe resizing, delayed WordPress loader, forged resize rejection, multiple embeds, missing-data fallback; no JS errors.');
 } finally {
   await browser.close();
   server.close();

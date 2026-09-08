@@ -6,15 +6,28 @@
   assumed channels, corrected bitrate propagation, new reviewed camera export).
 - Node calculation tests: 5 passed (decimal units, simultaneous channels,
   allocations/headroom, ranges/inverse, invalid inputs).
-- Static build: 15 camera presets; seven output files totaling approximately
-  23 KB uncompressed. No runtime third-party requests except the user-opened
+- Static build: 15 camera presets, standalone assets and a WordPress plugin ZIP.
+  No runtime third-party requests except the user-opened
   measurement-reference link.
 - Playwright Chromium: desktop 1024px and mobile 375px; no JavaScript errors.
   Tested camera changes, inverse mode, missing allocation, valid allocation,
   invalid input, bitrate ranges, custom mode, unavailable-JSON fallback,
   actual iframe embedding and height expansion. No horizontal page overflow.
+- WordPress package PHP lint and shortcode API-contract test passed. Additional
+  Chromium tests cover a footer loader executing after the iframe, rejected
+  forged resize messages, and multiple standalone embeds. These are local tests,
+  not a WordPress-server acceptance result.
 - Manually inspected mobile calculator and expanded embedded-mobile screenshots.
 - No production deployment or real WordPress rendering was performed.
+
+## Staging access check
+
+Staging development was authorized after the first draft PR. The managed
+browser returned `ERR_INVALID_AUTH_CREDENTIALS` for the separate staging site.
+Protected staging credential metadata exists, but its allowed-host routing is
+not configured. No credential values were retrieved or exposed. No staging or
+production files/posts were written. Installation and real-theme acceptance
+remain blocked until protected staging access is restored.
 
 ## Code review
 

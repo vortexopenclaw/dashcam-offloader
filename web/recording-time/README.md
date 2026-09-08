@@ -4,7 +4,8 @@
 
 Embed a driving-only calculator in a website post, using the offloader's
 existing measured data. No app runtime changes, paid APIs, analytics, cookies,
-raw footage access, WordPress plugin, or frontend build dependencies.
+raw footage access, or frontend build dependencies. An optional lightweight
+WordPress plugin packages the same static calculator with a shortcode.
 
 The canonical bitrate source remains `docs/video-metadata-reference.md`.
 `catalog.json` is a reviewed eligibility list, not a second bitrate database.
@@ -19,6 +20,8 @@ local paths, footage filenames, or submission metadata.
 python3 -m unittest discover -s web/recording-time -p 'test_*.py'
 node --test web/recording-time/calculator.test.mjs
 python3 web/recording-time/build.py
+php -l web/recording-time/wordpress/vortex-recording-time.php
+php web/recording-time/test_shortcode.php
 ```
 
 Optional browser checks use an existing Playwright installation:
@@ -37,8 +40,37 @@ directly from disk does not support the JSON fetch/module imports reliably.
 
 ## Install into a website post
 
-After approving deployment, host the contents of `dist/` together at a stable
-HTTPS path, for example `/tools/recording-time/` on the website. Keep that path
+### WordPress package (preferred for staging)
+
+The build produces `dist/vortex-recording-time.zip`. Upload and activate this
+plugin on the authorized staging site, then add a Shortcode block containing:
+
+```text
+[vortex_recording_time]
+```
+
+The shortcode enqueues its own resize script and serves its calculator assets
+from the plugin directory. No theme edit or unfiltered HTML capability is
+required for the post author. The loader handles delayed footer execution and
+checks resize-message origins and frame identity. Its WordPress script version
+uses the deployed file modification time to invalidate the loader cache.
+
+No activation hook or database migration runs. Deactivation removes the shortcode
+handler but leaves post content intact. For rollback, back up the exact existing
+plugin directory with the site's approved backup mechanism before replacement,
+then restore that directory if the rendered checks fail. Do not change unrelated
+plugins, global security headers, or cache settings.
+
+The staging site requires an authenticated browser for rendered acceptance.
+Check iframe height expansion/contraction, 375px mobile overflow, dropdown and
+custom inputs, and neighboring post content in the actual theme. Confirm `.mjs`
+assets have a JavaScript MIME type. This repository's local browser test does
+not prove server MIME types, authentication propagation, or WordPress rendering.
+
+### Standalone static hosting
+
+After approving deployment, host the six calculator assets from `dist/` together at a stable
+HTTPS path, for example `/tools/recording-time/` on the website (exclude the ZIP and demo). Keep that path
 stable so existing post embeds pick up future deployments.
 
 Add this to a WordPress Custom HTML block (the path is proposed, not deployed):
