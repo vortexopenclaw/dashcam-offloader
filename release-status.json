@@ -1,17 +1,17 @@
 {
-  "sha": "37f968607635ac074a1a281a55ed3054101beaee",
-  "runId": "32083648079",
+  "sha": "07915c2df938c569029436df007014307e44d3ac",
+  "runId": "34249330539",
   "attempt": "1",
-  "jobStatus": "success",
+  "jobStatus": "cancelled",
   "steps": {
-    "build": "success",
-    "repoVerify": "success",
-    "appVerify": "success",
-    "zip": "success",
-    "manifest": "success",
-    "cloudflareStage": "success",
-    "githubRelease": "success",
-    "cloudflare": "success"
+    "build": "cancelled",
+    "repoVerify": "skipped",
+    "appVerify": "skipped",
+    "zip": "skipped",
+    "manifest": "skipped",
+    "cloudflareStage": "skipped",
+    "githubRelease": "skipped",
+    "cloudflare": "skipped"
   },
-  "recordedAt": "2026-08-18T00:21:20Z"
+  "recordedAt": "2026-09-08T16:15:01Z"
 }
