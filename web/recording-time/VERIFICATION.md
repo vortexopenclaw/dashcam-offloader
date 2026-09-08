@@ -1,86 +1,65 @@
 # Verification
 
-## Observed checks
+## Simplified chart revision (2026-09-08)
 
-- Python exporter tests: 4 passed (driving-only provenance, fail-closed missing/
-  assumed channels, corrected bitrate propagation, new reviewed camera export).
-- Node calculation tests: 5 passed (decimal units, simultaneous channels,
-  allocations/headroom, ranges/inverse, invalid inputs).
-- Static build: 15 camera presets, standalone assets and a WordPress plugin ZIP.
-  No runtime third-party requests except the user-opened
-  measurement-reference link.
-- Playwright Chromium: desktop 1024px and mobile 375px; no JavaScript errors.
-  Tested camera changes, inverse mode, missing allocation, valid allocation,
-  invalid input, bitrate ranges, custom mode, unavailable-JSON fallback,
-  actual iframe embedding and height expansion. No horizontal page overflow.
-- WordPress package PHP lint and shortcode API-contract test passed. Additional
-  Chromium tests cover a footer loader executing after the iframe, rejected
-  forged resize messages, and multiple standalone embeds. These are local tests,
-  not a WordPress-server acceptance result.
-- Manually inspected mobile calculator and expanded embedded-mobile screenshots.
-- No production deployment or real WordPress rendering was performed.
+Supersedes the initial 15-camera calculator. The interface now has two
+dropdowns and a five-row recording-time table. Inverse mode, custom bitrate,
+allocation, and headroom controls have been removed. The catalog contains
+29 cameras, with normalized VIOFO, BlackVue, and ROVE display names.
 
-## Staging access check
+### Checks observed
 
-Staging development was authorized after the first draft PR. The managed
-browser returned `ERR_INVALID_AUTH_CREDENTIALS` for the separate staging site.
-Protected staging credential metadata exists, but its allowed-host routing is
-not configured. No credential values were retrieved or exposed. No staging or
-production files/posts were written. Installation and real-theme acceptance
-remain blocked until protected staging access is restored.
+- Six Python exporter tests passed: driving-only provenance, channel-set
+  validation, corrections/new camera propagation, subset estimates, and
+  manufacturer-chart override. Parking rows do not enter driving estimates.
+- Five Node calculation tests passed: decimal units, channel totals, measured
+  ranges, official durations, and invalid data.
+- Build generated schema-2 camera JSON, static assets, and WordPress ZIP.
+- PHP lint and shortcode API-contract test passed.
+- Playwright checks passed for all 29 camera entries, channel selection,
+  five card sizes, single-channel selector state, ranges, desktop/mobile
+  layout, missing-data error, iframe resizing, delayed footer loader,
+  forged resize-message rejection, and multiple embeds. No JavaScript errors.
+- VIOFO A229 Pro Normal-quality 256 GB outputs match the inspected source:
+  1CH 17 hours, 2CH 10 hours 30 minutes, 3CH 8 hours 30 minutes.
 
-### Browser-only real-theme check
+### Browser-only staging-theme preview
 
-After the outer staging password gate was authenticated, a read-only preview
-loaded an actual staging article and inserted the local calculator into its
-existing content column using browser request interception. Nothing was
-uploaded, installed, published, or saved to WordPress. WordPress administration
-remained logged out.
+Loaded an authenticated staging article and inserted the local chart into its
+actual theme content column through browser request interception. This is
+DOM-only preview work: nothing was uploaded, installed, published, or saved
+to WordPress. WordPress admin access remains unresolved.
 
-- Viewports 1440, 768, and 375px passed; calculator/content widths were 750,
+- Viewports 1440, 768, and 375px passed; chart/content widths were 750,
   720, and 345px respectively.
-- No page or calculator horizontal overflow at any tested width.
-- Following post content did not overlap the iframe.
-- Missing allocation, 50% allocation calculation, and expanded methodology
-  passed, with no clipped iframe content and no JavaScript errors.
-- Mobile rendered screenshot inspected.
+- No page or iframe horizontal overflow, clipping, or overlapping next content.
+- Switching 2CH/3CH updated the chart correctly; expanding methodology resized
+  the iframe correctly. No JavaScript errors.
+- Mobile screenshot visually inspected: two native selectors, five readable
+  rows, short caveat, collapsed methodology.
 
-Reproduce with `theme-preview.mjs` using an existing Playwright module, the
-authenticated browser's CDP URL, and a staging article URL. This verifies theme
-geometry but does not verify installation, server MIME types, or shortcode
-execution inside WordPress. Preview changes disappear on reload.
+Reproduce with `theme-preview.mjs`, an existing Playwright module, an
+authenticated browser CDP URL, and a staging article URL. Changes disappear on
+reload. This proves theme geometry, not server MIME handling, deployed assets,
+or shortcode execution in an actual WordPress installation.
 
-## Code review
+## Review and limitations
 
-Scope: new exporter, calculation module, widget, embed loader, static CI artifact
-workflow, and focused tests. Existing desktop app code is unchanged.
-
-- Correctness: sums simultaneous channels; uses only driving measurements;
-  accounts separately for partition share and headroom; retains sampled ranges.
-- Readability/architecture: no frontend framework or runtime dependency; bitrate
-  source remains the existing reference, eligibility policy is separate.
-- Security: no dynamic HTML interpolation, secrets, raw submission data, or
-  user tracking. Resize messages validate origin, source window, and bounds.
-- Performance: one small local JSON fetch; no hosted calculation or AI service.
-- Remaining limitations: headroom is an assumption, card compatibility is not
-  checked, firmware/quality metadata is incomplete, and fixed percentages are
-  user-entered. These are visible in the interface.
-
-## Interface review (quick)
-
-Plain CSS inside an isolated iframe. Scope: primary workflow, expanded storage
-and methodology details, error and loading-fallback states.
-
-| Category | Evidence | Result |
-| --- | --- | --- |
-| Typography | Mobile screenshot, dynamic outputs | Clear; tabular output, readable labels |
-| Surfaces | Inputs, results, focus rules, mobile overflow check | Clear; native controls with 44px+ height |
-| Animations | Source inspection | No custom animation to review |
-| Icons | Native select/disclosure controls | No custom icon system |
-| Performance | Built assets, browser errors, iframe resize test | Clear |
-
-Considered but rejected: arbitrary channel toggles would imply unmeasured
-configurations; animated result transitions would distract on repeated edits.
-No actionable interface-polish findings. Local implementation approved for
-review handoff; real WordPress integration and production hosting remain
-unverified. Safari/Firefox and assistive-technology walkthroughs not run.
+- Scope is the website chart/exporter; desktop application code is unchanged.
+- Existing measured reference remains canonical. Reviewed manufacturer charts
+  are a separate source with URLs, quality setting, and verification date.
+- Reduced-channel estimates add only selected measured rates. They are not
+  independently measured configurations or hardware compatibility guarantees.
+- Manufacturer figures use Normal quality; Offloader samples do not have
+  consistent quality/firmware metadata. Cross-model values are approximate,
+  not a controlled quality comparison.
+- Full nominal card capacity is used for bitrate estimates. Actual partitions,
+  parked/protected recordings, and formatting can reduce retention. The UI
+  states this without numeric storage controls or an invented reserve factor.
+- Missing incomplete/provisional cameras remain excluded. Common card sizes
+  are comparison points, not verified compatibility recommendations.
+- No dynamic HTML interpolation, private source notes, credentials, tracking,
+  runtime API dependencies, or paid services are added. Resize messages still
+  validate origin, source window, and bounds.
+- No production changes. Safari/Firefox and assistive-technology walkthroughs
+  have not been run. Actual WordPress installation remains unverified.

@@ -29,14 +29,14 @@ try {
   await page.evaluate(prefix => {
     const content = document.querySelector('.entry-content');
     const heading = document.querySelector('h1');
-    if (heading) heading.textContent = 'Dashcam Recording Time Calculator';
-    document.title = 'Calculator theme preview (not saved)';
+    if (heading) heading.textContent = 'Dashcam Recording Time Chart';
+    document.title = 'Simplified recording-time chart (browser preview)';
     content.replaceChildren();
     const notice = document.createElement('p');
     notice.textContent = 'BROWSER-ONLY PREVIEW: This calculator has not been installed or saved to staging.';
     notice.style.cssText = 'padding:12px;background:#fff3cd;color:#513f03;';
     const intro = document.createElement('p');
-    intro.textContent = 'Choose your dashcam and memory card to estimate how much driving footage you can retain. The estimates use measured recording bitrates from the Dashcam Offloader reference.';
+    intro.textContent = 'Choose your dashcam and channel setup to compare recording times across memory card sizes.';
     const frame = document.createElement('iframe');
     frame.dataset.vrRecordingTime = '';
     frame.src = prefix + 'index.html';
@@ -70,11 +70,11 @@ try {
     await page.locator('iframe[data-vr-recording-time]').scrollIntoViewIfNeeded();
     await page.screenshot({path:path.join(evidence,`staging-theme-${width}.png`),fullPage:false});
   }
-  await frame.locator('#camera').selectOption('thinkware-u3000-pro');
-  if (!(await frame.locator('#result').innerText()).includes('Check storage settings')) throw new Error('Missing allocation was not flagged');
-  await frame.locator('#allocation').fill('50');
-  if (!(await frame.locator('#result').innerText()).includes('6 hr 45 min')) throw new Error('Allocation result incorrect');
   await frame.locator('#camera').selectOption('viofo-a229-pro');
+  await frame.locator('#channels').selectOption('front-rear');
+  if (!(await frame.locator('#rows').innerText()).includes('10 hr 30 min')) throw new Error('2CH chart incorrect');
+  await frame.locator('#channels').selectOption('front-rear-interior');
+  if (!(await frame.locator('#rows').innerText()).includes('8 hr 30 min')) throw new Error('3CH chart incorrect');
   await frame.locator('.method summary').click();
   await page.waitForTimeout(250);
   const clipped = await page.locator('iframe[data-vr-recording-time]').evaluate(el=>el.clientHeight < el.contentDocument.documentElement.scrollHeight);
@@ -82,7 +82,7 @@ try {
   await frame.locator('.method summary').click();
   await page.setViewportSize({width:1280,height:1000});
   await page.locator('.entry-content').first().scrollIntoViewIfNeeded();
-  const result = {browserOnly:true,siteWrites:false,checks,calculatorChecks:'preset, allocation, expansion passed',pageErrors:errors};
+  const result = {browserOnly:true,siteWrites:false,checks,calculatorChecks:'2CH/3CH charts and expansion passed',pageErrors:errors};
   await writeFile(path.join(evidence,'staging-theme-checks.json'),JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
 } finally {

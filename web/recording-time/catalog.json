@@ -1,4 +1,7 @@
 {
+  "BlackVue DR650S-2CH": {"channels": ["front", "rear"]},
+  "BlackVue DR750S-2CH": {"channels": ["front", "rear"]},
+  "BlackVue DR900S-2CH": {"channels": ["front", "rear"]},
   "BlackVue Elite 9": {"channels": ["front", "rear"]},
   "BlackVue DR770X Box": {"channels": ["front", "interior", "rear"]},
   "Thinkware U3000 Pro": {"channels": ["front", "rear"], "allocationRequired": true},
@@ -10,8 +13,19 @@
   "VIOFO A329S": {"channels": ["front", "rear", "interior"]},
   "VIOFO A329T": {"channels": ["front", "telephoto", "rear"]},
   "VIOFO A139 Pro": {"channels": ["front", "rear", "interior"]},
+  "VIOFO A139": {"channels": ["front", "interior", "rear"]},
+  "VIOFO T130": {"channels": ["front", "interior", "rear"]},
+  "VIOFO A129 Duo": {"channels": ["front", "rear"]},
+  "VIOFO A129 Plus Duo": {"channels": ["front", "rear"]},
+  "VIOFO A129 Pro": {"channels": ["front", "rear"]},
+  "VIOFO A119 v3": {"channels": ["front"]},
+  "VIOFO A119 Mini": {"channels": ["front"]},
+  "VIOFO A119 Mini 2": {"channels": ["front"]},
   "VIOFO A119M Pro": {"channels": ["front"]},
   "70mai M310": {"channels": ["front"]},
   "Vantrue N4 Pro S": {"channels": ["front", "interior", "rear"]},
-  "Vantrue E1 Pro": {"channels": ["front"]}
+  "Vantrue N4 S": {"channels": ["front", "interior", "rear"]},
+  "Vantrue E1 Pro": {"channels": ["front"]},
+  "Rove R2-4K Pro": {"displayName": "ROVE R2-4K Pro", "channels": ["front"]},
+  "Cobra Road Scout": {"channels": ["front"]}
 }

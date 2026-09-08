@@ -2,8 +2,13 @@
 
 ## Objective and scope
 
-Embed a driving-only calculator in a website post, using the offloader's
-existing measured data. No app runtime changes, paid APIs, analytics, cookies,
+Embed a simple driving-footage chart in a website post. Choose a dashcam and
+channel setup; compare approximate recording times for 32, 64, 128, 256, and
+512 GB cards. There are no inverse modes, bitrate inputs, allocation inputs,
+or headroom controls. The initial catalog covers 29 dashcams.
+
+Use the offloader's existing measured data, supplemented by verified VIOFO
+Normal-quality charts for A229 Pro, Plus, and Ultra. No app runtime changes, paid APIs, analytics, cookies,
 raw footage access, or frontend build dependencies. An optional lightweight
 WordPress plugin packages the same static calculator with a shortcode.
 
@@ -12,7 +17,10 @@ The canonical bitrate source remains `docs/video-metadata-reference.md`.
 Only complete, explicitly mapped driving channel sets measured with ffprobe
 are exported. The exporter fails if an approved camera loses a channel or has
 an unsupported measurement format. It never exports free-form source notes,
-local paths, footage filenames, or submission metadata.
+local paths, footage filenames, or submission metadata. Manufacturer chart
+transcriptions, source image URLs, quality, and check dates live separately in
+`manufacturer-times.json`. These override bitrate-derived estimates for the
+three reviewed VIOFO models. Exported JSON uses schema version 2.
 
 ## Build and verify
 
@@ -63,7 +71,7 @@ plugins, global security headers, or cache settings.
 
 The staging site requires an authenticated browser for rendered acceptance.
 Check iframe height expansion/contraction, 375px mobile overflow, dropdown and
-custom inputs, and neighboring post content in the actual theme. Confirm `.mjs`
+channel selections, and neighboring post content in the actual theme. Confirm `.mjs`
 assets have a JavaScript MIME type. This repository's local browser test does
 not prove server MIME types, authentication propagation, or WordPress rendering.
 
@@ -98,7 +106,7 @@ No hosting, WordPress, cache, or production configuration is changed by this wor
    `catalog.json` after confirming the sample is a complete configuration.
    A filename-recognition profile alone is not recording-rate evidence.
 3. Mark `allocationRequired: true` where normal-driving capacity must be checked.
-   This is a conservative UI gate, not a verified model-specific percentage.
+   This adds a short partition note, not an input or an assumed percentage.
 4. Run the checks/build. The included GitHub workflow produces the static build
    artifact whenever the measurements or calculator change.
 5. Deploy that artifact to the same stable hosting path after release approval.
@@ -111,26 +119,24 @@ not to raw unreviewed submissions or arbitrary branch pushes.
 
 ## Driving versus parking
 
-No blended driving/parking bitrate. Shared cards default to 100% driving share
-for a driving-only scenario; parked/protected files can reduce real retention.
-For fixed allocations, enter the camera's normal-driving percentage, even when
-parking mode is off. The initial Thinkware presets require this input; any
-other preset can enable it under Storage assumptions. No allocation percentage
-was verified in the inspected repository, so none is prefilled.
+No blended driving/parking bitrate. Bitrate-derived rows use nominal decimal
+card capacity without a hidden reserve factor. Parking, protected files, and
+fixed partitions can reduce actual driving retention; the UI explains this
+briefly without making the user configure storage assumptions.
 
-The 5% default headroom is an explicitly adjustable planning allowance within
-the driving allocation. It is not a measured filesystem or audio overhead.
-Do not apply a GB-to-GiB penalty: card labels and formula both use decimal GB.
-
-Only sampled channel combinations are offered. Removing a rear camera may
-change front bitrate, so arbitrary channel toggles are intentionally absent.
-Quality and firmware were not consistently recorded; the UI states this and
-offers custom total bitrate. No supported-card-size claims are made.
+Manufacturer rows retain the published Normal-quality durations. Other rows
+sum measured simultaneous channel bitrates. Front-only and reduced-channel
+choices are estimates derived from those channel measurements, not separate
+tests or guarantees of supported hardware configurations. Disconnecting a
+camera can change the remaining bitrate. The collapsed methodology explains
+this limitation. Quality and firmware were not consistently recorded.
+Times are rounded to five minutes, preserving measured ranges. Card sizes are
+comparison points, not model-specific compatibility recommendations.
 
 ## Success checks and rollback
 
-Verify unit conversions, simultaneous-channel totals, ranges, inverse results,
-partition handling, invalid inputs, exclusion of parking/provisional rows,
+Verify unit conversions, simultaneous-channel totals, ranges, manufacturer rows,
+channel selection, invalid data, exclusion of parking/provisional rows,
 data-update propagation, mobile sizing, missing-data fallback, and iframe
 resize behavior. Reverting this feature commit removes the build workflow and
 tool without touching scanner/copy behavior. For a deployed version, restore

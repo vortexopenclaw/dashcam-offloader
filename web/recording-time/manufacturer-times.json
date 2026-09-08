@@ -1,0 +1,32 @@
+{
+  "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+  "checkedOn": "2026-09-08",
+  "quality": "Normal",
+  "cardGB": [32, 64, 128, 256, 512],
+  "cameras": {
+    "VIOFO A229 Pro": {
+      "imageUrl": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/19147713698/original/6r5OzqhLOnZGP57ZP6mq5ivVE6rur0kV4w.png",
+      "setups": [
+        {"roles": ["front"], "hours": [2, 4.5, 8.5, 17, 34]},
+        {"roles": ["front", "rear"], "hours": [1.5, 2.5, 5.5, 10.5, 21]},
+        {"roles": ["front", "rear", "interior"], "hours": [1, 2, 4, 8.5, 17]}
+      ]
+    },
+    "VIOFO A229 Plus": {
+      "imageUrl": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/19147713576/original/1_l3gFFRBo0JAWEzMJktCHrbsprELQxrAQ.png",
+      "setups": [
+        {"roles": ["front"], "hours": [3.5, 6.5, 13, 26, 52]},
+        {"roles": ["front", "rear"], "hours": [1.5, 3.5, 6.5, 13.5, 27]},
+        {"roles": ["front", "rear", "interior"], "hours": [1, 2.5, 5, 10, 20]}
+      ]
+    },
+    "VIOFO A229 Ultra": {
+      "imageUrl": "https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/19154541316/original/zkzxPz2nr-NuvEgDdcX6uNcf1mcKbfwbJA.png",
+      "setups": [
+        {"roles": ["front"], "hours": [1.75, 3.5, 7, 14, 28]},
+        {"roles": ["front", "rear"], "hours": [1.1, 2.2, 4.5, 9, 18]},
+        {"roles": ["front", "rear", "interior"], "hours": [0.93, 1.9, 3.8, 7.6, 14.9]}
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 
-def extract(reference, catalog):
+def extract(reference, catalog, manufacturer=None):
     sections = {}
     section = None
     for line in reference.splitlines():
@@ -37,19 +37,47 @@ def extract(reference, catalog):
         if [c['role'] for c in channels] != policy['channels']:
             raise ValueError(f'Missing, duplicate, or changed channel set: {name}')
         slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
-        cameras.append(dict(id=slug, name=name, channels=channels,
+        cameras.append(dict(id=slug, name=policy.get('displayName', name), channels=channels,
                             allocationRequired=policy.get('allocationRequired', False),
-                            sourceAnchor=slug))
+                            sourceAnchor=slug, setups=make_setups(name, channels, manufacturer)))
     if not cameras:
         raise ValueError('No measured presets')
-    return dict(schemaVersion=1, sourceSha256=hashlib.sha256(reference.encode()).hexdigest(),
+    return dict(schemaVersion=2, sourceSha256=hashlib.sha256(reference.encode()).hexdigest(),
                 sourceUrl='https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/video-metadata-reference.md',
                 cameras=cameras)
 
 
+def make_setups(name, channels, manufacturer):
+    official = (manufacturer or {}).get('cameras', {}).get(name)
+    if official:
+        setups = []
+        for setup in official['setups']:
+            roles, times = setup['roles'], setup['hours']
+            if len(times) != 5 or any(not isinstance(t, (int, float)) or t <= 0 for t in times):
+                raise ValueError('Invalid manufacturer recording times')
+            if len(set(roles)) != len(roles) or not set(roles) <= {c['role'] for c in channels}:
+                raise ValueError('Invalid manufacturer channel set')
+            setups.append(dict(id='-'.join(roles), roles=roles, hours=times,
+                               sourceUrl=manufacturer['sourceUrl'], basis='VIOFO chart · Normal recording quality'))
+        return setups
+    available = {c['role']: c for c in channels}
+    roles = [r for r in ['front', 'rear', 'interior', 'telephoto'] if r in available]
+    groups = [roles]
+    if len(roles) > 1:
+        groups = [['front']] + [['front', r] for r in roles[1:]]
+        if len(roles) > 2:
+            groups.append(roles)
+    return [dict(id='-'.join(group), roles=group,
+                 minMbps=sum(available[r]['minMbps'] for r in group),
+                 maxMbps=sum(available[r]['maxMbps'] for r in group),
+                 basis='Offloader measured bitrates' if group == roles else 'Estimated from measured channel bitrates')
+            for group in groups]
+
+
 def build():
     reference = (ROOT / 'docs/video-metadata-reference.md').read_text()
-    data = extract(reference, json.loads((HERE / 'catalog.json').read_text()))
+    data = extract(reference, json.loads((HERE / 'catalog.json').read_text()),
+                   json.loads((HERE / 'manufacturer-times.json').read_text()))
     out = HERE / 'dist'
     out.mkdir(exist_ok=True)
     for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'demo.html']:

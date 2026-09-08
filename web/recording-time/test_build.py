@@ -32,6 +32,20 @@ class ExportTests(unittest.TestCase):
         data = extract(reference, {**self.catalog, 'Test Camera':{'channels':['front']}})
         self.assertEqual(len(data['cameras']), len(self.catalog) + 1)
 
+    def test_official_channel_sets_use_official_times(self):
+        manufacturer = json.loads((HERE / 'manufacturer-times.json').read_text())
+        data = extract(self.reference, self.catalog, manufacturer)
+        camera = next(c for c in data['cameras'] if c['name'] == 'VIOFO A229 Pro')
+        self.assertEqual([len(s['roles']) for s in camera['setups']], [1, 2, 3])
+        self.assertEqual(camera['setups'][1]['hours'], [1.5, 2.5, 5.5, 10.5, 21])
+
+    def test_channel_subsets_add_only_selected_streams(self):
+        data = extract(self.reference, self.catalog)
+        camera = next(c for c in data['cameras'] if c['name'] == 'Vantrue N4 Pro S')
+        setup = next(s for s in camera['setups'] if s['id'] == 'front-rear')
+        self.assertAlmostEqual(setup['maxMbps'], 46.2)
+        self.assertIn('Estimated', setup['basis'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,38 +1,20 @@
-function positive(value, name) {
-  if (!Number.isFinite(value) || value <= 0) throw new Error(`Enter a valid ${name}.`);
-  return value;
-}
-
-export function calculate({cardGB, targetHours, minMbps, maxMbps, allocationPercent, reservePercent}) {
-  positive(minMbps, 'bitrate');
-  positive(maxMbps, 'bitrate');
-  if (maxMbps < minMbps) throw new Error('Maximum bitrate must be at least the minimum.');
-  positive(allocationPercent, 'driving allocation');
-  if (allocationPercent > 100) throw new Error('Driving allocation cannot exceed 100%.');
-  if (!Number.isFinite(reservePercent) || reservePercent < 0 || reservePercent >= 100) {
-    throw new Error('Headroom must be from 0 to less than 100%.');
+export const CARD_SIZES = [32, 64, 128, 256, 512];
+export function recordingRows(setup) {
+  if (setup.hours) {
+    if (setup.hours.length !== CARD_SIZES.length || setup.hours.some(t => !Number.isFinite(t) || t <= 0)) throw new Error('Invalid chart');
+    return CARD_SIZES.map((gb, i) => ({gb, minHours:setup.hours[i], maxHours:setup.hours[i]}));
   }
-  // Card labels use decimal GB. Mbps * 0.45 = decimal GB per hour.
-  const fraction = allocationPercent / 100 * (1 - reservePercent / 100);
-  if (cardGB !== undefined) {
-    positive(cardGB, 'card capacity');
-    return {minHours: cardGB * fraction / (maxMbps * 0.45),
-      maxHours: cardGB * fraction / (minMbps * 0.45)};
-  }
-  positive(targetHours, 'recording duration');
-  return {minGB: targetHours * minMbps * 0.45 / fraction,
-    maxGB: targetHours * maxMbps * 0.45 / fraction};
+  const {minMbps, maxMbps} = setup;
+  if (!Number.isFinite(minMbps) || !Number.isFinite(maxMbps) || minMbps <= 0 || maxMbps < minMbps) throw new Error('Invalid recording rate');
+  // Decimal card capacity and bitrate; no hidden reserve factor.
+  return CARD_SIZES.map(gb => ({gb, minHours:gb / (maxMbps * 0.45), maxHours:gb / (minMbps * 0.45)}));
 }
-
-export function rates(camera) {
-  return camera.channels.reduce((sum, channel) => ({
-    minMbps: sum.minMbps + channel.minMbps,
-    maxMbps: sum.maxMbps + channel.maxMbps,
-  }), {minMbps: 0, maxMbps: 0});
+export function timeLabel(hours) {
+  const minutes = Math.max(5, Math.round(hours * 60 / 5) * 5);
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return h ? `${h} hr${m ? ` ${m} min` : ''}` : `${m} min`;
 }
-
-export function hoursLabel(hours) {
-  if (hours < 1 / 60) return 'less than 1 min';
-  const minutes = Math.round(hours * 60);
-  return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+export function rowLabel(row) {
+  const low = timeLabel(row.minHours), high = timeLabel(row.maxHours);
+  return low === high ? low : `${low} – ${high}`;
 }

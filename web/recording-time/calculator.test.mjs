@@ -1,26 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {calculate, rates} from './calculator.mjs';
-
-const base = {minMbps: 80, maxMbps: 80, allocationPercent: 100, reservePercent: 0};
-test('80 Mbps consumes 36 decimal GB per hour, not GiB', () => {
-  assert.equal(calculate({...base, cardGB: 360}).minHours, 10);
-  assert.equal(calculate({...base, targetHours: 10}).maxGB, 360);
+import {recordingRows, rowLabel, timeLabel} from './calculator.mjs';
+test('all card sizes appear, use decimal units and no hidden headroom',()=>{
+  const rows=recordingRows({minMbps:80,maxMbps:80});
+  assert.deepEqual(rows.map(r=>r.gb),[32,64,128,256,512]);
+  assert.equal(rows[3].minHours,256/36);
 });
-test('simultaneous channels add storage rates, never recording durations', () => {
-  const combined = rates({channels:[{minMbps:36,maxMbps:36},{minMbps:15.6,maxMbps:15.6},{minMbps:24,maxMbps:24}]});
-  assert.equal(combined.maxMbps, 75.6);
-  assert.ok(Math.abs(calculate({...base,...combined,cardGB:256,reservePercent:5}).minHours - 7.1487360376) < 0.000001);
+test('manufacturer times preserve individual rounded cells without scaling',()=>{
+  const rows=recordingRows({hours:[1,2,4,8.5,17]});
+  assert.equal(rowLabel(rows[3]),'8 hr 30 min');
+  assert.equal(rows[0].minHours,1);
 });
-test('partition and headroom both reduce driving retention', () => {
-  assert.equal(calculate({...base,cardGB:360,allocationPercent:50,reservePercent:10}).minHours, 4.5);
+test('higher bitrate means shorter duration; ranges stay ranges',()=>{
+  const rows=recordingRows({minMbps:40,maxMbps:80});
+  assert.equal(rows[1].maxHours,2*rows[1].minHours);
+  assert.match(rowLabel(rows[1]),/ – /);
 });
-test('range uses high bitrate for shorter time and larger required card', () => {
-  assert.deepEqual(calculate({...base,minMbps:40,cardGB:360}), {minHours:10,maxHours:20});
-  assert.deepEqual(calculate({...base,minMbps:40,targetHours:10}), {minGB:180,maxGB:360});
+test('times round to readable five-minute increments',()=>{
+  assert.equal(timeLabel(0.93),'55 min');
+  assert.equal(timeLabel(8.5),'8 hr 30 min');
+  assert.equal(timeLabel(1),'1 hr');
 });
-test('invalid values never produce plausible outputs', () => {
-  for (const patch of [{allocationPercent:NaN},{allocationPercent:0},{allocationPercent:101},{reservePercent:100},{reservePercent:-1},{minMbps:0},{maxMbps:Infinity},{maxMbps:1},{cardGB:-1}]) {
-    assert.throws(() => calculate({...base,cardGB:256,...patch}));
-  }
+test('invalid source data does not produce a plausible chart',()=>{
+  for(const setup of [{hours:[1]},{hours:[1,2,NaN,4,5]},{minMbps:0,maxMbps:2},{minMbps:20,maxMbps:10},{minMbps:2,maxMbps:Infinity}])assert.throws(()=>recordingRows(setup));
 });
