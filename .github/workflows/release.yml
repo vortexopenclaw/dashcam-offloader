@@ -94,6 +94,16 @@ jobs:
 
           "build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --verify-update-manifest build/latest.json
 
+      - name: Preserve signed release artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dashcam-offloader-${{ steps.package.outputs.short_sha }}
+          path: |
+            ${{ steps.package.outputs.zip_path }}
+            build/latest.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Stage Cloudflare archive and deploy Worker
         id: cloudflarestage
         env:
