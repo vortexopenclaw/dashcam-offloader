@@ -1,0 +1,700 @@
+{
+  "checkedOn": "2026-09-08",
+  "modes": {
+    "viofo-a229-pro": {
+      "front": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            2,
+            4,
+            7.5,
+            14.5,
+            29
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            1,
+            2,
+            4.5,
+            9,
+            18
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 24.0,
+              "maxMbps": 24.0
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ],
+      "front-rear-interior": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            1,
+            1.5,
+            3.5,
+            7,
+            14
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            },
+            {
+              "role": "interior",
+              "codec": "H.264",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 15.6,
+              "maxMbps": 15.6
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 24.0,
+              "maxMbps": 24.0
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ]
+    },
+    "viofo-a229-plus": {
+      "front-rear": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            1,
+            2,
+            4.5,
+            9,
+            18
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 28.7,
+              "maxMbps": 28.7
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 23.8,
+              "maxMbps": 23.8
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ],
+      "front-rear-interior": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            1,
+            2,
+            3.5,
+            7.5,
+            15
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 28.7,
+              "maxMbps": 28.7
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 23.8,
+              "maxMbps": 23.8
+            },
+            {
+              "role": "interior",
+              "codec": "H.264",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 15.6,
+              "maxMbps": 15.6
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ]
+    },
+    "viofo-a229-ultra": {
+      "front": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            1,
+            2.2,
+            4.4,
+            8.8,
+            17.4
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            0.9,
+            1.9,
+            3.8,
+            7.6,
+            15.2
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 34.4,
+              "maxMbps": 34.4
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ],
+      "front-rear-interior": [
+        {
+          "id": "maximum",
+          "label": "Maximum bitrate",
+          "hours": [
+            0.77,
+            1.5,
+            3,
+            6,
+            12.2
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.0,
+              "maxMbps": 36.0
+            },
+            {
+              "role": "rear",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 34.4,
+              "maxMbps": 34.4
+            },
+            {
+              "role": "interior",
+              "codec": "H.264",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 15.6,
+              "maxMbps": 15.6
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
+        }
+      ]
+    }
+  },
+  "replaceModes": {
+    "viofo-a119-mini-2": {
+      "front": [
+        {
+          "id": "normal",
+          "label": "2K (1440p) 30 fps \u00b7 Medium bitrate",
+          "hours": [
+            2.5,
+            5,
+            10,
+            20.5,
+            41
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 26.6,
+              "maxMbps": 28.8
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Medium bitrate"
+        },
+        {
+          "id": "maximum",
+          "label": "2K (1440p) 30 fps \u00b7 High bitrate (highest listed)",
+          "hours": [
+            2,
+            4.5,
+            8.5,
+            17.5,
+            35
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 26.6,
+              "maxMbps": 28.8
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 High bitrate (highest listed)"
+        },
+        {
+          "id": "measured-60fps",
+          "label": "2K (1440p) 60 fps \u00b7 Measured setting",
+          "minMbps": 26.8972,
+          "maxMbps": 26.8975,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "60",
+              "codec": "H.264"
+            }
+          ],
+          "basis": "Measured from original 60 fps recording files. Quality menu setting unknown; not a controlled comparison with the manufacturer\u2019s 30 fps figures."
+        }
+      ]
+    },
+    "viofo-a119m-pro": {
+      "front": [
+        {
+          "id": "normal",
+          "label": "4K 30 fps \u00b7 HDR on \u00b7 Medium bitrate",
+          "hours": [
+            2,
+            4,
+            8.4,
+            16.2,
+            32.4
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.9,
+              "maxMbps": 36.9
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 Medium bitrate"
+        },
+        {
+          "id": "maximum",
+          "label": "4K 30 fps \u00b7 HDR on \u00b7 High bitrate (highest listed)",
+          "hours": [
+            1.8,
+            3.5,
+            7.5,
+            14.4,
+            28.8
+          ],
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 36.9,
+              "maxMbps": 36.9
+            }
+          ],
+          "sourceUrl": "https://support.viofo.com/support/solutions/articles/19000109194-how-long-could-32-64-128-256gb-512gb-microsd-card-record-",
+          "basis": "Manufacturer recording-time chart \u00b7 High bitrate (highest listed)"
+        }
+      ]
+    },
+    "blackvue-elite-10": {
+      "front": [
+        {
+          "id": "normal",
+          "label": "Medium bitrate",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "maximum",
+          "label": "Maximum \u00b7 Extreme H.265",
+          "minMbps": 60,
+          "maxMbps": 60,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "HEVC"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 40,
+          "maxMbps": 40,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "high",
+          "label": "High bitrate",
+          "minMbps": 30,
+          "maxMbps": 30,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "low",
+          "label": "Low bitrate",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "normal",
+          "label": "Medium bitrate",
+          "minMbps": 40,
+          "maxMbps": 40,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            },
+            {
+              "role": "rear",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "maximum",
+          "label": "Maximum \u00b7 Extreme H.265",
+          "minMbps": 90,
+          "maxMbps": 90,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "HEVC"
+            },
+            {
+              "role": "rear",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "HEVC"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 70,
+          "maxMbps": 70,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264"
+            },
+            {
+              "role": "rear",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "high",
+          "label": "High bitrate",
+          "minMbps": 60,
+          "maxMbps": 60,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            },
+            {
+              "role": "rear",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        },
+        {
+          "id": "low",
+          "label": "Low bitrate",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30"
+            },
+            {
+              "role": "rear",
+              "resolution": "3840x2160",
+              "fps": "30"
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
+          "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        }
+      ]
+    }
+  },
+  "additionalCameras": [
+    {
+      "id": "blackvue-elite-10",
+      "name": "Blackvue Elite 10",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30",
+          "codec": "HEVC"
+        },
+        {
+          "role": "rear",
+          "resolution": "3840x2160",
+          "fps": "30",
+          "codec": "HEVC"
+        }
+      ],
+      "sourceAnchor": "",
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 20,
+          "maxMbps": 20,
+          "basis": "Manufacturer bitrate specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 40,
+          "maxMbps": 40,
+          "basis": "Manufacturer bitrate specifications"
+        }
+      ]
+    }
+  ],
+  "notes": {
+    "viofo-a229-plus": "Maximum-quality figures for front-only recording are not shown because the published chart contains inconsistent values.",
+    "vueroid-s1-4k-infinite": "Based on the space used by original recording files, including reserved space inside each file. The quality menu setting was not recorded."
+  },
+  "links": {
+    "viofo-a229-pro": {
+      "front": "https://geni.us/ViofoA229Pro1CH",
+      "front-rear": "https://geni.us/ViofoA229Pro2CH",
+      "front-rear-interior": "https://geni.us/ViofoA229Pro3CH"
+    },
+    "viofo-a229-plus": {
+      "front": "https://geni.us/ViofoA229Plus1CH-VR",
+      "front-rear": "https://geni.us/ViofoA229Plus2CH",
+      "front-rear-interior": "https://geni.us/ViofoA229Plus3CH"
+    },
+    "viofo-a229-ultra": {
+      "front-rear": "https://geni.us/ViofoA229Ultra2CH",
+      "front-rear-interior": "https://geni.us/ViofoA229Ultra3CH"
+    },
+    "viofo-a329s": {
+      "front": "https://geni.us/ViofoA329S-1CH",
+      "front-rear": "https://geni.us/ViofoA329S-2CH",
+      "front-rear-interior": "https://geni.us/ViofoA329S-3CH"
+    },
+    "viofo-a329t": {
+      "front-telephoto": "https://geni.us/ViofoA329T-2CH",
+      "front-rear-telephoto": "https://geni.us/ViofoA329T-3CH"
+    },
+    "blackvue-elite-10": {
+      "front-rear": "https://geni.us/BlackvueElite10-2CH"
+    },
+    "blackvue-elite-9": {
+      "front-rear": "https://geni.us/BlackvueElite9-2CH"
+    },
+    "vueroid-s1-4k-infinite": {
+      "front": "https://geni.us/VueroidS14K-1CH",
+      "front-rear": "https://geni.us/VueroidS14K-2CH",
+      "front-rear-interior": "https://geni.us/VueroidS14K-3CH"
+    },
+    "vantrue-e1-pro": {
+      "front": "https://geni.us/VantrueE1Pro"
+    },
+    "thinkware-u1000-plus": {
+      "front": "https://geni.us/ThinkwareU1000Plus1CH",
+      "front-rear": "https://geni.us/ThinkwareU1000Plus2CH"
+    },
+    "viofo-a119-mini-2": {
+      "front": "https://geni.us/ViofoA119Mini2"
+    },
+    "viofo-a119m-pro": {
+      "front": "https://geni.us/ViofoA119MPro"
+    }
+  },
+  "cardLinks": [
+    {
+      "label": "Viofo memory cards",
+      "url": "https://geni.us/Viofo256GBMicroSD",
+      "brand": "Viofo"
+    },
+    {
+      "label": "Vueroid memory cards",
+      "url": "https://geni.us/Vueroid512GBMicroSD",
+      "brand": "Vueroid"
+    },
+    {
+      "label": "Vantrue memory cards",
+      "url": "https://geni.us/Vantrue512GBMicroSD",
+      "brand": "Vantrue"
+    }
+  ]
+}

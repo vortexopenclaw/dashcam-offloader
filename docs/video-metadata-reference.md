@@ -463,6 +463,24 @@ No mounted media files were found for these models in this archive pass:
 - 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
 - DJI Mini 3 Pro
 - Sony A7 III
-- Vueroid S1 4K Infinite
 
 Those rows stay on manual/spec-driven data until we get real footage samples.
+
+## Vueroid S1 4K Infinite
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~55.021 Mbps | MP4 | `ffprobe` |
+| I (interior) | driving | H.264 | 1920x1080 | 30 | ~17.196 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~25.222 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate measurement (2026-09-08):** Direct INF driving clips from a complete 3CH set (20250922_114903), each 60.032 seconds. Front/interior/rear file sizes: 412876800 / 129040384 / 189267968 bytes. Rates above use complete file size divided by duration, including preallocated padding, not just encoded video. Video streams measured about 48 / 15 / 22 Mbps. A later complete 2CH pair (20260603_212826) confirmed the same front/rear file sizes and duration. Excluded shortened 46.528-second end clips from the baseline. Quality menu selection is unconfirmed. Reduced-channel estimates assume unchanged per-channel file allocation.
+
+### A119 Mini 2 — isolated 60 fps storage-rate check (2026-09-08)
+
+Two original driving clips (20230717111528_005186 and 20230721073714_005418)
+were independently probed: both 2560x1440 at 60/1 fps, 60.000 seconds,
+201729099 / 201730671 bytes, about 26.8972–26.8975 Mbps complete-file
+storage rates. Video streams were about 26.6232 Mbps. Quality menu selection
+was not recorded. These samples support a separate 60fps setting, not a claim
+of maximum quality or a controlled comparison with 30fps manufacturer figures.

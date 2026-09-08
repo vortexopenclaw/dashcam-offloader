@@ -3,12 +3,12 @@
 ## Objective and scope
 
 Embed a simple driving-footage chart in a website post. Choose a dashcam and
-channel setup; compare approximate recording times for 32, 64, 128, 256, and
+channel setup and a supported recording setting; compare approximate recording times for 32, 64, 128, 256, and
 512 GB cards. There are no inverse modes, bitrate inputs, allocation inputs,
-or headroom controls. The initial catalog covers 29 dashcams.
+or headroom controls. The catalog covers 31 dashcams.
 
 Use the offloader's existing measured data, supplemented by verified VIOFO
-Normal-quality charts for A229 Pro, Plus, and Ultra. No app runtime changes, paid APIs, analytics, cookies,
+quality charts and Blackvue Elite 10 specifications. No app runtime changes, paid APIs, analytics, cookies,
 raw footage access, or frontend build dependencies. An optional lightweight
 WordPress plugin packages the same static calculator with a shortcode.
 
@@ -20,7 +20,30 @@ an unsupported measurement format. It never exports free-form source notes,
 local paths, footage filenames, or submission metadata. Manufacturer chart
 transcriptions, source image URLs, quality, and check dates live separately in
 `manufacturer-times.json`. These override bitrate-derived estimates for the
-three reviewed VIOFO models. Exported JSON uses schema version 2.
+three reviewed VIOFO models. Exported JSON uses schema version 3.
+
+## Recording settings and public links
+
+`recording-modes.json` supplies reviewed quality/FPS variants and manufacturer-only
+cameras, plus exact-configuration affiliate destinations. Each setup exports a
+`modes` array with its own recording rate or times, per-channel resolution/FPS,
+and source description. Never reuse resolution or rate data from another mode.
+Manufacturer quality names and measured samples are distinct: a high sampled
+rate does not establish a Maximum menu setting. Normal in a quality chart is
+not the same as normal/driving recording mode.
+
+Vueroid uses complete-file storage rates because its recording containers are
+preallocated. A119 Mini 2 has separately identified 60fps direct-file samples;
+its menu quality is unknown. These are not a controlled 30fps/60fps comparison.
+Do not derive an unmeasured 2K60 setting by scaling a 4K30 bitrate.
+
+Brand display names use first-letter capitalization; source names and IDs stay
+stable. Public explanations follow the current camera and setting. Existing
+owner affiliate links are shown only for the exact selected package; unmatched
+configurations get no camera shopping link. Card links are brand-specific,
+with a compatibility reminder and affiliate disclosure. No live prices or
+stock claims are made. Purchase destinations still require editorial review
+before a public launch.
 
 ## Build and verify
 
@@ -124,7 +147,7 @@ card capacity without a hidden reserve factor. Parking, protected files, and
 fixed partitions can reduce actual driving retention; the UI explains this
 briefly without making the user configure storage assumptions.
 
-Manufacturer rows retain the published Normal-quality durations. Other rows
+Manufacturer rows retain the published durations for each verified quality setting. Other rows
 sum measured simultaneous channel bitrates. Front-only and reduced-channel
 choices are estimates derived from those channel measurements, not separate
 tests or guarantees of supported hardware configurations. Disconnecting a

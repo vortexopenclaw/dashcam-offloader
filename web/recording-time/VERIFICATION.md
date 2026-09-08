@@ -1,5 +1,58 @@
 # Verification
 
+## Recording-settings revision (2026-09-08, afternoon)
+
+Supersedes the two-dropdown revision below. 31 cameras, with one additional
+recording-setting selector and an always-visible per-channel resolution/FPS line.
+Brand display names are Viofo, Blackvue, Rove, etc., per editorial direction.
+
+### Evidence and coverage
+
+- 8 Python export tests, 5 Node calculation tests, and PHP shortcode contract pass.
+- Browser checks exercise every exported camera, channel setup, and recording mode.
+- Specific regressions: A229 Pro 256GB 3CH Normal 8h30 vs Maximum 7h;
+  Thinkware U1000 Plus 4K30 front + 1080p30 rear, with no Viofo source prose;
+  Elite 10 medium vs maximum 90Mbps 2CH, dual 4K30; Vueroid cabin metadata;
+  A119 Mini 2 60fps source label; exact-package affiliate link.
+- Desktop/mobile and embed screenshots visually inspected. No horizontal overflow,
+  JavaScript errors, clipped expanded methodology, or resize-message regression.
+- This revision was tested locally, not in a newly deployed WordPress post.
+  The prior staging-theme geometry checks below are historical, not a fresh test.
+
+### Source decisions and limitations
+
+- A229 Pro/Plus/Ultra Maximum cells read directly from the official source images
+  already linked in manufacturer-times.json. Plus 1CH Maximum is omitted:
+  its source jumps from 8.5h at 128GB to 32.5h at 256GB. No silent correction.
+- A119 Mini 2 and A119M Pro quality options transcribed from Viofo’s same support
+  article (image attachment IDs 19149878491 and 19153743038). Manufacturer Medium
+  and High names preserved. A119M Pro source explicitly uses 4K30 HDR on.
+- Blackvue Elite 10 uses published per-channel rates from
+  https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/
+  Calculated full-card times are labeled as such, not the manual’s rounded times.
+- Vueroid S1 4K Infinite now has direct-file storage measurements in the canonical
+  reference. Complete-file rates include preallocation; video-only rates would
+  overestimate storage duration. Original files were read-only and not uploaded.
+- A119 Mini 2 60fps uses two individually probed direct-file samples, documented
+  in the reference. Quality unknown; no controlled 30fps/60fps comparison claimed.
+- No unmeasured 4K30-to-2K60 conversion. Not every supported menu option has data.
+  Vueroid QHD archive lacks verified driving samples in this bounded check.
+- Camera/card URLs are existing owner affiliate destinations, with sponsored rel
+  and a visible disclosure. Exact camera package matching; no fabricated links,
+  prices, stock, or universal card-compatibility claims. Destination stock/product
+  landing pages have not been individually re-audited this revision.
+
+### Review
+
+Code review: calculation provenance, mode/channel matching, update behavior,
+readability, existing static architecture, safe textContent rendering, no secret
+exports, bounded single-JSON load. No new dependencies or app runtime changes.
+Interface review: plain CSS; mobile/desktop typography, spacing, focus styles,
+select states, and link placement inspected. No new motion/icons; no animations
+added to routine selection changes. Kept native selectors and plain shopping
+links rather than introducing tabs or prominent purchase buttons.
+No blocking issues found for preview; production and live-site draft unchanged.
+
 ## Simplified chart revision (2026-09-08)
 
 Supersedes the initial 15-camera calculator. The interface now has two

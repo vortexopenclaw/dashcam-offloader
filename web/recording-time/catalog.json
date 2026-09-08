@@ -1,31 +1,218 @@
 {
-  "BlackVue DR650S-2CH": {"channels": ["front", "rear"]},
-  "BlackVue DR750S-2CH": {"channels": ["front", "rear"]},
-  "BlackVue DR900S-2CH": {"channels": ["front", "rear"]},
-  "BlackVue Elite 9": {"channels": ["front", "rear"]},
-  "BlackVue DR770X Box": {"channels": ["front", "interior", "rear"]},
-  "Thinkware U3000 Pro": {"channels": ["front", "rear"], "allocationRequired": true},
-  "Thinkware U3000": {"channels": ["front", "rear"], "allocationRequired": true},
-  "Thinkware U1000 Plus": {"channels": ["front", "rear"], "allocationRequired": true},
-  "VIOFO A229 Pro": {"channels": ["front", "interior", "rear"]},
-  "VIOFO A229 Plus": {"channels": ["front", "rear", "interior"]},
-  "VIOFO A229 Ultra": {"channels": ["front", "rear", "interior"]},
-  "VIOFO A329S": {"channels": ["front", "rear", "interior"]},
-  "VIOFO A329T": {"channels": ["front", "telephoto", "rear"]},
-  "VIOFO A139 Pro": {"channels": ["front", "rear", "interior"]},
-  "VIOFO A139": {"channels": ["front", "interior", "rear"]},
-  "VIOFO T130": {"channels": ["front", "interior", "rear"]},
-  "VIOFO A129 Duo": {"channels": ["front", "rear"]},
-  "VIOFO A129 Plus Duo": {"channels": ["front", "rear"]},
-  "VIOFO A129 Pro": {"channels": ["front", "rear"]},
-  "VIOFO A119 v3": {"channels": ["front"]},
-  "VIOFO A119 Mini": {"channels": ["front"]},
-  "VIOFO A119 Mini 2": {"channels": ["front"]},
-  "VIOFO A119M Pro": {"channels": ["front"]},
-  "70mai M310": {"channels": ["front"]},
-  "Vantrue N4 Pro S": {"channels": ["front", "interior", "rear"]},
-  "Vantrue N4 S": {"channels": ["front", "interior", "rear"]},
-  "Vantrue E1 Pro": {"channels": ["front"]},
-  "Rove R2-4K Pro": {"displayName": "ROVE R2-4K Pro", "channels": ["front"]},
-  "Cobra Road Scout": {"channels": ["front"]}
+  "BlackVue DR650S-2CH": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Blackvue DR650S-2CH"
+  },
+  "BlackVue DR750S-2CH": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Blackvue DR750S-2CH"
+  },
+  "BlackVue DR900S-2CH": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Blackvue DR900S-2CH"
+  },
+  "BlackVue Elite 9": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Blackvue Elite 9"
+  },
+  "BlackVue DR770X Box": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Blackvue DR770X Box"
+  },
+  "Thinkware U3000 Pro": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "allocationRequired": true,
+    "displayName": "Thinkware U3000 Pro"
+  },
+  "Thinkware U3000": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "allocationRequired": true,
+    "displayName": "Thinkware U3000"
+  },
+  "Thinkware U1000 Plus": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "allocationRequired": true,
+    "displayName": "Thinkware U1000 Plus"
+  },
+  "VIOFO A229 Pro": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Viofo A229 Pro"
+  },
+  "VIOFO A229 Plus": {
+    "channels": [
+      "front",
+      "rear",
+      "interior"
+    ],
+    "displayName": "Viofo A229 Plus"
+  },
+  "VIOFO A229 Ultra": {
+    "channels": [
+      "front",
+      "rear",
+      "interior"
+    ],
+    "displayName": "Viofo A229 Ultra"
+  },
+  "VIOFO A329S": {
+    "channels": [
+      "front",
+      "rear",
+      "interior"
+    ],
+    "displayName": "Viofo A329S"
+  },
+  "VIOFO A329T": {
+    "channels": [
+      "front",
+      "telephoto",
+      "rear"
+    ],
+    "displayName": "Viofo A329T"
+  },
+  "VIOFO A139 Pro": {
+    "channels": [
+      "front",
+      "rear",
+      "interior"
+    ],
+    "displayName": "Viofo A139 Pro"
+  },
+  "VIOFO A139": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Viofo A139"
+  },
+  "VIOFO T130": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Viofo T130"
+  },
+  "VIOFO A129 Duo": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Viofo A129 Duo"
+  },
+  "VIOFO A129 Plus Duo": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Viofo A129 Plus Duo"
+  },
+  "VIOFO A129 Pro": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Viofo A129 Pro"
+  },
+  "VIOFO A119 v3": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119 v3"
+  },
+  "VIOFO A119 Mini": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119 Mini"
+  },
+  "VIOFO A119 Mini 2": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119 Mini 2"
+  },
+  "VIOFO A119M Pro": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119M Pro"
+  },
+  "70mai M310": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "70mai M310"
+  },
+  "Vantrue N4 Pro S": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Vantrue N4 Pro S"
+  },
+  "Vantrue N4 S": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "displayName": "Vantrue N4 S"
+  },
+  "Vantrue E1 Pro": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Vantrue E1 Pro"
+  },
+  "Rove R2-4K Pro": {
+    "displayName": "Rove R2-4K Pro",
+    "channels": [
+      "front"
+    ]
+  },
+  "Cobra Road Scout": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Cobra Road Scout"
+  },
+  "Vueroid S1 4K Infinite": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ]
+  }
 }

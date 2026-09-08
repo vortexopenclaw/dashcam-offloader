@@ -42,7 +42,7 @@ def extract(reference, catalog, manufacturer=None):
                             sourceAnchor=slug, setups=make_setups(name, channels, manufacturer)))
     if not cameras:
         raise ValueError('No measured presets')
-    return dict(schemaVersion=2, sourceSha256=hashlib.sha256(reference.encode()).hexdigest(),
+    return dict(schemaVersion=3, sourceSha256=hashlib.sha256(reference.encode()).hexdigest(),
                 sourceUrl='https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/video-metadata-reference.md',
                 cameras=cameras)
 
@@ -58,7 +58,7 @@ def make_setups(name, channels, manufacturer):
             if len(set(roles)) != len(roles) or not set(roles) <= {c['role'] for c in channels}:
                 raise ValueError('Invalid manufacturer channel set')
             setups.append(dict(id='-'.join(roles), roles=roles, hours=times,
-                               sourceUrl=manufacturer['sourceUrl'], basis='VIOFO chart · Normal recording quality'))
+                               sourceUrl=manufacturer['sourceUrl'], basis='Manufacturer recording-time chart · Normal quality'))
         return setups
     available = {c['role']: c for c in channels}
     roles = [r for r in ['front', 'rear', 'interior', 'telephoto'] if r in available]
@@ -70,14 +70,46 @@ def make_setups(name, channels, manufacturer):
     return [dict(id='-'.join(group), roles=group,
                  minMbps=sum(available[r]['minMbps'] for r in group),
                  maxMbps=sum(available[r]['maxMbps'] for r in group),
-                 basis='Offloader measured bitrates' if group == roles else 'Estimated from measured channel bitrates')
+                 basis='Measured from original dashcam recording files' if group == roles else 'Estimated by adding measured recording rates for the selected cameras')
             for group in groups]
+
+
+def add_recording_modes(data, extras):
+    data['cameras'].extend(extras.get('additionalCameras', []))
+    for camera in data['cameras']:
+        for setup in camera['setups']:
+            selected = [c for c in camera['channels'] if c['role'] in setup['roles']]
+            default = {k: v for k, v in setup.items() if k not in ['roles', 'id']}
+            default.update(id='normal' if 'hours' in setup else 'measured',
+                           label='Normal bitrate' if 'hours' in setup else 'Measured recording setting',
+                           channels=selected)
+            setup['modes'] = [default] + extras.get('modes', {}).get(camera['id'], {}).get(setup['id'], [])
+            override = extras.get('replaceModes', {}).get(camera['id'], {}).get(setup['id'])
+            if override:
+                setup['modes'] = override
+            for mode in setup['modes']:
+                if set(c['role'] for c in mode['channels']) != set(setup['roles']):
+                    raise ValueError('Mode resolution details do not match channel setup')
+                if 'hours' in mode:
+                    times = mode['hours']
+                    if len(times) != 5 or any(t <= 0 for t in times) or any(b < a for a,b in zip(times,times[1:])):
+                        raise ValueError('Invalid mode recording times')
+                elif not 0 < mode['minMbps'] <= mode['maxMbps'] < 1000:
+                    raise ValueError('Invalid mode storage rate')
+            if len({m['id'] for m in setup['modes']}) != len(setup['modes']):
+                raise ValueError('Duplicate recording setting')
+        camera['links'] = extras.get('links', {}).get(camera['id'], {})
+        camera['note'] = extras.get('notes', {}).get(camera['id'], '')
+    data['cardLinks'] = extras.get('cardLinks', [])
+    data['cameras'].sort(key=lambda c: c['name'].lower())
+    return data
 
 
 def build():
     reference = (ROOT / 'docs/video-metadata-reference.md').read_text()
     data = extract(reference, json.loads((HERE / 'catalog.json').read_text()),
                    json.loads((HERE / 'manufacturer-times.json').read_text()))
+    data = add_recording_modes(data, json.loads((HERE / 'recording-modes.json').read_text()))
     out = HERE / 'dist'
     out.mkdir(exist_ok=True)
     for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'demo.html']:
@@ -87,7 +119,7 @@ def build():
         archive.write(HERE / 'wordpress/vortex-recording-time.php', 'vortex-recording-time/vortex-recording-time.php')
         for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'cameras.json']:
             archive.write(out / name, 'vortex-recording-time/calculator/' + name)
-    print(f'Built {len(data["cameras"])} measured presets in {out.relative_to(ROOT)}')
+    print(f'Built {len(data["cameras"])} camera presets in {out.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

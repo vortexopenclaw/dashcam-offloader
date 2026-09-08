@@ -27,10 +27,15 @@ page.on('pageerror', error => errors.push(error.message));
 try {
   await page.goto(url);
   await page.locator('#form').waitFor({state:'visible'});
-  assert.equal(await page.locator('#camera option').count(),29);
+  assert.equal(await page.locator('#camera option').count(),31);
   assert.equal(await page.locator('#rows tr').count(),5);
   assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'8 hr 30 min');
   assert.equal(await page.locator('input').count(),0);
+  await page.selectOption('#setting','maximum');
+  assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'7 hr');
+  await page.selectOption('#setting','normal');
+  assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'8 hr 30 min');
+  assert.match(await page.locator('#recording-details').innerText(),/4K/);
   await page.screenshot({path:path.join(evidence,'desktop.png'),fullPage:true});
   await page.selectOption('#channels','front-rear');
   assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'10 hr 30 min');
@@ -45,6 +50,36 @@ try {
   assert.match(await page.locator('#rows').innerText(),/ – /);
   await page.selectOption('#camera','thinkware-u3000-pro');
   assert.equal(await page.locator('#partition-note').isVisible(),true);
+  await page.selectOption('#camera','thinkware-u1000-plus');
+  assert.match(await page.locator('#recording-details').innerText(),/front: 4K.*rear: 1080p/);
+  assert.ok(!(await page.locator('.method').textContent()).includes('Viofo'));
+  await page.selectOption('#camera','blackvue-elite-10');
+  await page.selectOption('#channels','front-rear');
+  const medium = await page.locator('#rows').innerText();
+  await page.selectOption('#setting','maximum');
+  assert.notEqual(await page.locator('#rows').innerText(),medium);
+  assert.match(await page.locator('#recording-details').innerText(),/front: 4K.*rear: 4K/);
+  assert.equal(await page.locator('#shopping-links a').first().getAttribute('href'),'https://geni.us/BlackvueElite10-2CH');
+  await page.selectOption('#camera','vueroid-s1-4k-infinite');
+  await page.selectOption('#channels','front-rear-interior');
+  assert.match(await page.locator('#recording-details').innerText(),/cabin: 1080p/);
+  assert.match(await page.locator('#camera-note').textContent(),/reserved space/);
+  await page.selectOption('#camera','viofo-a119-mini-2');
+  await page.selectOption('#setting','measured-60fps');
+  assert.match(await page.locator('#recording-details').innerText(),/60 fps/);
+  assert.match(await page.locator('#basis').textContent(),/Quality menu setting unknown/);
+  // Every public camera, configuration and setting must render and update safely.
+  for (const id of await page.locator('#camera option').evaluateAll(nodes=>nodes.map(n=>n.value))) {
+    await page.selectOption('#camera',id);
+    for (const setup of await page.locator('#channels option').evaluateAll(nodes=>nodes.map(n=>n.value))) {
+      if (await page.locator('#channels').isEnabled()) await page.selectOption('#channels',setup);
+      for (const mode of await page.locator('#setting option').evaluateAll(nodes=>nodes.map(n=>n.value))) {
+        if (await page.locator('#setting').isEnabled()) await page.selectOption('#setting',mode);
+        assert.equal(await page.locator('#rows tr').count(),5);
+        assert.ok(!(await page.locator('#rows').innerText()).match(/NaN|undefined/));
+      }
+    }
+  }
   await page.selectOption('#camera','viofo-a229-pro');
   await page.selectOption('#channels','front-rear-interior');
   await page.setViewportSize({width:375,height:812});
@@ -79,7 +114,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#loading').textContent.includes('couldn’t load'));
   assert.equal(await page.locator('#form').isHidden(),true);
   assert.deepEqual(errors, []);
-  console.log('Browser checks passed: 29 cameras, 1/2/3CH chart changes, five card sizes, single-channel controls, ranges, desktop/mobile, iframe resizing, delayed loader, forged-message rejection, multiple embeds, missing-data state; no JS errors.');
+  console.log('Browser checks passed: 31 cameras, 1/2/3CH chart changes, five card sizes, single-channel controls, ranges, desktop/mobile, iframe resizing, delayed loader, forged-message rejection, multiple embeds, missing-data state; no JS errors.');
 } finally {
   await browser.close();
   server.close();

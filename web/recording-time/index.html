@@ -3,16 +3,20 @@
 <title>Dashcam Recording Time | Vortex Radar</title>
 <link rel="stylesheet" href="./style.css"><script type="module" src="./widget.mjs"></script>
 </head><body><main class="calculator">
-<header><p class="eyebrow">VORTEX RADAR</p><h1>Dashcam recording time</h1><p>Choose your dashcam and cameras. See how much driving footage fits.</p></header>
+<header><p class="eyebrow">VORTEX RADAR</p><h1>Dashcam recording time</h1><p>Choose your dashcam and channel configuration. See how many hours of driving footage fit on different-sized memory cards.</p></header>
 <p id="loading" role="status">Loading dashcams…</p>
 <form id="form" hidden>
-<div class="selectors"><div><label for="camera">Dashcam</label><select id="camera"></select></div><div><label for="channels">Cameras recording</label><select id="channels"></select></div></div>
+<div class="selectors"><div><label for="camera">Dashcam</label><select id="camera"></select></div><div><label for="channels">Channel configuration</label><select id="channels"></select></div></div>
+<div id="setting-control"><label for="setting">Recording setting</label><select id="setting"></select></div>
+<p id="recording-details" class="recording-details"></p>
+<p id="setting-note" class="hint"></p>
 <table><caption id="chart-caption" class="sr-only">Approximate driving recording time</caption><thead><tr><th scope="col">Memory card</th><th scope="col">Driving footage</th></tr></thead><tbody id="rows"></tbody></table>
 <p class="hint">Approximate times. Recording quality, parking footage, and reserved card space can change how much driving footage you keep.</p>
 <p id="partition-note" class="hint" hidden>This camera uses recording partitions. Actual driving history can be shorter than this full-card estimate.</p>
 <p id="announcement" class="sr-only" role="status"></p></form>
 <details class="method"><summary>About these estimates</summary><p id="basis"></p>
-<p>VIOFO A229 chart entries use Normal quality. Other entries use the Offloader’s sampled bitrates. Changing channel setup may also change bitrate; channel subsets are estimates, not separately measured configurations.</p>
+<p id="method-detail"></p><p id="camera-note"></p>
 <p>Card sizes are shown for comparison, not as a compatibility list. Missing cameras will be added as recording data becomes available.</p>
 <a id="source" href="https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/video-metadata-reference.md" target="_blank" rel="noopener">Measurement reference</a></details>
+<aside id="shopping" hidden aria-label="Camera and memory card links"><p id="shopping-links"></p><p class="hint">Affiliate links: I may earn a commission if you buy through these links, at no extra cost to you. Check your camera’s card compatibility before buying.</p></aside>
 <noscript>This chart needs JavaScript enabled.</noscript></main></body></html>
