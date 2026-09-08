@@ -1,90 +1,126 @@
 import {recordingRows, rowLabel} from './calculator.mjs';
 const $ = id => document.getElementById(id);
-const roles = {front:'front', rear:'rear', interior:'cabin', telephoto:'telephoto'};
+const roles = {front:'Front', rear:'Rear', interior:'Cabin', telephoto:'Telephoto', interior_front:'Front cabin', interior_rear:'Rear cabin', panoramic_front:'360° camera'};
+const collator = new Intl.Collator('en', {numeric:true, sensitivity:'base'});
 let cameras = [], current, sourceUrl, cardLinks = [];
-function setupLabel(setup) { return `${setup.roles.length}CH · ${setup.roles.map(r=>roles[r]).join(' + ')}`; }
+function setupLabel(setup) { return `${setup.roles.length}CH (${setup.roles.map(r=>roles[r]).join(' + ')})`; }
 function selectedSetup() { return current.setups.find(s=>s.id === $('channels').value); }
 function resolutionLabel(channel) {
-  const names = {'3840x2160':'4K', '2560x1440':'2K (1440p)', '1920x1080':'1080p', '1280x720':'720p'};
-  return `${roles[channel.role]}: ${names[channel.resolution] || channel.resolution} · ${channel.fps} fps`;
+  const names = {'3840x2160':'4K', '2560x1440':'2K (1440p)', '1920x1080':'1080p', '1280x720':'720p', '2592x1944':'1944p'};
+  return `${names[channel.resolution] || channel.resolution}, ${channel.fps} fps`;
+}
+function fileSizeLabel(channel, mode) {
+  // Published whole-system times do not identify each camera's file size.
+  if (mode.hours || !Number.isFinite(channel.minMbps)) return '';
+  const low = Math.round(channel.minMbps * 7.5), high = Math.round(channel.maxMbps * 7.5);
+  return `About ${low === high ? low : `${low}–${high}`} MB/min`;
+}
+function renderDetails(setup, mode) {
+  $('recording-details').replaceChildren(...setup.roles.map(role=>{
+    const channel = mode.channels.find(c=>c.role===role);
+    const row = document.createElement('div');row.className='channel-row';
+    const name = document.createElement('dt');name.textContent=roles[role];
+    const format = document.createElement('dd');format.textContent=resolutionLabel(channel);
+    const size = document.createElement('dd');size.textContent=fileSizeLabel(channel,mode);
+    row.append(name,format,size);return row;
+  }));
+}
+function renderLinks(setup) {
+  const paragraph=$('shopping-links');paragraph.replaceChildren();
+  function link(label,url) {
+    const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='sponsored noopener';return a;
+  }
+  const cameraUrl=current.links?.[setup.id];
+  const card=cardLinks.find(c=>current.brand===c.brand);
+  if(cameraUrl) paragraph.append('You can find the ',link(current.name,cameraUrl),' here.');
+  if(card) paragraph.append(cameraUrl ? ' ' : '', 'Looking for a card? Here are ',link(`${current.brand}’s memory cards`,card.url),'.');
+  $('shopping').hidden=!cameraUrl && !card;
 }
 function render() {
-  const setup = selectedSetup();
-  const mode = setup.modes.find(m=>m.id === $('setting').value);
-  $('rows').replaceChildren(...recordingRows(mode).map(row => {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th'); th.scope='row'; th.textContent=`${row.gb} GB`;
-    const td = document.createElement('td'); td.textContent=rowLabel(row);
-    tr.append(th,td); return tr;
+  const setup=selectedSetup();
+  const mode=setup.modes.find(m=>m.id === $('setting').value);
+  $('rows').replaceChildren(...recordingRows(mode).map(row=>{
+    const tr=document.createElement('tr');
+    const th=document.createElement('th');th.scope='row';th.textContent=`${row.gb} GB`;
+    const td=document.createElement('td');td.textContent=rowLabel(row);
+    tr.append(th,td);return tr;
   }));
-  $('chart-caption').textContent = `${current.name}, ${setupLabel(setup)}, ${mode.label}: approximate driving time`;
-  $('announcement').textContent = `Chart updated: ${current.name}, ${setupLabel(setup)}, ${mode.label}`;
-  $('recording-details').textContent = setup.roles.map(role=>resolutionLabel(mode.channels.find(c=>c.role===role))).join(' • ');
-  $('basis').textContent = `${current.name} · ${setupLabel(setup)} · ${mode.label}. ${mode.basis}`;
-  const official = Boolean(mode.sourceUrl);
-  $('method-detail').textContent = official
-    ? 'These figures come from the manufacturer’s published recording-time or bitrate data for this setting, not our own measurements. Different settings are shown only where we have supporting data.'
-    : 'We inspected original video files recorded by the dashcams themselves and used their recording rates to estimate storage needs. We add the rates for the cameras you select. Reduced-channel combinations assume those rates stay the same. The saved samples do not always identify the quality menu setting, so we do not label them Normal or Maximum without confirmation.';
-  $('setting-note').textContent = setup.modes.length === 1
-    ? 'Only this recording setting has verified data here; other camera settings may be available.'
-    : 'Choose a setting to update the times. Only settings with supporting data are listed.';
-  $('camera-note').textContent = current.note;
-  $('camera-note').hidden = !current.note;
-  $('source').href = mode.sourceUrl || sourceUrl + '#' + current.sourceAnchor;
-  $('source').textContent = official ? `${current.name.split(' ')[0]} recording reference` : 'View our recording measurements';
-  $('partition-note').hidden = !current.allocationRequired;
-  const links = [];
-  function link(label,url) {
-    const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='sponsored noopener';links.push(a);
-  }
-  if (current.links?.[setup.id]) link(`Shop ${current.name} · ${setup.roles.length}CH`,current.links[setup.id]);
-  const card = cardLinks.find(c=>current.name.startsWith(c.brand+' '));
-  if (card) link(card.label,card.url);
-  $('shopping-links').replaceChildren(...links);
-  $('shopping').hidden = links.length === 0;
+  $('chart-caption').textContent=`${current.name}, ${setupLabel(setup)}, ${mode.label}: approximate driving time`;
+  $('announcement').textContent=`Chart updated: ${current.name}, ${setupLabel(setup)}, ${mode.label}`;
+  renderDetails(setup,mode);
+  $('basis').textContent=`${current.name}, ${mode.label}. ${mode.basis}`;
+  const official=Boolean(mode.sourceUrl);
+  $('method-detail').textContent=official
+    ? 'These estimates use the manufacturer’s published recording times or bitrates for this setting.'
+    : 'These estimates come from original video files recorded by the dashcams. I generally test at the highest video quality, although the exact menu setting wasn’t saved for every sample. We add the recording rates of the cameras you select to estimate how much footage fits.';
+  $('camera-note').textContent=current.note;
+  $('camera-note').hidden=!current.note;
+  $('source').href=mode.sourceUrl || sourceUrl+'#'+current.sourceAnchor;
+  $('source').textContent=official ? `${current.brand}’s recording data` : 'See the recording measurements';
+  $('partition-note').hidden=!current.allocationRequired;
+  $('size-note').hidden=!mode.hours;
+  renderLinks(setup);
 }
 function selectSetup() {
-  const previous = $('setting').value;
-  const modes = selectedSetup().modes;
+  const previous=$('setting').value;
+  const modes=selectedSetup().modes;
   $('setting').replaceChildren(...modes.map(m=>new Option(m.label,m.id)));
-  $('setting').value = modes.some(m=>m.id===previous) ? previous : modes[0].id;
-  $('setting').disabled = modes.length === 1;
+  const preferred=modes.find(m=>['maximum','extreme','extreme-h265'].includes(m.id)) || modes[0];
+  $('setting').value=modes.some(m=>m.id===previous) ? previous : preferred.id;
+  $('setting-control').hidden=modes.length===1;
+  $('setting').disabled=modes.length===1;
   render();
 }
 function selectCamera() {
-  const previous = $('channels').value;
-  current = cameras.find(c=>c.id === $('camera').value);
+  const previous=$('channels').value;
+  current=cameras.find(c=>c.id === $('camera').value);
   $('channels').replaceChildren(...current.setups.map(s=>new Option(setupLabel(s),s.id)));
-  $('channels').value = current.setups.some(s=>s.id===previous) ? previous : current.setups.at(-1).id;
-  $('channels').disabled = current.setups.length === 1;
-  // Do not carry a quality label across brands: 'maximum' can mean different things.
+  $('channels').value=current.setups.some(s=>s.id===previous) ? previous : current.setups.at(-1).id;
+  $('channels').disabled=current.setups.length===1;
   $('setting').replaceChildren();
+  const photo=current.image;
+  $('camera-photo').hidden=!photo?.path;
+  if(photo?.path) {
+    $('product-image').alt=photo.alt;
+    $('product-image').src=photo.path;
+    $('photo-caption').textContent=photo.alt;
+  } else $('product-image').removeAttribute('src');
   selectSetup();
 }
+function selectBrand(preferredId) {
+  const models=cameras.filter(c=>c.brand === $('brand').value).sort((a,b)=>collator.compare(a.model,b.model));
+  $('camera').replaceChildren(...models.map(c=>new Option(c.model,c.id)));
+  if(models.some(c=>c.id===preferredId)) $('camera').value=preferredId;
+  selectCamera();
+}
 try {
-  const response = await fetch(new URL('./cameras.json', import.meta.url));
-  if (!response.ok) throw new Error('Chart unavailable');
-  const data = await response.json();
-  if (data.schemaVersion !== 3 || !Array.isArray(data.cameras) || !data.cameras.length) throw new Error('Invalid chart');
-  for (const camera of data.cameras) {
-    if (!camera.setups?.length) throw new Error('Missing setups');
-    camera.setups.forEach(setup => { if (!setup.modes?.length) throw new Error('Missing settings'); setup.modes.forEach(recordingRows); });
+  const response=await fetch(new URL('./cameras.json',import.meta.url));
+  if(!response.ok) throw new Error('Chart unavailable');
+  const data=await response.json();
+  if(data.schemaVersion!==3 || !Array.isArray(data.cameras) || !data.cameras.length) throw new Error('Invalid chart');
+  for(const camera of data.cameras) {
+    if(!camera.setups?.length || !camera.brand || !camera.model) throw new Error('Missing model');
+    camera.setups.forEach(setup=>{if(!setup.modes?.length) throw new Error('Missing settings');setup.modes.forEach(recordingRows);});
   }
-  cameras = data.cameras; sourceUrl = data.sourceUrl; cardLinks = data.cardLinks || [];
-  for (const camera of cameras) $('camera').add(new Option(camera.name,camera.id));
-  $('camera').value = cameras.some(c=>c.id==='viofo-a229-pro') ? 'viofo-a229-pro' : cameras[0].id;
+  cameras=data.cameras;sourceUrl=data.sourceUrl;cardLinks=data.cardLinks || [];
+  const brands=[...new Set(cameras.map(c=>c.brand))].sort(collator.compare);
+  $('brand').replaceChildren(...brands.map(b=>new Option(b,b)));
+  const initial=cameras.find(c=>c.id==='viofo-a229-pro') || cameras[0];
+  $('brand').value=initial.brand;
+  $('brand').addEventListener('change',()=>selectBrand());
   $('camera').addEventListener('change',selectCamera);
   $('channels').addEventListener('change',selectSetup);
   $('setting').addEventListener('change',render);
+  $('product-image').addEventListener('error',()=>{$('camera-photo').hidden=true;});
   $('form').addEventListener('submit',event=>event.preventDefault());
-  selectCamera(); $('loading').hidden=true; $('form').hidden=false;
+  selectBrand(initial.id);$('loading').hidden=true;$('form').hidden=false;
 } catch {
-  $('form').hidden=true; $('loading').hidden=false;
+  $('form').hidden=true;$('loading').hidden=false;
   $('loading').textContent='The recording-time chart couldn’t load. Please reload the page to try again.';
 }
-const embedOrigin = (()=>{try{return new URL(document.referrer).origin;}catch{return null;}})();
-if (parent !== window && embedOrigin) {
-  const measure = ()=>parent.postMessage({type:'vr-recording-height',height:Math.ceil(document.documentElement.getBoundingClientRect().height)},embedOrigin);
+const embedOrigin=(()=>{try{return new URL(document.referrer).origin;}catch{return null;}})();
+if(parent!==window && embedOrigin) {
+  const measure=()=>parent.postMessage({type:'vr-recording-height',height:Math.ceil(document.documentElement.getBoundingClientRect().height)},embedOrigin);
   new ResizeObserver(measure).observe(document.documentElement);
   window.addEventListener('message',event=>{
     if(event.source===parent && event.origin===embedOrigin && event.data?.type==='vr-recording-measure') measure();

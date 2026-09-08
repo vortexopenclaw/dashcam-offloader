@@ -6,10 +6,11 @@
 <header><p class="eyebrow">VORTEX RADAR</p><h1>Dashcam recording time</h1><p>Choose your dashcam and channel configuration. See how many hours of driving footage fit on different-sized memory cards.</p></header>
 <p id="loading" role="status">Loading dashcams…</p>
 <form id="form" hidden>
-<div class="selectors"><div><label for="camera">Dashcam</label><select id="camera"></select></div><div><label for="channels">Channel configuration</label><select id="channels"></select></div></div>
-<div id="setting-control"><label for="setting">Recording setting</label><select id="setting"></select></div>
-<p id="recording-details" class="recording-details"></p>
-<p id="setting-note" class="hint"></p>
+<div class="camera-picker"><div class="selectors"><div><label for="brand">Brand</label><select id="brand"></select></div><div><label for="camera">Model</label><select id="camera"></select></div></div>
+<figure id="camera-photo" hidden><img id="product-image" alt="" width="140" height="110"><figcaption id="photo-caption"></figcaption></figure></div>
+<div class="selectors recording-controls"><div><label for="channels">Channel configuration</label><select id="channels"></select></div><div id="setting-control"><label for="setting">Recording setting</label><select id="setting"></select></div></div>
+<dl id="recording-details" class="recording-details"></dl>
+<p id="size-note" class="hint" hidden>Per-camera file sizes aren’t listed in the manufacturer’s chart.</p>
 <table><caption id="chart-caption" class="sr-only">Approximate driving recording time</caption><thead><tr><th scope="col">Memory card</th><th scope="col">Driving footage</th></tr></thead><tbody id="rows"></tbody></table>
 <p class="hint">Approximate times. Recording quality, parking footage, and reserved card space can change how much driving footage you keep.</p>
 <p id="partition-note" class="hint" hidden>This camera uses recording partitions. Actual driving history can be shorter than this full-card estimate.</p>

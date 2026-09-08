@@ -23,23 +23,33 @@ def extract(reference, catalog, manufacturer=None):
     for name, policy in sorted(catalog.items()):
         channels = []
         for row in sections.get(name, []):
-            if len(row) != 8 or 'driving' not in row[1].split(' / '):
+            if len(row) != 8 or not any(mode in row[1].split(' / ') for mode in policy.get('recordingModes', ['driving'])):
                 continue
-            role = re.fullmatch(r'[A-Z] \((front|rear|interior|telephoto)\)', row[0])
+            role = re.fullmatch(r'[A-Z] \((front|rear|interior|telephoto|interior_front|interior_rear|panoramic_front)\)', row[0])
+            mapped_role = policy.get('rowRoles', {}).get(row[0]) or (role[1] if role else None)
             rate = re.fullmatch(r'~?(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))? Mbps', row[5])
-            if not role or not rate or row[7] != '`ffprobe`':
+            if not mapped_role or not rate or row[7] != '`ffprobe`':
                 raise ValueError(f'Unusable driving measurement: {name}: {row}')
             low = float(rate[1])
             high = float(rate[2] or rate[1])
             if not 0 < low <= high < 1000:
                 raise ValueError(f'Invalid bitrate: {name}')
-            channels.append(dict(role=role[1], codec=row[2], resolution=row[3], fps=row[4], minMbps=low, maxMbps=high))
+            previous = next((c for c in channels if c['role'] == mapped_role), None)
+            if previous:
+                if not policy.get('mergeRepeatedSamples', False):
+                    raise ValueError('Duplicate channel requires reviewed sample merging')
+                if (previous['resolution'], previous['fps']) != (row[3], row[4]):
+                    raise ValueError('Different recording settings require separate modes')
+                previous['minMbps'] = min(previous['minMbps'], low)
+                previous['maxMbps'] = max(previous['maxMbps'], high)
+            else:
+                channels.append(dict(role=mapped_role, codec=row[2], resolution=row[3], fps=row[4], minMbps=low, maxMbps=high))
         if [c['role'] for c in channels] != policy['channels']:
             raise ValueError(f'Missing, duplicate, or changed channel set: {name}')
         slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
         cameras.append(dict(id=slug, name=policy.get('displayName', name), channels=channels,
                             allocationRequired=policy.get('allocationRequired', False),
-                            sourceAnchor=slug, setups=make_setups(name, channels, manufacturer)))
+                            sourceAnchor=slug, setups=make_setups(name, channels, manufacturer, policy.get('setups'))))
     if not cameras:
         raise ValueError('No measured presets')
     return dict(schemaVersion=3, sourceSha256=hashlib.sha256(reference.encode()).hexdigest(),
@@ -47,7 +57,7 @@ def extract(reference, catalog, manufacturer=None):
                 cameras=cameras)
 
 
-def make_setups(name, channels, manufacturer):
+def make_setups(name, channels, manufacturer, reviewed_groups=None):
     official = (manufacturer or {}).get('cameras', {}).get(name)
     if official:
         setups = []
@@ -61,12 +71,14 @@ def make_setups(name, channels, manufacturer):
                                sourceUrl=manufacturer['sourceUrl'], basis='Manufacturer recording-time chart · Normal quality'))
         return setups
     available = {c['role']: c for c in channels}
-    roles = [r for r in ['front', 'rear', 'interior', 'telephoto'] if r in available]
+    roles = [r for r in ['front', 'panoramic_front', 'rear', 'interior', 'interior_front', 'interior_rear', 'telephoto'] if r in available]
     groups = [roles]
     if len(roles) > 1:
-        groups = [['front']] + [['front', r] for r in roles[1:]]
+        groups = [[roles[0]]] + [[roles[0], r] for r in roles[1:]]
         if len(roles) > 2:
             groups.append(roles)
+    if reviewed_groups:
+        groups = reviewed_groups
     return [dict(id='-'.join(group), roles=group,
                  minMbps=sum(available[r]['minMbps'] for r in group),
                  maxMbps=sum(available[r]['maxMbps'] for r in group),
@@ -81,13 +93,23 @@ def add_recording_modes(data, extras):
             selected = [c for c in camera['channels'] if c['role'] in setup['roles']]
             default = {k: v for k, v in setup.items() if k not in ['roles', 'id']}
             default.update(id='normal' if 'hours' in setup else 'measured',
-                           label='Normal bitrate' if 'hours' in setup else 'Measured recording setting',
+                           label='Normal bitrate' if 'hours' in setup else 'Our test footage',
                            channels=selected)
+            if camera['id'] in extras.get('defaultLabels', {}):
+                default['label'] = extras['defaultLabels'][camera['id']]
             setup['modes'] = [default] + extras.get('modes', {}).get(camera['id'], {}).get(setup['id'], [])
             override = extras.get('replaceModes', {}).get(camera['id'], {}).get(setup['id'])
             if override:
                 setup['modes'] = override
+            elif 'hours' in default:
+                setup['modes'].append(dict(
+                    id='measured', label='Our test footage', channels=selected,
+                    minMbps=sum(c['minMbps'] for c in selected),
+                    maxMbps=sum(c['maxMbps'] for c in selected),
+                    basis='Estimated from the recording rates of original dashcam files.'))
             for mode in setup['modes']:
+                mode['label'] = mode['label'].replace(' · ', ', ').replace('highest listed', 'High')
+                mode['basis'] = mode['basis'].replace(' · ', ', ').replace('; ', '. ')
                 if set(c['role'] for c in mode['channels']) != set(setup['roles']):
                     raise ValueError('Mode resolution details do not match channel setup')
                 if 'hours' in mode:
@@ -100,8 +122,11 @@ def add_recording_modes(data, extras):
                 raise ValueError('Duplicate recording setting')
         camera['links'] = extras.get('links', {}).get(camera['id'], {})
         camera['note'] = extras.get('notes', {}).get(camera['id'], '')
+        camera['image'] = extras.get('images', {}).get(camera['id'])
+        camera['brand'], camera['model'] = camera['name'].split(' ', 1)
+        camera['model'] = re.sub(r'-[1234]CH(?=$| )', '', camera['model'])
     data['cardLinks'] = extras.get('cardLinks', [])
-    data['cameras'].sort(key=lambda c: c['name'].lower())
+    data['cameras'].sort(key=lambda c: [int(part) if part.isdigit() else part.lower() for part in re.split(r'(\d+)', c['name'])])
     return data
 
 
@@ -114,11 +139,15 @@ def build():
     out.mkdir(exist_ok=True)
     for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'demo.html']:
         shutil.copyfile(HERE / name, out / name)
+    if (HERE / 'images').exists():
+        shutil.copytree(HERE / 'images', out / 'images', dirs_exist_ok=True)
     (out / 'cameras.json').write_text(json.dumps(data, indent=2) + '\n')
     with zipfile.ZipFile(out / 'vortex-recording-time.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.write(HERE / 'wordpress/vortex-recording-time.php', 'vortex-recording-time/vortex-recording-time.php')
         for name in ['index.html', 'calculator.mjs', 'widget.mjs', 'style.css', 'embed.js', 'cameras.json']:
             archive.write(out / name, 'vortex-recording-time/calculator/' + name)
+        for image in sorted((out / 'images').glob('*')):
+            archive.write(image, 'vortex-recording-time/calculator/images/' + image.name)
     print(f'Built {len(data["cameras"])} camera presets in {out.relative_to(ROOT)}')
 
 

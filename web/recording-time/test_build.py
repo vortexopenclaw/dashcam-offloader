@@ -78,6 +78,33 @@ class ExportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 add_recording_modes(extract(self.reference, self.catalog, manufacturer), extra)
 
+    def test_new_catalog_sort_four_channels_and_image_assets(self):
+        extra = json.loads((HERE / 'recording-modes.json').read_text())
+        manufacturer = json.loads((HERE / 'manufacturer-times.json').read_text())
+        data = add_recording_modes(extract(self.reference, self.catalog, manufacturer), extra)
+        cams = {c['id']:c for c in data['cameras']}
+        elite = [c['model'] for c in data['cameras'] if c['model'].startswith('Elite')]
+        self.assertEqual(elite, ['Elite 8','Elite 9','Elite 10'])
+        n5 = cams['vantrue-n5']['setups'][0]
+        self.assertEqual(len(n5['roles']),4)
+        self.assertEqual(n5['modes'][1]['channels'][0]['resolution'],'2592x1944')
+        lte = cams['blackvue-dr970x-lte-plus']['setups'][1]['modes'][0]
+        self.assertEqual(lte['maxMbps'],70)
+        self.assertEqual(sum(c['maxMbps'] for c in lte['channels']),70)
+        for camera in data['cameras']:
+            if camera['image']:
+                self.assertTrue((HERE / camera['image']['path']).is_file())
+            for setup in camera['setups']:
+                for mode in setup['modes']:
+                    self.assertNotIn(' · ', mode['label'])
+                    self.assertNotIn(';', mode['basis'])
+
+    def test_duplicate_measurement_requires_explicit_review(self):
+        reference = self.reference.replace('| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |',
+            '| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |\n| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |',1)
+        with self.assertRaises(ValueError):
+            extract(reference,self.catalog)
+
 
 if __name__ == '__main__':
     unittest.main()

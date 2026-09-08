@@ -12,6 +12,8 @@ const browser = await chromium.connectOverCDP(process.argv[3]);
 const page = await browser.contexts()[0].newPage();
 const prefix = '/__vr_calculator_preview__/';
 const assets = new Set(['index.html','widget.mjs','calculator.mjs','style.css','embed.js','cameras.json']);
+const data = JSON.parse(await readFile(path.join(root,'cameras.json'),'utf8'));
+for (const camera of data.cameras) if(camera.image?.path) assets.add(camera.image.path);
 const checks = [];
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
@@ -19,7 +21,7 @@ try {
   await page.route(articleUrl.origin + prefix + '**', async route => {
     const name = new URL(route.request().url()).pathname.slice(prefix.length);
     if (!assets.has(name)) return route.abort();
-    await route.fulfill({status:200, contentType:({'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json'})[path.extname(name)],body:await readFile(path.join(root,name))});
+    await route.fulfill({status:200, contentType:({'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.jpeg':'image/jpeg'})[path.extname(name)],body:await readFile(path.join(root,name))});
   });
   const response = await page.goto(articleUrl.href,{waitUntil:'domcontentloaded',timeout:30000});
   if (response.status() !== 200 || new URL(page.url()).origin !== articleUrl.origin) throw new Error('Staging article did not load');
@@ -70,7 +72,9 @@ try {
     await page.locator('iframe[data-vr-recording-time]').scrollIntoViewIfNeeded();
     await page.screenshot({path:path.join(evidence,`staging-theme-${width}.png`),fullPage:false});
   }
+  await frame.locator('#brand').selectOption('Viofo');
   await frame.locator('#camera').selectOption('viofo-a229-pro');
+  await frame.locator('#setting').selectOption('normal');
   await frame.locator('#channels').selectOption('front-rear');
   if (!(await frame.locator('#rows').innerText()).includes('10 hr 30 min')) throw new Error('2CH chart incorrect');
   await frame.locator('#channels').selectOption('front-rear-interior');

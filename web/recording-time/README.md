@@ -2,10 +2,10 @@
 
 ## Objective and scope
 
-Embed a simple driving-footage chart in a website post. Choose a dashcam and
+Embed a simple driving-footage chart in a website post. Choose a brand, model,
 channel setup and a supported recording setting; compare approximate recording times for 32, 64, 128, 256, and
 512 GB cards. There are no inverse modes, bitrate inputs, allocation inputs,
-or headroom controls. The catalog covers 31 dashcams.
+or headroom controls. The catalog covers 63 dashcams.
 
 Use the offloader's existing measured data, supplemented by verified VIOFO
 quality charts and Blackvue Elite 10 specifications. No app runtime changes, paid APIs, analytics, cookies,
@@ -21,6 +21,32 @@ local paths, footage filenames, or submission metadata. Manufacturer chart
 transcriptions, source image URLs, quality, and check dates live separately in
 `manufacturer-times.json`. These override bitrate-derived estimates for the
 three reviewed VIOFO models. Exported JSON uses schema version 3.
+
+## Catalog coverage and images
+
+The chart includes 48 cameras backed by recorded-file measurements and 15
+manufacturer-only models. Where only Front footage exists, only that estimate
+is offered. Reviewed driving-event samples are allowed for specific Vantrue
+models. Parking-only footage, ambiguous model identification and empty sample
+folders are not usable driving-rate evidence.
+
+Brand/model selection uses numeric sorting. A recording-setting selector appears
+only when a setup has multiple choices. Highest documented options are preferred
+where identified. Samples are labeled Our test footage rather than claiming an
+unrecorded menu setting. Ariel normally tests at maximum quality, which the
+public explanation acknowledges without treating it as proof for every clip.
+
+Per-channel MB/min is Mbps × 7.5 using decimal MB, rounded for readability.
+These are approximate file-size estimates. Published whole-system durations do
+not reveal individual channel sizes, so those cells remain empty. Viofo A229
+models also offer Our test footage to expose their measured per-channel rates.
+
+49 reviewed image mappings use the existing Vortex Radar media library. Image
+assets are packaged locally, with original source URL, media ID and descriptive
+alt text retained in the mapping. Selection loads the corresponding image.
+Missing images collapse cleanly. Photos can depict optional cameras, and their
+caption identifies the pictured kit. New models need a reviewed image mapping,
+not arbitrary runtime image search or a guessed lookalike.
 
 ## Recording settings and public links
 

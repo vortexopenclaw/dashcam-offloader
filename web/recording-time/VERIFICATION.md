@@ -1,5 +1,74 @@
 # Verification
 
+## Expanded catalog and brand/model revision (2026-09-08)
+
+63 cameras (48 recorded-file measurement entries and 15 manufacturer-only entries),
+up from 31. 49 source-mapped product images from the existing public site media
+library are bundled locally. Production access was read-only WP-CLI attachment
+metadata. No WordPress writes, credential changes or external authentication apps.
+
+### Observed checks
+
+10 Python exporter tests, 5 Node calculation tests and the PHP shortcode contract
+pass. Local browser tests exercise every exported brand/model/setup/setting,
+numeric Elite ordering, hidden single-setting selector, four-channel N5,
+per-channel Elite 10 MB/min, 70mai 60fps, photos and missing-image fallback,
+mobile overflow, iframe resizing, delayed loader and message-origin protection.
+No JavaScript errors. Desktop/mobile and both photo contact sheets visually
+inspected. New image assets are present and packaged in the WordPress ZIP.
+
+### New sources and scope
+
+Blackvue’s official recording-time manual index provided DR900X/Plus,
+DR750X/Plus/LTE Plus, DR970X/Plus/LTE/LTE Plus/Box Plus, DR770X, DR590X/Plus,
+and Elite 8 rates. Exact individual URLs are stored on each recording mode.
+Front-only extrapolation was withheld where the cited page only documented 2CH.
+DR590X front-only is 60fps and its two-channel setup is 30fps per camera.
+Manufacturer bitrates are used for full-card estimates, not presented as the
+manual’s exact rounded duration table.
+
+New raw-file checks covered Thinkware U1000, Vantrue N5, Rove R2-4K Dual,
+70mai 4K Omni, Blackvue DR750 LTE, Nextbase 622GW, Cobra SC 200D and the older
+Viofo A229, A329, WM1 and VS1. Source metadata is recorded in the canonical
+reference. N5 resolution variants use matched complete four-camera sets.
+70mai’s 30/60fps clips came from different sessions, not a controlled FPS test.
+Its combined-camera estimate adds separately measured Front/Rear rates.
+Nextbase uses a matching 45-second protected-driving pair and identifies that
+basis. Later front clips vary, so no constant file-size guarantee is made.
+
+Existing usable measurements now also include the front-only Q800 Pro/F800 Pro,
+Cansonic Z3+, Escort M1/M2, and Vantrue N4/E360. Specific Vantrue driving-event
+rows are explicitly opted in. Parking remains excluded. Repeated Escort M1
+samples have explicit merge authorization, otherwise duplicate rows fail.
+
+No guessed per-channel MB/min from manufacturer whole-system duration charts.
+Our test footage is offered separately for the A229 models to show their
+measured per-channel rates. File-rate figures use decimal Mbps × 7.5 MB/min.
+The user’s usual maximum-quality practice is acknowledged, but is not relabeled
+as a confirmed menu setting for every archived sample.
+
+### Remaining gaps
+
+Thinkware FA200 and Rove R2-4K have parking-only measurements. Vantrue X4’s
+Driving Clips folder was empty. The Vueroid QHD and 70mai T800 records still
+lack an approved driving-rate set in the reviewed reference. Ambiguous
+Blackvue Elite 8 4K sample data was not used over its official QHD specification.
+Not every archive directory is a dashcam or an original driving recording.
+
+This is still a local preview. Fresh authenticated staging installation,
+server MIME handling and a live WordPress draft are not verified. Existing
+source measurement links target main and gain new rows when this PR is merged.
+Affiliate URLs remain existing owner destinations, not current stock claims.
+
+### Review
+
+Reviewed correctness, source provenance, readable static UI structure, safe
+text rendering, constrained image paths and no runtime data/API expansion.
+Plain-CSS layout retains native selectors. No new motion or icon system.
+Rejected guessed photos and prominent sales buttons. Photos use existing
+assets and descriptive kit captions. Shopping copy uses normal sentences,
+not Shop labels or bullet separators. No blocking preview issues remain.
+
 ## Recording-settings revision (2026-09-08, afternoon)
 
 Supersedes the two-dropdown revision below. 31 cameras, with one additional

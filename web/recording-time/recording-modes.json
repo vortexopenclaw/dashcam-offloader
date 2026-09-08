@@ -278,6 +278,67 @@
           "basis": "Manufacturer recording-time chart \u00b7 Maximum quality"
         }
       ]
+    },
+    "vantrue-n5": {
+      "front-interior_front-interior_rear-rear": [
+        {
+          "id": "1944p",
+          "label": "1944p 30 fps / Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2592x1944",
+              "fps": "30",
+              "minMbps": 16.4976,
+              "maxMbps": 16.4976
+            },
+            {
+              "role": "interior_front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10.3459,
+              "maxMbps": 10.3459
+            },
+            {
+              "role": "interior_rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10.3404,
+              "maxMbps": 10.3404
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10.3459,
+              "maxMbps": 10.3459
+            }
+          ],
+          "minMbps": 47.5298,
+          "maxMbps": 47.5298,
+          "basis": "Measured from a complete four-camera set of original driving recordings."
+        }
+      ]
+    },
+    "70mai-4k-omni-x800": {
+      "front": [
+        {
+          "id": "60fps",
+          "label": "4K 60 fps / Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "60",
+              "minMbps": 32.4235,
+              "maxMbps": 32.4235
+            }
+          ],
+          "minMbps": 32.4235,
+          "maxMbps": 32.4235,
+          "basis": "Measured from an original 4K60 driving file. This was a different recording session from the 4K30 sample, not a controlled FPS-only comparison."
+        }
+      ]
     }
   },
   "replaceModes": {
@@ -285,7 +346,7 @@
       "front": [
         {
           "id": "normal",
-          "label": "2K (1440p) 30 fps \u00b7 Medium bitrate",
+          "label": "2K (1440p) 30 fps / Medium bitrate",
           "hours": [
             2.5,
             5,
@@ -308,7 +369,7 @@
         },
         {
           "id": "maximum",
-          "label": "2K (1440p) 30 fps \u00b7 High bitrate (highest listed)",
+          "label": "2K (1440p) 30 fps / High bitrate",
           "hours": [
             2,
             4.5,
@@ -331,7 +392,7 @@
         },
         {
           "id": "measured-60fps",
-          "label": "2K (1440p) 60 fps \u00b7 Measured setting",
+          "label": "2K (1440p) 60 fps / Our test footage",
           "minMbps": 26.8972,
           "maxMbps": 26.8975,
           "channels": [
@@ -342,7 +403,7 @@
               "codec": "H.264"
             }
           ],
-          "basis": "Measured from original 60 fps recording files. Quality menu setting unknown; not a controlled comparison with the manufacturer\u2019s 30 fps figures."
+          "basis": "Measured from original 60 fps recording files. Quality menu setting unknown. not a controlled comparison with the manufacturer\u2019s 30 fps figures."
         }
       ]
     },
@@ -350,7 +411,7 @@
       "front": [
         {
           "id": "normal",
-          "label": "4K 30 fps \u00b7 HDR on \u00b7 Medium bitrate",
+          "label": "4K 30 fps / HDR on / Medium bitrate",
           "hours": [
             2,
             4,
@@ -373,7 +434,7 @@
         },
         {
           "id": "maximum",
-          "label": "4K 30 fps \u00b7 HDR on \u00b7 High bitrate (highest listed)",
+          "label": "4K 30 fps / HDR on / High bitrate",
           "hours": [
             1.8,
             3.5,
@@ -407,7 +468,9 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -415,7 +478,7 @@
         },
         {
           "id": "maximum",
-          "label": "Maximum \u00b7 Extreme H.265",
+          "label": "Maximum / Extreme H.265",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -423,7 +486,9 @@
               "role": "front",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "HEVC"
+              "codec": "HEVC",
+              "minMbps": 60,
+              "maxMbps": 60
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -439,7 +504,9 @@
               "role": "front",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "H.264"
+              "codec": "H.264",
+              "minMbps": 40,
+              "maxMbps": 40
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -454,7 +521,9 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 30,
+              "maxMbps": 30
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -469,7 +538,9 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -486,12 +557,16 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
             },
             {
               "role": "rear",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -499,7 +574,7 @@
         },
         {
           "id": "maximum",
-          "label": "Maximum \u00b7 Extreme H.265",
+          "label": "Maximum / Extreme H.265",
           "minMbps": 90,
           "maxMbps": 90,
           "channels": [
@@ -507,13 +582,17 @@
               "role": "front",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "HEVC"
+              "codec": "HEVC",
+              "minMbps": 60,
+              "maxMbps": 60
             },
             {
               "role": "rear",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "HEVC"
+              "codec": "HEVC",
+              "minMbps": 30,
+              "maxMbps": 30
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -529,13 +608,17 @@
               "role": "front",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "H.264"
+              "codec": "H.264",
+              "minMbps": 40,
+              "maxMbps": 40
             },
             {
               "role": "rear",
               "resolution": "3840x2160",
               "fps": "30",
-              "codec": "H.264"
+              "codec": "H.264",
+              "minMbps": 30,
+              "maxMbps": 30
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -550,12 +633,16 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 30,
+              "maxMbps": 30
             },
             {
               "role": "rear",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 30,
+              "maxMbps": 30
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
@@ -570,16 +657,2265 @@
             {
               "role": "front",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
             },
             {
               "role": "rear",
               "resolution": "3840x2160",
-              "fps": "30"
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
             }
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/elite-10-series/11-recording-time/recording-time-elite-10-series/",
           "basis": "Calculated from Blackvue\u2019s published per-camera bitrates. These are full-card estimates, not the manual\u2019s rounded recording times."
+        }
+      ]
+    },
+    "blackvue-dr900x-plus": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-plus/recording-time/recording-time-dr900x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr900x": {
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-2ch/recording-time/recording-time-dr900x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-2ch/recording-time/recording-time-dr900x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-2ch/recording-time/recording-time-dr900x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr900x-2ch/recording-time/recording-time-dr900x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr750x-plus": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-plus/recording-time/recording-time-dr750x-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr750x-lte-plus": {
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch-lte-plus/recording-time/recording-time-dr750x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch-lte-plus/recording-time/recording-time-dr750x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch-lte-plus/recording-time/recording-time-dr750x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch-lte-plus/recording-time/recording-time-dr750x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr970x-plus": {
+      "front": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 60,
+          "maxMbps": 60,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 40,
+          "maxMbps": 40,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 70,
+          "maxMbps": 70,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 50,
+          "maxMbps": 50,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-plus-series/recording-time/recording-time-dr970x-plus-series-2/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr970x-lte-plus": {
+      "front": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 60,
+          "maxMbps": 60,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 40,
+          "maxMbps": 40,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 70,
+          "maxMbps": 70,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 50,
+          "maxMbps": 50,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte-plus-series/recording-time/recording-time-dr970x-2ch-lte-plus/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr970x-lte": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-2ch-lte/recording-time/recording-time-dr970x-2ch-lte/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr770x": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr770x/recording-time/recording-time-dr770x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr970x": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x/recording-time/recording-time-dr970x-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr970x-box-plus": {
+      "front": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 60,
+          "maxMbps": 60,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 40,
+          "maxMbps": 40,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme-h265",
+          "label": "Extreme H.265",
+          "minMbps": 70,
+          "maxMbps": 70,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 60,
+              "maxMbps": 60
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "extreme-h264",
+          "label": "Extreme H.264",
+          "minMbps": 50,
+          "maxMbps": 50,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 40,
+              "maxMbps": 40
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr970x-box-2ch-plus-series/recording-time/recording-time-dr970x-box-2ch-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr750x": {
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch/recording-time/recording-time-dr750x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch/recording-time/recording-time-dr750x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch/recording-time/recording-time-dr750x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr750x-2ch/recording-time/recording-time-dr750x-2ch/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-elite-8": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 20,
+          "maxMbps": 20,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "medium",
+          "label": "Medium",
+          "minMbps": 15,
+          "maxMbps": 15,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 15,
+              "maxMbps": 15
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "low",
+          "label": "Low",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 45,
+          "maxMbps": 45,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 25,
+              "maxMbps": 25
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 35,
+          "maxMbps": 35,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 20,
+              "maxMbps": 20
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 15,
+              "maxMbps": 15
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "medium",
+          "label": "Medium",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 15,
+              "maxMbps": 15
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "low",
+          "label": "Low",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-1ch/11-recording-time/recording-time-elite-8-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr590x": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "blackvue-dr590x-plus": {
+      "front": [
+        {
+          "id": "extreme",
+          "label": "Extreme",
+          "minMbps": 25,
+          "maxMbps": 25,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 25,
+              "maxMbps": 25
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 12,
+          "maxMbps": 12,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 12,
+              "maxMbps": 12
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 10,
+          "maxMbps": 10,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 8,
+          "maxMbps": 8,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "60",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "highest",
+          "label": "Highest",
+          "minMbps": 22,
+          "maxMbps": 22,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 12,
+              "maxMbps": 12
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "minMbps": 18,
+          "maxMbps": 18,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 10,
+              "maxMbps": 10
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        },
+        {
+          "id": "normal",
+          "label": "Normal",
+          "minMbps": 14,
+          "maxMbps": 14,
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 8,
+              "maxMbps": 8
+            },
+            {
+              "role": "rear",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 6,
+              "maxMbps": 6
+            }
+          ],
+          "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
+          "basis": "Calculated from the manufacturer\u2019s published bitrates."
         }
       ]
     }
@@ -625,11 +2961,537 @@
           "basis": "Manufacturer bitrate specifications"
         }
       ]
+    },
+    {
+      "id": "blackvue-dr900x-plus",
+      "name": "Blackvue DR900X Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr900x",
+      "name": "Blackvue DR900X",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr750x-plus",
+      "name": "Blackvue DR750X Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr750x-lte-plus",
+      "name": "Blackvue DR750X LTE Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr970x-plus",
+      "name": "Blackvue DR970X Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr970x-lte-plus",
+      "name": "Blackvue DR970X LTE Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr970x-lte",
+      "name": "Blackvue DR970X LTE",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr770x",
+      "name": "Blackvue DR770X",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr970x",
+      "name": "Blackvue DR970X",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr970x-box-plus",
+      "name": "Blackvue DR970X Box Plus",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 60,
+          "maxMbps": 60,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr750x",
+      "name": "Blackvue DR750X",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-elite-8",
+      "name": "Blackvue Elite 8",
+      "sourceAnchor": "",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "2560x1440",
+          "fps": "30"
+        },
+        {
+          "role": "rear",
+          "resolution": "2560x1440",
+          "fps": "30"
+        }
+      ],
+      "allocationRequired": false,
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 25,
+          "maxMbps": 25,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr590x",
+      "name": "Blackvue DR590X",
+      "sourceAnchor": "",
+      "allocationRequired": false,
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 12,
+          "maxMbps": 12,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 12,
+          "maxMbps": 12,
+          "basis": "Manufacturer specifications"
+        }
+      ]
+    },
+    {
+      "id": "blackvue-dr590x-plus",
+      "name": "Blackvue DR590X Plus",
+      "sourceAnchor": "",
+      "allocationRequired": false,
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "60"
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30"
+        }
+      ],
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 12,
+          "maxMbps": 12,
+          "basis": "Manufacturer specifications"
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 12,
+          "maxMbps": 12,
+          "basis": "Manufacturer specifications"
+        }
+      ]
     }
   ],
   "notes": {
     "viofo-a229-plus": "Maximum-quality figures for front-only recording are not shown because the published chart contains inconsistent values.",
-    "vueroid-s1-4k-infinite": "Based on the space used by original recording files, including reserved space inside each file. The quality menu setting was not recorded."
+    "vueroid-s1-4k-infinite": "Based on the space used by original recording files, including reserved space inside each file. The quality menu setting was not recorded.",
+    "thinkware-q800-pro": "The estimate covers the Front camera only. We still need a matching Rear recording sample.",
+    "thinkware-f800-pro": "The estimate covers the Front camera only. We still need a matching Rear recording sample.",
+    "vantrue-n4": "Includes original driving event recordings. Event clips are saved while driving, not in parking mode.",
+    "70mai-4k-omni-x800": "The 30 and 60 fps samples were recorded separately. Their quality settings may differ too. The two-camera estimate adds the Front and Rear sample rates.",
+    "vantrue-n5": "Both resolution options come from complete four-camera driving recordings. The exact quality menu setting wasn\u2019t saved.",
+    "cobra-sc-200d": "Front-camera estimate. We still need a matching Rear recording sample.",
+    "nextbase-622gw": "Based on a matching Front and Rear driving clip saved with Alexa. File sizes vary across the sampled clips."
   },
   "links": {
     "viofo-a229-pro": {
@@ -678,6 +3540,37 @@
     },
     "viofo-a119m-pro": {
       "front": "https://geni.us/ViofoA119MPro"
+    },
+    "viofo-wm1": {
+      "front": "https://geni.us/ViofoWM1"
+    },
+    "viofo-vs1": {
+      "front": "https://geni.us/ViofoVS1"
+    },
+    "viofo-a329": {
+      "front": "https://geni.us/ViofoA329-1CH",
+      "front-rear": "https://geni.us/ViofoA329-2CH"
+    },
+    "viofo-a119-mini": {
+      "front": "https://geni.us/ViofoA119Mini"
+    },
+    "viofo-a119-v3": {
+      "front": "https://geni.us/ViofoA119v3"
+    },
+    "viofo-a139-pro": {
+      "front": "https://geni.us/ViofoA139Pro1CH",
+      "front-rear": "https://geni.us/ViofoA139Pro2CH",
+      "front-rear-interior": "https://geni.us/ViofoA139Pro3CH"
+    },
+    "viofo-a129-plus-duo": {
+      "front-rear": "https://geni.us/ViofoA129PlusDuo"
+    },
+    "viofo-a129-pro": {
+      "front-rear": "https://geni.us/ViofoA129ProDuo"
+    },
+    "thinkware-u1000": {
+      "front": "https://geni.us/ThinkwareU1000-1CH",
+      "front-rear": "https://geni.us/ThinkwareU1000-2CH"
     }
   },
   "cardLinks": [
@@ -696,5 +3589,305 @@
       "url": "https://geni.us/Vantrue512GBMicroSD",
       "brand": "Vantrue"
     }
-  ]
+  ],
+  "images": {
+    "blackvue-elite-10": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Blackvue-Elite-10-2CH.png",
+      "attachmentId": 11907,
+      "alt": "Blackvue Elite 10 2CH",
+      "path": "images/blackvue-elite-10.png"
+    },
+    "blackvue-elite-9": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/11/Blackvue-Elite-9-2CH-transparent.webp",
+      "attachmentId": 10801,
+      "alt": "Blackvue Elite 9 2CH",
+      "path": "images/blackvue-elite-9.webp"
+    },
+    "blackvue-elite-8": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Blackvue-Elite-8-2CH.webp",
+      "attachmentId": 10666,
+      "alt": "Blackvue Elite 8 2CH",
+      "path": "images/blackvue-elite-8.webp"
+    },
+    "blackvue-dr970x-lte-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/10/Blackvue-DR970X-2CH-LTE-Plus.png",
+      "attachmentId": 10204,
+      "alt": "Blackvue DR970X-2CH LTE Plus",
+      "path": "images/blackvue-dr970x-lte-plus.png"
+    },
+    "blackvue-dr970x-box-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/07/Blackvue-DR970X-Box-Plus.jpg",
+      "attachmentId": 9999,
+      "alt": "Blackvue DR970X Box Plus",
+      "path": "images/blackvue-dr970x-box-plus.jpg"
+    },
+    "blackvue-dr970x-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/07/Blackvue-DR970X-2CH-Plus.jpg",
+      "attachmentId": 9992,
+      "alt": "Blackvue DR970X-2CH Plus",
+      "path": "images/blackvue-dr970x-plus.jpg"
+    },
+    "blackvue-dr970x-lte": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/01/Blackvue-DR970X-2CH-LTE.png",
+      "attachmentId": 8553,
+      "alt": "Blackvue DR970X-2CH LTE",
+      "path": "images/blackvue-dr970x-lte.png"
+    },
+    "blackvue-dr770x-box": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/01/Blackvue-DR770X-Box.png",
+      "attachmentId": 8558,
+      "alt": "Blackvue DR770X Box",
+      "path": "images/blackvue-dr770x-box.png"
+    },
+    "blackvue-dr750x-lte-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Blackvue-DR750X-2CH-LTE-Plus.png",
+      "attachmentId": 8208,
+      "alt": "Blackvue DR750X-2CH LTE Plus",
+      "path": "images/blackvue-dr750x-lte-plus.png"
+    },
+    "blackvue-dr750x-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/11/Blackvue-DR750X-2CH-Plus.png",
+      "attachmentId": 7866,
+      "alt": "Blackvue DR750X-2CH Plus",
+      "path": "images/blackvue-dr750x-plus.png"
+    },
+    "blackvue-dr900x": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/10/Blackvue-DR900X-2CH-1.jpg",
+      "attachmentId": 6894,
+      "alt": "Blackvue DR900X-2CH",
+      "path": "images/blackvue-dr900x.jpg"
+    },
+    "blackvue-dr900s-2ch": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2018/05/Blackvue-DR900S-2CH.jpg",
+      "attachmentId": 3605,
+      "alt": "Blackvue DR900S-2CH",
+      "path": "images/blackvue-dr900s-2ch.jpg"
+    },
+    "blackvue-dr650s-2ch": {
+      "sourceUrl": "https://vortexradar.com/wp-content/uploads/2015/12/Blackvue-DR650S-2CH.jpg",
+      "attachmentId": 1456,
+      "alt": "Blackvue DR650S-2CH",
+      "path": "images/blackvue-dr650s-2ch.jpg"
+    },
+    "viofo-a119-mini-2": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/06/Viofo-A119-Mini-2-angle.webp",
+      "attachmentId": 12414,
+      "alt": "Viofo A119 Mini 2",
+      "path": "images/viofo-a119-mini-2.webp"
+    },
+    "viofo-a329t": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A329T-3CH.png",
+      "attachmentId": 11905,
+      "alt": "Viofo A329T 3CH",
+      "path": "images/viofo-a329t.png"
+    },
+    "viofo-a329s": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A329S-3CH.png",
+      "attachmentId": 10833,
+      "alt": "Viofo A329S 3CH",
+      "path": "images/viofo-a329s.png"
+    },
+    "viofo-a229-ultra": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A229-Ultra-3CH-left-a.png",
+      "attachmentId": 11902,
+      "alt": "Viofo A229 Ultra 3CH",
+      "path": "images/viofo-a229-ultra.png"
+    },
+    "viofo-a229-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A229-Pro-3CH.png",
+      "attachmentId": 10834,
+      "alt": "Viofo A229 Pro 3CH",
+      "path": "images/viofo-a229-pro.png"
+    },
+    "viofo-a119m-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A119M-Pro.png",
+      "attachmentId": 10832,
+      "alt": "Viofo A119M Pro",
+      "path": "images/viofo-a119m-pro.png"
+    },
+    "viofo-a229-plus": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/10/Viofo-A229-Plus-3CH-angled-transparent.png",
+      "attachmentId": 10252,
+      "alt": "Viofo A229 Plus 3CH",
+      "path": "images/viofo-a229-plus.png"
+    },
+    "thinkware-u3000-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Thinkware-U3000-Pro-2CH-transparent.webp",
+      "attachmentId": 10730,
+      "alt": "Thinkware U3000 Pro 2CH transparent",
+      "path": "images/thinkware-u3000-pro.webp"
+    },
+    "thinkware-u3000": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Thinkware-U3000-2CH.webp",
+      "attachmentId": 10667,
+      "alt": "Thinkware U3000 2CH",
+      "path": "images/thinkware-u3000.webp"
+    },
+    "thinkware-u1000": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2019/11/Thinkware-U1000-2CH-dashcam.jpg",
+      "attachmentId": 5565,
+      "alt": "Thinkware U1000 2CH dashcam",
+      "path": "images/thinkware-u1000.jpg"
+    },
+    "thinkware-q800-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2019/07/Thinkware-Q800-Pro-Dashcam.jpg",
+      "attachmentId": 4996,
+      "alt": "Thinkware Q800 Pro Dashcam",
+      "path": "images/thinkware-q800-pro.jpg"
+    },
+    "vantrue-n4-s": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Vantrue-N4S-3CH.png",
+      "attachmentId": 11913,
+      "alt": "Vantrue N4S 3CH",
+      "path": "images/vantrue-n4-s.png"
+    },
+    "vantrue-n4-pro-s": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Vantrue-N4-Pro-S-3CH.webp",
+      "attachmentId": 10665,
+      "alt": "Vantrue N4 Pro S 3CH",
+      "path": "images/vantrue-n4-pro-s.webp"
+    },
+    "vantrue-e1-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Vantrue-E1-Pro.png",
+      "attachmentId": 10846,
+      "alt": "Vantrue E1 Pro",
+      "path": "images/vantrue-e1-pro.png"
+    },
+    "vantrue-e360": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/11/Vantrue-E360-package.jpg",
+      "attachmentId": 10287,
+      "alt": "Vantrue E360 package",
+      "path": "images/vantrue-e360.jpg"
+    },
+    "vantrue-n4": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Vantrue-N4-3CH.png",
+      "attachmentId": 8231,
+      "alt": "Vantrue N4 3CH",
+      "path": "images/vantrue-n4.png"
+    },
+    "vueroid-s1-4k-infinite": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/09/Vueroid-S1-4K-Infinite-2CH.png",
+      "attachmentId": 13279,
+      "alt": "Vueroid S1 4K Infinite 2CH",
+      "path": "images/vueroid-s1-4k-infinite.png"
+    },
+    "rove-r2-4k-dual": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/08/Rove-R2-4K-Dual-with-app.jpg",
+      "attachmentId": 10114,
+      "alt": "Rove R2-4K Dual with app",
+      "path": "images/rove-r2-4k-dual.jpg"
+    },
+    "70mai-4k-omni-x800": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/07/70mai-4K-Omni-2CH-transparent.png",
+      "attachmentId": 10506,
+      "alt": "70mai 4K Omni 2CH",
+      "path": "images/70mai-4k-omni-x800.png"
+    },
+    "escort-m2": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/10/Escort-M2.png",
+      "attachmentId": 8397,
+      "alt": "Escort M2",
+      "path": "images/escort-m2.png"
+    },
+    "cansonic-ultradash-z3-standard-edition": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/11/Cansonic-UltraDash-Z3.png",
+      "attachmentId": 9167,
+      "alt": "Cansonic UltraDash Z3+",
+      "path": "images/cansonic-ultradash-z3-standard-edition.png"
+    },
+    "blackvue-dr750-2ch-lte": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/10/Blackvue-DR750-2CH-LTE.jpg",
+      "attachmentId": 6826,
+      "alt": "Blackvue DR750-2CH LTE",
+      "path": "images/blackvue-dr750-2ch-lte.jpg"
+    },
+    "viofo-a119-mini": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A119-Mini.jpg",
+      "attachmentId": 8206,
+      "alt": "Viofo A119 Mini",
+      "path": "images/viofo-a119-mini.jpg"
+    },
+    "viofo-a119-v3": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A119-v3.jpg",
+      "attachmentId": 8202,
+      "alt": "Viofo A119 v3",
+      "path": "images/viofo-a119-v3.jpg"
+    },
+    "viofo-a139-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/04/Viofo-A139-Pro-3CH-transparent.png",
+      "attachmentId": 8646,
+      "alt": "Viofo A139 Pro 3CH transparent",
+      "path": "images/viofo-a139-pro.png"
+    },
+    "viofo-a139": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A139-3CH.jpg",
+      "attachmentId": 8207,
+      "alt": "Viofo A139 3CH",
+      "path": "images/viofo-a139.jpg"
+    },
+    "viofo-a129-pro": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-A129-Pro-Duo.jpg",
+      "attachmentId": 8363,
+      "alt": "Viofo A129 Pro Duo",
+      "path": "images/viofo-a129-pro.jpg"
+    },
+    "viofo-a129-plus-duo": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-A129-Plus-Duo.png",
+      "attachmentId": 8351,
+      "alt": "Viofo A129 Plus Duo",
+      "path": "images/viofo-a129-plus-duo.png"
+    },
+    "viofo-a129-duo": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2018/09/Viofo-A129-Duo.jpg",
+      "attachmentId": 3943,
+      "alt": "Viofo A129 Duo",
+      "path": "images/viofo-a129-duo.jpg"
+    },
+    "viofo-t130": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-T130-3CH.png",
+      "attachmentId": 8362,
+      "alt": "Viofo T130 3CH",
+      "path": "images/viofo-t130.png"
+    },
+    "viofo-a229": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/10/Viofo-A229-Duo.jpg",
+      "attachmentId": 8390,
+      "alt": "Viofo A229 Duo",
+      "path": "images/viofo-a229.jpg"
+    },
+    "viofo-wm1": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/10/Viofo-WM1-with-phone.jpg",
+      "attachmentId": 9009,
+      "alt": "Viofo WM1 with phone",
+      "path": "images/viofo-wm1.jpg"
+    },
+    "nextbase-622gw": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/11/Nextbase-622GW-front-angle.jpg",
+      "attachmentId": 7123,
+      "alt": "Nextbase 622GW front angle",
+      "path": "images/nextbase-622gw.jpg"
+    },
+    "cobra-sc-200d": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/06/Cobra-SC-200D-dashcam.jpg",
+      "attachmentId": 7566,
+      "alt": "Cobra SC 200D dashcam",
+      "path": "images/cobra-sc-200d.jpg"
+    },
+    "cobra-road-scout": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/05/Cobra-Road-Scout-front-top-main-display.png",
+      "attachmentId": 7478,
+      "alt": "Cobra Road Scout front top main display",
+      "path": "images/cobra-road-scout.png"
+    },
+    "escort-m1": {
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/11/Escort-M1-dashcam.png",
+      "attachmentId": 7047,
+      "alt": "Escort M1 dashcam",
+      "path": "images/escort-m1.png"
+    }
+  },
+  "defaultLabels": {
+    "vantrue-n5": "1440p 30 fps / Our test footage",
+    "70mai-4k-omni-x800": "4K 30 fps / Our test footage"
+  }
 }

@@ -214,5 +214,147 @@
       "interior",
       "rear"
     ]
+  },
+  "Thinkware U1000": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "allocationRequired": true
+  },
+  "Thinkware Q800 Pro": {
+    "channels": [
+      "front"
+    ],
+    "allocationRequired": true
+  },
+  "Thinkware F800 Pro": {
+    "channels": [
+      "front"
+    ],
+    "allocationRequired": true
+  },
+  "Vantrue N4": {
+    "channels": [
+      "front",
+      "interior",
+      "rear"
+    ],
+    "recordingModes": [
+      "driving",
+      "event"
+    ]
+  },
+  "Vantrue N5": {
+    "channels": [
+      "front",
+      "interior_front",
+      "interior_rear",
+      "rear"
+    ],
+    "setups": [
+      [
+        "front",
+        "interior_front",
+        "interior_rear",
+        "rear"
+      ]
+    ]
+  },
+  "Vantrue E360": {
+    "channels": [
+      "panoramic_front",
+      "rear"
+    ],
+    "recordingModes": [
+      "driving",
+      "event"
+    ],
+    "rowRoles": {
+      "A (360/interior/front composite)": "panoramic_front",
+      "C": "rear"
+    }
+  },
+  "Cansonic UltraDash Z3+ Standard Edition": {
+    "channels": [
+      "front",
+      "telephoto",
+      "rear"
+    ],
+    "rowRoles": {
+      "L (wide front)": "front",
+      "R (telephoto front)": "telephoto",
+      "B (rear)": "rear"
+    }
+  },
+  "Escort M1": {
+    "channels": [
+      "front"
+    ],
+    "mergeRepeatedSamples": true
+  },
+  "Escort M2": {
+    "channels": [
+      "front"
+    ]
+  },
+  "Rove R2-4K Dual": {
+    "channels": [
+      "front",
+      "rear"
+    ]
+  },
+  "70mai 4K Omni X800": {
+    "channels": [
+      "front",
+      "rear"
+    ]
+  },
+  "BlackVue DR750-2CH LTE": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Blackvue DR750-2CH LTE"
+  },
+  "Nextbase 622GW": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Nextbase 622GW",
+    "allocationRequired": false
+  },
+  "Cobra SC 200D": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Cobra SC 200D"
+  },
+  "VIOFO A229": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Viofo A229"
+  },
+  "VIOFO WM1": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo WM1"
+  },
+  "VIOFO VS1": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo VS1"
+  },
+  "VIOFO A329": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Viofo A329"
   }
 }

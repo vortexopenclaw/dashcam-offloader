@@ -370,10 +370,12 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| A (front) | driving | HEVC | 2560x1440 / 2592x1944 | 30 | ~14.3-16.0 Mbps | MP4 | `ffprobe` |
-| B / C / D | driving | HEVC | 1920x1080 | 30 | ~9.8 Mbps | MP4 | `ffprobe` |
+| A (front) | driving | HEVC | 2560x1440 | 30 | ~14.8199 Mbps | MP4 | `ffprobe` |
+| B (interior_front) | driving | HEVC | 1920x1080 | 30 | ~10.3459 Mbps | MP4 | `ffprobe` |
+| C (interior_rear) | driving | HEVC | 1920x1080 | 30 | ~10.3459 Mbps | MP4 | `ffprobe` |
+| D (rear) | driving | HEVC | 1920x1080 | 30 | ~10.3459 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Sampled files use `YYYYMMDD_HHMMSS_SEQ_N_A/B/C/D`, matching Vantrue's four-channel naming style.
+**Storage-rate verification (2026-09-08):** Complete original driving-channel set, using file size divided by duration including container overhead. Exact quality menu setting not saved.
 
 ## Vantrue E360
 
@@ -388,11 +390,10 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| F (front) | driving / parking | HEVC | 3840x2160 | 30 | ~31.9-60.3 Mbps | MP4 | `ffprobe` |
-| R (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9 Mbps | MP4 | `ffprobe` |
-| PI / PR | parking | H.264 | 1920x1080 / 2560x1440 | 30 | ~3.9-4.1 Mbps | MP4 | `ffprobe` |
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~56.4826 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~10.9992 Mbps | MP4 | `ffprobe` |
 
-**Notes:** X800 and 4K Omni are the same product family in the current catalog. NAS samples show both 70mai-style `NO`/`PA` prefixed files and VIOFO-style parking suffix examples in the same model folder, so keep archive media specs provisional even though the X800 card layout is now sampled.
+**Storage-rate verification (2026-09-08):** Probed original driving files using complete file size divided by duration. Only native NO-prefixed files used. Front and rear came from separate clips. The 2CH estimate adds their rates, not a measured matched pair. A separate 4K60 front sample is cataloged as its own mode. Do not infer a controlled FPS-only comparison.
 
 ## Escort M1
 
@@ -443,10 +444,10 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 | Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
 |---|---|---|---|---|---|---|---|
-| F (front) | driving | HEVC | 3840x2160 | 30 | ~20.0 Mbps | MP4 | `ffprobe` |
-| F (front) | protected / parking event | HEVC | 3840x2160 | 30 | ~20.1 Mbps | MP4 | `ffprobe` |
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~25.0237 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 1920x1080 | 30 | ~11.1216 Mbps | MP4 | `ffprobe` |
 
-**Notes:** Observed raw filename families include `RECYYYYMMDD-HHMMSS-SEQ` and `PROYYYYMMDD-HHMMSS-SEQ`.
+**Storage-rate verification (2026-09-08):** Probed original driving files using complete file size divided by duration. Matched front/rear pair at 20240903-210812. Both files are 60.340789 seconds.
 
 ## Rove R2-4K Pro
 
@@ -484,3 +485,86 @@ were independently probed: both 2560x1440 at 60/1 fps, 60.000 seconds,
 storage rates. Video streams were about 26.6232 Mbps. Quality menu selection
 was not recorded. These samples support a separate 60fps setting, not a claim
 of maximum quality or a controlled comparison with 30fps manufacturer figures.
+
+## Thinkware U1000
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~27.6824 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | HEVC | 2560x1440 | 30 | ~14.2606 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Complete original driving-channel set, using file size divided by duration including container overhead. Exact quality menu setting not saved.
+
+## BlackVue DR750-2CH LTE
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 60 | ~25.8395 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~11.1116 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front and Rear from the same timestamp. Menu quality setting not retained.
+
+## Nextbase 622GW
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 30 | ~48.4191 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~14.8982 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front and Rear from the same timestamp. Menu quality setting not retained.
+Matched 45.045-second FH/RH pair (201120_082835_077). Alexa-protected driving clip. Later 60.06-second front files measured about 50.28–53.08 Mbps of complete-file storage. The matched pair estimate is representative, not a fixed bitrate guarantee.
+
+## Cobra SC 200D
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1600 | 30 | ~39.0032 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front-only recording evidence. Menu quality setting not retained.
+
+## VIOFO A229
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~31.5634 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~25.7251 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front and Rear from the same timestamp. Menu quality setting not retained.
+
+## VIOFO WM1
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~27.9444 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front-only recording evidence. Menu quality setting not retained.
+
+## VIOFO VS1
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~25.6728 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front-only recording evidence. Menu quality setting not retained.
+
+## VIOFO A329
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 60 | ~65.9904 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 2560x1440 | 30 | ~27.4028 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original camera-named files from the driving archive, using complete file size divided by duration. Front and Rear from the same timestamp. Menu quality setting not retained.
+
+### Additional resolution/FPS witnesses (2026-09-08)
+
+Vantrue N5 1944p option: complete 20240614_125501_00080_N_A/B/C/D set.
+Front is 2592x1944 at 30fps, 123731968 bytes / 60 seconds. The three other
+1080p30 cameras are 77594624 bytes each over about 60 seconds. Compared with
+the 1440p baseline, this is a distinct observed configuration, not a bitrate
+inferred from resolution.
+
+70mai 4K Omni front 60fps option: native NO20250516-092136-001948F driving
+file, HEVC 3840x2160 at 60/1fps, 243305578 bytes / 60.032 seconds. The 30fps
+sample was NO20250501-153114-000028F. Quality/session differences mean the
+storage difference must not be attributed to FPS alone.
