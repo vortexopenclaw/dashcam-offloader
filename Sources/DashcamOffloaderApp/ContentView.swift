@@ -94,15 +94,16 @@ struct ContentView: View {
                 .padding(.horizontal)
                 .padding(.top)
 
-            Picker("Import", selection: Binding(
-                get: { viewModel.importMode },
-                set: { viewModel.setImportMode($0) }
-            )) {
-                ForEach(ImportMode.allCases) { mode in
-                    Text(mode.displayName).tag(mode)
-                }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Import source")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ImportModeSelector(selection: Binding(
+                    get: { viewModel.importMode },
+                    set: { viewModel.setImportMode($0) }
+                ))
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal)
 
             Button {

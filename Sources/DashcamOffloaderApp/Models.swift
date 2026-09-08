@@ -216,6 +216,13 @@ enum ImportMode: String, CaseIterable, Identifiable {
         }
     }
 
+    var systemImage: String {
+        switch self {
+        case .dashcamFootage: "externaldrive"
+        case .regularVideo: "folder"
+        }
+    }
+
     var sourcePickerTitle: String {
         switch self {
         case .dashcamFootage: "Choose dashcam card or folder"

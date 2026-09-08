@@ -1,0 +1,103 @@
+id: vueroid-s1-qhd-infinite
+manufacturer: Vueroid
+model: S1 QHD Infinite
+status: seed
+channel_variants:
+  - channels: 1
+    roles: [front]
+    validation: app_submission
+    notes: 60 fps mode observed with front recording only.
+  - channels: 2
+    roles: [front, rear]
+    validation: app_submission
+  - channels: 3
+    roles: [front, interior, rear]
+    validation: app_submission
+    notes: 30 fps 3CH recording observed on firmware 1.0.4.
+sampled_variants:
+  - channels: 1
+    roles: [front]
+  - channels: 3
+    roles: [front, interior, rear]
+source_notes:
+  - App training submissions from 2026-09-08.
+detection:
+  high_confidence:
+    - path: CONFIG/config.bin
+      contains: S1-QHD-INFINITE
+  supporting:
+    - folder: INF
+    - folder: EVENT
+    - folder: PARK
+    - folder: PEVENT
+    - folder: USER
+  disqualifying:
+    - path: CONFIG/config.bin
+      must_not_contain: H1-QHD-INFINITE
+    - path: CONFIG/config.bin
+      must_not_contain: S1-4K-INFINITE
+folders:
+  - path: INF
+    mode: continuous
+    validation: app_submission
+  - path: EVENT
+    mode: driving_event
+    validation: app_submission
+  - path: PARK
+    mode: parking
+    validation: app_submission
+    parking_mode_detection:
+      method: video_frame_rate
+      signal: nominalFrameRate
+      modes:
+        parking_motion:
+          frame_rate: 30
+          audio: true
+          clip_duration_seconds: 30
+        parking_timelapse:
+          frame_rate: 5
+          audio: false
+          clip_duration_seconds: 20
+  - path: PEVENT
+    mode: parking_event
+    validation: app_submission
+  - path: USER
+    mode: manual
+    validation: app_submission
+  - path: BOOKMARK
+    mode: bookmark_image
+    import: false
+filename_patterns:
+  - pattern: "^(\\d{8})_(\\d{6})_([A-Z]+)_([FIR])_([A-Z])\\.mp4$"
+    case_sensitive: false
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    prefix_group: 3
+    channel_group: 4
+    flag_group: 5
+channels:
+  F: front
+  I: interior
+  R: rear
+grouping:
+  keys: [date, time, prefix]
+  channel_sets:
+    3ch:
+      channels: [F, I, R]
+      validation: app_submission
+    2ch:
+      channels: [F, R]
+      validation: app_submission
+    1ch:
+      channels: [F]
+      validation: app_submission
+exclude:
+  - CONFIG/**
+  - .TFF_REC_RESERVE*
+  - "*.SYS"
+  - "*.NFF"
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - "._*"

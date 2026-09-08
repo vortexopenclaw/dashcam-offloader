@@ -343,7 +343,9 @@ enum VerificationTest {
                 return false
             }
             guard ImportMode.dashcamFootage.displayName == "Dashcam Footage",
+                  ImportMode.dashcamFootage.systemImage == "externaldrive",
                   ImportMode.regularVideo.displayName == "Regular Video",
+                  ImportMode.regularVideo.systemImage == "folder",
                   ImportMode.regularVideo.sourcePickerTitle == "Choose regular video folder" else {
                 print("VERIFY FAIL: regular-video import mode labels regressed")
                 return false
@@ -481,9 +483,9 @@ enum VerificationTest {
             }
             guard s1QHDLearningPrefill.0?.manufacturer == "Vueroid",
                   s1QHDLearningPrefill.0?.model == "S1 QHD Infinite",
-                  s1QHDLearningPrefill.1.count == 2,
-                  s1QHDLearningPrefill.1.description == "Front / Rear" else {
-                print("VERIFY FAIL: identified Vueroid S1 QHD did not prefill its catalog model and 2CH setup")
+                  s1QHDLearningPrefill.1.count == 3,
+                  s1QHDLearningPrefill.1.description == "Front / Rear / Interior" else {
+                print("VERIFY FAIL: identified Vueroid S1 QHD did not prefill its catalog model and 3CH setup")
                 return false
             }
             let h1ManualSelectorState = MainActor.assumeIsolated { () -> Bool in
@@ -2316,6 +2318,30 @@ enum VerificationTest {
                           $0.detail.contains("S1 4K Infinite")
                   }) else {
                 print("VERIFY FAIL: Vueroid S1 safe metadata did not identify supported profile: identified=\(String(describing: vueroidScan.identifiedCamera)), diagnostics=\(vueroidScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+
+            let vueroidQHDSource = temp.appendingPathComponent("vueroid-s1-qhd", isDirectory: true)
+            try FileManager.default.createDirectory(at: vueroidQHDSource.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidQHDSource.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: vueroidQHDSource.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
+            try Data("S1-QHD-INFINITE V1.0.4\u{0}S1-QHD-INFINITE".utf8).write(to: vueroidQHDSource.appendingPathComponent("CONFIG/config.bin"))
+            for channel in ["F", "I", "R"] {
+                try Data(repeating: 12, count: 1024).write(
+                    to: vueroidQHDSource.appendingPathComponent("INF/20260908_100000_INF_" + channel + "_N.mp4")
+                )
+                try Data(repeating: 13, count: 1024).write(
+                    to: vueroidQHDSource.appendingPathComponent("PEVENT/20260908_101000_PVT_" + channel + "_N.mp4")
+                )
+            }
+
+            let vueroidQHDScan = try scanner.scan(sourceURL: vueroidQHDSource, profiles: profiles)
+            guard vueroidQHDScan.selectedProfile?.id == "vueroid-s1-qhd-infinite",
+                  vueroidQHDScan.identifiedCamera?.model == "S1 QHD Infinite",
+                  vueroidQHDScan.identifiedCamera?.isSupported == true,
+                  Set(vueroidQHDScan.clips.map(\.channel)) == Set(["front", "interior", "rear"]),
+                  vueroidQHDScan.clips.filter({ $0.outputCategory == "Parking Events" }).count == 3 else {
+                print("VERIFY FAIL: S1 QHD Infinite 3CH training profile was not selected or classified correctly: profile=" + (vueroidQHDScan.selectedProfile?.id ?? "nil") + ", identified=" + String(describing: vueroidQHDScan.identifiedCamera) + ", channels=" + String(describing: Set(vueroidQHDScan.clips.map(\.channel))))
                 return false
             }
 

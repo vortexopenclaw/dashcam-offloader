@@ -22,8 +22,8 @@ from openclaw_env import load_openclaw_env  # noqa: E402
 
 DEFAULT_NAMESPACE_ID = "39129dc4017b48c6bd8b8f4848b25c76"
 TOKEN_ENV_NAMES = (
-    "CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN",
     "CLOUDFLARE_WORKERS_API_TOKEN",
+    "CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN",
 )
 REDACTED_KEYS = {"contact", "email", "name", "phone"}
 

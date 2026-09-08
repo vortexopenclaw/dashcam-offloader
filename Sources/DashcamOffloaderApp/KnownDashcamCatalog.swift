@@ -59,7 +59,16 @@ enum KnownDashcamCatalog {
             roles: ["front", "rear", "interior"],
             notes: "Observed 1CH, 2CH, and 3CH S1 4K Infinite card variants."
         ),
-        model("Vueroid", "S1 QHD Infinite", channels: 2, roles: ["front", "rear"]),
+        model(
+            "Vueroid",
+            "S1 QHD Infinite",
+            aliases: ["S1 QHD", "S1-QHD", "S1-QHD-INFINITE"],
+            channels: 3,
+            roles: ["front", "interior", "rear"],
+            resolutions: ["front": "2560x1440", "interior": "1920x1080", "rear": "1920x1080"],
+            parkingModes: ["motion detection", "impact detection", "extreme low power"],
+            notes: "Observed 30 fps 3CH and 60 fps front-only recordings on firmware 1.0.4. Camera metadata may still report 2CH while a 3CH set is active."
+        ),
         model("Vueroid", "D40-Q2", channels: 2, roles: ["front", "rear"]),
         model("Vueroid", "D21 4K", channels: 2, roles: ["front", "rear"]),
         model("Vueroid", "D21 LTE FHD", channels: 2, roles: ["front", "rear"]),

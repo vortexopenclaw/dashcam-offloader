@@ -223,6 +223,7 @@ safe model evidence, so the app does not auto-identify them yet.
 **Vueroid**
 - Vueroid H1: 1CH front variant, confirmed from app submission and real card sample
 - Vueroid S1 4K Infinite: 1CH/2CH/3CH variants, all confirmed from real card samples
+- Vueroid S1 QHD Infinite: 1CH/2CH/3CH variants, exact firmware metadata detection confirmed from app submissions
 
 ## Repository Layout
 

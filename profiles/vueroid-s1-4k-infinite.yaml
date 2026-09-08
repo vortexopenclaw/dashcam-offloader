@@ -48,6 +48,8 @@ detection:
   disqualifying:
     - path: CONFIG/config.bin
       must_not_contain: H1-QHD-INFINITE
+    - path: CONFIG/config.bin
+      must_not_contain: S1-QHD-INFINITE
   supporting:
     - folder: INF
     - folder: EVENT
