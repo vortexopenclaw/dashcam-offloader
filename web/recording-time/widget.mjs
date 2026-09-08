@@ -3,7 +3,11 @@ const $ = id => document.getElementById(id);
 const roles = {front:'Front', rear:'Rear', interior:'Cabin', telephoto:'Telephoto', interior_front:'Front cabin', interior_rear:'Rear cabin', panoramic_front:'360° camera'};
 const collator = new Intl.Collator('en', {numeric:true, sensitivity:'base'});
 let cameras = [], current, sourceUrl, cardLinks = [];
-function setupLabel(setup) { return `${setup.roles.length}CH (${setup.roles.map(r=>roles[r]).join(' + ')})`; }
+function setupLabel(setup) {
+  const labels = setup.roles.length === 4 && setup.roles.includes('interior_front') && setup.roles.includes('interior_rear')
+    ? ['Front', 'Rear', '2 Cabin'] : setup.roles.map(r=>roles[r]);
+  return `${setup.roles.length}CH (${labels.join(' + ')})`;
+}
 function selectedSetup() { return current.setups.find(s=>s.id === $('channels').value); }
 function resolutionLabel(channel) {
   const names = {'3840x2160':'4K', '2560x1440':'2K (1440p)', '1920x1080':'1080p', '1280x720':'720p', '2592x1944':'1944p'};
@@ -13,7 +17,7 @@ function fileSizeLabel(channel, mode) {
   // Published whole-system times do not identify each camera's file size.
   if (mode.hours || !Number.isFinite(channel.minMbps)) return '';
   const low = Math.round(channel.minMbps * 7.5), high = Math.round(channel.maxMbps * 7.5);
-  return `${mode.sourceType === 'submitted-video' ? 'Video: about' : 'About'} ${low === high ? low : `${low}–${high}`} MB/min`;
+  return `${mode.sourceType === 'submitted-video' ? 'Video: ' : ''}${low === high ? low : `${low}–${high}`} MB/min`;
 }
 function renderDetails(setup, mode) {
   $('recording-details').replaceChildren(...setup.roles.map(role=>{
@@ -24,6 +28,23 @@ function renderDetails(setup, mode) {
     const size = document.createElement('dd');size.textContent=fileSizeLabel(channel,mode);
     row.append(name,format,size);return row;
   }));
+}
+let photoRequest = 0;
+async function renderPhoto(setup) {
+  const request = ++photoRequest;
+  const photo = current.setupImages?.find(image=>image.setups.includes(setup.id));
+  const figure = $('camera-photo'), img = $('product-image');
+  if (photo && !figure.hidden && img.getAttribute('src') === photo.path) return;
+  figure.hidden = true;
+  img.removeAttribute('src');
+  if (!photo) return;
+  const preload = new Image();
+  preload.src = photo.path;
+  try { await preload.decode(); } catch { return; }
+  if (request !== photoRequest) return;
+  img.alt = photo.alt;
+  img.src = photo.path;
+  figure.hidden = false;
 }
 function renderLinks(setup) {
   const paragraph=$('shopping-links');paragraph.replaceChildren();
@@ -40,14 +61,15 @@ function render() {
   const setup=selectedSetup();
   const mode=setup.modes.find(m=>m.id === $('setting').value);
   $('rows').replaceChildren(...recordingRows(mode).map(row=>{
-    const tr=document.createElement('tr');
-    const th=document.createElement('th');th.scope='row';th.textContent=`${row.gb} GB`;
-    const td=document.createElement('td');td.textContent=rowLabel(row);
+    const tr=document.createElement('tr');tr.setAttribute('role','row');
+    const th=document.createElement('th');th.scope='row';th.setAttribute('role','rowheader');th.textContent=`${row.gb} GB`;
+    const td=document.createElement('td');td.setAttribute('role','cell');td.textContent=rowLabel(row);
     tr.append(th,td);return tr;
   }));
   $('chart-caption').textContent=`${current.name}, ${setupLabel(setup)}, ${mode.label}: approximate driving time`;
   $('announcement').textContent=`Chart updated: ${current.name}, ${setupLabel(setup)}, ${mode.label}`;
   renderDetails(setup,mode);
+  renderPhoto(setup);
   $('basis').textContent=`${current.name}, ${mode.label}. ${mode.basis}`;
   const submitted=mode.sourceType === 'submitted-video';
   const official=Boolean(mode.sourceUrl) && !submitted;
@@ -82,12 +104,6 @@ function selectCamera() {
   $('channels').value=current.setups.some(s=>s.id===previous) ? previous : current.setups.at(-1).id;
   $('channels').disabled=current.setups.length===1;
   $('setting').replaceChildren();
-  const photo=current.image;
-  $('camera-photo').hidden=!photo?.path;
-  if(photo?.path) {
-    $('product-image').alt=photo.alt;
-    $('product-image').src=photo.path;
-  } else $('product-image').removeAttribute('src');
   selectSetup();
 }
 function selectBrand(preferredId) {
@@ -114,7 +130,6 @@ try {
   $('camera').addEventListener('change',selectCamera);
   $('channels').addEventListener('change',selectSetup);
   $('setting').addEventListener('change',render);
-  $('product-image').addEventListener('error',()=>{$('camera-photo').hidden=true;});
   $('form').addEventListener('submit',event=>event.preventDefault());
   selectBrand(initial.id);$('loading').hidden=true;$('form').hidden=false;
 } catch {

@@ -3859,301 +3859,447 @@
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Blackvue-Elite-10-2CH.png",
       "attachmentId": 11907,
       "alt": "Blackvue Elite 10 2CH",
-      "path": "images/blackvue-elite-10.png"
+      "path": "images/blackvue-elite-10.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-elite-9": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/11/Blackvue-Elite-9-2CH-transparent.webp",
       "attachmentId": 10801,
       "alt": "Blackvue Elite 9 2CH",
-      "path": "images/blackvue-elite-9.webp"
+      "path": "images/blackvue-elite-9.webp",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-elite-8": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Blackvue-Elite-8-2CH.webp",
       "attachmentId": 10666,
       "alt": "Blackvue Elite 8 2CH",
-      "path": "images/blackvue-elite-8.webp"
+      "path": "images/blackvue-elite-8.webp",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr970x-lte-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/10/Blackvue-DR970X-2CH-LTE-Plus.png",
       "attachmentId": 10204,
       "alt": "Blackvue DR970X-2CH LTE Plus",
-      "path": "images/blackvue-dr970x-lte-plus.png"
+      "path": "images/blackvue-dr970x-lte-plus.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr970x-box-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/07/Blackvue-DR970X-Box-Plus.jpg",
       "attachmentId": 9999,
       "alt": "Blackvue DR970X Box Plus",
-      "path": "images/blackvue-dr970x-box-plus.jpg"
+      "path": "images/blackvue-dr970x-box-plus.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr970x-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/07/Blackvue-DR970X-2CH-Plus.jpg",
       "attachmentId": 9992,
       "alt": "Blackvue DR970X-2CH Plus",
-      "path": "images/blackvue-dr970x-plus.jpg"
+      "path": "images/blackvue-dr970x-plus.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr970x-lte": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/01/Blackvue-DR970X-2CH-LTE.png",
       "attachmentId": 8553,
       "alt": "Blackvue DR970X-2CH LTE",
-      "path": "images/blackvue-dr970x-lte.png"
+      "path": "images/blackvue-dr970x-lte.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr770x-box": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/01/Blackvue-DR770X-Box.png",
       "attachmentId": 8558,
       "alt": "Blackvue DR770X Box",
-      "path": "images/blackvue-dr770x-box.png"
+      "path": "images/blackvue-dr770x-box.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "blackvue-dr750x-lte-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Blackvue-DR750X-2CH-LTE-Plus.png",
       "attachmentId": 8208,
       "alt": "Blackvue DR750X-2CH LTE Plus",
-      "path": "images/blackvue-dr750x-lte-plus.png"
+      "path": "images/blackvue-dr750x-lte-plus.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr750x-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/11/Blackvue-DR750X-2CH-Plus.png",
       "attachmentId": 7866,
       "alt": "Blackvue DR750X-2CH Plus",
-      "path": "images/blackvue-dr750x-plus.png"
+      "path": "images/blackvue-dr750x-plus.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr900x": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/10/Blackvue-DR900X-2CH-1.jpg",
       "attachmentId": 6894,
       "alt": "Blackvue DR900X-2CH",
-      "path": "images/blackvue-dr900x.jpg"
+      "path": "images/blackvue-dr900x.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr900s-2ch": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2018/05/Blackvue-DR900S-2CH.jpg",
       "attachmentId": 3605,
       "alt": "Blackvue DR900S-2CH",
-      "path": "images/blackvue-dr900s-2ch.jpg"
+      "path": "images/blackvue-dr900s-2ch.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "blackvue-dr650s-2ch": {
       "sourceUrl": "https://vortexradar.com/wp-content/uploads/2015/12/Blackvue-DR650S-2CH.jpg",
       "attachmentId": 1456,
       "alt": "Blackvue DR650S-2CH",
-      "path": "images/blackvue-dr650s-2ch.jpg"
+      "path": "images/blackvue-dr650s-2ch.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-a119-mini-2": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/06/Viofo-A119-Mini-2-angle.webp",
       "attachmentId": 12414,
       "alt": "Viofo A119 Mini 2",
-      "path": "images/viofo-a119-mini-2.webp"
+      "path": "images/viofo-a119-mini-2.webp",
+      "setups": [
+        "front"
+      ]
     },
     "viofo-a329t": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A329T-3CH.png",
       "attachmentId": 11905,
       "alt": "Viofo A329T 3CH",
-      "path": "images/viofo-a329t.png"
+      "path": "images/viofo-a329t.png",
+      "setups": [
+        "front-rear-telephoto"
+      ]
     },
     "viofo-a329s": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A329S-3CH.png",
       "attachmentId": 10833,
       "alt": "Viofo A329S 3CH",
-      "path": "images/viofo-a329s.png"
+      "path": "images/viofo-a329s.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a229-ultra": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A229-Ultra-3CH-left-a.png",
       "attachmentId": 11902,
       "alt": "Viofo A229 Ultra 3CH",
-      "path": "images/viofo-a229-ultra.png"
+      "path": "images/viofo-a229-ultra.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a229-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A229-Pro-3CH.png",
       "attachmentId": 10834,
       "alt": "Viofo A229 Pro 3CH",
-      "path": "images/viofo-a229-pro.png"
+      "path": "images/viofo-a229-pro.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a119m-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Viofo-A119M-Pro.png",
       "attachmentId": 10832,
       "alt": "Viofo A119M Pro",
-      "path": "images/viofo-a119m-pro.png"
+      "path": "images/viofo-a119m-pro.png",
+      "setups": [
+        "front"
+      ]
     },
     "viofo-a229-plus": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/10/Viofo-A229-Plus-3CH-angled-transparent.png",
       "attachmentId": 10252,
       "alt": "Viofo A229 Plus 3CH",
-      "path": "images/viofo-a229-plus.png"
+      "path": "images/viofo-a229-plus.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "thinkware-u3000-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Thinkware-U3000-Pro-2CH-transparent.webp",
       "attachmentId": 10730,
       "alt": "Thinkware U3000 Pro 2CH transparent",
-      "path": "images/thinkware-u3000-pro.webp"
+      "path": "images/thinkware-u3000-pro.webp",
+      "setups": [
+        "front-rear"
+      ]
     },
     "thinkware-u3000": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Thinkware-U3000-2CH.webp",
       "attachmentId": 10667,
       "alt": "Thinkware U3000 2CH",
-      "path": "images/thinkware-u3000.webp"
+      "path": "images/thinkware-u3000.webp",
+      "setups": [
+        "front-rear"
+      ]
     },
     "thinkware-u1000": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2019/11/Thinkware-U1000-2CH-dashcam.jpg",
       "attachmentId": 5565,
       "alt": "Thinkware U1000 2CH dashcam",
-      "path": "images/thinkware-u1000.jpg"
+      "path": "images/thinkware-u1000.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "thinkware-q800-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2019/07/Thinkware-Q800-Pro-Dashcam.jpg",
       "attachmentId": 4996,
       "alt": "Thinkware Q800 Pro Dashcam",
-      "path": "images/thinkware-q800-pro.jpg"
+      "path": "images/thinkware-q800-pro.jpg",
+      "setups": []
     },
     "vantrue-n4-s": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Vantrue-N4S-3CH.png",
       "attachmentId": 11913,
       "alt": "Vantrue N4S 3CH",
-      "path": "images/vantrue-n4-s.png"
+      "path": "images/vantrue-n4-s.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "vantrue-n4-pro-s": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Vantrue-N4-Pro-S-3CH.webp",
       "attachmentId": 10665,
       "alt": "Vantrue N4 Pro S 3CH",
-      "path": "images/vantrue-n4-pro-s.webp"
+      "path": "images/vantrue-n4-pro-s.webp",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "vantrue-e1-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/12/Vantrue-E1-Pro.png",
       "attachmentId": 10846,
       "alt": "Vantrue E1 Pro",
-      "path": "images/vantrue-e1-pro.png"
+      "path": "images/vantrue-e1-pro.png",
+      "setups": [
+        "front"
+      ]
     },
     "vantrue-e360": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/11/Vantrue-E360-package.jpg",
       "attachmentId": 10287,
       "alt": "Vantrue E360 package",
-      "path": "images/vantrue-e360.jpg"
+      "path": "images/vantrue-e360.jpg",
+      "setups": [
+        "panoramic_front-rear"
+      ]
     },
     "vantrue-n4": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Vantrue-N4-3CH.png",
       "attachmentId": 8231,
       "alt": "Vantrue N4 3CH",
-      "path": "images/vantrue-n4.png"
+      "path": "images/vantrue-n4.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "vueroid-s1-4k-infinite": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/09/Vueroid-S1-4K-Infinite-2CH.png",
       "attachmentId": 13279,
       "alt": "Vueroid S1 4K Infinite 2CH",
-      "path": "images/vueroid-s1-4k-infinite.png"
+      "path": "images/vueroid-s1-4k-infinite.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "rove-r2-4k-dual": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2024/08/Rove-R2-4K-Dual-with-app.jpg",
       "attachmentId": 10114,
       "alt": "Rove R2-4K Dual with app",
-      "path": "images/rove-r2-4k-dual.jpg"
+      "path": "images/rove-r2-4k-dual.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "70mai-4k-omni-x800": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/07/70mai-4K-Omni-2CH-transparent.png",
       "attachmentId": 10506,
       "alt": "70mai 4K Omni 2CH",
-      "path": "images/70mai-4k-omni-x800.png"
+      "path": "images/70mai-4k-omni-x800.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "escort-m2": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/10/Escort-M2.png",
       "attachmentId": 8397,
       "alt": "Escort M2",
-      "path": "images/escort-m2.png"
+      "path": "images/escort-m2.png",
+      "setups": [
+        "front"
+      ]
     },
     "cansonic-ultradash-z3-standard-edition": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/11/Cansonic-UltraDash-Z3.png",
       "attachmentId": 9167,
       "alt": "Cansonic UltraDash Z3+",
-      "path": "images/cansonic-ultradash-z3-standard-edition.png"
+      "path": "images/cansonic-ultradash-z3-standard-edition.png",
+      "setups": [
+        "front"
+      ]
     },
     "blackvue-dr750-2ch-lte": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/10/Blackvue-DR750-2CH-LTE.jpg",
       "attachmentId": 6826,
       "alt": "Blackvue DR750-2CH LTE",
-      "path": "images/blackvue-dr750-2ch-lte.jpg"
+      "path": "images/blackvue-dr750-2ch-lte.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-a119-mini": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A119-Mini.jpg",
       "attachmentId": 8206,
       "alt": "Viofo A119 Mini",
-      "path": "images/viofo-a119-mini.jpg"
+      "path": "images/viofo-a119-mini.jpg",
+      "setups": [
+        "front"
+      ]
     },
     "viofo-a119-v3": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A119-v3.jpg",
       "attachmentId": 8202,
       "alt": "Viofo A119 v3",
-      "path": "images/viofo-a119-v3.jpg"
+      "path": "images/viofo-a119-v3.jpg",
+      "setups": [
+        "front"
+      ]
     },
     "viofo-a139-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/04/Viofo-A139-Pro-3CH-transparent.png",
       "attachmentId": 8646,
       "alt": "Viofo A139 Pro 3CH transparent",
-      "path": "images/viofo-a139-pro.png"
+      "path": "images/viofo-a139-pro.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a139": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/07/Viofo-A139-3CH.jpg",
       "attachmentId": 8207,
       "alt": "Viofo A139 3CH",
-      "path": "images/viofo-a139.jpg"
+      "path": "images/viofo-a139.jpg",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a129-pro": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-A129-Pro-Duo.jpg",
       "attachmentId": 8363,
       "alt": "Viofo A129 Pro Duo",
-      "path": "images/viofo-a129-pro.jpg"
+      "path": "images/viofo-a129-pro.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-a129-plus-duo": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-A129-Plus-Duo.png",
       "attachmentId": 8351,
       "alt": "Viofo A129 Plus Duo",
-      "path": "images/viofo-a129-plus-duo.png"
+      "path": "images/viofo-a129-plus-duo.png",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-a129-duo": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2018/09/Viofo-A129-Duo.jpg",
       "attachmentId": 3943,
       "alt": "Viofo A129 Duo",
-      "path": "images/viofo-a129-duo.jpg"
+      "path": "images/viofo-a129-duo.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-t130": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/09/Viofo-T130-3CH.png",
       "attachmentId": 8362,
       "alt": "Viofo T130 3CH",
-      "path": "images/viofo-t130.png"
+      "path": "images/viofo-t130.png",
+      "setups": [
+        "front-rear-interior"
+      ]
     },
     "viofo-a229": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2022/10/Viofo-A229-Duo.jpg",
       "attachmentId": 8390,
       "alt": "Viofo A229 Duo",
-      "path": "images/viofo-a229.jpg"
+      "path": "images/viofo-a229.jpg",
+      "setups": [
+        "front-rear"
+      ]
     },
     "viofo-wm1": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/10/Viofo-WM1-with-phone.jpg",
       "attachmentId": 9009,
       "alt": "Viofo WM1 with phone",
-      "path": "images/viofo-wm1.jpg"
+      "path": "images/viofo-wm1.jpg",
+      "setups": [
+        "front"
+      ]
     },
     "nextbase-622gw": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/11/Nextbase-622GW-front-angle.jpg",
       "attachmentId": 7123,
       "alt": "Nextbase 622GW front angle",
-      "path": "images/nextbase-622gw.jpg"
+      "path": "images/nextbase-622gw.jpg",
+      "setups": [
+        "front"
+      ]
     },
     "cobra-sc-200d": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/06/Cobra-SC-200D-dashcam.jpg",
       "attachmentId": 7566,
       "alt": "Cobra SC 200D dashcam",
-      "path": "images/cobra-sc-200d.jpg"
+      "path": "images/cobra-sc-200d.jpg",
+      "setups": []
     },
     "cobra-road-scout": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2021/05/Cobra-Road-Scout-front-top-main-display.png",
       "attachmentId": 7478,
       "alt": "Cobra Road Scout front top main display",
-      "path": "images/cobra-road-scout.png"
+      "path": "images/cobra-road-scout.png",
+      "setups": [
+        "front"
+      ]
     },
     "escort-m1": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2020/11/Escort-M1-dashcam.png",
       "attachmentId": 7047,
       "alt": "Escort M1 dashcam",
-      "path": "images/escort-m1.png"
+      "path": "images/escort-m1.png",
+      "setups": [
+        "front"
+      ]
     },
     "70mai-t800": {
       "path": "images/70mai-t800.webp",
       "alt": "70mai T800 with optional rear camera and memory card",
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/70mai-T800-3CH-MicroSD.webp",
-      "mediaId": 10668
+      "mediaId": 10668,
+      "setups": [
+        "front-rear-interior"
+      ]
     }
   },
   "defaultLabels": {
@@ -4165,5 +4311,82 @@
     "vueroid-h1": "Unreleased. Excluded by Ariel on 2026-09-08.",
     "vueroid-h1-qhd": "Unreleased H1 naming variant.",
     "vueroid-h1-qhd-infinite": "Unreleased H1 naming variant."
+  },
+  "setupImages": {
+    "vueroid-s1-4k-infinite": [
+      {
+        "path": "images/vueroid-s1-4k-infinite-front.webp",
+        "alt": "Vueroid S1 4K 1CH front cam",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Vueroid-S1-4K-1CH-front-cam.webp",
+        "mediaId": 11918,
+        "setups": [
+          "front"
+        ]
+      },
+      {
+        "path": "images/vueroid-s1-4k-infinite-front-rear-interior.webp",
+        "alt": "Vueroid S1 4K 3CH",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/Vueroid-S1-4K-3CH.webp",
+        "mediaId": 10684,
+        "setups": [
+          "front-rear-interior"
+        ]
+      }
+    ],
+    "viofo-a329t": [
+      {
+        "path": "images/viofo-a329t-front-telephoto.png",
+        "alt": "Viofo A329T 2CH",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A329T-2CH.png",
+        "mediaId": 11904,
+        "setups": [
+          "front-telephoto"
+        ]
+      }
+    ],
+    "viofo-a329s": [
+      {
+        "path": "images/viofo-a329s-front-rear.png",
+        "alt": "Viofo A329S 2CH",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A329S-2CH.png",
+        "mediaId": 11903,
+        "setups": [
+          "front-rear"
+        ]
+      }
+    ],
+    "viofo-a229-ultra": [
+      {
+        "path": "images/viofo-a229-ultra-front-rear.png",
+        "alt": "Viofo A229 Ultra 2CH",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Viofo-A229-Ultra-2CH.png",
+        "mediaId": 11898,
+        "setups": [
+          "front-rear"
+        ]
+      }
+    ],
+    "viofo-a229-pro": [
+      {
+        "path": "images/viofo-a229-pro-front-rear.png",
+        "alt": "A229 Pro 2CH transparent",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/11/A229-Pro-2CH-transparent.png",
+        "mediaId": 9201,
+        "setups": [
+          "front-rear"
+        ]
+      }
+    ],
+    "viofo-a229-plus": [
+      {
+        "path": "images/viofo-a229-plus-front-rear.png",
+        "alt": "A229 Plus 2CH transparent",
+        "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2023/11/A229-Plus-2CH-transparent.png",
+        "mediaId": 9197,
+        "setups": [
+          "front-rear"
+        ]
+      }
+    ]
   }
 }

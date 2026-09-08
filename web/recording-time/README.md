@@ -220,3 +220,32 @@ review, including release status. The app’s recognition catalog is not an
 automatic public-calculator eligibility list. Vueroid ZERO is a real 2CH FHD
 product (https://vueroid.com/product/vueroid-zero-2ch/), but no reviewed driving
 rate is available here, so it is not offered in the calculator.
+
+## Embed-first comparison layout and setup photos (latest revision)
+
+The current layout supersedes the two-column details/time layout above. A compact
+recording-summary strip precedes the five-card-size comparison. Desktop lays the
+five capacities horizontally. At 620px and below, the same semantic table uses
+vertical rows. Small phones use compact channel rows. Source details remain
+collapsed and no calculation inputs were added.
+
+Design references reviewed: Nielsen Norman Group’s comparison-table guidance
+(https://www.nngroup.com/articles/comparison-tables/) and GOV.UK’s table component
+(https://design-system.service.gov.uk/components/table/). Consistent labels,
+adjacent comparable values and numeric alignment informed the layout. No chart
+library, animations, icon library or new styling system was introduced.
+
+The embed no longer repeats Vortex Radar branding or an affiliate disclosure.
+The host post provides those. Camera links retain rel=sponsored; memory-card
+links remain deferred.
+
+Photos are matched by exact setup ID, not camera model alone. Existing image
+entries now have reviewed `setups` lists; `setupImages` holds additional assets.
+Exported cameras contain one `setupImages` list, and the exporter rejects invalid
+or duplicate setup matches and images outside the packaged local image folder.
+Seven additional reviewed assets cover Vueroid S1 4K Front/3CH and Viofo two-camera
+variants. A329T’s two-camera asset is Front + Telephoto, not Front + Rear.
+Unmatched configurations get no photo; they do not inherit a different kit.
+The fixed-size photo slot is retained, including missing/error/loading states.
+Images decode before display and obsolete async loads cannot replace the latest
+selected setup. Setup/source changes can still change text height naturally.

@@ -92,12 +92,19 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(lte['maxMbps'],70)
         self.assertEqual(sum(c['maxMbps'] for c in lte['channels']),70)
         for camera in data['cameras']:
-            if camera['image']:
-                self.assertTrue((HERE / camera['image']['path']).is_file())
+            for photo in camera['setupImages']:
+                self.assertTrue((HERE / photo['path']).is_file())
             for setup in camera['setups']:
                 for mode in setup['modes']:
                     self.assertNotIn(' · ', mode['label'])
                     self.assertNotIn(';', mode['basis'])
+
+    def test_setup_photo_mappings_reject_unknown_or_duplicate_setups(self):
+        for invalid in ['unknown-setup', 'front-rear']:
+            extra = json.loads((HERE / 'recording-modes.json').read_text())
+            extra['setupImages']['vueroid-s1-4k-infinite'][0]['setups'] = [invalid]
+            with self.assertRaisesRegex(ValueError, 'image setup mapping'):
+                add_recording_modes(extract(self.reference, self.catalog), extra)
 
     def test_unreleased_camera_cannot_enter_public_catalog(self):
         extra = json.loads((HERE / 'recording-modes.json').read_text())

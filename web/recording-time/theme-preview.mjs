@@ -13,7 +13,7 @@ const page = await browser.contexts()[0].newPage();
 const prefix = '/__vr_calculator_preview__/';
 const assets = new Set(['index.html','widget.mjs','calculator.mjs','style.css','embed.js','cameras.json']);
 const data = JSON.parse(await readFile(path.join(root,'cameras.json'),'utf8'));
-for (const camera of data.cameras) if(camera.image?.path) assets.add(camera.image.path);
+for (const camera of data.cameras) for (const photo of camera.setupImages || []) assets.add(photo.path);
 const checks = [];
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));

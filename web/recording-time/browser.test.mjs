@@ -43,7 +43,7 @@ try {
   await page.selectOption('#setting','normal');
   assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'8 hr 30 min');
   assert.match(await page.locator('#recording-details').innerText(),/4K/);
-  await page.locator('#product-image').evaluate(img=>img.decode());
+  await page.waitForFunction(()=>!document.querySelector('#camera-photo').hidden);
   await page.screenshot({path:path.join(evidence,'desktop.png'),fullPage:true});
   await page.selectOption('#channels','front-rear');
   assert.equal(await page.locator('#rows tr').nth(3).locator('td').innerText(),'10 hr 30 min');
@@ -141,14 +141,43 @@ try {
   assert.equal(await page.locator('figcaption').count(),0);
   await chooseCamera('viofo-a229-pro');
   assert.ok(!(await page.locator('#shopping-links').innerText()).includes('memory cards'));
-  // Compact layout is side-by-side on desktop and stacked at phone widths.
+  // The summary precedes a horizontal desktop or vertical phone comparison.
   for (const width of [740,620,375,320]) {
     await page.setViewportSize({width,height:1000});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const layout=await page.evaluate(()=>{const d=document.querySelector('.channel-summary').getBoundingClientRect();const t=document.querySelector('table').getBoundingClientRect();return {detailsRight:d.right,detailsBottom:d.bottom,tableLeft:t.left,tableTop:t.top};});
-    if(width===740) assert.ok(layout.tableLeft>=layout.detailsRight);
-    if(width<=620) assert.ok(layout.tableTop>=layout.detailsBottom);
+    assert.ok(layout.tableTop>=layout.detailsBottom);
+    const cells=await page.locator('#rows tr').evaluateAll(rows=>rows.map(r=>{const b=r.getBoundingClientRect();return {x:b.x,y:b.y};}));
+    if(width===740) assert.ok(cells[1].x>cells[0].x && cells[1].y===cells[0].y);
+    else assert.ok(cells[1].y>cells[0].y);
   }
+  // Setup photos change without moving controls; slow obsolete loads cannot win.
+  await chooseCamera('vueroid-s1-4k-infinite');
+  await page.setViewportSize({width:740,height:1000});
+  const geometry=()=>page.locator('#channels').boundingBox();
+  let baseline;
+  const sources=new Set();
+  for(const setup of ['front','front-rear','front-rear-interior']) {
+    await page.selectOption('#channels',setup);
+    await page.waitForFunction(()=>!document.querySelector('#camera-photo').hidden);
+    sources.add(await page.locator('#product-image').getAttribute('src'));
+    const box=await geometry();
+    if(baseline) assert.deepEqual(box,baseline); else baseline=box;
+  }
+  assert.equal(sources.size,3);
+  await page.selectOption('#channels','front-interior');
+  assert.equal(await page.locator('#camera-photo').isHidden(),true);
+  assert.deepEqual(await geometry(),baseline);
+  await page.route('**/images/vueroid-s1-4k-infinite-front.webp',async route=>{
+    await new Promise(resolve=>setTimeout(resolve,150));await route.continue();
+  });
+  await page.selectOption('#channels','front');
+  await page.selectOption('#channels','front-rear-interior');
+  await page.waitForFunction(()=>!document.querySelector('#camera-photo').hidden);
+  await page.waitForTimeout(200);
+  assert.match(await page.locator('#product-image').getAttribute('src'),/front-rear-interior/);
+  assert.equal(await page.locator('.eyebrow').count(),0);
+  assert.ok(!(await page.locator('body').innerText()).includes('Affiliate links:'));
   // WordPress can enqueue the loader after the iframe has finished loading.
   await page.setContent(`<iframe data-vr-recording-time src="${url}/index.html" style="width:100%;height:1100px;border:0"></iframe>`);
   await page.frameLocator('iframe').locator('#form').waitFor({state:'visible'});

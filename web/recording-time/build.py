@@ -125,7 +125,17 @@ def add_recording_modes(data, extras):
                 raise ValueError('Duplicate recording setting')
         camera['links'] = extras.get('links', {}).get(camera['id'], {})
         camera['note'] = extras.get('notes', {}).get(camera['id'], '')
-        camera['image'] = extras.get('images', {}).get(camera['id'])
+        primary_photo = extras.get('images', {}).get(camera['id'])
+        camera['setupImages'] = ([primary_photo] if primary_photo else []) + extras.get('setupImages', {}).get(camera['id'], [])
+        used_setups = set()
+        for photo in camera['setupImages']:
+            photo_path = Path(photo['path'])
+            if photo_path.parts[0] != 'images' or len(photo_path.parts) != 2 or not (HERE / photo_path).is_file():
+                raise ValueError('Image must be a packaged local asset')
+            for setup_id in photo.get('setups', []):
+                if setup_id not in {s['id'] for s in camera['setups']} or setup_id in used_setups:
+                    raise ValueError('Invalid or duplicate image setup mapping')
+                used_setups.add(setup_id)
         camera['brand'], camera['model'] = camera['name'].split(' ', 1)
         if camera['name'].startswith('Street Guardian '):
             camera['brand'], camera['model'] = 'Street Guardian', camera['name'][16:]

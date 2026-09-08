@@ -1,5 +1,40 @@
 # Verification
 
+## Embed-first layout and exact-setup photos (latest, 2026-09-08)
+
+Supersedes the side-by-side details/time layout below. Recording details are a
+compact strip, with five horizontally aligned capacity/time columns on desktop
+and ordinary numeric table rows on mobile. Removed the eyebrow brand and
+in-widget affiliate disclosure per Ariel; host-post disclosure is outside this
+widget. No memory-card links were restored.
+
+Reviewed existing photo contact sheets and seven additional original site assets.
+Vueroid S1 4K Front, Front + Rear and 3CH now use distinct exact-setup photos.
+Viofo A329T Front + Telephoto and A329S/A229 Pro/Plus/Ultra Front + Rear gained
+matching photos. Other kit images are restricted to their reviewed setups.
+No image editing or generated product representations. Missing setup photos leave
+the fixed slot empty rather than rendering a wrong kit or moving controls.
+
+Browser regression verifies three distinct Vueroid sources, identical control
+geometry across all three photos and an unmatched setup, and delayed stale-image
+load rejection. All 80 cameras and settings still render, plus table orientation
+and overflow checks at 320/375/620/740px, source caveats, image failure, absent
+caption/branding/disclosure/card links, and the existing embed-security checks.
+12 exporter tests pass, including invalid/duplicate photo mappings and H1 block.
+Desktop and phone screenshots inspected, including 3CH and four-channel N5.
+The N5 configuration label is compact (Front + Rear + 2 Cabin), with full role
+names retained in recording details. No new browser errors.
+
+Design references: NN/G comparison tables and GOV.UK tables, linked in README.
+Review: plain CSS, native selects, semantic table roles, safe text DOM updates,
+packaged image paths, no network services beyond existing asset fetches.
+Typography/surfaces/responsive layout reviewed. No animation or icons added.
+Rejected retaining the split detail/time columns, adding graphical bars with
+redundant values, and a visible placeholder/caption in the reserved image slot.
+Verdict: approve preview revision. Actual WordPress installation remains unverified
+and unchanged; these are local-rendering checks, not new staging verification.
+
+
 ## Compact layout and released-model expansion (2026-09-08, latest)
 
 80 cameras: 63 original-file entries, 16 manufacturer-reference entries and one
