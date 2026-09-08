@@ -457,6 +457,16 @@ enum VerificationTest {
                 print("VERIFY FAIL: researched catalog models missing from the manual picker: \(missingCatalogChoices)")
                 return false
             }
+            guard let s1QHDModel = KnownDashcamCatalog.models.first(where: {
+                $0.manufacturer == "Vueroid" && $0.model == "S1 QHD Infinite"
+            }),
+                  s1QHDModel.channelResolutions["front"] == "2560x1440",
+                  s1QHDModel.channelResolutions["interior"] == "1920x1080",
+                  s1QHDModel.channelResolutions["rear"] == "2560x1440",
+                  s1QHDModel.parkingModes.contains("time-lapse") else {
+                print("VERIFY FAIL: S1 QHD catalog facts do not match the four submitted card scans")
+                return false
+            }
             let s1QHDLearningPrefill = MainActor.assumeIsolated { () -> ((manufacturer: String, model: String)?, (count: Int, description: String)) in
                 let viewModel = TransferViewModel()
                 viewModel.selectedProfile = .genericNewDashcam

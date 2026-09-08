@@ -9,7 +9,8 @@ channel_variants:
     notes: 60 fps mode observed with front recording only.
   - channels: 2
     roles: [front, rear]
-    validation: app_submission
+    validation: manual_backed
+    notes: Front/rear product variant is supported but still needs its own privacy-safe card submission.
   - channels: 3
     roles: [front, interior, rear]
     validation: app_submission
@@ -20,7 +21,9 @@ sampled_variants:
   - channels: 3
     roles: [front, interior, rear]
 source_notes:
-  - App training submissions from 2026-09-08.
+  - Four privacy-sanitized app training submissions from 2026-09-08 on firmware 1.0.4.
+  - The newest 3CH submission confirmed PARK time-lapse at 5 fps and PEVENT impact clips at 30 fps.
+  - In the observed high-bitrate 3CH configuration, front/rear were 2560x1440 and interior was 1920x1080.
 detection:
   high_confidence:
     - path: CONFIG/config.bin

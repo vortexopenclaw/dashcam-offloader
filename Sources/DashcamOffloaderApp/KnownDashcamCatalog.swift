@@ -65,9 +65,9 @@ enum KnownDashcamCatalog {
             aliases: ["S1 QHD", "S1-QHD", "S1-QHD-INFINITE"],
             channels: 3,
             roles: ["front", "interior", "rear"],
-            resolutions: ["front": "2560x1440", "interior": "1920x1080", "rear": "1920x1080"],
-            parkingModes: ["motion detection", "impact detection", "extreme low power"],
-            notes: "Observed 30 fps 3CH and 60 fps front-only recordings on firmware 1.0.4. Camera metadata may still report 2CH while a 3CH set is active."
+            resolutions: ["front": "2560x1440", "interior": "1920x1080", "rear": "2560x1440"],
+            parkingModes: ["motion detection", "time-lapse", "impact detection", "extreme low power"],
+            notes: "Four submissions observed 30 fps 3CH and 60 fps front-only recordings on firmware 1.0.4. A 3CH time-lapse card recorded front/rear at 2560x1440 and interior at 1920x1080. Camera metadata may still report 2CH while a 3CH set is active."
         ),
         model("Vueroid", "D40-Q2", channels: 2, roles: ["front", "rear"]),
         model("Vueroid", "D21 4K", channels: 2, roles: ["front", "rear"]),

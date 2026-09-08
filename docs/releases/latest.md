@@ -1,9 +1,9 @@
-# Dashcam Offloader 0.1.9
+# Dashcam Offloader 0.1.10
 
-- Replaces the cramped import-mode segmented control with two roomy, accessible
-  source buttons. This also removes the compressed picker-label artifacts that
-  appeared as white lines and dots in the sidebar.
-- Adds a dedicated Vueroid S1 QHD Infinite profile learned from 30 fps 3CH and
-  60 fps front-only submissions on firmware 1.0.4.
-- S1 QHD Infinite cards now select the exact profile, classify front/interior/rear
-  footage and parking events, and prefill the learning form as a 3CH-capable model.
+- Expands the Vueroid S1 QHD Infinite profile with four privacy-sanitized card
+  submissions from firmware 1.0.4.
+- Records the tested 3CH high-bitrate layout: QHD front and rear, 1080p
+  interior, 5 fps time-lapse parking, and 30 fps parking-impact clips.
+- Corrects the camera catalog's rear-resolution entry and documents that the
+  card's internal `2CH` value is not authoritative when all three channels are
+  recording.
