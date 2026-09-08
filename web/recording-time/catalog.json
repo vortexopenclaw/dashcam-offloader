@@ -1,0 +1,17 @@
+{
+  "BlackVue Elite 9": {"channels": ["front", "rear"]},
+  "BlackVue DR770X Box": {"channels": ["front", "interior", "rear"]},
+  "Thinkware U3000 Pro": {"channels": ["front", "rear"], "allocationRequired": true},
+  "Thinkware U3000": {"channels": ["front", "rear"], "allocationRequired": true},
+  "Thinkware U1000 Plus": {"channels": ["front", "rear"], "allocationRequired": true},
+  "VIOFO A229 Pro": {"channels": ["front", "interior", "rear"]},
+  "VIOFO A229 Plus": {"channels": ["front", "rear", "interior"]},
+  "VIOFO A229 Ultra": {"channels": ["front", "rear", "interior"]},
+  "VIOFO A329S": {"channels": ["front", "rear", "interior"]},
+  "VIOFO A329T": {"channels": ["front", "telephoto", "rear"]},
+  "VIOFO A139 Pro": {"channels": ["front", "rear", "interior"]},
+  "VIOFO A119M Pro": {"channels": ["front"]},
+  "70mai M310": {"channels": ["front"]},
+  "Vantrue N4 Pro S": {"channels": ["front", "interior", "rear"]},
+  "Vantrue E1 Pro": {"channels": ["front"]}
+}

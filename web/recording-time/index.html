@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashcam Recording Time Calculator | Vortex Radar</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./widget.mjs"></script>
+</head>
+<body>
+<main class="calculator">
+  <header><p class="eyebrow">VORTEX RADAR / DASHCAM TOOLS</p>
+    <h1>How much driving footage fits?</h1>
+    <p>Estimate recording time using bitrates measured from real dashcam footage.</p>
+  </header>
+  <p id="loading" role="status">Loading measured camera presets…</p>
+  <form id="form" hidden>
+    <label for="camera">Dashcam</label><select id="camera" name="camera"></select>
+    <p id="preset-note" class="hint"></p>
+    <div id="manual-fields" hidden><label for="bitrate">Total bitrate across all recording channels (Mbps)</label>
+      <input id="bitrate" type="number" min="0.1" max="5000" step="any" value="60">
+    </div>
+    <label for="direction">I want to know</label>
+    <select id="direction"><option value="time">How many hours fit on my card</option><option value="capacity">How much space I need</option></select>
+    <div id="card-field"><label for="card">Memory card capacity</label><select id="card">
+      <option value="32">32 GB</option><option value="64">64 GB</option><option value="128">128 GB</option>
+      <option value="256" selected>256 GB</option><option value="512">512 GB</option><option value="1000">1 TB (1000 GB)</option>
+    </select></div>
+    <div id="hours-field" hidden><label for="hours">Hours of driving footage to retain</label>
+      <input id="hours" type="number" min="0.1" max="10000" step="any" value="8"></div>
+    <div id="allocation-field" class="allocation" hidden>
+      <label for="allocation">Card allocated to normal driving (%)</label>
+      <input id="allocation" type="number" min="0.1" max="100" step="any" placeholder="Enter the percentage from your camera settings">
+      <p class="hint">Use the continuous/normal-recording allocation from your camera’s memory settings. We don’t have a verified percentage for this preset.</p>
+    </div>
+    <details id="assumptions"><summary>Storage assumptions</summary>
+      <label class="check"><input id="partitioned" type="checkbox"> My camera reserves a fixed share for other recording types</label>
+      <label for="reserve">Extra storage headroom (%)</label><input id="reserve" type="number" min="0" max="99" step="any" value="5">
+      <p class="hint">5% is an adjustable planning allowance, not a measured camera value. It leaves room within the driving allocation for audio, file overhead, and other storage use.</p>
+    </details>
+    <section class="result" aria-live="polite" aria-atomic="true">
+      <p id="result-title">Estimated driving footage</p><output id="result">Select a camera</output><p id="result-note"></p>
+    </section>
+  </form>
+  <details class="method"><summary>What this estimate includes</summary>
+    <p>All channels in the sampled configuration record together. Their bitrates are added, not their recording times. Presets are sampled configurations, not maximum-quality specifications or a promise for every firmware version.</p>
+    <p>Driving only: parking footage is not mixed into the bitrate. On a shared card, parking and protected files can reduce the driving history retained. On a partitioned card, use the normal-driving allocation even if parking recording is disabled.</p>
+    <p>Ranges reflect the recorded bitrate ranges, not statistical confidence intervals. Scene complexity and camera settings can change actual results. Card compatibility is not checked.</p>
+    <p>Formula: hours = card GB × driving share × (1 − headroom) ÷ (total Mbps × 0.45). GB and TB use the decimal units printed on cards.</p>
+    <a id="source" href="https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/video-metadata-reference.md" target="_blank" rel="noopener">Measurement reference</a>
+  </details>
+  <noscript>This calculator needs JavaScript enabled.</noscript>
+</main>
+</body>
+</html>
