@@ -7,13 +7,13 @@ function setupLabel(setup) { return `${setup.roles.length}CH (${setup.roles.map(
 function selectedSetup() { return current.setups.find(s=>s.id === $('channels').value); }
 function resolutionLabel(channel) {
   const names = {'3840x2160':'4K', '2560x1440':'2K (1440p)', '1920x1080':'1080p', '1280x720':'720p', '2592x1944':'1944p'};
-  return `${names[channel.resolution] || channel.resolution}, ${channel.fps} fps`;
+  return `${names[channel.resolution] || channel.resolution}${channel.fps ? `, ${channel.fps} fps` : ''}`;
 }
 function fileSizeLabel(channel, mode) {
   // Published whole-system times do not identify each camera's file size.
   if (mode.hours || !Number.isFinite(channel.minMbps)) return '';
   const low = Math.round(channel.minMbps * 7.5), high = Math.round(channel.maxMbps * 7.5);
-  return `About ${low === high ? low : `${low}–${high}`} MB/min`;
+  return `${mode.sourceType === 'submitted-video' ? 'Video: about' : 'About'} ${low === high ? low : `${low}–${high}`} MB/min`;
 }
 function renderDetails(setup, mode) {
   $('recording-details').replaceChildren(...setup.roles.map(role=>{
@@ -49,16 +49,20 @@ function render() {
   $('announcement').textContent=`Chart updated: ${current.name}, ${setupLabel(setup)}, ${mode.label}`;
   renderDetails(setup,mode);
   $('basis').textContent=`${current.name}, ${mode.label}. ${mode.basis}`;
-  const official=Boolean(mode.sourceUrl);
-  $('method-detail').textContent=official
+  const submitted=mode.sourceType === 'submitted-video';
+  const official=Boolean(mode.sourceUrl) && !submitted;
+  $('method-detail').textContent=submitted
+    ? 'These estimates use video-stream measurements from submitted camera cards. Complete files may include audio, metadata and reserved padding, so actual recording time can be shorter.'
+    : official
     ? 'These estimates use the manufacturer’s published recording times or bitrates for this setting.'
     : 'These estimates come from original video files recorded by the dashcams. I generally test at the highest video quality, although the exact menu setting wasn’t saved for every sample. We add the recording rates of the cameras you select to estimate how much footage fits.';
   $('camera-note').textContent=current.note;
   $('camera-note').hidden=!current.note;
   $('source').href=mode.sourceUrl || sourceUrl+'#'+current.sourceAnchor;
-  $('source').textContent=official ? `${current.brand}’s recording data` : 'See the recording measurements';
+  $('source').textContent=submitted ? 'See the submitted recording measurements' : official ? `${current.brand}’s recording data` : 'See the recording measurements';
   $('partition-note').hidden=!current.allocationRequired;
-  $('size-note').hidden=!mode.hours;
+  $('size-note').hidden=!mode.hours && !submitted;
+  $('size-note').textContent=mode.notice || (submitted ? 'Video-bitrate estimate. File padding can reduce recording time.' : 'Per-camera file sizes aren’t listed in the manufacturer’s chart.');
   renderLinks(setup);
 }
 function selectSetup() {
@@ -83,7 +87,6 @@ function selectCamera() {
   if(photo?.path) {
     $('product-image').alt=photo.alt;
     $('product-image').src=photo.path;
-    $('photo-caption').textContent=photo.alt;
   } else $('product-image').removeAttribute('src');
   selectSetup();
 }

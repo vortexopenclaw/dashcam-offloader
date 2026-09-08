@@ -568,3 +568,125 @@ inferred from resolution.
 file, HEVC 3840x2160 at 60/1fps, 243305578 bytes / 60.032 seconds. The 30fps
 sample was NO20250501-153114-000028F. Quality/session differences mean the
 storage difference must not be attributed to FPS alone.
+
+## DOD LS500W
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 60 | ~20.5719-21.1996 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 314749480 bytes / 122.4 seconds (1920x1080, 60/1 fps); 476991080 bytes / 180.0 seconds (1920x1080, 60/1 fps). Quality-menu selection was not saved.
+
+## DOD RC500S
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~15.1983 Mbps | MP4 | `ffprobe` |
+| R (rear) | driving | H.264 | 1920x1080 | 30 | ~15.2007 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 113987556 bytes / 60.0 seconds (1920x1080, 30/1 fps); 114005391 bytes / 60.0 seconds (1920x1080, 30/1 fps). Quality-menu selection was not saved.
+Front and rear are separate driving sessions, not a matched pair. Combined estimates assume those sampled channel rates.
+
+## KDLinks X1
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~13.0959-13.1271 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 94945352 bytes / 58.0 seconds (1920x1080, 30/1 fps); 49226600 bytes / 30.0 seconds (1920x1080, 30/1 fps). Quality-menu selection was not saved.
+
+## Papago GoSafe 200
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~13.0730-13.0770 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 158558340 bytes / 97.0 seconds (1920x1080, 30/1 fps); 294141468 bytes / 180.0 seconds (1920x1080, 30/1 fps). Quality-menu selection was not saved.
+
+## Papago GoSafe 760
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~20.2628 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 762692580 bytes / 301.12 seconds (2560x1440, 30/1 fps). Quality-menu selection was not saved.
+
+## Roav C1 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~18.6170-18.6260 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 421210213 bytes / 181.0 seconds (2560x1440, 30/1 fps); 183876097 bytes / 78.976 seconds (2560x1440, 30/1 fps). Quality-menu selection was not saved.
+
+## SG9665GC
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 30 | ~15.9263-15.9408 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 360333094 bytes / 181.0 seconds (1920x1080, 30/1 fps); 360660774 bytes / 181.0 seconds (1920x1080, 30/1 fps). Quality-menu selection was not saved.
+
+## TaoTronics TT-CD06
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2304x1296 | 29.97 | ~20.9581-20.9584 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 440565760 bytes / 168.168 seconds (2304x1296, 30000/1001 fps); 272728064 bytes / 104.104 seconds (2304x1296, 30000/1001 fps). Quality-menu selection was not saved.
+
+## Vantrue OnDash R2
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2304x1296 | 29.97 | ~18.5849-18.6315 Mbps | MOV | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 419627008 bytes / 180.18 seconds (2304x1296, 30000/1001 fps); 377651200 bytes / 162.5624 seconds (2304x1296, 30000/1001 fps). Quality-menu selection was not saved.
+
+## Vantrue X4
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 3840x2160 | 29.97 | ~44.9734-45.1111 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 174604004 bytes / 30.964267 seconds (3840x2160, 30000/1001 fps); 174071012 bytes / 30.964267 seconds (3840x2160, 30000/1001 fps). Quality-menu selection was not saved.
+
+## Vicovation Opia1
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 60 | ~20.3650-20.3656 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 229560533 bytes / 90.176 seconds (1920x1080, 60/1 fps); 460899721 bytes / 181.056 seconds (1920x1080, 60/1 fps). Quality-menu selection was not saved.
+
+## Viofo A119
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~24.3235-24.3250 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 547279669 bytes / 180.0 seconds (2560x1440, 30/1 fps); 547313173 bytes / 180.0 seconds (2560x1440, 30/1 fps). Quality-menu selection was not saved.
+
+## Viofo A119 Pro
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 2560x1440 | 30 | ~24.3215-24.3331 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 547495829 bytes / 180.0 seconds (2560x1440, 30/1 fps); 547233373 bytes / 180.0 seconds (2560x1440, 30/1 fps). Quality-menu selection was not saved.
+
+## Viofo A119s
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | H.264 | 1920x1080 | 60 | ~24.6069-29.6168 Mbps | MP4 | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 666378657 bytes / 180.0 seconds (1920x1080, 60/1 fps); 553656105 bytes / 180.0 seconds (1920x1080, 60/1 fps). Quality-menu selection was not saved.
+
+## Blueskysea B4K
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving | HEVC | 3840x2160 | 30 | ~27.0716-27.0724 Mbps | TS | `ffprobe` |
+
+**Storage-rate verification (2026-09-08):** Original archived driving clips, complete file size divided by duration. 609133348 bytes / 180.001333 seconds (3840x2160, 30/1 fps); 609114548 bytes / 180.001333 seconds (3840x2160, 30/1 fps). Quality-menu selection was not saved.

@@ -1,5 +1,55 @@
 # Verification
 
+## Compact layout and released-model expansion (2026-09-08, latest)
+
+80 cameras: 63 original-file entries, 16 manufacturer-reference entries and one
+submitted-video entry. 50 reviewed product images. Previous sections below are
+historical and do not describe the current coverage gaps.
+
+Removed the visible photo caption. Rebalanced recording details and the time
+table into two desktop columns, stacked below 620px. Resolution/FPS and MB/min
+are adjacent within each channel block. Blue/navy/neutral colors match the
+existing child-theme palette inspected in local theme inventory and historical
+staging screenshots, not a newly authenticated staging session.
+
+Full quality labels replace abbreviated Blackvue choices. No memory-card links
+are exported pending Ariel’s capacity-specific URLs. Camera links remain.
+
+15 legacy cameras gained full-file rate probes. New raw-file evidence lives in
+video-metadata-reference.md. DOD RC500S combines separate Front/Rear sessions;
+Papago 760 1440p/1080p remain separate modes. A119s retains a measured range.
+No sample archive paths, filenames, or private submission metadata are exported.
+
+S1 QHD uses the existing public profile’s firmware 1.0.4 stream measurements,
+with a visible warning about padding and a distinct submitted-data explanation.
+T800 uses https://70mai.pl/faq/70mai-4k-t800/ (checked 2026-09-08): 1 hour/32GB
+three-channel baseline, larger sizes scaled, rear-camera variant and FPS unknown.
+Conflicting 1CH figures are omitted. No fabricated per-channel MB/min.
+Vueroid ZERO confirmed at https://vueroid.com/product/vueroid-zero-2ch/.
+H1 explicitly blocked as unreleased per Ariel. No offloader application changes.
+
+Photo review: T800 image is a real existing site product-kit asset. The site’s
+S1 2K-labeled image visibly says 4K60fps on its screen, so that mapping was withheld.
+
+Review scope: plain HTML/CSS/JS, calculator data and exporter. Typography,
+surfaces, spacing and responsive states checked. No icons or animation changed.
+Rejected adding motion, color heatmaps, or a second styling framework. Retained
+native accessible selects, text-only DOM rendering and existing build/export path.
+
+
+### Verification and verdict for this revision
+
+11 exporter tests and 5 calculation tests pass. PHP lint and shortcode contract
+pass. The browser suite passed all 80 cameras and every setup/setting, plus
+320/375/620/740px layout boundaries, source-type wording, absent card links and
+captions, image failure, missing data, and iframe security/resizing checks.
+The excluded-H1 regression fails closed. No JavaScript errors.
+Desktop Blackvue, mobile S1 QHD and T800, and general desktop/mobile screenshots
+were inspected. No clipped controls or horizontal overflow. T800’s published
+normal-recording duration is not flagged as an unpartitioned full-card figure.
+Review verdict: approve preview revision. Actual staging installation/theme
+integration and live publication remain unverified and were not performed.
+
 ## Expanded catalog and brand/model revision (2026-09-08)
 
 63 cameras (48 recorded-file measurement entries and 15 manufacturer-only entries),

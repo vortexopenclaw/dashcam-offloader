@@ -99,6 +99,12 @@ class ExportTests(unittest.TestCase):
                     self.assertNotIn(' · ', mode['label'])
                     self.assertNotIn(';', mode['basis'])
 
+    def test_unreleased_camera_cannot_enter_public_catalog(self):
+        extra = json.loads((HERE / 'recording-modes.json').read_text())
+        extra['additionalCameras'].append({'id':'vueroid-h1'})
+        with self.assertRaisesRegex(ValueError, 'unreleased'):
+            add_recording_modes(extract(self.reference, self.catalog), extra)
+
     def test_duplicate_measurement_requires_explicit_review(self):
         reference = self.reference.replace('| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |',
             '| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |\n| F (front) | driving | H.264 | 3840x2160 | 30 | ~36.0 Mbps | MP4 | `ffprobe` |',1)

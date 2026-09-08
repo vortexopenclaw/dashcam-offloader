@@ -356,5 +356,96 @@
       "rear"
     ],
     "displayName": "Viofo A329"
+  },
+  "DOD LS500W": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Dod LS500W"
+  },
+  "DOD RC500S": {
+    "channels": [
+      "front",
+      "rear"
+    ],
+    "displayName": "Dod RC500S"
+  },
+  "KDLinks X1": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Kdlinks X1"
+  },
+  "Papago GoSafe 200": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Papago GoSafe 200"
+  },
+  "Papago GoSafe 760": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Papago GoSafe 760"
+  },
+  "Roav C1 Pro": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Roav C1 Pro"
+  },
+  "SG9665GC": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Street Guardian SG9665GC"
+  },
+  "TaoTronics TT-CD06": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Taotronics TT-CD06"
+  },
+  "Vantrue OnDash R2": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Vantrue OnDash R2"
+  },
+  "Vantrue X4": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Vantrue X4"
+  },
+  "Vicovation Opia1": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Vicovation Opia1"
+  },
+  "Viofo A119": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119"
+  },
+  "Viofo A119 Pro": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119 Pro"
+  },
+  "Viofo A119s": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Viofo A119s"
+  },
+  "Blueskysea B4K": {
+    "channels": [
+      "front"
+    ],
+    "displayName": "Blueskysea B4K"
   }
 }

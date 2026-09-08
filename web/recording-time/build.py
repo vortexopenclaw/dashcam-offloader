@@ -88,12 +88,15 @@ def make_setups(name, channels, manufacturer, reviewed_groups=None):
 
 def add_recording_modes(data, extras):
     data['cameras'].extend(extras.get('additionalCameras', []))
+    excluded = set(extras.get('excludedCameras', {}))
+    if any(c['id'] in excluded for c in data['cameras']):
+        raise ValueError('Excluded or unreleased camera cannot enter the public chart')
     for camera in data['cameras']:
         for setup in camera['setups']:
             selected = [c for c in camera['channels'] if c['role'] in setup['roles']]
             default = {k: v for k, v in setup.items() if k not in ['roles', 'id']}
             default.update(id='normal' if 'hours' in setup else 'measured',
-                           label='Normal bitrate' if 'hours' in setup else 'Our test footage',
+                           label='Normal Quality' if 'hours' in setup else 'Our test footage',
                            channels=selected)
             if camera['id'] in extras.get('defaultLabels', {}):
                 default['label'] = extras['defaultLabels'][camera['id']]
@@ -124,6 +127,8 @@ def add_recording_modes(data, extras):
         camera['note'] = extras.get('notes', {}).get(camera['id'], '')
         camera['image'] = extras.get('images', {}).get(camera['id'])
         camera['brand'], camera['model'] = camera['name'].split(' ', 1)
+        if camera['name'].startswith('Street Guardian '):
+            camera['brand'], camera['model'] = 'Street Guardian', camera['name'][16:]
         camera['model'] = re.sub(r'-[1234]CH(?=$| )', '', camera['model'])
     data['cardLinks'] = extras.get('cardLinks', [])
     data['cameras'].sort(key=lambda c: [int(part) if part.isdigit() else part.lower() for part in re.split(r'(\d+)', c['name'])])

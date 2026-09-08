@@ -128,6 +128,27 @@ try {
   await chooseCamera('blackvue-elite-10');
   await page.waitForFunction(()=>document.querySelector('#camera-photo').hidden);
   assert.equal(await page.locator('#rows tr').count(),5);
+  // New source types must not become fictitious file sizes or manufacturer claims.
+  await chooseCamera('vueroid-s1-qhd-infinite');
+  await page.selectOption('#channels','front');
+  await page.selectOption('#setting','submitted-60fps');
+  assert.match(await page.locator('#recording-details').innerText(), /60 fps/);
+  assert.match(await page.locator('#size-note').innerText(), /padding/);
+  assert.match(await page.locator('#source').textContent(), /submitted/);
+  await chooseCamera('70mai-t800');
+  assert.match(await page.locator('#size-note').innerText(), /rear-camera version/);
+  assert.ok(!(await page.locator('#recording-details').innerText()).includes('MB/min'));
+  assert.equal(await page.locator('figcaption').count(),0);
+  await chooseCamera('viofo-a229-pro');
+  assert.ok(!(await page.locator('#shopping-links').innerText()).includes('memory cards'));
+  // Compact layout is side-by-side on desktop and stacked at phone widths.
+  for (const width of [740,620,375,320]) {
+    await page.setViewportSize({width,height:1000});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    const layout=await page.evaluate(()=>{const d=document.querySelector('.channel-summary').getBoundingClientRect();const t=document.querySelector('table').getBoundingClientRect();return {detailsRight:d.right,detailsBottom:d.bottom,tableLeft:t.left,tableTop:t.top};});
+    if(width===740) assert.ok(layout.tableLeft>=layout.detailsRight);
+    if(width<=620) assert.ok(layout.tableTop>=layout.detailsBottom);
+  }
   // WordPress can enqueue the loader after the iframe has finished loading.
   await page.setContent(`<iframe data-vr-recording-time src="${url}/index.html" style="width:100%;height:1100px;border:0"></iframe>`);
   await page.frameLocator('iframe').locator('#form').waitFor({state:'visible'});

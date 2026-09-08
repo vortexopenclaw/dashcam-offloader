@@ -5,7 +5,7 @@
       "front": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             2,
             4,
@@ -30,7 +30,7 @@
       "front-rear": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             1,
             2,
@@ -63,7 +63,7 @@
       "front-rear-interior": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             1,
             1.5,
@@ -106,7 +106,7 @@
       "front-rear": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             1,
             2,
@@ -139,7 +139,7 @@
       "front-rear-interior": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             1,
             2,
@@ -182,7 +182,7 @@
       "front": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             1,
             2.2,
@@ -207,7 +207,7 @@
       "front-rear": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             0.9,
             1.9,
@@ -240,7 +240,7 @@
       "front-rear-interior": [
         {
           "id": "maximum",
-          "label": "Maximum bitrate",
+          "label": "Maximum Quality",
           "hours": [
             0.77,
             1.5,
@@ -339,6 +339,27 @@
           "basis": "Measured from an original 4K60 driving file. This was a different recording session from the 4K30 sample, not a controlled FPS-only comparison."
         }
       ]
+    },
+    "papago-gosafe-760": {
+      "front": [
+        {
+          "id": "1080p",
+          "label": "1080p, Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "codec": "H.264",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "minMbps": 12.0845,
+              "maxMbps": 12.0845
+            }
+          ],
+          "minMbps": 12.0845,
+          "maxMbps": 12.0845,
+          "basis": "Original 1080p driving file, 454812132 bytes / 301.088 seconds. Separate session from the 1440p sample."
+        }
+      ]
     }
   },
   "replaceModes": {
@@ -346,7 +367,7 @@
       "front": [
         {
           "id": "normal",
-          "label": "2K (1440p) 30 fps / Medium bitrate",
+          "label": "2K (1440p) 30 fps / Medium Quality",
           "hours": [
             2.5,
             5,
@@ -369,7 +390,7 @@
         },
         {
           "id": "maximum",
-          "label": "2K (1440p) 30 fps / High bitrate",
+          "label": "2K (1440p) 30 fps / High Quality",
           "hours": [
             2,
             4.5,
@@ -411,7 +432,7 @@
       "front": [
         {
           "id": "normal",
-          "label": "4K 30 fps / HDR on / Medium bitrate",
+          "label": "4K 30 fps / HDR on / Medium Quality",
           "hours": [
             2,
             4,
@@ -434,7 +455,7 @@
         },
         {
           "id": "maximum",
-          "label": "4K 30 fps / HDR on / High bitrate",
+          "label": "4K 30 fps / HDR on / High Quality",
           "hours": [
             1.8,
             3.5,
@@ -461,7 +482,7 @@
       "front": [
         {
           "id": "normal",
-          "label": "Medium bitrate",
+          "label": "Medium Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -478,7 +499,7 @@
         },
         {
           "id": "maximum",
-          "label": "Maximum / Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -496,7 +517,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 40,
           "maxMbps": 40,
           "channels": [
@@ -514,7 +535,7 @@
         },
         {
           "id": "high",
-          "label": "High bitrate",
+          "label": "High Quality",
           "minMbps": 30,
           "maxMbps": 30,
           "channels": [
@@ -531,7 +552,7 @@
         },
         {
           "id": "low",
-          "label": "Low bitrate",
+          "label": "Low Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -550,7 +571,7 @@
       "front-rear": [
         {
           "id": "normal",
-          "label": "Medium bitrate",
+          "label": "Medium Quality",
           "minMbps": 40,
           "maxMbps": 40,
           "channels": [
@@ -574,7 +595,7 @@
         },
         {
           "id": "maximum",
-          "label": "Maximum / Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 90,
           "maxMbps": 90,
           "channels": [
@@ -600,7 +621,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 70,
           "maxMbps": 70,
           "channels": [
@@ -626,7 +647,7 @@
         },
         {
           "id": "high",
-          "label": "High bitrate",
+          "label": "High Quality",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -650,7 +671,7 @@
         },
         {
           "id": "low",
-          "label": "Low bitrate",
+          "label": "Low Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -678,7 +699,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -695,7 +716,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -712,7 +733,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -729,7 +750,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -748,7 +769,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -772,7 +793,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -796,7 +817,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -820,7 +841,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -848,7 +869,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -872,7 +893,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -896,7 +917,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -920,7 +941,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -948,7 +969,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -965,7 +986,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -982,7 +1003,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -999,7 +1020,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -1018,7 +1039,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1042,7 +1063,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -1066,7 +1087,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -1090,7 +1111,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1118,7 +1139,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1142,7 +1163,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -1166,7 +1187,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -1190,7 +1211,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1218,7 +1239,7 @@
       "front": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -1235,7 +1256,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 40,
           "maxMbps": 40,
           "channels": [
@@ -1252,7 +1273,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -1269,7 +1290,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -1286,7 +1307,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -1305,7 +1326,7 @@
       "front-rear": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 70,
           "maxMbps": 70,
           "channels": [
@@ -1329,7 +1350,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 50,
           "maxMbps": 50,
           "channels": [
@@ -1353,7 +1374,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1377,7 +1398,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -1401,7 +1422,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1429,7 +1450,7 @@
       "front": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -1446,7 +1467,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 40,
           "maxMbps": 40,
           "channels": [
@@ -1463,7 +1484,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -1480,7 +1501,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -1497,7 +1518,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -1516,7 +1537,7 @@
       "front-rear": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 70,
           "maxMbps": 70,
           "channels": [
@@ -1540,7 +1561,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 50,
           "maxMbps": 50,
           "channels": [
@@ -1564,7 +1585,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1588,7 +1609,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -1612,7 +1633,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1640,7 +1661,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -1657,7 +1678,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -1674,7 +1695,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -1691,7 +1712,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -1710,7 +1731,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1734,7 +1755,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -1758,7 +1779,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -1782,7 +1803,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1810,7 +1831,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -1827,7 +1848,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -1844,7 +1865,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -1861,7 +1882,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -1880,7 +1901,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -1904,7 +1925,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -1928,7 +1949,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -1952,7 +1973,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -1980,7 +2001,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -1997,7 +2018,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -2014,7 +2035,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -2031,7 +2052,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -2050,7 +2071,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -2074,7 +2095,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -2098,7 +2119,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -2122,7 +2143,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -2150,7 +2171,7 @@
       "front": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 60,
           "maxMbps": 60,
           "channels": [
@@ -2167,7 +2188,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 40,
           "maxMbps": 40,
           "channels": [
@@ -2184,7 +2205,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -2201,7 +2222,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -2218,7 +2239,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -2237,7 +2258,7 @@
       "front-rear": [
         {
           "id": "extreme-h265",
-          "label": "Extreme H.265",
+          "label": "Extreme Mode H.265",
           "minMbps": 70,
           "maxMbps": 70,
           "channels": [
@@ -2261,7 +2282,7 @@
         },
         {
           "id": "extreme-h264",
-          "label": "Extreme H.264",
+          "label": "Extreme Mode H.264",
           "minMbps": 50,
           "maxMbps": 50,
           "channels": [
@@ -2285,7 +2306,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -2309,7 +2330,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -2333,7 +2354,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -2361,7 +2382,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -2385,7 +2406,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -2409,7 +2430,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -2433,7 +2454,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -2461,7 +2482,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -2478,7 +2499,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 20,
           "maxMbps": 20,
           "channels": [
@@ -2495,7 +2516,7 @@
         },
         {
           "id": "medium",
-          "label": "Medium",
+          "label": "Medium Quality",
           "minMbps": 15,
           "maxMbps": 15,
           "channels": [
@@ -2512,7 +2533,7 @@
         },
         {
           "id": "low",
-          "label": "Low",
+          "label": "Low Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -2531,7 +2552,7 @@
       "front-rear": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 45,
           "maxMbps": 45,
           "channels": [
@@ -2555,7 +2576,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 35,
           "maxMbps": 35,
           "channels": [
@@ -2579,7 +2600,7 @@
         },
         {
           "id": "medium",
-          "label": "Medium",
+          "label": "Medium Quality",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -2603,7 +2624,7 @@
         },
         {
           "id": "low",
-          "label": "Low",
+          "label": "Low Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -2631,7 +2652,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -2648,7 +2669,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -2665,7 +2686,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -2682,7 +2703,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -2701,7 +2722,7 @@
       "front-rear": [
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -2725,7 +2746,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -2749,7 +2770,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -2777,7 +2798,7 @@
       "front": [
         {
           "id": "extreme",
-          "label": "Extreme",
+          "label": "Extreme Mode",
           "minMbps": 25,
           "maxMbps": 25,
           "channels": [
@@ -2794,7 +2815,7 @@
         },
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 12,
           "maxMbps": 12,
           "channels": [
@@ -2811,7 +2832,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 10,
           "maxMbps": 10,
           "channels": [
@@ -2828,7 +2849,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 8,
           "maxMbps": 8,
           "channels": [
@@ -2847,7 +2868,7 @@
       "front-rear": [
         {
           "id": "highest",
-          "label": "Highest",
+          "label": "Highest Quality",
           "minMbps": 22,
           "maxMbps": 22,
           "channels": [
@@ -2871,7 +2892,7 @@
         },
         {
           "id": "high",
-          "label": "High",
+          "label": "High Quality",
           "minMbps": 18,
           "maxMbps": 18,
           "channels": [
@@ -2895,7 +2916,7 @@
         },
         {
           "id": "normal",
-          "label": "Normal",
+          "label": "Normal Quality",
           "minMbps": 14,
           "maxMbps": 14,
           "channels": [
@@ -2916,6 +2937,152 @@
           ],
           "sourceUrl": "https://manual.blackvue.com/docs/dr590x-2ch/recording-time/new-recording-time-dr590x-plus-series/",
           "basis": "Calculated from the manufacturer\u2019s published bitrates."
+        }
+      ]
+    },
+    "vueroid-s1-qhd-infinite": {
+      "front": [
+        {
+          "id": "submitted-30fps",
+          "label": "30 fps, Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 22,
+              "maxMbps": 22
+            }
+          ],
+          "minMbps": 22,
+          "maxMbps": 22,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
+          "sourceType": "submitted-video",
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        },
+        {
+          "id": "submitted-60fps",
+          "label": "60 fps, Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "60",
+              "codec": "H.264",
+              "minMbps": 24,
+              "maxMbps": 24
+            }
+          ],
+          "minMbps": 24,
+          "maxMbps": 24,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
+          "sourceType": "submitted-video",
+          "basis": "Submitted firmware 1.0.4 front-only 60 fps driving-video measurement. Quality-menu selection unconfirmed."
+        }
+      ],
+      "front-rear": [
+        {
+          "id": "submitted-30fps",
+          "label": "30 fps, Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 22,
+              "maxMbps": 22
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 22,
+              "maxMbps": 22
+            }
+          ],
+          "minMbps": 44,
+          "maxMbps": 44,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
+          "sourceType": "submitted-video",
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        }
+      ],
+      "front-rear-interior": [
+        {
+          "id": "submitted-30fps",
+          "label": "30 fps, Our test footage",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 22,
+              "maxMbps": 22
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 22,
+              "maxMbps": 22
+            },
+            {
+              "role": "interior",
+              "resolution": "1920x1080",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 15,
+              "maxMbps": 15
+            }
+          ],
+          "minMbps": 59,
+          "maxMbps": 59,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
+          "sourceType": "submitted-video",
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        }
+      ]
+    },
+    "70mai-t800": {
+      "front-rear-interior": [
+        {
+          "id": "hdr-high-compression",
+          "label": "HDR, High Compression",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "",
+              "codec": "HEVC"
+            },
+            {
+              "role": "rear",
+              "resolution": "Not specified",
+              "fps": "",
+              "codec": "HEVC"
+            },
+            {
+              "role": "interior",
+              "resolution": "1920x1080",
+              "fps": "",
+              "codec": "HEVC"
+            }
+          ],
+          "hours": [
+            1,
+            2,
+            4,
+            8,
+            16
+          ],
+          "sourceUrl": "https://70mai.pl/faq/70mai-4k-t800/",
+          "basis": "70mai regional FAQ gives about one hour of three-channel recording on 32 GB. Larger capacities are scaled proportionally. The FAQ does not identify the rear-camera bundle or FPS for this estimate.",
+          "notice": "Published 3CH estimate. The rear-camera version and FPS are not specified."
         }
       ]
     }
@@ -3480,6 +3647,115 @@
           "basis": "Manufacturer specifications"
         }
       ]
+    },
+    {
+      "id": "vueroid-s1-qhd-infinite",
+      "name": "Vueroid S1 QHD Infinite",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "2560x1440",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 22,
+          "maxMbps": 22
+        },
+        {
+          "role": "rear",
+          "resolution": "2560x1440",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 22,
+          "maxMbps": 22
+        },
+        {
+          "role": "interior",
+          "resolution": "1920x1080",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 15,
+          "maxMbps": 15
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "vueroid-s1-qhd-infinite",
+      "setups": [
+        {
+          "id": "front",
+          "roles": [
+            "front"
+          ],
+          "minMbps": 22,
+          "maxMbps": 22,
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        },
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 44,
+          "maxMbps": 44,
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        },
+        {
+          "id": "front-rear-interior",
+          "roles": [
+            "front",
+            "rear",
+            "interior"
+          ],
+          "minMbps": 59,
+          "maxMbps": 59,
+          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+        }
+      ]
+    },
+    {
+      "id": "70mai-t800",
+      "name": "70mai T800",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "",
+          "codec": "HEVC"
+        },
+        {
+          "role": "rear",
+          "resolution": "Not specified",
+          "fps": "",
+          "codec": "HEVC"
+        },
+        {
+          "role": "interior",
+          "resolution": "1920x1080",
+          "fps": "",
+          "codec": "HEVC"
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "70mai-t800",
+      "setups": [
+        {
+          "id": "front-rear-interior",
+          "roles": [
+            "front",
+            "rear",
+            "interior"
+          ],
+          "hours": [
+            1,
+            2,
+            4,
+            8,
+            16
+          ],
+          "sourceUrl": "https://70mai.pl/faq/70mai-4k-t800/",
+          "basis": "70mai regional FAQ gives about one hour of three-channel recording on 32 GB. Larger capacities are scaled proportionally. The FAQ does not identify the rear-camera bundle or FPS for this estimate."
+        }
+      ]
     }
   ],
   "notes": {
@@ -3491,7 +3767,11 @@
     "70mai-4k-omni-x800": "The 30 and 60 fps samples were recorded separately. Their quality settings may differ too. The two-camera estimate adds the Front and Rear sample rates.",
     "vantrue-n5": "Both resolution options come from complete four-camera driving recordings. The exact quality menu setting wasn\u2019t saved.",
     "cobra-sc-200d": "Front-camera estimate. We still need a matching Rear recording sample.",
-    "nextbase-622gw": "Based on a matching Front and Rear driving clip saved with Alexa. File sizes vary across the sampled clips."
+    "nextbase-622gw": "Based on a matching Front and Rear driving clip saved with Alexa. File sizes vary across the sampled clips.",
+    "papago-gosafe-760": "Front-only estimates. The two resolutions were recorded in different sessions.",
+    "viofo-a119s": "These two 1080p60 samples use different recording rates. The range covers both, without assuming the same quality-menu selection.",
+    "vueroid-s1-qhd-infinite": "30 fps data came from a three-camera setup. The 60 fps submission recorded only Front. Reduced-channel 30 fps results assume the same per-camera rate.",
+    "70mai-t800": "The published three-camera estimate does not specify whether the Rear camera is the 1080p or 4K version. Front-only FAQ figures conflict, so they are not included."
   },
   "links": {
     "viofo-a229-pro": {
@@ -3573,23 +3853,7 @@
       "front-rear": "https://geni.us/ThinkwareU1000-2CH"
     }
   },
-  "cardLinks": [
-    {
-      "label": "Viofo memory cards",
-      "url": "https://geni.us/Viofo256GBMicroSD",
-      "brand": "Viofo"
-    },
-    {
-      "label": "Vueroid memory cards",
-      "url": "https://geni.us/Vueroid512GBMicroSD",
-      "brand": "Vueroid"
-    },
-    {
-      "label": "Vantrue memory cards",
-      "url": "https://geni.us/Vantrue512GBMicroSD",
-      "brand": "Vantrue"
-    }
-  ],
+  "cardLinks": [],
   "images": {
     "blackvue-elite-10": {
       "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2026/05/Blackvue-Elite-10-2CH.png",
@@ -3884,10 +4148,22 @@
       "attachmentId": 7047,
       "alt": "Escort M1 dashcam",
       "path": "images/escort-m1.png"
+    },
+    "70mai-t800": {
+      "path": "images/70mai-t800.webp",
+      "alt": "70mai T800 with optional rear camera and memory card",
+      "sourceUrl": "https://www.vortexradar.com/wp-content/uploads/2025/10/70mai-T800-3CH-MicroSD.webp",
+      "mediaId": 10668
     }
   },
   "defaultLabels": {
     "vantrue-n5": "1440p 30 fps / Our test footage",
-    "70mai-4k-omni-x800": "4K 30 fps / Our test footage"
+    "70mai-4k-omni-x800": "4K 30 fps / Our test footage",
+    "papago-gosafe-760": "1440p, Our test footage"
+  },
+  "excludedCameras": {
+    "vueroid-h1": "Unreleased. Excluded by Ariel on 2026-09-08.",
+    "vueroid-h1-qhd": "Unreleased H1 naming variant.",
+    "vueroid-h1-qhd-infinite": "Unreleased H1 naming variant."
   }
 }

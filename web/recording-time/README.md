@@ -5,7 +5,7 @@
 Embed a simple driving-footage chart in a website post. Choose a brand, model,
 channel setup and a supported recording setting; compare approximate recording times for 32, 64, 128, 256, and
 512 GB cards. There are no inverse modes, bitrate inputs, allocation inputs,
-or headroom controls. The catalog covers 63 dashcams.
+or headroom controls. The catalog covers 80 dashcams.
 
 Use the offloader's existing measured data, supplemented by verified VIOFO
 quality charts and Blackvue Elite 10 specifications. No app runtime changes, paid APIs, analytics, cookies,
@@ -24,8 +24,8 @@ three reviewed VIOFO models. Exported JSON uses schema version 3.
 
 ## Catalog coverage and images
 
-The chart includes 48 cameras backed by recorded-file measurements and 15
-manufacturer-only models. Where only Front footage exists, only that estimate
+The chart includes 63 cameras backed by recorded-file measurements, 16
+manufacturer-only models and one submitted-video-bitrate model. Where only Front footage exists, only that estimate
 is offered. Reviewed driving-event samples are allowed for specific Vantrue
 models. Parking-only footage, ambiguous model identification and empty sample
 folders are not usable driving-rate evidence.
@@ -41,11 +41,11 @@ These are approximate file-size estimates. Published whole-system durations do
 not reveal individual channel sizes, so those cells remain empty. Viofo A229
 models also offer Our test footage to expose their measured per-channel rates.
 
-49 reviewed image mappings use the existing Vortex Radar media library. Image
+50 reviewed image mappings use the existing Vortex Radar media library. Image
 assets are packaged locally, with original source URL, media ID and descriptive
 alt text retained in the mapping. Selection loads the corresponding image.
 Missing images collapse cleanly. Photos can depict optional cameras, and their
-caption identifies the pictured kit. New models need a reviewed image mapping,
+accessible alt text identifies the pictured kit (no redundant visible caption). New models need a reviewed image mapping,
 not arbitrary runtime image search or a guessed lookalike.
 
 ## Recording settings and public links
@@ -66,8 +66,9 @@ Do not derive an unmeasured 2K60 setting by scaling a 4K30 bitrate.
 Brand display names use first-letter capitalization; source names and IDs stay
 stable. Public explanations follow the current camera and setting. Existing
 owner affiliate links are shown only for the exact selected package; unmatched
-configurations get no camera shopping link. Card links are brand-specific,
-with a compatibility reminder and affiliate disclosure. No live prices or
+configurations get no camera shopping link. Memory-card links are intentionally empty pending Ariel’s capacity-specific destinations.
+Do not label a single-capacity SKU as the brand’s whole card range. Camera links
+retain their affiliate disclosure. No live prices or
 stock claims are made. Purchase destinations still require editorial review
 before a public launch.
 
@@ -190,3 +191,32 @@ data-update propagation, mobile sizing, missing-data fallback, and iframe
 resize behavior. Reverting this feature commit removes the build workflow and
 tool without touching scanner/copy behavior. For a deployed version, restore
 the previous static build at the same path.
+
+## September 8 compact layout and additional coverage
+
+Desktop places per-channel details beside the card-time table. Phone widths stack
+the sections, keeping each channel’s format and MB/min together. Colors use the
+existing child-theme navy `#17385f`, link blue `#0044ba`, and light-blue neutral
+`#f4f7fb`. No global theme edits or runtime stylesheets were added.
+
+New archive coverage includes older Viofo A119/A119 Pro/A119s, Dod LS500W/RC500S,
+Kdlinks X1, Papago GoSafe 200/760, Roav C1 Pro, Street Guardian SG9665GC,
+Taotronics TT-CD06, Vantrue OnDash R2/X4, Vicovation Opia1 and Blueskysea B4K.
+All use probed complete-file size/duration, with source details in the reference.
+
+Vueroid S1 QHD Infinite uses the existing firmware 1.0.4 submitted-video measurements
+from the maintained profile, including Front-only 60fps. Its `sourceType` is
+`submitted-video`: encoded-video MB/min and a visible padding caveat, not a claim
+of measured complete-file storage. Never apply the S1 4K padding ratio by analogy.
+
+70mai T800 uses the regional 70mai FAQ’s approximate one-hour/32GB 3CH figure.
+Higher capacities are proportional estimates. Its source does not identify the
+rear-camera bundle/FPS, so these are explicitly unspecified. Conflicting Front-only
+figures are excluded. No per-channel bitrates are invented.
+
+`excludedCameras` is a fail-closed blocklist for known unreleased models, currently
+Vueroid H1 and its naming variants. New public models still require eligibility
+review, including release status. The app’s recognition catalog is not an
+automatic public-calculator eligibility list. Vueroid ZERO is a real 2CH FHD
+product (https://vueroid.com/product/vueroid-zero-2ch/), but no reviewed driving
+rate is available here, so it is not offered in the calculator.
