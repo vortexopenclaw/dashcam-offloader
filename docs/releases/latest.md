@@ -1,8 +1,7 @@
-# Dashcam Offloader 0.1.7
+# Dashcam Offloader 0.1.8
 
-- Removed the read-only driving, parking, and output-group summaries that
-  looked like selectable controls.
-- Camera detection and optional card-scan submission now lead the scanned-card
-  view.
-- Footage types, recording types, and channels are selected in one clear,
-  clickable section.
+- Manual update checks now show a clear result when the app is current and a
+  clear error when the update service cannot be reached.
+- Learning submissions prefill an identified camera's manufacturer and model.
+- Known catalog channel details fill the learning form when a card scan is
+  incomplete, including the Vueroid S1 QHD Infinite 2CH front/rear setup.
