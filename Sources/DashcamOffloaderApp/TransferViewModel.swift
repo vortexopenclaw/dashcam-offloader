@@ -147,6 +147,17 @@ final class TransferViewModel: ObservableObject {
     }
 
     var inferredLearningChannelSetup: (count: Int, description: String) {
+        if (selectedProfile == nil || selectedProfile?.id == DashcamProfile.genericNewDashcam.id),
+           let catalogModel = identifiedCatalogModel,
+           let channelCount = catalogModel.channels,
+           channelCount > 0 {
+            let labels = orderedChannelLabels(from: catalogModel.channelRoles)
+            let description = labels.isEmpty
+                ? defaultChannelDescription(for: channelCount)
+                : labels.joined(separator: " / ")
+            return (min(max(channelCount, 1), 4), description)
+        }
+
         let scannedLabels = orderedChannelLabels(from: footageClips.map(\.channel))
         if !scannedLabels.isEmpty {
             return (min(max(scannedLabels.count, 1), 4), scannedLabels.joined(separator: " / "))
@@ -173,6 +184,10 @@ final class TransferViewModel: ObservableObject {
             return (selectedProfile.manufacturer, selectedProfile.model)
         }
 
+        if let identifiedCamera {
+            return (identifiedCamera.manufacturer, identifiedCamera.model)
+        }
+
         if let selectedSource,
            let catalogMatch = KnownDashcamCatalog.exactVolumeLabelMatch(selectedSource.name) {
             return (catalogMatch.manufacturer, catalogMatch.model)
@@ -187,6 +202,14 @@ final class TransferViewModel: ObservableObject {
         }
 
         return nil
+    }
+
+    private var identifiedCatalogModel: KnownDashcamModel? {
+        guard let identifiedCamera else { return nil }
+        return KnownDashcamCatalog.exactModelMatch(
+            manufacturer: identifiedCamera.manufacturer,
+            modelText: identifiedCamera.model
+        )
     }
 
     var profilesByBrand: [(brand: String, profiles: [DashcamProfile])] {
@@ -435,6 +458,7 @@ final class TransferViewModel: ObservableObject {
                 await MainActor.run {
                     if userInitiated {
                         self?.updateStatusMessage = "Update check failed: \(error.localizedDescription)"
+                        self?.presentUpdateCheckFailure(error)
                     }
                     self?.isCheckingForUpdates = false
                 }
@@ -448,6 +472,7 @@ final class TransferViewModel: ObservableObject {
             availableUpdate = nil
             if userInitiated {
                 updateStatusMessage = "Dashcam Offloader is up to date."
+                presentUpToDatePrompt()
             }
             return
         }
@@ -455,6 +480,23 @@ final class TransferViewModel: ObservableObject {
         availableUpdate = manifest
         updateStatusMessage = "Update available: \(manifest.displayName)"
         presentUpdatePrompt(for: manifest)
+    }
+
+    private func presentUpToDatePrompt() {
+        let alert = NSAlert()
+        alert.messageText = "You're Up to Date"
+        let currentBuild = AppBuildInfo.current()
+        alert.informativeText = "Dashcam Offloader \(currentBuild.version) (\(currentBuild.build)) is the latest version."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func presentUpdateCheckFailure(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = "Unable to Check for Updates"
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     private func presentUpdatePrompt(for manifest: AppUpdateManifest) {

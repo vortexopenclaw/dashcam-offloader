@@ -455,6 +455,37 @@ enum VerificationTest {
                 print("VERIFY FAIL: researched catalog models missing from the manual picker: \(missingCatalogChoices)")
                 return false
             }
+            let s1QHDLearningPrefill = MainActor.assumeIsolated { () -> ((manufacturer: String, model: String)?, (count: Int, description: String)) in
+                let viewModel = TransferViewModel()
+                viewModel.selectedProfile = .genericNewDashcam
+                viewModel.identifiedCamera = IdentifiedCamera(
+                    manufacturer: "Vueroid",
+                    model: "S1 QHD Infinite",
+                    evidence: ["CONFIG/config.bin model S1-QHD-INFINITE"],
+                    isSupported: false
+                )
+                viewModel.clips = [
+                    ClipItem(
+                        sourceURL: URL(fileURLWithPath: "/tmp/S1-QHD/INF/20260908_120000_INF_F_N.mp4"),
+                        relativePath: "INF/20260908_120000_INF_F_N.mp4",
+                        filename: "20260908_120000_INF_F_N.mp4",
+                        mode: "continuous",
+                        channel: "front",
+                        timestamp: nil,
+                        size: 1_024,
+                        extensionLowercased: "mp4",
+                        excludedReason: nil
+                    )
+                ]
+                return (viewModel.inferredLearningCameraIdentity, viewModel.inferredLearningChannelSetup)
+            }
+            guard s1QHDLearningPrefill.0?.manufacturer == "Vueroid",
+                  s1QHDLearningPrefill.0?.model == "S1 QHD Infinite",
+                  s1QHDLearningPrefill.1.count == 2,
+                  s1QHDLearningPrefill.1.description == "Front / Rear" else {
+                print("VERIFY FAIL: identified Vueroid S1 QHD did not prefill its catalog model and 2CH setup")
+                return false
+            }
             let h1ManualSelectorState = MainActor.assumeIsolated { () -> Bool in
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
