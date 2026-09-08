@@ -29,6 +29,27 @@ not configured. No credential values were retrieved or exposed. No staging or
 production files/posts were written. Installation and real-theme acceptance
 remain blocked until protected staging access is restored.
 
+### Browser-only real-theme check
+
+After the outer staging password gate was authenticated, a read-only preview
+loaded an actual staging article and inserted the local calculator into its
+existing content column using browser request interception. Nothing was
+uploaded, installed, published, or saved to WordPress. WordPress administration
+remained logged out.
+
+- Viewports 1440, 768, and 375px passed; calculator/content widths were 750,
+  720, and 345px respectively.
+- No page or calculator horizontal overflow at any tested width.
+- Following post content did not overlap the iframe.
+- Missing allocation, 50% allocation calculation, and expanded methodology
+  passed, with no clipped iframe content and no JavaScript errors.
+- Mobile rendered screenshot inspected.
+
+Reproduce with `theme-preview.mjs` using an existing Playwright module, the
+authenticated browser's CDP URL, and a staging article URL. This verifies theme
+geometry but does not verify installation, server MIME types, or shortcode
+execution inside WordPress. Preview changes disappear on reload.
+
 ## Code review
 
 Scope: new exporter, calculation module, widget, embed loader, static CI artifact
