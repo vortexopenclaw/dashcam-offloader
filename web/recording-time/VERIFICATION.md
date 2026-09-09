@@ -34,7 +34,7 @@ not verified this revision. No merge or live-site update performed.
 Supersedes the side-by-side details/time layout below. Recording details are a
 compact strip, with five horizontally aligned capacity/time columns on desktop
 and ordinary numeric table rows on mobile. Removed the eyebrow brand and
-in-widget affiliate disclosure per Ariel; host-post disclosure is outside this
+in-widget affiliate disclosure per the site owner; host-post disclosure is outside this
 widget. No memory-card links were restored.
 
 Reviewed existing photo contact sheets and seven additional original site assets.
@@ -77,7 +77,7 @@ existing child-theme palette inspected in local theme inventory and historical
 staging screenshots, not a newly authenticated staging session.
 
 Full quality labels replace abbreviated Blackvue choices. No memory-card links
-are exported pending Ariel’s capacity-specific URLs. Camera links remain.
+are exported pending the site owner’s capacity-specific URLs. Camera links remain.
 
 15 legacy cameras gained full-file rate probes. New raw-file evidence lives in
 video-metadata-reference.md. DOD RC500S combines separate Front/Rear sessions;
@@ -90,7 +90,7 @@ T800 uses https://70mai.pl/faq/70mai-4k-t800/ (checked 2026-09-08): 1 hour/32GB
 three-channel baseline, larger sizes scaled, rear-camera variant and FPS unknown.
 Conflicting 1CH figures are omitted. No fabricated per-channel MB/min.
 Vueroid ZERO confirmed at https://vueroid.com/product/vueroid-zero-2ch/.
-H1 explicitly blocked as unreleased per Ariel. No offloader application changes.
+H1 explicitly blocked as unreleased per the site owner. No offloader application changes.
 
 Photo review: T800 image is a real existing site product-kit asset. The site’s
 S1 2K-labeled image visibly says 4K60fps on its screen, so that mapping was withheld.

@@ -23,7 +23,7 @@ check_tracked_pattern "private owner name" '\bAriel(?:\s+Bravy)?\b'
 
 unexpected_emails="$({
   git grep -I -h -P -o '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' -- ':!desktop/package-lock.json' ':!scripts/privacy-audit.sh' || true
-} | sort -u | rg -v '^(security@vortexradar\.com|[^@]+@example\.com)$' || true)"
+} | sort -u | grep -Ev '^(security@vortexradar\.com|[^@]+@example\.com)$' || true)"
 if [[ -n "$unexpected_emails" ]]; then
   echo "Privacy audit failed: an unapproved email address is present in tracked content." >&2
   failures=1

@@ -33,7 +33,7 @@ folders are not usable driving-rate evidence.
 Brand/model selection uses numeric sorting. A recording-setting selector appears
 only when a setup has multiple choices. Highest documented options are preferred
 where identified. Samples are labeled Our test footage rather than claiming an
-unrecorded menu setting. Ariel normally tests at maximum quality, which the
+unrecorded menu setting. the site owner normally tests at maximum quality, which the
 public explanation acknowledges without treating it as proof for every clip.
 
 Per-channel MB/min is Mbps × 7.5 using decimal MB, rounded for readability.
@@ -66,7 +66,7 @@ Do not derive an unmeasured 2K60 setting by scaling a 4K30 bitrate.
 Brand display names use first-letter capitalization; source names and IDs stay
 stable. Public explanations follow the current camera and setting. Existing
 owner affiliate links are shown only for the exact selected package; unmatched
-configurations get no camera shopping link. Memory-card links are intentionally empty pending Ariel’s capacity-specific destinations.
+configurations get no camera shopping link. Memory-card links are intentionally empty pending the site owner’s capacity-specific destinations.
 Do not label a single-capacity SKU as the brand’s whole card range. Camera links
 retain their affiliate disclosure. No live prices or
 stock claims are made. Purchase destinations still require editorial review

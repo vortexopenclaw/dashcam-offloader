@@ -1,5 +1,5 @@
 source,model,status,calculator_model,reason
-App catalog,Vueroid H1,Excluded: unreleased,,H1 excluded at Ariel’s instruction.
+App catalog,Vueroid H1,Excluded: unreleased,,H1 excluded at the site owner’s instruction.
 App catalog,Vueroid S1 4K Infinite,Included,Vueroid S1 4K Infinite,"Available setups: front, front-rear, front-interior, front-rear-interior. Coverage does not imply every menu setting or setup."
 App catalog,Vueroid S1 QHD Infinite,Included,Vueroid S1 QHD Infinite,"Available setups: front, front-rear, front-rear-interior. Coverage does not imply every menu setting or setup."
 App catalog,Vueroid D40-Q2,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
@@ -326,7 +326,7 @@ Maintained profile,VIOFO A329T,Included,Viofo A329T,"Available setups: front, fr
 Maintained profile,VIOFO T130,Included,Viofo T130,"Available setups: front, front-rear, front-interior, front-rear-interior. Coverage does not imply every menu setting or setup."
 Maintained profile,VIOFO VS1,Included,Viofo VS1,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,VIOFO WM1,Included,Viofo WM1,Available setups: front. Coverage does not imply every menu setting or setup.
-Maintained profile,Vueroid H1,Excluded: unreleased,,H1 excluded at Ariel’s instruction.
+Maintained profile,Vueroid H1,Excluded: unreleased,,H1 excluded at the site owner’s instruction.
 Maintained profile,Vueroid S1 4K Infinite,Included,Vueroid S1 4K Infinite,"Available setups: front, front-rear, front-interior, front-rear-interior. Coverage does not imply every menu setting or setup."
 Maintained profile,Vueroid S1 QHD Infinite,Included,Vueroid S1 QHD Infinite,"Available setups: front, front-rear, front-rear-interior. Coverage does not imply every menu setting or setup."
 Calculator additional model,Blackvue DR750-2CH LTE,Included,Blackvue DR750-2CH LTE,Measured/manufacturer-backed entry beyond the app catalog’s exact model rows.
