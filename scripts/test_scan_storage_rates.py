@@ -18,6 +18,12 @@ class StorageRateTests(unittest.TestCase):
         self.assertEqual(result['completeFileSamples'][0]['storageBytesPerSecond'],4000000)
         self.assertNotIn('relativePath',result['completeFileSamples'][0])
 
+    def test_generic_event_does_not_prove_driving(self):
+        self.assertFalse(rates.driving(dict(mode='event')))
+        self.assertFalse(rates.driving(dict(mode='locked')))
+        self.assertTrue(rates.driving(dict(mode='driving_event')))
+        self.assertFalse(rates.driving(dict(mode='driving_event', outputCategory='Parking')))
+
     def test_unpaired_summary_extrema_are_not_storage_rates(self):
         result = rates.extract(dict(scan=dict(videoSpecSummaries=[dict(mode='driving',
             minFileSizeBytes=1,maxFileSizeBytes=100000000,sampleDurationMin=1,
