@@ -1,6 +1,6 @@
 import {recordingRows, rowLabel} from './calculator.mjs';
 const $ = id => document.getElementById(id);
-const roles = {front:'Front', rear:'Rear', interior:'Cabin', telephoto:'Telephoto', interior_front:'Front cabin', interior_rear:'Rear cabin', panoramic_front:'360° camera'};
+const roles = {front:'Front', rear:'Rear', left:'Left', right:'Right', interior:'Cabin', telephoto:'Telephoto', interior_front:'Front cabin', interior_rear:'Rear cabin', panoramic_front:'360° camera'};
 const collator = new Intl.Collator('en', {numeric:true, sensitivity:'base'});
 let cameras = [], current, sourceUrl, cardLinks = [];
 function setupLabel(setup) {
@@ -72,8 +72,11 @@ function render() {
   renderPhoto(setup);
   $('basis').textContent=`${current.name}, ${mode.label}. ${mode.basis}`;
   const submitted=mode.sourceType === 'submitted-video';
-  const official=Boolean(mode.sourceUrl) && !submitted;
-  $('method-detail').textContent=submitted
+  const completeFile=mode.sourceType === 'complete-file';
+  const official=Boolean(mode.sourceUrl) && !submitted && !completeFile;
+  $('method-detail').textContent=completeFile
+    ? 'These estimates use complete recording-file sizes, including audio, metadata and padding. Full-length driving loops are used. Interrupted clips can use more storage per recorded minute.'
+    : submitted
     ? 'These estimates use video-stream measurements from submitted camera cards. Complete files may include audio, metadata and reserved padding, so actual recording time can be shorter.'
     : official
     ? 'These estimates use the manufacturer’s published recording times or bitrates for this setting.'
@@ -81,10 +84,10 @@ function render() {
   $('camera-note').textContent=current.note;
   $('camera-note').hidden=!current.note;
   $('source').href=mode.sourceUrl || sourceUrl+'#'+current.sourceAnchor;
-  $('source').textContent=submitted ? 'See the submitted recording measurements' : official ? `${current.brand}’s recording data` : 'See the recording measurements';
+  $('source').textContent=completeFile ? 'See the submitted and original-file storage measurements' : submitted ? 'See the submitted recording measurements' : official ? `${current.brand}’s recording data` : 'See the recording measurements';
   $('partition-note').hidden=!current.allocationRequired;
-  $('size-note').hidden=!mode.hours && !submitted;
-  $('size-note').textContent=mode.notice || (submitted ? 'Video-bitrate estimate. File padding can reduce recording time.' : 'Per-camera file sizes aren’t listed in the manufacturer’s chart.');
+  $('size-note').hidden=!mode.hours && !submitted && !completeFile;
+  $('size-note').textContent=mode.notice || (completeFile ? 'Includes file padding, audio and metadata.' : submitted ? 'Video-bitrate estimate. File padding can reduce recording time.' : 'Per-camera file sizes aren’t listed in the manufacturer’s chart.');
   renderLinks(setup);
 }
 function selectSetup() {

@@ -2951,15 +2951,15 @@
               "resolution": "2560x1440",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 22,
-              "maxMbps": 22
+              "minMbps": 25.235729066666668,
+              "maxMbps": 25.235729066666668
             }
           ],
-          "minMbps": 22,
-          "maxMbps": 22,
-          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
-          "sourceType": "submitted-video",
-          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+          "minMbps": 25.235729066666668,
+          "maxMbps": 25.235729066666668,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file",
+          "basis": "Full 60-second driving-loop estimate from constant allocated file sizes across the submitted channel group. Includes padding, audio and metadata. Short interrupted clips use more storage per recorded minute."
         },
         {
           "id": "submitted-60fps",
@@ -2970,15 +2970,15 @@
               "resolution": "2560x1440",
               "fps": "60",
               "codec": "H.264",
-              "minMbps": 24,
-              "maxMbps": 24
+              "minMbps": 27.52512,
+              "maxMbps": 27.52512
             }
           ],
-          "minMbps": 24,
-          "maxMbps": 24,
-          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
-          "sourceType": "submitted-video",
-          "basis": "Submitted firmware 1.0.4 front-only 60 fps driving-video measurement. Quality-menu selection unconfirmed."
+          "minMbps": 27.52512,
+          "maxMbps": 27.52512,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file",
+          "basis": "Full 60-second driving-loop estimate from constant allocated file sizes across the submitted channel group. Includes padding, audio and metadata. Short interrupted clips use more storage per recorded minute."
         }
       ],
       "front-rear": [
@@ -2991,23 +2991,23 @@
               "resolution": "2560x1440",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 22,
-              "maxMbps": 22
+              "minMbps": 25.235729066666668,
+              "maxMbps": 25.235729066666668
             },
             {
               "role": "rear",
               "resolution": "2560x1440",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 22,
-              "maxMbps": 22
+              "minMbps": 25.235729066666668,
+              "maxMbps": 25.235729066666668
             }
           ],
-          "minMbps": 44,
-          "maxMbps": 44,
-          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
-          "sourceType": "submitted-video",
-          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+          "minMbps": 50.471458133333336,
+          "maxMbps": 50.471458133333336,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file",
+          "basis": "Full 60-second driving-loop estimate from constant allocated file sizes across the submitted channel group. Includes padding, audio and metadata. Short interrupted clips use more storage per recorded minute."
         }
       ],
       "front-rear-interior": [
@@ -3020,31 +3020,31 @@
               "resolution": "2560x1440",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 22,
-              "maxMbps": 22
+              "minMbps": 25.235729066666668,
+              "maxMbps": 25.235729066666668
             },
             {
               "role": "rear",
               "resolution": "2560x1440",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 22,
-              "maxMbps": 22
+              "minMbps": 25.235729066666668,
+              "maxMbps": 25.235729066666668
             },
             {
               "role": "interior",
               "resolution": "1920x1080",
               "fps": "30",
               "codec": "H.264",
-              "minMbps": 15,
-              "maxMbps": 15
+              "minMbps": 17.205384533333334,
+              "maxMbps": 17.205384533333334
             }
           ],
-          "minMbps": 59,
-          "maxMbps": 59,
-          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-offloader/blob/main/docs/card-profiles/vueroid-s1-qhd-infinite.md",
-          "sourceType": "submitted-video",
-          "basis": "Submitted firmware 1.0.4 driving-video measurements. Uses encoded video bitrate, not complete padded file size."
+          "minMbps": 67.67684266666667,
+          "maxMbps": 67.67684266666667,
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file",
+          "basis": "Full 60-second driving-loop estimate from constant allocated file sizes across the submitted channel group. Includes padding, audio and metadata. Short interrupted clips use more storage per recorded minute."
         }
       ]
     },
@@ -3089,6 +3089,25 @@
     "cansonic-ultradash-z4-standard": {
       "front": [
         {
+          "id": "full-file",
+          "label": "Our test footage, complete file sizes",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            }
+          ],
+          "minMbps": 31.59709013333333,
+          "maxMbps": 41.383799466666666,
+          "sourceType": "complete-file",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+        },
+        {
           "id": "high",
           "label": "High Quality",
           "channels": [
@@ -3130,6 +3149,33 @@
         }
       ],
       "front-rear": [
+        {
+          "id": "full-file",
+          "label": "Our test footage, complete file sizes",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 12.303291733333332,
+              "maxMbps": 12.303291733333332
+            }
+          ],
+          "minMbps": 43.90038186666666,
+          "maxMbps": 53.6870912,
+          "sourceType": "complete-file",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+        },
         {
           "id": "high",
           "label": "High Quality",
@@ -3189,6 +3235,33 @@
       ],
       "front-telephoto": [
         {
+          "id": "full-file",
+          "label": "Our test footage, complete file sizes",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            }
+          ],
+          "minMbps": 63.19418026666666,
+          "maxMbps": 82.76759893333333,
+          "sourceType": "complete-file",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+        },
+        {
           "id": "high",
           "label": "High Quality",
           "channels": [
@@ -3246,6 +3319,41 @@
         }
       ],
       "front-telephoto-rear": [
+        {
+          "id": "full-file",
+          "label": "Our test footage, complete file sizes",
+          "channels": [
+            {
+              "role": "front",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            },
+            {
+              "role": "telephoto",
+              "resolution": "3840x2160",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 31.59709013333333,
+              "maxMbps": 41.383799466666666
+            },
+            {
+              "role": "rear",
+              "resolution": "2560x1440",
+              "fps": "30",
+              "codec": "H.264",
+              "minMbps": 12.303291733333332,
+              "maxMbps": 12.303291733333332
+            }
+          ],
+          "minMbps": 75.49747199999999,
+          "maxMbps": 95.07089066666666,
+          "sourceType": "complete-file",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+        },
         {
           "id": "high",
           "label": "High Quality",
@@ -4064,6 +4172,176 @@
           "basis": "Submitted driving-video measurements."
         }
       ]
+    },
+    {
+      "id": "ottocast-ottosafe-cam",
+      "name": "Ottocast OttoSafe Cam",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "2560x1440",
+          "fps": "29.97",
+          "codec": "H.264",
+          "minMbps": 16.983840016813566,
+          "maxMbps": 17.187422823945298
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "25",
+          "codec": "H.264",
+          "minMbps": 9.098448500999334,
+          "maxMbps": 9.203282611592272
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "ottocast-ottosafe-cam",
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 26.0822885178129,
+          "maxMbps": 26.39070543553757,
+          "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file"
+        }
+      ]
+    },
+    {
+      "id": "thinkware-fa200",
+      "name": "Thinkware FA200",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "1920x1080",
+          "fps": "29.97",
+          "codec": "H.264",
+          "minMbps": 11.17363702963703,
+          "maxMbps": 11.17363702963703
+        },
+        {
+          "role": "rear",
+          "resolution": "1280x720",
+          "fps": "29.97",
+          "codec": "H.264",
+          "minMbps": 11.17363702963703,
+          "maxMbps": 11.17363702963703
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "thinkware-fa200",
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 22.34727405927406,
+          "maxMbps": 22.34727405927406,
+          "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file"
+        }
+      ]
+    },
+    {
+      "id": "botslab-g980h",
+      "name": "Botslab G980H",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "2880x1620",
+          "fps": "25",
+          "codec": "H.265 / HEVC",
+          "minMbps": 12.378813866666666,
+          "maxMbps": 20.063852503793626
+        },
+        {
+          "role": "left",
+          "resolution": "1920x1080",
+          "fps": "25",
+          "codec": "H.265 / HEVC",
+          "minMbps": 7.4038208,
+          "maxMbps": 8.819706133333332
+        },
+        {
+          "role": "right",
+          "resolution": "1920x1080",
+          "fps": "25",
+          "codec": "H.265 / HEVC",
+          "minMbps": 7.824601599999999,
+          "maxMbps": 8.938873432835821
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "25",
+          "codec": "H.265 / HEVC",
+          "minMbps": 1.0774133333333333,
+          "maxMbps": 4.489338666666667
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "botslab-g980h",
+      "setups": [
+        {
+          "id": "front-left-right-rear",
+          "roles": [
+            "front",
+            "left",
+            "right",
+            "rear"
+          ],
+          "minMbps": 28.6846496,
+          "maxMbps": 42.31177073662945,
+          "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file"
+        }
+      ]
+    },
+    {
+      "id": "thinkware-arc-800",
+      "name": "Thinkware ARC 800",
+      "channels": [
+        {
+          "role": "front",
+          "resolution": "3840x2160",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 33.69424213333333,
+          "maxMbps": 33.69424213333333
+        },
+        {
+          "role": "rear",
+          "resolution": "1920x1080",
+          "fps": "30",
+          "codec": "H.264",
+          "minMbps": 8.528418133333332,
+          "maxMbps": 8.528418133333332
+        }
+      ],
+      "allocationRequired": false,
+      "sourceAnchor": "thinkware-arc-800",
+      "setups": [
+        {
+          "id": "front-rear",
+          "roles": [
+            "front",
+            "rear"
+          ],
+          "minMbps": 42.222660266666665,
+          "maxMbps": 42.222660266666665,
+          "basis": "Full 60-second driving-loop estimate from constant allocated file sizes across the submitted channel group. Includes padding, audio and metadata. Short interrupted clips use more storage per recorded minute.",
+          "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
+          "sourceType": "complete-file"
+        }
+      ]
     }
   ],
   "notes": {
@@ -4080,7 +4358,11 @@
     "viofo-a119s": "These two 1080p60 samples use different recording rates. The range covers both, without assuming the same quality-menu selection.",
     "vueroid-s1-qhd-infinite": "30 fps data came from a three-camera setup. The 60 fps submission recorded only Front. Reduced-channel 30 fps results assume the same per-camera rate.",
     "70mai-t800": "The published three-camera estimate does not specify whether the Rear camera is the 1080p or 4K version. Front-only FAQ figures conflict, so they are not included.",
-    "cansonic-ultradash-z4-standard": "High and Highest Quality come from separate submitted card sessions. Highest Quality varied across the sampled clips, so its recording times are shown as a range."
+    "cansonic-ultradash-z4-standard": "High and Highest Quality come from separate submitted card sessions. Highest Quality varied across the sampled clips, so its recording times are shown as a range.",
+    "ottocast-ottosafe-cam": "Measured configuration only. Recording time varies with scene content and interrupted clips.",
+    "thinkware-fa200": "Measured configuration only. Recording time varies with scene content and interrupted clips.",
+    "botslab-g980h": "Measured configuration only. Recording time varies with scene content and interrupted clips.",
+    "thinkware-arc-800": "Measured configuration only. Recording time varies with scene content and interrupted clips."
   },
   "links": {
     "viofo-a229-pro": {

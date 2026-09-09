@@ -10,6 +10,18 @@ class ExportTests(unittest.TestCase):
         self.reference = (ROOT / 'docs/video-metadata-reference.md').read_text()
         self.catalog = json.loads((HERE / 'catalog.json').read_text())
 
+    def test_recovered_storage_uses_padded_files_not_video_stream(self):
+        extras = json.loads((HERE / 'recording-modes.json').read_text())
+        data = add_recording_modes(extract(self.reference, self.catalog), extras)
+        cameras = {c['id']: c for c in data['cameras']}
+        fa = cameras['thinkware-fa200']['setups'][0]['modes'][0]
+        self.assertAlmostEqual(fa['minMbps'], 2 * 83886080 * 8 / 60.06 / 1e6)
+        self.assertEqual(fa['channels'][0]['minMbps'], fa['channels'][1]['minMbps'])
+        self.assertEqual(fa['sourceType'], 'complete-file')
+        arc = cameras['thinkware-arc-800']['setups'][0]['modes'][0]
+        self.assertAlmostEqual(arc['minMbps'], (252706816 + 63963136) * 8 / 60 / 1e6)
+        self.assertEqual(cameras['botslab-g980h']['setups'][0]['roles'], ['front', 'left', 'right', 'rear'])
+
     def test_real_measurements_exclude_parking_and_incomplete_cameras(self):
         data = extract(self.reference, self.catalog)
         camera = next(c for c in data['cameras'] if c['name'] == 'Viofo A229 Pro')
@@ -103,7 +115,9 @@ class ExportTests(unittest.TestCase):
         extra = json.loads((HERE / 'recording-modes.json').read_text())
         data = add_recording_modes(extract(self.reference, self.catalog), extra)
         camera = next(c for c in data['cameras'] if c['id'] == 'cansonic-ultradash-z4-standard')
-        high, highest = camera['setups'][-1]['modes']
+        complete, high, highest = camera['setups'][-1]['modes']
+        self.assertEqual(complete['sourceType'], 'complete-file')
+        self.assertGreater(complete['minMbps'], high['minMbps'])
         self.assertEqual([c['role'] for c in high['channels']], ['front', 'telephoto', 'rear'])
         self.assertAlmostEqual(high['maxMbps'], 74.1)
         self.assertAlmostEqual(highest['minMbps'], 73.8)

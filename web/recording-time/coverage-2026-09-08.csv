@@ -43,7 +43,7 @@ App catalog,Thinkware Q800 Pro,Included,Thinkware Q800 Pro,Available setups: fro
 App catalog,Thinkware Q200,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware ARC,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware ARC 700,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
-App catalog,Thinkware ARC 800,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
+App catalog,Thinkware ARC 800,Included,Thinkware ARC 800,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 App catalog,Thinkware ARC 900,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
 App catalog,Thinkware T700,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware F790,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
@@ -51,7 +51,7 @@ App catalog,Thinkware F70 Pro,Missing: catalog-only or variant,,No matching main
 App catalog,Thinkware F70,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware F200 Pro,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware F200,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
-App catalog,Thinkware FA200,Missing: parking-only rates,,"Maintained profile has only parking measurements, not driving rates."
+App catalog,Thinkware FA200,Included,Thinkware FA200,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 App catalog,Thinkware F800 Pro,Included,Thinkware F800 Pro,Available setups: front. Coverage does not imply every menu setting or setup.
 App catalog,Thinkware F800,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Thinkware F770,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
@@ -260,7 +260,7 @@ App catalog,Pruveeo D90-4CH-RGW,Missing: catalog-only or variant,,No matching ma
 App catalog,Pruveeo RD316,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Terunsoul D016 4K+4K,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
 App catalog,Terunsoul 4K 3-Channel,Missing: catalog-only or variant,,No matching maintained recording-rate profile in this audit. Requires rate evidence and release/variant verification before calculator inclusion. Not an assertion that manufacturer data does not exist.
-App catalog,Botslab G980H,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
+App catalog,Botslab G980H,Included,Botslab G980H,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 Maintained profile,70mai M310,Included,70mai M310,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,70mai T800,Included,70mai T800,Available setups: front-rear-interior. Coverage does not imply every menu setting or setup.
 Maintained profile,70mai 4K Omni X800,Included,70mai 4K Omni X800,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
@@ -271,7 +271,7 @@ Maintained profile,BlackVue DR970X Plus,Included,Blackvue DR970X Plus,"Available
 Maintained profile,BlackVue Elite 10,Included,Blackvue Elite 10,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
 Maintained profile,BlackVue Elite 8,Included,Blackvue Elite 8,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
 Maintained profile,BlackVue Elite 9,Included,Blackvue Elite 9,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
-Maintained profile,Botslab G980H,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
+Maintained profile,Botslab G980H,Included,Botslab G980H,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 Maintained profile,Cansonic UltraDash Z3+ Standard Edition,Included,Cansonic UltraDash Z3+ Standard Edition,"Available setups: front, front-rear, front-telephoto, front-rear-telephoto. Coverage does not imply every menu setting or setup."
 Maintained profile,Cansonic UltraDash Z4 Standard Edition,Included,Cansonic UltraDash Z4 Standard Edition,"Available setups: front, front-rear, front-telephoto, front-telephoto-rear. Coverage does not imply every menu setting or setup."
 Maintained profile,Cobra Road Scout,Included,Cobra Road Scout,Available setups: front. Coverage does not imply every menu setting or setup.
@@ -289,18 +289,18 @@ Maintained profile,BlackVue DR900S-2CH,Included,Blackvue DR900S-2CH,"Available s
 Maintained profile,Rove R2-4K Dual,Included,Rove R2-4K Dual,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
 Maintained profile,Rove R2-4K,Missing: parking-only rates,,"Maintained profile has only parking measurements, not driving rates."
 Maintained profile,Thinkware F800 Pro,Included,Thinkware F800 Pro,Available setups: front. Coverage does not imply every menu setting or setup.
-Maintained profile,Thinkware FA200,Missing: parking-only rates,,"Maintained profile has only parking measurements, not driving rates."
+Maintained profile,Thinkware FA200,Included,Thinkware FA200,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 Maintained profile,Thinkware Q800 Pro,Included,Thinkware Q800 Pro,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,VIOFO A119 Mini,Included,Viofo A119 Mini,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,VIOFO A119 v3,Included,Viofo A119 v3,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,VIOFO A139,Included,Viofo A139,"Available setups: front, front-rear, front-interior, front-rear-interior. Coverage does not imply every menu setting or setup."
 Maintained profile,Nextbase 622GW,Included,Nextbase 622GW,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
-Maintained profile,Ottocast OttoSafe Cam,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
+Maintained profile,Ottocast OttoSafe Cam,Included,Ottocast OttoSafe Cam,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 Maintained profile,Rove R2-4K Pro,Included,Rove R2-4K Pro,Available setups: front. Coverage does not imply every menu setting or setup.
 Maintained profile,Sony A7 III,Outside dashcam scope,,"Action, drone or interchangeable-lens camera."
 Maintained profile,Tesla TeslaCam,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
 Maintained profile,Thinkware ARC 700,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
-Maintained profile,Thinkware ARC 800,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
+Maintained profile,Thinkware ARC 800,Included,Thinkware ARC 800,Recovered complete-file driving storage evidence from original submissions or archived recordings. Only measured configuration is selectable.
 Maintained profile,Thinkware ARC 900,Missing: profile lacks driving rates,,Profile has recognition/configuration facts but no usable driving bitrate or recording-time figure. Needs measured driving files or a published duration/bitrate.
 Maintained profile,Thinkware U1000 Plus,Included,Thinkware U1000 Plus,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."
 Maintained profile,Thinkware U1000,Included,Thinkware U1000,"Available setups: front, front-rear. Coverage does not imply every menu setting or setup."

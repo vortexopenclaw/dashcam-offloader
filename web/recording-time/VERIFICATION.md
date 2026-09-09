@@ -299,3 +299,7 @@ or shortcode execution in an actual WordPress installation.
   validate origin, source window, and bounds.
 - No production changes. Safari/Firefox and assistive-technology walkthroughs
   have not been run. Actual WordPress installation remains unverified.
+
+## Complete-file recovery, September 8 follow-up
+
+85 presets. Original 50-record feedback archive audited privately. Full-file evidence saved without filenames, timestamps, paths, contacts or notes. New FA200 regression checks equal allocated storage despite different encoded bitrates. ARC 800 checks constant allocation divided by observed full-loop duration. Browser source attribution distinguishes complete-file measurements from manufacturer data. Scanner/receiver logging changes are on a separate review branch, not deployed by this calculator update.
