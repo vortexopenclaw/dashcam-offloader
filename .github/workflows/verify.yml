@@ -3,6 +3,8 @@ name: Verify
 on:
   push:
     branches-ignore: [main, ci-status]
+    paths-ignore:
+      - 'web/recording-time/**'
   workflow_dispatch:
 
 permissions:
