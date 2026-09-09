@@ -1,0 +1,36 @@
+name: Recording calculator
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/recording-time/**'
+      - 'docs/video-metadata-reference.md'
+      - '.github/workflows/recording-calculator.yml'
+  pull_request:
+    paths:
+      - 'web/recording-time/**'
+      - 'docs/video-metadata-reference.md'
+      - '.github/workflows/recording-calculator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 2
+      - run: bash scripts/privacy-audit.sh
+        env:
+          PRIVACY_AUDIT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      - run: python3 -m unittest discover -s web/recording-time -p 'test_*.py'
+      - run: node --test web/recording-time/calculator.test.mjs
+      - run: php -l web/recording-time/wordpress/vortex-recording-time.php
+      - run: python3 web/recording-time/build.py
+      - run: php web/recording-time/test_shortcode.php
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: recording-time-calculator
+          path: web/recording-time/dist/
+          if-no-files-found: error
