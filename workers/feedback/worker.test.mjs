@@ -156,3 +156,25 @@ test("clientFingerprint is stable and salt-dependent", async () => {
   assert.match(a1, /^[0-9a-f]{64}$/);
   assert.match(unknown, /^[0-9a-f]{64}$/);
 });
+
+
+test("storage samples retain paired complete-file measurements without private fields", () => {
+  const short = {fileSizeBytes:120000000,durationSeconds:30,width:3840,height:2160,
+    nominalFrameRate:30,videoBitrate:16000000,relativePath:"private/location.mp4",
+    timestamp:"private",gps:"private",storageBytesPerSecond:999};
+  const scan = sanitizeScan({videoSpecSummaries:[{channel:"front",storageRateSamples:[
+    short, {...short,durationSeconds:60}, {...short,durationSeconds:0},
+    {...short,durationSeconds:Infinity}, {...short,fileSizeBytes:-1},
+    {...short,fileSizeBytes:"120000000"}, null,
+  ]}]});
+  const pairs = scan.videoSpecSummaries[0].storageRateSamples;
+  assert.equal(pairs.length,2);
+  assert.deepEqual(pairs.map(s=>s.fileSizeBytes/s.durationSeconds),[4000000,2000000]);
+  assert.equal(pairs[0].videoBitrate,16000000);
+  assert.deepEqual(Object.keys(pairs[0]).sort(),[
+    "fileSizeBytes","durationSeconds","width","height","nominalFrameRate","videoBitrate"
+  ].sort());
+  assert.deepEqual(sanitizeScan({videoSpecSummaries:[{}]}).videoSpecSummaries[0].storageRateSamples,[]);
+  assert.equal(sanitizeScan({videoSpecSummaries:[{storageRateSamples:Array(100).fill(short)}]})
+    .videoSpecSummaries[0].storageRateSamples.length,64);
+});

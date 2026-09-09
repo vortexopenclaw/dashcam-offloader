@@ -441,6 +441,23 @@ function sanitizeVideoSpecSample(sample) {
   };
 }
 
+// Accept measurements only, never paths, times, GPS, or arbitrary nested fields.
+function sanitizeStorageRateSample(sample) {
+  if (!sample || typeof sample !== "object" || Array.isArray(sample)) return null;
+  const size = sample.fileSizeBytes, duration = sample.durationSeconds;
+  if (!Number.isSafeInteger(size) || size <= 0 || size > 1e12 ||
+      !Number.isFinite(duration) || duration <= 0 || duration > 86400) return null;
+  const positive = (value, max) => Number.isFinite(value) && value > 0 && value <= max ? value : null;
+  return {
+    fileSizeBytes: size,
+    durationSeconds: duration,
+    width: positive(sample.width, 32768),
+    height: positive(sample.height, 32768),
+    nominalFrameRate: positive(sample.nominalFrameRate, 1000),
+    videoBitrate: positive(sample.videoBitrate, 1e10),
+  };
+}
+
 function sanitizeVideoSpecSummary(summary) {
   if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
     return null;
@@ -469,6 +486,9 @@ function sanitizeVideoSpecSummary(summary) {
     sampleBitrateMax: nullableNumber(summary.sampleBitrateMax),
     sampleDurationMin: nullableNumber(summary.sampleDurationMin),
     sampleDurationMax: nullableNumber(summary.sampleDurationMax),
+    storageRateSamples: Array.isArray(summary.storageRateSamples)
+      ? summary.storageRateSamples.slice(0, 64).map(sanitizeStorageRateSample).filter(Boolean)
+      : [],
   };
 }
 

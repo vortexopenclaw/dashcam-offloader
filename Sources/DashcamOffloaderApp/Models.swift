@@ -1035,6 +1035,7 @@ struct FeedbackVideoSpecSummary: Codable, Hashable, Sendable {
     var sampleBitrateMax: Int?
     var sampleDurationMin: Double?
     var sampleDurationMax: Double?
+    var storageRateSamples: [FeedbackStorageRateSample]?
 }
 
 struct FeedbackSettingSnapshot: Codable, Hashable, Sendable {
