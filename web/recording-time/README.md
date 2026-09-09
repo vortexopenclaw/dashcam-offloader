@@ -262,3 +262,7 @@ and all 68 maintained profiles, including explicit aliases and excluded/non-dash
 entries. Do not describe the calculator’s 81 presets as the complete app database.
 Cansonic UltraDash Z4 Standard has been added from driving-folder profile rates.
 The remaining exact model gaps and reasons are in the linked CSV.
+
+### Single recording-time estimates
+
+Each card displays one time, rounded to five minutes. Manufacturer time tables are unchanged. Recovered paired samples use total full-file bytes divided by total duration per channel, deduplicating identical size/duration pairs within that format. Channel means are summed for the selected configuration. If only min/max rates are known, the estimate uses their arithmetic midpoint rate (not the midpoint of the resulting durations). Raw ranges remain available as source evidence.

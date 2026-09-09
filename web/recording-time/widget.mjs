@@ -81,6 +81,9 @@ function render() {
     : official
     ? 'These estimates use the manufacturer’s published recording times or bitrates for this setting.'
     : 'These estimates come from original video files recorded by the dashcams. I generally test at the highest video quality, although the exact menu setting wasn’t saved for every sample. We add the recording rates of the cameras you select to estimate how much footage fits.';
+  if (!mode.hours) $('method-detail').textContent += mode.estimatedMbps != null
+    ? ' Each card shows one estimate using the average measured storage rate.'
+    : ' Each card shows one estimate using the midpoint recording rate when measurements vary.';
   $('camera-note').textContent=current.note;
   $('camera-note').hidden=!current.note;
   $('source').href=mode.sourceUrl || sourceUrl+'#'+current.sourceAnchor;

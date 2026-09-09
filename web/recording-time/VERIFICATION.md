@@ -303,3 +303,7 @@ or shortcode execution in an actual WordPress installation.
 ## Complete-file recovery, September 8 follow-up
 
 85 presets. Original 50-record feedback archive audited privately. Full-file evidence saved without filenames, timestamps, paths, contacts or notes. New FA200 regression checks equal allocated storage despite different encoded bitrates. ARC 800 checks constant allocation divided by observed full-loop duration. Browser source attribution distinguishes complete-file measurements from manufacturer data. Scanner/receiver logging changes are on a separate review branch, not deployed by this calculator update.
+
+### Single-time revision
+
+14 exporter tests, 6 calculation tests, and the full 85-camera browser suite passed. Tests distinguish midpoint bitrate from midpoint duration, prefer measured mean rates, reject invalid means, and verify no time range is rendered. Updated desktop/mobile previews show the G980H four-channel setup with one time per capacity.

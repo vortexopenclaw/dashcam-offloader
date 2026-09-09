@@ -55,7 +55,7 @@ try {
   assert.equal(await page.locator('#channels').isDisabled(),true);
   await chooseCamera('viofo-a329s');
   await page.selectOption('#channels','front-rear-interior');
-  assert.match(await page.locator('#rows').innerText(),/ – /);
+  assert.ok(!(await page.locator('#rows').innerText()).includes(' – '));
   await chooseCamera('thinkware-u3000-pro');
   assert.equal(await page.locator('#partition-note').isVisible(),true);
   await chooseCamera('thinkware-u1000-plus');
@@ -208,7 +208,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#loading').textContent.includes('couldn’t load'));
   assert.equal(await page.locator('#form').isHidden(),true);
   assert.deepEqual(errors, []);
-  console.log(`Browser checks passed: ${catalog.cameras.length} cameras, 1/2/3CH chart changes, five card sizes, single-channel controls, ranges, desktop/mobile, iframe resizing, delayed loader, forged-message rejection, multiple embeds, missing-data state; no JS errors.`);
+  console.log(`Browser checks passed: ${catalog.cameras.length} cameras, 1/2/3CH chart changes, five card sizes, single-channel controls, single time estimates, desktop/mobile, iframe resizing, delayed loader, forged-message rejection, multiple embeds, missing-data state; no JS errors.`);
 } finally {
   await browser.close();
   server.close();

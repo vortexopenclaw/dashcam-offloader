@@ -3098,14 +3098,16 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             }
           ],
           "minMbps": 31.59709013333333,
           "maxMbps": 41.383799466666666,
           "sourceType": "complete-file",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label.",
+          "estimatedMbps": 36.4904448
         },
         {
           "id": "high",
@@ -3159,7 +3161,8 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             },
             {
               "role": "rear",
@@ -3167,14 +3170,16 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 12.303291733333332,
-              "maxMbps": 12.303291733333332
+              "maxMbps": 12.303291733333332,
+              "estimatedMbps": 12.303291733333332
             }
           ],
           "minMbps": 43.90038186666666,
           "maxMbps": 53.6870912,
           "sourceType": "complete-file",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label.",
+          "estimatedMbps": 48.79373653333333
         },
         {
           "id": "high",
@@ -3244,7 +3249,8 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             },
             {
               "role": "telephoto",
@@ -3252,14 +3258,16 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             }
           ],
           "minMbps": 63.19418026666666,
           "maxMbps": 82.76759893333333,
           "sourceType": "complete-file",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label.",
+          "estimatedMbps": 72.9808896
         },
         {
           "id": "high",
@@ -3329,7 +3337,8 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             },
             {
               "role": "telephoto",
@@ -3337,7 +3346,8 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 31.59709013333333,
-              "maxMbps": 41.383799466666666
+              "maxMbps": 41.383799466666666,
+              "estimatedMbps": 36.4904448
             },
             {
               "role": "rear",
@@ -3345,14 +3355,16 @@
               "fps": "30",
               "codec": "H.264",
               "minMbps": 12.303291733333332,
-              "maxMbps": 12.303291733333332
+              "maxMbps": 12.303291733333332,
+              "estimatedMbps": 12.303291733333332
             }
           ],
           "minMbps": 75.49747199999999,
           "maxMbps": 95.07089066666666,
           "sourceType": "complete-file",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label."
+          "basis": "Complete 60-second driving-file sizes including audio, metadata and padding. Samples span recording settings, so the measured range is shown without assigning a quality-menu label.",
+          "estimatedMbps": 85.28418133333332
         },
         {
           "id": "high",
@@ -4183,7 +4195,8 @@
           "fps": "29.97",
           "codec": "H.264",
           "minMbps": 16.983840016813566,
-          "maxMbps": 17.187422823945298
+          "maxMbps": 17.187422823945298,
+          "estimatedMbps": 17.11007119819679
         },
         {
           "role": "rear",
@@ -4191,7 +4204,8 @@
           "fps": "25",
           "codec": "H.264",
           "minMbps": 9.098448500999334,
-          "maxMbps": 9.203282611592272
+          "maxMbps": 9.203282611592272,
+          "estimatedMbps": 9.162484565844991
         }
       ],
       "allocationRequired": false,
@@ -4207,7 +4221,8 @@
           "maxMbps": 26.39070543553757,
           "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "sourceType": "complete-file"
+          "sourceType": "complete-file",
+          "estimatedMbps": 26.27255576404178
         }
       ]
     },
@@ -4221,7 +4236,8 @@
           "fps": "29.97",
           "codec": "H.264",
           "minMbps": 11.17363702963703,
-          "maxMbps": 11.17363702963703
+          "maxMbps": 11.17363702963703,
+          "estimatedMbps": 11.17363702963703
         },
         {
           "role": "rear",
@@ -4229,7 +4245,8 @@
           "fps": "29.97",
           "codec": "H.264",
           "minMbps": 11.17363702963703,
-          "maxMbps": 11.17363702963703
+          "maxMbps": 11.17363702963703,
+          "estimatedMbps": 11.17363702963703
         }
       ],
       "allocationRequired": false,
@@ -4245,7 +4262,8 @@
           "maxMbps": 22.34727405927406,
           "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "sourceType": "complete-file"
+          "sourceType": "complete-file",
+          "estimatedMbps": 22.34727405927406
         }
       ]
     },
@@ -4259,7 +4277,8 @@
           "fps": "25",
           "codec": "H.265 / HEVC",
           "minMbps": 12.378813866666666,
-          "maxMbps": 20.063852503793626
+          "maxMbps": 20.063852503793626,
+          "estimatedMbps": 18.05638267445858
         },
         {
           "role": "left",
@@ -4267,7 +4286,8 @@
           "fps": "25",
           "codec": "H.265 / HEVC",
           "minMbps": 7.4038208,
-          "maxMbps": 8.819706133333332
+          "maxMbps": 8.819706133333332,
+          "estimatedMbps": 8.09543788748565
         },
         {
           "role": "right",
@@ -4275,7 +4295,8 @@
           "fps": "25",
           "codec": "H.265 / HEVC",
           "minMbps": 7.824601599999999,
-          "maxMbps": 8.938873432835821
+          "maxMbps": 8.938873432835821,
+          "estimatedMbps": 8.63439191780822
         },
         {
           "role": "rear",
@@ -4283,7 +4304,8 @@
           "fps": "25",
           "codec": "H.265 / HEVC",
           "minMbps": 1.0774133333333333,
-          "maxMbps": 4.489338666666667
+          "maxMbps": 4.489338666666667,
+          "estimatedMbps": 2.2690754865931675
         }
       ],
       "allocationRequired": false,
@@ -4301,7 +4323,8 @@
           "maxMbps": 42.31177073662945,
           "basis": "Complete file size divided by recorded duration, including audio, metadata and padding. Uses full-length driving clips. Quality-menu selection unconfirmed.",
           "sourceUrl": "https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/main/docs/data/storage-evidence.json",
-          "sourceType": "complete-file"
+          "sourceType": "complete-file",
+          "estimatedMbps": 37.05528796634562
         }
       ]
     },
