@@ -3,6 +3,27 @@ import Foundation
 enum VerificationTest {
     static func run() -> Bool {
         do {
+            // Equal file sizes with different durations must keep their own rates.
+            let short = FeedbackStorageRateSample(fileSizeBytes: 120_000_000, durationSeconds: 30,
+                                                  videoBitrate: 16_000_000)
+            let long = FeedbackStorageRateSample(fileSizeBytes: 120_000_000, durationSeconds: 60)
+            guard short?.storageBytesPerSecond == 4_000_000,
+                  long?.storageBytesPerSecond == 2_000_000,
+                  FeedbackStorageRateSample(fileSizeBytes: 1, durationSeconds: 0) == nil,
+                  FeedbackStorageRateSample(fileSizeBytes: 1, durationSeconds: .infinity) == nil,
+                  FeedbackStorageRateSample(fileSizeBytes: nil, durationSeconds: 60) == nil,
+                  FeedbackStorageRateSample(fileSizeBytes: -1, durationSeconds: 60) == nil else {
+                print("VERIFY FAIL: complete-file storage rates require valid paired measurements")
+                return false
+            }
+            let storageJSON = try JSONEncoder().encode([short!, long!])
+            let storageRoundTrip = try JSONDecoder().decode([FeedbackStorageRateSample].self, from: storageJSON)
+            guard storageRoundTrip.map(\.storageBytesPerSecond) == [4_000_000, 2_000_000],
+                  storageRoundTrip.first?.videoBitrate == 16_000_000 else {
+                print("VERIFY FAIL: paired storage rates did not survive submission encoding")
+                return false
+            }
+
             guard let profilesURL = ProfileStore.defaultProfilesDirectory() else {
                 print("VERIFY FAIL: profiles directory not found")
                 return false

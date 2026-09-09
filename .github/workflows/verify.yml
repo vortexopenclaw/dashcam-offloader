@@ -3,6 +3,8 @@ name: Verify
 on:
   push:
     branches-ignore: [main, ci-status]
+    paths-ignore:
+      - 'web/recording-time/**'
   workflow_dispatch:
 
 permissions:
@@ -42,6 +44,9 @@ jobs:
 
       - name: Test feedback worker sanitizer
         run: node --test workers/feedback/worker.test.mjs
+
+      - name: Test scan storage evidence extraction
+        run: python3 -m unittest discover -s scripts -p 'test_scan_storage_rates.py'
 
       - name: Check review script syntax
         run: python3 -m py_compile scripts/review-feedback-submissions.py

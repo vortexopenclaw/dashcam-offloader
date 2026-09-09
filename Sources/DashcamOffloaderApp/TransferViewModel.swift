@@ -2051,7 +2051,8 @@ final class TransferViewModel: ObservableObject {
                     sampleBitrateMin: bitrates.min(),
                     sampleBitrateMax: bitrates.max(),
                     sampleDurationMin: durations.min(),
-                    sampleDurationMax: durations.max()
+                    sampleDurationMax: durations.max(),
+                    storageRateSamples: bucketSamples.compactMap(FeedbackStorageRateSample.init)
                 )
             }
     }
