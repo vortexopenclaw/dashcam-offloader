@@ -1,8 +1,7 @@
 name: Build and Release
 
+# Merging code is not a release. Publish explicitly from reviewed main.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,10 +13,17 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Check repository privacy and feedback validation
+        run: |
+          bash scripts/privacy-audit.sh
+          node --test workers/feedback/worker.test.mjs
+          python3 -m unittest discover -s scripts -p 'test_scan_storage_rates.py'
 
       - name: Build app
         id: buildapp
