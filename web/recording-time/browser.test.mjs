@@ -191,6 +191,17 @@ try {
   await page.addScriptTag({url:`${url}/embed.js`});
   await page.addScriptTag({url:`${url}/embed.js`});
   assert.equal(await page.locator('iframe').count(), 2);
+  await page.goto(url);
+  await chooseCamera('botslab-g980h');
+  assert.match(await page.locator('#recording-details').innerText(), /Left/);
+  assert.match(await page.locator('#recording-details').innerText(), /Right/);
+  assert.match(await page.locator('#size-note').innerText(), /Includes file padding/);
+  assert.ok(!(await page.locator('#method-detail').innerText()).includes('manufacturer'));
+  await page.setViewportSize({width:1280,height:1000});
+  await page.screenshot({path:path.join(evidence,'storage-desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.screenshot({path:path.join(evidence,'storage-mobile.png'),fullPage:true});
   await page.route('**/cameras.json', route => route.fulfill({status:503,body:'unavailable'}));
   await page.goto(url);
   await page.locator('#loading').waitFor({state:'visible'});
