@@ -1339,13 +1339,15 @@ enum VerificationTest {
             }
 
             let mixedBlackVueFixtures: [(String, TimeInterval, Double, Bool)] = [
-                ("20260913_185449_PF.mp4", 0, 60, true),
-                ("20260913_185549_PF.mp4", 60, 60, true),
-                ("20260913_185649_PF.mp4", 120, 60, true),
+                // Motion cadence must remain recognizable when the microphone is off.
+                ("20260913_185449_PF.mp4", 0, 60, false),
+                ("20260913_185549_PF.mp4", 60, 60, false),
+                ("20260913_185649_PF.mp4", 120, 60, false),
                 ("20260914_090000_PF.mp4", 3_600, 60, false),
                 ("20260914_093000_PF.mp4", 5_400, 60, false),
                 ("20260914_100000_PF.mp4", 7_200, 60, false),
-                ("20260915_120000_PF.mp4", 12_000, 60, false)
+                ("20260915_120000_PF.mp4", 12_000, 60, false),
+                ("20260916_120000_PF.mp4", 20_000, 60, true)
             ]
             let mixedBlackVueBaseTime = Date(timeIntervalSince1970: 1_789_000_000)
             let mixedBlackVueClips = mixedBlackVueFixtures.map { filename, timestamp, _, _ in
@@ -1371,7 +1373,7 @@ enum VerificationTest {
             })
             let mixedBlackVueResult = scanner.inferBlackVueParkingPatterns(
                 in: mixedBlackVueClips,
-                configuredPattern: .motionDetection,
+                configuredPattern: .timelapse,
                 mediaHintsByRelativePath: mixedBlackVueHints
             )
             guard mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[0].relativePath] == .motionDetection,
@@ -1381,8 +1383,13 @@ enum VerificationTest {
                   mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[4].relativePath] == .timelapse,
                   mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[5].relativePath] == .timelapse,
                   mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[6].relativePath] == nil,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[7].relativePath] == .motionDetection,
                   mixedBlackVueResult.outcome == "classified_mixed_with_ambiguity" else {
-                print("VERIFY FAIL: mixed BlackVue parking history did not preserve per-clip motion/time-lapse evidence and ambiguity: \(mixedBlackVueResult)")
+                print("VERIFY FAIL: mixed BlackVue parking history did not preserve microphone-off motion cadence, time-lapse cadence, and ambiguity: \(mixedBlackVueResult)")
+                return false
+            }
+            guard mixedBlackVueResult.detail.contains("audio absence alone is never classified") else {
+                print("VERIFY FAIL: BlackVue parking diagnostics do not describe the microphone-off-safe evidence policy: \(mixedBlackVueResult.detail)")
                 return false
             }
 

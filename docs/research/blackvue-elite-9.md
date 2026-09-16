@@ -38,9 +38,12 @@ The privacy-safe submission aggregates show that motion and time-lapse overlap
 at 3840x2160/30 fps and roughly 60 Mbps front, and 2560x1440/30 fps and roughly
 25 Mbps rear. File sizes and durations overlap too. BlackVue documents two
 stronger per-clip signals: time-lapse `P` files are silent, and a one-minute
-playback file covers about 30 minutes of real time. Use audio presence plus the
-ratio between encoded duration and adjacent filename timestamps; preserve an
-ambiguous label when those signals are insufficient.
+playback file covers about 30 minutes of real time. Use encoded duration and
+filename cadence as the primary sequence signal. Audio presence can support a
+motion classification, but audio absence cannot identify time-lapse by itself
+because ordinary parking motion clips can also be silent when the microphone is
+disabled. Use the ratio between encoded duration and adjacent filename
+timestamps; preserve an ambiguous label when those signals are insufficient.
 
 ## Privacy Notes
 

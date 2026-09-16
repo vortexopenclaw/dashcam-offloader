@@ -203,9 +203,6 @@ extension CardScanner {
         .sorted { $0.timestamp < $1.timestamp }
 
         var patternByMoment: [Int: ParkingPattern] = [:]
-        for (index, moment) in moments.enumerated() where moment.mediaHint.hasAudio == true {
-            patternByMoment[index] = .motionDetection
-        }
 
         enum CadencePattern: Equatable {
             case motion
@@ -272,6 +269,15 @@ extension CardScanner {
             edgeStart = edgeEnd + 1
         }
 
+        // A real-time run is still motion recording when the dashcam microphone
+        // is disabled. Treat audio presence as one-way supporting evidence only
+        // after cadence has been evaluated; audio absence never classifies a clip
+        // by itself.
+        for (index, moment) in moments.enumerated()
+            where patternByMoment[index] == nil && moment.mediaHint.hasAudio == true {
+            patternByMoment[index] = .motionDetection
+        }
+
         let strongPatterns = Set(patternByMoment.values)
         if strongPatterns.isEmpty, let configuredPattern {
             for index in moments.indices where patternByMoment[index] == nil {
@@ -306,7 +312,7 @@ extension CardScanner {
         } else {
             outcome = "kept_ambiguous"
         }
-        let detail = "BlackVue P recordings: \(evidence.isEmpty ? "no per-clip evidence" : evidence), unresolved=\(unresolvedCount), current_setting=\(settingText); audio and duration-aware cadence override the card-wide setting"
+        let detail = "BlackVue P recordings: \(evidence.isEmpty ? "no per-clip evidence" : evidence), unresolved=\(unresolvedCount), current_setting=\(settingText); duration-aware cadence is primary, audio presence is supporting motion evidence, and audio absence alone is never classified"
         return (inferredByRelativePath, outcome, detail)
     }
 
