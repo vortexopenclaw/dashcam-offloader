@@ -24,6 +24,9 @@ enum CopyExecutorVerification {
         guard try await verifiesBasicCopy(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
+        guard try await verifiesFilenameTimestampApplied(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
         guard try await verifiesSkipExisting(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
@@ -37,6 +40,9 @@ enum CopyExecutorVerification {
             return false
         }
         guard try await verifiesCancellationCleanup(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
+        guard try await verifiesLargeCopiesBatchProgress(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
 
@@ -59,6 +65,34 @@ enum CopyExecutorVerification {
               result.mediaItems.first?.status == .copied,
               try fileSize(at: destination) == 2048 else {
             print("VERIFY FAIL: copy executor did not copy a normal file")
+            return false
+        }
+        return true
+    }
+
+    private static func verifiesFilenameTimestampApplied(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let source = sourceRoot.appendingPathComponent("20260913_191600_PF.mp4")
+        let destination = destinationRoot.appendingPathComponent("20260913_191600_PF.mp4")
+        try Data(repeating: 8, count: 2048).write(to: source)
+        let recordingDate = Date(timeIntervalSince1970: 1_789_348_560)
+        var timestampedClip = clip(source: source, relativePath: source.lastPathComponent, size: 2048)
+        timestampedClip.timestamp = recordingDate
+        timestampedClip.timestampSource = .filename
+        guard timestampedClip.timestampSource == .filename, !timestampedClip.hasSuspiciousTimestamp else {
+            print("VERIFY FAIL: timestamp fixture was not eligible for filename-time preservation")
+            return false
+        }
+
+        let result = await runCopy(
+            sourceRoot: sourceRoot,
+            destinationRoot: destinationRoot,
+            items: [CopyPlanItem(clip: timestampedClip, destinationURL: destination, status: .planned)]
+        )
+        let copiedDate = try FileManager.default.attributesOfItem(atPath: destination.path)[.modificationDate] as? Date
+        guard result.mediaItems.first?.status == .copied,
+              let copiedDate,
+              abs(copiedDate.timeIntervalSince(recordingDate)) < 1 else {
+            print("VERIFY FAIL: copied video did not preserve its reliable filename recording time: expected=\(recordingDate.timeIntervalSince1970), actual=\(copiedDate?.timeIntervalSince1970.description ?? "nil")")
             return false
         }
         return true
@@ -196,6 +230,32 @@ enum CopyExecutorVerification {
         return true
     }
 
+    private static func verifiesLargeCopiesBatchProgress(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let source = sourceRoot.appendingPathComponent("batched-progress.MP4")
+        let destination = destinationRoot.appendingPathComponent("batched-progress.MP4")
+        let byteCount = 24 * 1024 * 1024
+        try createSparseFile(at: source, size: UInt64(byteCount))
+
+        let progressBox = await MainActor.run { CopyProgressCounterBox() }
+        let executor = CopyExecutor { progress in
+            progressBox.observe(progress)
+        }
+        let result = await executor.copy(plan: plan(
+            sourceRoot: sourceRoot,
+            destinationRoot: destinationRoot,
+            items: [item(source: source, relativePath: source.lastPathComponent, destination: destination, expectedSize: Int64(byteCount))]
+        ))
+        let copiedByteUpdates = await MainActor.run { progressBox.copiedByteUpdates }
+
+        guard result.mediaItems.first?.status == .copied,
+              copiedByteUpdates == 3,
+              try fileSize(at: destination) == Int64(byteCount) else {
+            print("VERIFY FAIL: large copies did not use 8 MiB progress batches: updates=\(copiedByteUpdates)")
+            return false
+        }
+        return true
+    }
+
     private static func runCopy(sourceRoot: URL, destinationRoot: URL, items: [CopyPlanItem]) async -> CopyRunResult {
         let executor = CopyExecutor { _ in }
         return await executor.copy(plan: plan(sourceRoot: sourceRoot, destinationRoot: destinationRoot, items: items))
@@ -256,5 +316,17 @@ private final class CopyCancellationBox {
         guard !didCancel, progress.copiedBytes > 0 else { return }
         didCancel = true
         task?.cancel()
+    }
+}
+
+@MainActor
+private final class CopyProgressCounterBox {
+    private var lastCopiedBytes: Int64 = 0
+    private(set) var copiedByteUpdates = 0
+
+    func observe(_ progress: CopyProgress) {
+        guard progress.copiedBytes > lastCopiedBytes else { return }
+        copiedByteUpdates += 1
+        lastCopiedBytes = progress.copiedBytes
     }
 }

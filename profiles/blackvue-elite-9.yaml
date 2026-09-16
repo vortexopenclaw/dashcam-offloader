@@ -1,7 +1,7 @@
 id: blackvue-elite-9
 manufacturer: BlackVue
 model: Elite 9
-status: seed
+status: validated
 channel_variants:
   - channels: 2
     roles:
@@ -63,10 +63,13 @@ filename_patterns:
       format: YYYYMMDD_HHMMSS
     mode_group: 3
     channel_group: 4
-modes:
-  N: normal
-  P: parking
-  I: impact_event
+    modes:
+      N: normal
+      P: parking_motion_detection
+      I: parking_impact_detection
+    channels:
+      F: front
+      R: rear
 channels:
   F: front
   R: rear
@@ -81,17 +84,17 @@ grouping:
       - R
 observed_counts:
   files:
-    NF: 1187
-    NR: 1187
-    PF: 253
-    PR: 253
-    IF: 85
-    IR: 85
+    NF: 538
+    NR: 538
+    PF: 531
+    PR: 531
+    IF: 456
+    IR: 456
   groups:
     total: 1525
-    complete_normal_pairs: 1187
-    complete_parking_pairs: 253
-    complete_impact_event_pairs: 85
+    complete_normal_pairs: 538
+    complete_parking_pairs: 531
+    complete_impact_event_pairs: 456
     incomplete_pairs: 0
 exclude:
   - .Trashes/**

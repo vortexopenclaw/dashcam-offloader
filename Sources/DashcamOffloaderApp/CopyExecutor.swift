@@ -3,6 +3,8 @@ import Foundation
 import CryptoKit
 
 struct CopyExecutor {
+    private static let copyBufferSize = 8 * 1024 * 1024
+
     var progressHandler: @MainActor (CopyProgress) -> Void
 
     func copy(plan: CopyPlan) async -> CopyRunResult {
@@ -41,7 +43,12 @@ struct CopyExecutor {
                         progress.copiedBytes += item.totalSize
                     }
                 } else {
-                    let copied = try await copyOne(sourceURL: item.clip.sourceURL, destinationURL: item.destinationURL, expectedSize: item.clip.size) { copiedChunk in
+                    let copied = try await copyOne(
+                        sourceURL: item.clip.sourceURL,
+                        destinationURL: item.destinationURL,
+                        expectedSize: item.clip.size,
+                        modificationDate: reliableRecordingDate(for: item.clip)
+                    ) { copiedChunk in
                         progress.copiedBytes += copiedChunk
                         await update(progress)
                     }
@@ -77,7 +84,12 @@ struct CopyExecutor {
             await update(progress)
 
             do {
-                let copied = try await copyOne(sourceURL: item.sourceURL, destinationURL: item.destinationURL, expectedSize: item.size) { copiedChunk in
+                let copied = try await copyOne(
+                    sourceURL: item.sourceURL,
+                    destinationURL: item.destinationURL,
+                    expectedSize: item.size,
+                    modificationDate: nil
+                ) { copiedChunk in
                     progress.copiedBytes += copiedChunk
                     await update(progress)
                 }
@@ -148,7 +160,13 @@ struct CopyExecutor {
         await progressHandler(updatedProgress)
     }
 
-    private func copyOne(sourceURL: URL, destinationURL: URL, expectedSize: Int64, progress: (Int64) async -> Void) async throws -> Bool {
+    private func copyOne(
+        sourceURL: URL,
+        destinationURL: URL,
+        expectedSize: Int64,
+        modificationDate: Date?,
+        progress: (Int64) async -> Void
+    ) async throws -> Bool {
         let fileManager = FileManager.default
         let destination = destinationURL
         let destinationDirectory = destination.deletingLastPathComponent()
@@ -171,44 +189,66 @@ struct CopyExecutor {
             }
         }
         let output = try FileHandle(forWritingTo: destination)
-        defer { try? output.close() }
+        var outputIsClosed = false
+        defer {
+            if !outputIsClosed {
+                try? output.close()
+            }
+        }
+        var sourceHasher = SHA256()
 
         while true {
             if Task.isCancelled {
                 throw CancellationError()
             }
-            let data = input.readData(ofLength: 1024 * 1024)
+            let data = input.readData(ofLength: Self.copyBufferSize)
             guard !data.isEmpty else { break }
+            sourceHasher.update(data: data)
             output.write(data)
             await progress(Int64(data.count))
         }
+        try output.close()
+        outputIsClosed = true
 
         let copiedSize = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
         guard copiedSize == expectedSize else {
             throw CopyError.sizeVerificationFailed
         }
-        guard try filesHaveMatchingSHA256(sourceURL, destination) else {
+        let sourceDigest = Array(sourceHasher.finalize())
+        let destinationDigest = Array(try sha256Digest(for: destination))
+        guard sourceDigest == destinationDigest else {
             throw CopyError.checksumVerificationFailed
+        }
+        if let modificationDate {
+            try fileManager.setAttributes([.modificationDate: modificationDate], ofItemAtPath: destination.path)
         }
         didFinishWriting = true
         return true
     }
 
-    private func filesHaveMatchingSHA256(_ firstURL: URL, _ secondURL: URL) throws -> Bool {
-        try sha256Hex(for: firstURL) == sha256Hex(for: secondURL)
+    private func reliableRecordingDate(for clip: ClipItem) -> Date? {
+        guard clip.timestampSource == .filename,
+              !clip.hasSuspiciousTimestamp else {
+            return nil
+        }
+        return clip.timestamp
     }
 
-    private func sha256Hex(for url: URL) throws -> String {
+    private func filesHaveMatchingSHA256(_ firstURL: URL, _ secondURL: URL) throws -> Bool {
+        try Array(sha256Digest(for: firstURL)) == Array(sha256Digest(for: secondURL))
+    }
+
+    private func sha256Digest(for url: URL) throws -> SHA256.Digest {
         let input = try FileHandle(forReadingFrom: url)
         defer { try? input.close() }
         var hasher = SHA256()
         while true {
             if Task.isCancelled { throw CancellationError() }
-            let data = input.readData(ofLength: 1024 * 1024)
+            let data = input.readData(ofLength: Self.copyBufferSize)
             guard !data.isEmpty else { break }
             hasher.update(data: data)
         }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return hasher.finalize()
     }
 
     private func concatenateVideoItem(
@@ -295,6 +335,9 @@ struct CopyExecutor {
         }
         switch exportSession.status {
         case .completed:
+            if let modificationDate = reliableRecordingDate(for: item.clip) {
+                try fileManager.setAttributes([.modificationDate: modificationDate], ofItemAtPath: destinationURL.path)
+            }
             didFinishExport = true
             await progress(item.totalSize)
             return true

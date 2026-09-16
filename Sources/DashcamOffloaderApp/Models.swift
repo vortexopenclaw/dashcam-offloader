@@ -578,7 +578,10 @@ struct CopyPlanItem: Identifiable, Hashable, Sendable {
     }
 
     var displayCreatedAt: Date? {
-        createdAt ?? clip.timestamp
+        if clip.timestampSource == .filename, !clip.hasSuspiciousTimestamp {
+            return clip.timestamp
+        }
+        return createdAt ?? clip.timestamp
     }
 
     var displayModeLabel: String {

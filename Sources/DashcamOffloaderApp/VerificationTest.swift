@@ -1294,6 +1294,38 @@ enum VerificationTest {
                 return false
             }
 
+            let elite9Source = temp.appendingPathComponent("BLACKVUE-ELITE-9", isDirectory: true)
+            try FileManager.default.createDirectory(at: elite9Source.appendingPathComponent("BlackVue/Config", isDirectory: true), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: elite9Source.appendingPathComponent("BlackVue/Record", isDirectory: true), withIntermediateDirectories: true)
+            try Data("model = ELITE 9\nversion = 1.010\nrev = 830\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/version.bin"))
+            try Data("model = ELITE 9 v1.010(rev830)\nversion = 3.02\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
+            try Data("model = ELITE 9 v1.010(rev830)\nversion = 1.000\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/smart_gsensor_version.bin"))
+            for (index, filename) in [
+                "20260913_185300_NF.mp4",
+                "20260913_185300_NR.mp4",
+                "20260913_185449_PF.mp4",
+                "20260913_185449_PR.mp4",
+                "20260913_185600_IF.mp4",
+                "20260913_185600_IR.mp4"
+            ].enumerated() {
+                try Data(repeating: UInt8(31 + index), count: 1024).write(
+                    to: elite9Source.appendingPathComponent("BlackVue/Record/\(filename)")
+                )
+            }
+            let elite9Scan = try scanner.scanWithOSD(sourceURL: elite9Source, profiles: profiles)
+            let elite9Modes = Dictionary(uniqueKeysWithValues: elite9Scan.clips.map { ($0.filename, $0.mode) })
+            guard elite9Scan.selectedProfile?.id == "blackvue-elite-9",
+                  elite9Scan.identifiedCamera?.model == "Elite 9",
+                  elite9Scan.identifiedCamera?.isSupported == true,
+                  elite9Modes["20260913_185300_NF.mp4"] == "normal",
+                  elite9Modes["20260913_185449_PF.mp4"] == "parking_motion_detection",
+                  elite9Modes["20260913_185449_PR.mp4"] == "parking_motion_detection",
+                  elite9Modes["20260913_185600_IF.mp4"] == "parking_impact_detection",
+                  elite9Modes["20260913_185600_IR.mp4"] == "parking_impact_detection" else {
+                print("VERIFY FAIL: Elite 9 exact metadata or N/P/I classification regressed: profile=\(elite9Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite9Scan.identifiedCamera)), clips=\(elite9Modes)")
+                return false
+            }
+
             let elite10Source = temp.appendingPathComponent("BLACKVUE", isDirectory: true)
             guard let elite10Profile = profiles.first(where: { $0.id == "blackvue-elite-10" }),
                   elite10Profile.detectionRules.contains(where: { $0.path == "BlackVue/Config/version.bin" && $0.exists == true }) else {

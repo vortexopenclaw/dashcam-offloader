@@ -2,7 +2,7 @@
 
 ## Status
 
-Seed profile, based on one real 2CH sample card read-only scanned at `/Volumes/BLACKVUE` and official BlackVue Elite 9 manual/firmware references.
+Validated profile based on one directly sampled 2CH card, one privacy-sanitized 2CH app submission, and official BlackVue Elite 9 manual/firmware references. The newest scan used firmware 1.010 with parking configured for motion and impact detection only.
 
 Use `BlackVue Elite 9` as the public app model name. Treat channel count as variant metadata behind the scenes.
 
@@ -42,11 +42,11 @@ Examples:
 - `BlackVue/Record/20260604_144033_IF.mp4`
 - `BlackVue/Record/20260604_144033_IR.mp4`
 
-Observed mode letters:
+Observed and user-confirmed mode letters:
 
 - `N` - normal or continuous recording.
-- `P` - parking recording.
-- `I` - impact or event recording, provisional label until more BlackVue evidence confirms exact naming.
+- `P` - parking motion detection. The firmware 1.010 submission confirms `20260913_185449_PF.mp4` is motion-triggered footage, not time-lapse.
+- `I` - parking impact detection while the camera is parked; `IF` is the front-camera variant and `IR` is the paired rear-camera variant.
 
 Observed channel letters:
 
@@ -55,12 +55,12 @@ Observed channel letters:
 
 Observed suffix counts:
 
-- `NF` - 1187 files.
-- `NR` - 1187 files.
-- `PF` - 253 files.
-- `PR` - 253 files.
-- `IF` - 85 files.
-- `IR` - 85 files.
+- `NF` - 538 files.
+- `NR` - 538 files.
+- `PF` - 531 files.
+- `PR` - 531 files.
+- `IF` - 456 files.
+- `IR` - 456 files.
 
 ## Related-File Grouping
 
@@ -69,10 +69,14 @@ Group related files by date, time, and mode letter. The channel letter should no
 Observed groups:
 
 - 1525 total groups.
-- 1187 complete `NF/NR` pairs.
-- 253 complete `PF/PR` pairs.
-- 85 complete `IF/IR` pairs.
+- 538 complete `NF/NR` pairs.
+- 531 complete `PF/PR` pairs.
+- 456 complete `IF/IR` pairs.
 - No incomplete front/rear pairs were observed on this sample card.
+
+## Timestamps
+
+Use the `YYYYMMDD_HHMMSS` filename timestamp as the recording time. On the firmware 1.010 card, Finder showed filesystem modification times seven hours earlier than the camera-local filename time. This is consistent with BlackVue writing filesystem timestamps on a UTC basis while the filename carries the configured camera clock. The app should display the filename time and apply it to downloaded-file modification metadata rather than propagating the misleading card-filesystem value.
 
 ## Channel Variants
 
@@ -108,4 +112,4 @@ Weak signal:
 
 - Validate Elite 8 with a real card and compare filename structure and model metadata.
 - Validate Elite 10 when a card or reliable sample becomes available.
-- Confirm the exact BlackVue mode name for `I` recordings.
+- Validate how the same `I` suffix is represented when an impact happens during normal driving.

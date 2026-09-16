@@ -1,9 +1,13 @@
-# Dashcam Offloader 0.1.11
+# Dashcam Offloader 0.1.12
 
-- Card-learning submissions now preserve anonymous paired file-size and duration
-  measurements, so recording-time estimates can include actual file padding,
-  audio, and metadata instead of relying only on video bitrate.
-- Each measurement retains its resolution and frame rate without filenames,
-  timestamps, GPS, or other location information.
-- Adds a review-only scan-data extractor that refuses to combine unrelated
-  size and duration ranges or use parking clips as driving evidence.
+- Correctly recognizes exact Blackvue Elite 9 firmware metadata even when
+  structurally similar Elite 8/10 profiles score higher.
+- Classifies Elite 9 `PF/PR` clips as parking motion detection and `IF/IR`
+  clips as parking impact detection instead of inferring time-lapse footage.
+- Uses reliable filename recording times in the app and on downloaded files,
+  avoiding the Elite 9 card filesystem's seven-hour timestamp shift.
+- Speeds up downloads by reading each source file only once during copy,
+  hashing that same data for verification, and processing 8 MiB chunks instead
+  of issuing a main-thread progress update for every 1 MiB.
+- Card-learning submissions preserve anonymous paired file-size and duration
+  measurements for more accurate recording-time estimates.

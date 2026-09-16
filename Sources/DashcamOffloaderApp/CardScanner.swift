@@ -22,15 +22,10 @@ struct CardScanner {
         )
         let primarySafeModelMetadataInfo = safeModelMetadataInfos.first { $0.matchedModel != nil }
         let genericCardShapeHints = genericCardShapeHints(sourceURL: sourceURL, allFiles: allFiles)
-        var candidates = detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles)
-        if let matchedModel = primarySafeModelMetadataInfo?.matchedModel,
-           let exactModelIndex = candidates.firstIndex(where: {
-               profile($0.profile, matchesKnownModel: matchedModel)
-           }),
-           exactModelIndex != candidates.startIndex {
-            let exactModelCandidate = candidates.remove(at: exactModelIndex)
-            candidates.insert(exactModelCandidate, at: candidates.startIndex)
-        }
+        let candidates = prioritizeExactModelCandidate(
+            in: detectProfiles(sourceURL: sourceURL, allFiles: allFiles, profiles: profiles),
+            matchedModel: primarySafeModelMetadataInfo?.matchedModel
+        )
         let topCandidate = candidates.first
         let selectionIssue = topCandidate.flatMap {
             profileSelectionIssue(
@@ -597,6 +592,24 @@ struct CardScanner {
             model.searchNames.contains { compactModelToken($0) == compactModelToken(profile.model) }
     }
 
+    private func prioritizeExactModelCandidate(
+        in candidates: [DetectionCandidate],
+        matchedModel: KnownDashcamModel?
+    ) -> [DetectionCandidate] {
+        guard let matchedModel,
+              let exactModelIndex = candidates.firstIndex(where: {
+                  profile($0.profile, matchesKnownModel: matchedModel)
+              }),
+              exactModelIndex != candidates.startIndex else {
+            return candidates
+        }
+
+        var prioritized = candidates
+        let exactModelCandidate = prioritized.remove(at: exactModelIndex)
+        prioritized.insert(exactModelCandidate, at: prioritized.startIndex)
+        return prioritized
+    }
+
     private func requiresExplicitModelEvidence(_ profile: DashcamProfile) -> Bool {
         ["botslab-g980h"].contains(profile.id)
     }
@@ -834,12 +847,16 @@ struct CardScanner {
             return lhs.profile.displayName < rhs.profile.displayName
         }
 
-        result.candidates = updatedCandidates
         let observedChannelRoles = observedChannelRoles(from: result.allFiles, sourceURL: scanSourceURL)
         let safeModelMetadataInfo = safeKnownModelMetadataInfos(
             sourceURL: scanSourceURL,
             observedChannelRoles: observedChannelRoles
         ).first { $0.matchedModel != nil }
+        updatedCandidates = prioritizeExactModelCandidate(
+            in: updatedCandidates,
+            matchedModel: safeModelMetadataInfo?.matchedModel
+        )
+        result.candidates = updatedCandidates
         result.identifiedCamera = identifyCamera(
             from: updatedCandidates,
             selectedProfile: result.selectedProfile,
