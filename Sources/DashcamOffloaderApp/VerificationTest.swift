@@ -1338,6 +1338,54 @@ enum VerificationTest {
                 return false
             }
 
+            let mixedBlackVueFixtures: [(String, TimeInterval, Double, Bool)] = [
+                ("20260913_185449_PF.mp4", 0, 60, true),
+                ("20260913_185549_PF.mp4", 60, 60, true),
+                ("20260913_185649_PF.mp4", 120, 60, true),
+                ("20260914_090000_PF.mp4", 3_600, 60, false),
+                ("20260914_093000_PF.mp4", 5_400, 60, false),
+                ("20260914_100000_PF.mp4", 7_200, 60, false),
+                ("20260915_120000_PF.mp4", 12_000, 60, false)
+            ]
+            let mixedBlackVueBaseTime = Date(timeIntervalSince1970: 1_789_000_000)
+            let mixedBlackVueClips = mixedBlackVueFixtures.map { filename, timestamp, _, _ in
+                ClipItem(
+                    sourceURL: elite9Source.appendingPathComponent("BlackVue/Record/\(filename)"),
+                    relativePath: "BlackVue/Record/\(filename)",
+                    filename: filename,
+                    mode: "parking_motion_or_timelapse",
+                    channel: "front",
+                    timestamp: mixedBlackVueBaseTime.addingTimeInterval(timestamp),
+                    timestampSource: .filename,
+                    size: 450_000_000,
+                    extensionLowercased: "mp4",
+                    excludedReason: nil,
+                    inferredParkingPattern: nil
+                )
+            }
+            let mixedBlackVueHints = Dictionary(uniqueKeysWithValues: zip(mixedBlackVueClips, mixedBlackVueFixtures).map { clip, fixture in
+                (clip.relativePath, CardScanner.BlackVueParkingMediaHint(
+                    durationSeconds: fixture.2,
+                    hasAudio: fixture.3
+                ))
+            })
+            let mixedBlackVueResult = scanner.inferBlackVueParkingPatterns(
+                in: mixedBlackVueClips,
+                configuredPattern: .motionDetection,
+                mediaHintsByRelativePath: mixedBlackVueHints
+            )
+            guard mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[0].relativePath] == .motionDetection,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[1].relativePath] == .motionDetection,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[2].relativePath] == .motionDetection,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[3].relativePath] == .timelapse,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[4].relativePath] == .timelapse,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[5].relativePath] == .timelapse,
+                  mixedBlackVueResult.inferredByRelativePath[mixedBlackVueClips[6].relativePath] == nil,
+                  mixedBlackVueResult.outcome == "classified_mixed_with_ambiguity" else {
+                print("VERIFY FAIL: mixed BlackVue parking history did not preserve per-clip motion/time-lapse evidence and ambiguity: \(mixedBlackVueResult)")
+                return false
+            }
+
             try Data("EV_PARKING_MODE=1\nMOTIONSENSOR=4\nprivate_setting=not-for-diagnostics\n".utf8).write(
                 to: elite9Source.appendingPathComponent("BlackVue/Config/config.ini")
             )

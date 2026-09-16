@@ -6,6 +6,7 @@
 - Overview: <https://manual.blackvue.com/docs/elite-9-series/getting-started/overview-6/>
 - Key features: <https://manual.blackvue.com/docs/elite-9-series/getting-started/key-features-6/>
 - Elite 8, 9, 10 firmware update: <https://blackvue.com/blogs/update/firmware-update-elite-8-9-10-updates-1190778>
+- Parking-mode behavior: <https://media.blackvue.com/blackvue-dashcam-parking-mode/>
 
 ## Findings
 
@@ -28,10 +29,18 @@ The real Elite 9 sample at `/Volumes/BLACKVUE` confirmed:
 MP4 metadata also includes a `cprt` block with model and firmware fields, but that block includes private fields too. Use it only with field-level extraction and redaction.
 
 BlackVue's current filename reference defines `P` as either parking motion or
-parking time-lapse. The firmware 1.010 card pairs `EV_PARKING_MODE=0` with
-user-confirmed motion footage. Treat `EV_PARKING_MODE=1` as the alternate
-time-lapse option and keep `P` ambiguous if the allowlisted setting is missing;
-do not infer the subtype from the suffix alone.
+parking time-lapse. The firmware 1.010 card's current `EV_PARKING_MODE=0`
+setting agrees with user-confirmed motion clip `20260913_185449_PF.mp4`, but the
+same card can retain older clips recorded under another parking-mode setting.
+Do not apply the current setting card-wide.
+
+The privacy-safe submission aggregates show that motion and time-lapse overlap
+at 3840x2160/30 fps and roughly 60 Mbps front, and 2560x1440/30 fps and roughly
+25 Mbps rear. File sizes and durations overlap too. BlackVue documents two
+stronger per-clip signals: time-lapse `P` files are silent, and a one-minute
+playback file covers about 30 minutes of real time. Use audio presence plus the
+ratio between encoded duration and adjacent filename timestamps; preserve an
+ambiguous label when those signals are insufficient.
 
 ## Privacy Notes
 

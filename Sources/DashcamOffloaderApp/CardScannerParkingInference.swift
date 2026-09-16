@@ -1,3 +1,4 @@
+@preconcurrency import AVFoundation
 import Foundation
 
 extension CardScanner {
@@ -19,26 +20,18 @@ extension CardScanner {
         )
 
         if !blackVueParkingClips.isEmpty {
-            if let blackVueConfiguredPattern {
-                for clip in blackVueParkingClips {
-                    inferredByRelativePath[clip.relativePath] = blackVueConfiguredPattern
-                }
-                diagnostics.append(ScanDiagnosticEntry(
-                    stage: "blackvue_parking_mode",
-                    profileID: profileID,
-                    profileName: nil,
-                    outcome: "classified_from_safe_setting",
-                    detail: "Resolved BlackVue P recordings as \(blackVueConfiguredPattern.rawValue) from the allowlisted parking-mode setting"
-                ))
-            } else {
-                diagnostics.append(ScanDiagnosticEntry(
-                    stage: "blackvue_parking_mode",
-                    profileID: profileID,
-                    profileName: nil,
-                    outcome: "kept_ambiguous",
-                    detail: "BlackVue uses P for both motion detection and time-lapse; no reliable parking-mode setting was available"
-                ))
-            }
+            let blackVueContext = inferBlackVueParkingPatterns(
+                in: blackVueParkingClips,
+                configuredPattern: blackVueConfiguredPattern
+            )
+            inferredByRelativePath.merge(blackVueContext.inferredByRelativePath) { current, _ in current }
+            diagnostics.append(ScanDiagnosticEntry(
+                stage: "blackvue_parking_mode",
+                profileID: profileID,
+                profileName: nil,
+                outcome: blackVueContext.outcome,
+                detail: blackVueContext.detail
+            ))
         }
 
         for clip in clips {
@@ -171,6 +164,159 @@ extension CardScanner {
             of: #"^\d{8}_\d{6}_P[FROI](?:[SL])?$"#,
             options: .regularExpression
         ) != nil
+    }
+
+    struct BlackVueParkingMediaHint {
+        var durationSeconds: Double?
+        var hasAudio: Bool?
+    }
+
+    private struct BlackVueParkingMoment {
+        var timestamp: Date
+        var clips: [ClipItem]
+        var mediaHint: BlackVueParkingMediaHint
+    }
+
+    func inferBlackVueParkingPatterns(
+        in clips: [ClipItem],
+        configuredPattern: ParkingPattern?,
+        mediaHintsByRelativePath: [String: BlackVueParkingMediaHint] = [:]
+    ) -> (
+        inferredByRelativePath: [String: ParkingPattern],
+        outcome: String,
+        detail: String
+    ) {
+        let eligible = clips.filter {
+            $0.excludedReason == nil && $0.isVideo && $0.timestamp != nil && !$0.hasSuspiciousTimestamp
+        }
+        let grouped = Dictionary(grouping: eligible) { clip in
+            recordingMomentKey(for: clip.timestamp!)
+        }
+        let moments = grouped.compactMap { _, momentClips -> BlackVueParkingMoment? in
+            guard let timestamp = momentClips.compactMap(\.timestamp).min() else { return nil }
+            let preferredClip = momentClips.first(where: { $0.channel == "front" }) ?? momentClips.first
+            guard let preferredClip else { return nil }
+            let hint = mediaHintsByRelativePath[preferredClip.relativePath] ??
+                blackVueParkingMediaHint(for: preferredClip.sourceURL)
+            return BlackVueParkingMoment(timestamp: timestamp, clips: momentClips, mediaHint: hint)
+        }
+        .sorted { $0.timestamp < $1.timestamp }
+
+        var patternByMoment: [Int: ParkingPattern] = [:]
+        for (index, moment) in moments.enumerated() where moment.mediaHint.hasAudio == true {
+            patternByMoment[index] = .motionDetection
+        }
+
+        enum CadencePattern: Equatable {
+            case motion
+            case timelapse
+
+            var parkingPattern: ParkingPattern {
+                switch self {
+                case .motion: return .motionDetection
+                case .timelapse: return .timelapse
+                }
+            }
+        }
+
+        var edgePatterns: [CadencePattern?] = []
+        if moments.count >= 2 {
+            for index in 0..<(moments.count - 1) {
+                let current = moments[index]
+                let next = moments[index + 1]
+                let gap = next.timestamp.timeIntervalSince(current.timestamp)
+                guard let duration = current.mediaHint.durationSeconds,
+                      duration.isFinite,
+                      duration >= 5,
+                      duration <= 180,
+                      gap > 0 else {
+                    edgePatterns.append(nil)
+                    continue
+                }
+
+                let timelapseSpan = duration * 30
+                let timelapseTolerance = max(90, timelapseSpan * 0.20)
+                if current.mediaHint.hasAudio == false,
+                   next.mediaHint.hasAudio == false,
+                   abs(gap - timelapseSpan) <= timelapseTolerance {
+                    edgePatterns.append(.timelapse)
+                    continue
+                }
+
+                let motionTolerance = max(15, duration * 0.35)
+                if abs(gap - duration) <= motionTolerance {
+                    edgePatterns.append(.motion)
+                } else {
+                    edgePatterns.append(nil)
+                }
+            }
+        }
+
+        var edgeStart = 0
+        while edgeStart < edgePatterns.count {
+            guard let pattern = edgePatterns[edgeStart] else {
+                edgeStart += 1
+                continue
+            }
+            var edgeEnd = edgeStart
+            while edgeEnd + 1 < edgePatterns.count, edgePatterns[edgeEnd + 1] == pattern {
+                edgeEnd += 1
+            }
+            if edgeEnd - edgeStart + 1 >= 2 {
+                for momentIndex in edgeStart...(edgeEnd + 1) {
+                    if patternByMoment[momentIndex] == nil || pattern == .motion {
+                        patternByMoment[momentIndex] = pattern.parkingPattern
+                    }
+                }
+            }
+            edgeStart = edgeEnd + 1
+        }
+
+        let strongPatterns = Set(patternByMoment.values)
+        if strongPatterns.isEmpty, let configuredPattern {
+            for index in moments.indices where patternByMoment[index] == nil {
+                patternByMoment[index] = configuredPattern
+            }
+        } else if strongPatterns.count == 1, let configuredPattern,
+                  !strongPatterns.contains(configuredPattern) {
+            for index in moments.indices where patternByMoment[index] == nil {
+                patternByMoment[index] = configuredPattern
+            }
+        }
+
+        var inferredByRelativePath: [String: ParkingPattern] = [:]
+        for (index, pattern) in patternByMoment {
+            for clip in moments[index].clips {
+                inferredByRelativePath[clip.relativePath] = pattern
+            }
+        }
+
+        let counts = Dictionary(grouping: patternByMoment.values, by: { $0 }).mapValues(\.count)
+        let unresolvedCount = moments.count - patternByMoment.count
+        let evidence = counts.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ", ")
+        let settingText = configuredPattern?.rawValue ?? "unavailable"
+        let outcome: String
+        let finalPatterns = Set(patternByMoment.values)
+        if finalPatterns.count > 1 {
+            outcome = unresolvedCount == 0 ? "classified_mixed_per_clip" : "classified_mixed_with_ambiguity"
+        } else if !strongPatterns.isEmpty {
+            outcome = "classified_per_clip"
+        } else if configuredPattern != nil {
+            outcome = "classified_from_safe_setting"
+        } else {
+            outcome = "kept_ambiguous"
+        }
+        let detail = "BlackVue P recordings: \(evidence.isEmpty ? "no per-clip evidence" : evidence), unresolved=\(unresolvedCount), current_setting=\(settingText); audio and duration-aware cadence override the card-wide setting"
+        return (inferredByRelativePath, outcome, detail)
+    }
+
+    private func blackVueParkingMediaHint(for fileURL: URL) -> BlackVueParkingMediaHint {
+        let asset = AVURLAsset(url: fileURL)
+        let duration = asset.duration.seconds
+        let validDuration = duration.isFinite && duration > 0 ? duration : nil
+        let hasVideo = !asset.tracks(withMediaType: .video).isEmpty
+        let hasAudio = hasVideo ? !asset.tracks(withMediaType: .audio).isEmpty : nil
+        return BlackVueParkingMediaHint(durationSeconds: validDuration, hasAudio: hasAudio)
     }
 
     func inferWolfboxContextualParkingPatterns(in clips: [ClipItem]) -> (

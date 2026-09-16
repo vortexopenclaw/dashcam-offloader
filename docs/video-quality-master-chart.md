@@ -57,7 +57,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Vantrue N4 Pro S | ~31.9 Mbps | ~31.9 Mbps | none in sample | parking files | Current sample preserves front channel bitrate. |
 | Vantrue E1 Pro | ~31.9 Mbps | ~4.9-5.0 Mbps | ~84-85% lower | parking motion | Time-lapse parking stays 4K30 at ~31.9 Mbps in sample. |
 | Vantrue N4 | ~10.6-15.6 Mbps | ~0.7-1.3 Mbps | ~88-96% lower | A/B parking files | Parking drops to 720p in sampled archive. |
-| BlackVue Elite 9 | ~60.0 Mbps | ~56-60 Mbps | none to mild | PF/IF parking files | Rear parking stayed ~25 Mbps. |
+| BlackVue Elite 9 | ~60.0 Mbps | ~60 Mbps | none observed | PF/IF parking files | Motion and time-lapse overlap at the same 4K30/~60 Mbps front and 1440p30/~25 Mbps rear settings; distinguish silent 30x cadence, not bitrate. |
 | BlackVue DR750S-2CH | ~12.6 Mbps | ~10.5-12.6 Mbps | none to mild | PF/PR parking files | Parking rows look close to driving bitrate. |
 | Thinkware F800 Pro | ~10.0 Mbps | ~3.5 Mbps | ~65% lower | PAK parking event | Parking event row measured at lower frame rate. |
 | Thinkware FA200 | not measured | ~3.3 Mbps | unknown | TIM parking timelapse | Time-lapse row only; no driving baseline in current chart. |

@@ -2,7 +2,7 @@
 
 ## Status
 
-Validated profile based on one directly sampled 2CH card, one privacy-sanitized 2CH app submission, and official BlackVue Elite 9 manual/firmware references. The newest scan used firmware 1.010 with parking configured for motion and impact detection only.
+Validated profile based on one directly sampled 2CH card, one privacy-sanitized 2CH app submission, and official BlackVue Elite 9 manual/firmware references. The firmware 1.010 submission contains historical `P` clips from more than one parking-mode configuration, so the card's current setting cannot be applied retroactively to every clip.
 
 Use `BlackVue Elite 9` as the public app model name. Treat channel count as variant metadata behind the scenes.
 
@@ -12,6 +12,7 @@ Use `BlackVue Elite 9` as the public app model name. Treat channel count as vari
 - Official overview: <https://manual.blackvue.com/docs/elite-9-series/getting-started/overview-6/>
 - Official key features: <https://manual.blackvue.com/docs/elite-9-series/getting-started/key-features-6/>
 - Official Elite 8, 9, 10 firmware update: <https://blackvue.com/blogs/update/firmware-update-elite-8-9-10-updates-1190778>
+- Official BlackVue parking-mode behavior: <https://media.blackvue.com/blackvue-dashcam-parking-mode/>
 
 The official manual describes the Elite 9 as a 2CH BlackVue dash cam with front 4K UHD and rear 2K QHD cameras. BlackVue's firmware update page groups Elite 8, Elite 9, and Elite 10 as related models, but shared filename structure should still be validated with real cards.
 
@@ -49,12 +50,25 @@ Observed and user-confirmed mode letters:
 - `I` - parking impact detection while the camera is parked; `IF` is the front-camera variant and `IR` is the paired rear-camera variant.
 
 BlackVue also uses the same `P` filename code for time-lapse parking files. The
-filename therefore cannot distinguish the two modes by itself. Resolve `P`
-clips from the allowlisted `EV_PARKING_MODE` value in `config.ini`: observed
-value `0` is motion detection, while value `1` selects the camera's time-lapse
-parking option. If that safe setting is unavailable or unknown, keep the label
-as **Parking Motion Or Timelapse** rather than guessing from filename cadence or
-file size. `I` remains parking impact in either parking mode.
+filename therefore cannot distinguish the two modes by itself, and
+`EV_PARKING_MODE` describes only the current setting. Classify each `P` clip
+from its own media and sequence evidence first:
+
+- An audio track is positive motion-detection evidence. BlackVue documents
+  time-lapse parking files as silent.
+- A sustained silent run whose filename timestamps advance by approximately
+  `encoded duration × 30` is time-lapse evidence. BlackVue records at 1 fps and
+  stores 30 minutes of real time as a one-minute 30 fps playback file.
+- A sustained run whose timestamp advance matches encoded duration is
+  real-time motion-detection evidence, including when audio was disabled
+  globally.
+
+The sampled Elite 9's bitrate, resolution, nominal encoded frame rate, duration,
+and file-size ranges overlap between the two modes, so those values alone are
+not classification evidence. Use the allowlisted `EV_PARKING_MODE` value only
+as a fallback when it does not erase stronger per-clip history. Keep isolated
+clips without reliable evidence as **Parking Motion Or Timelapse**. `I` remains
+parking impact in either parking mode.
 
 Observed channel letters:
 
