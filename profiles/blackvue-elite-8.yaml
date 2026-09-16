@@ -68,7 +68,7 @@ filename_patterns:
     channel_group: 4
 modes:
   N: normal
-  P: parking
+  P: parking_motion_or_timelapse
   I: impact_event
 channels:
   F: front

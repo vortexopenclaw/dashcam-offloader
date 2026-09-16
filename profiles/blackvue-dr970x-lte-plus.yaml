@@ -50,7 +50,7 @@ filename_patterns:
       N: normal
       E: event
       M: manual
-      P: parking
+      P: parking_motion_or_timelapse
     channels:
       F: front
       R: rear

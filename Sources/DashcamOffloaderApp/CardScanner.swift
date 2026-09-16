@@ -62,7 +62,8 @@ struct CardScanner {
         }
         let parkingPatternResult = inferParkingPatterns(
             in: rawClips,
-            profileID: selectedProfile?.id
+            profileID: selectedProfile?.id,
+            sourceURL: sourceURL
         )
         let clips = parkingPatternResult.clips
 
@@ -874,7 +875,10 @@ struct CardScanner {
             )
         }
         if let updatedSelectionIssue, let newTop = updatedCandidates.first {
-            let parkingPatternResult = inferParkingPatterns(in: classifyGenerically(files: result.allFiles, sourceURL: scanSourceURL))
+            let parkingPatternResult = inferParkingPatterns(
+                in: classifyGenerically(files: result.allFiles, sourceURL: scanSourceURL),
+                sourceURL: scanSourceURL
+            )
             result.selectedProfile = DashcamProfile.genericNewDashcam
             result.clips = parkingPatternResult.clips
             result.identifiedCamera = nil
@@ -1343,12 +1347,16 @@ struct CardScanner {
     func classifyWithParkingPatterns(files: [URL], sourceURL: URL, profile: DashcamProfile) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
         inferParkingPatterns(
             in: classify(files: files, sourceURL: sourceURL, profile: profile),
-            profileID: profile.id
+            profileID: profile.id,
+            sourceURL: sourceURL
         )
     }
 
     func classifyGenericallyWithParkingPatterns(files: [URL], sourceURL: URL) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
-        inferParkingPatterns(in: classifyGenerically(files: files, sourceURL: sourceURL))
+        inferParkingPatterns(
+            in: classifyGenerically(files: files, sourceURL: sourceURL),
+            sourceURL: sourceURL
+        )
     }
 
     func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {

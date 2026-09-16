@@ -30,7 +30,7 @@ folders:
     mode: model_and_settings
     import: false
 filename_patterns:
-  - pattern: "^(\\d{8})_(\\d{6})_([NI])([FR])\\.mp4$"
+  - pattern: "^(\\d{8})_(\\d{6})_([NPI])([FR])\\.mp4$"
     applies_to:
       - BlackVue/Record
     timestamp:
@@ -39,7 +39,8 @@ filename_patterns:
     channel_group: 4
     modes:
       N: normal
-      I: impact_event
+      P: parking_motion_or_timelapse
+      I: parking_impact_detection
     channels:
       F: front
       R: rear

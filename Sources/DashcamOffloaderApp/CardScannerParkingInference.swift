@@ -3,14 +3,49 @@ import Foundation
 extension CardScanner {
     func inferParkingPatterns(
         in clips: [ClipItem],
-        profileID: String? = nil
+        profileID: String? = nil,
+        sourceURL: URL? = nil
     ) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
         let wolfboxContext = inferWolfboxContextualParkingPatterns(in: clips)
         var inferredByRelativePath = wolfboxContext.inferredByRelativePath
         var diagnostics = wolfboxContext.diagnostics
+        let blackVueParkingClips = clips.filter {
+            isBlackVueParkingFilename($0.filename, profileID: profileID)
+        }
+        let blackVueParkingPaths = Set(blackVueParkingClips.map(\.relativePath))
+        let blackVueConfiguredPattern = blackVueParkingPattern(
+            sourceURL: sourceURL,
+            profileID: profileID
+        )
+
+        if !blackVueParkingClips.isEmpty {
+            if let blackVueConfiguredPattern {
+                for clip in blackVueParkingClips {
+                    inferredByRelativePath[clip.relativePath] = blackVueConfiguredPattern
+                }
+                diagnostics.append(ScanDiagnosticEntry(
+                    stage: "blackvue_parking_mode",
+                    profileID: profileID,
+                    profileName: nil,
+                    outcome: "classified_from_safe_setting",
+                    detail: "Resolved BlackVue P recordings as \(blackVueConfiguredPattern.rawValue) from the allowlisted parking-mode setting"
+                ))
+            } else {
+                diagnostics.append(ScanDiagnosticEntry(
+                    stage: "blackvue_parking_mode",
+                    profileID: profileID,
+                    profileName: nil,
+                    outcome: "kept_ambiguous",
+                    detail: "BlackVue uses P for both motion detection and time-lapse; no reliable parking-mode setting was available"
+                ))
+            }
+        }
 
         for clip in clips {
             if inferredByRelativePath[clip.relativePath] != nil {
+                continue
+            }
+            if blackVueParkingPaths.contains(clip.relativePath) {
                 continue
             }
             if let explicitPattern = explicitParkingPattern(for: clip) {
@@ -24,7 +59,8 @@ extension CardScanner {
                 Self.isParkingOutputCategory(clip.outputCategory) &&
                 clip.timestamp != nil &&
                 !clip.hasSuspiciousTimestamp &&
-                inferredByRelativePath[clip.relativePath] == nil
+                inferredByRelativePath[clip.relativePath] == nil &&
+                !blackVueParkingPaths.contains(clip.relativePath)
         }
 
         let groupedByFolder = Dictionary(grouping: parkingClips) { clip in
@@ -87,6 +123,54 @@ extension CardScanner {
             return copy
         }
         return (annotated, diagnostics)
+    }
+
+    func blackVueParkingPattern(sourceURL: URL?, profileID: String?) -> ParkingPattern? {
+        guard profileID?.hasPrefix("blackvue-") == true,
+              let sourceURL else {
+            return nil
+        }
+
+        let configURL = sourceURL.appendingPathComponent("BlackVue/Config/config.ini")
+        guard let values = try? configURL.resourceValues(forKeys: [.fileSizeKey]),
+              let fileSize = values.fileSize,
+              fileSize > 0,
+              fileSize <= 512 * 1024,
+              let data = try? Data(contentsOf: configURL),
+              let text = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+
+        for line in text.split(whereSeparator: \.isNewline) {
+            let parts = line.split(separator: "=", maxSplits: 1).map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            guard parts.count == 2,
+                  parts[0].caseInsensitiveCompare("EV_PARKING_MODE") == .orderedSame else {
+                continue
+            }
+            switch parts[1] {
+            case "0":
+                return .motionDetection
+            case "1":
+                return .timelapse
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
+
+    func isBlackVueParkingFilename(_ filename: String, profileID: String?) -> Bool {
+        guard profileID?.hasPrefix("blackvue-") == true else { return false }
+        let stem = URL(fileURLWithPath: filename)
+            .deletingPathExtension()
+            .lastPathComponent
+            .uppercased()
+        return stem.range(
+            of: #"^\d{8}_\d{6}_P[FROI](?:[SL])?$"#,
+            options: .regularExpression
+        ) != nil
     }
 
     func inferWolfboxContextualParkingPatterns(in clips: [ClipItem]) -> (

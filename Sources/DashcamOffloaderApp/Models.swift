@@ -336,6 +336,9 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         if normalized == "time_lapse_or_timewarp" {
             return "Time Lapse"
         }
+        if normalized == "parking_motion_or_timelapse" {
+            return "Parking"
+        }
         if normalized.contains("parking_event") ||
             normalized.contains("parking event") ||
             normalized.contains("pevent") ||

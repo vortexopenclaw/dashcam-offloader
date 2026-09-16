@@ -1300,6 +1300,9 @@ enum VerificationTest {
             try Data("model = ELITE 9\nversion = 1.010\nrev = 830\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/version.bin"))
             try Data("model = ELITE 9 v1.010(rev830)\nversion = 3.02\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
             try Data("model = ELITE 9 v1.010(rev830)\nversion = 1.000\n".utf8).write(to: elite9Source.appendingPathComponent("BlackVue/Config/smart_gsensor_version.bin"))
+            try Data("EV_PARKING_MODE=0\nMOTIONSENSOR=4\nprivate_setting=not-for-diagnostics\n".utf8).write(
+                to: elite9Source.appendingPathComponent("BlackVue/Config/config.ini")
+            )
             for (index, filename) in [
                 "20260913_185300_NF.mp4",
                 "20260913_185300_NR.mp4",
@@ -1325,6 +1328,28 @@ enum VerificationTest {
                 print("VERIFY FAIL: Elite 9 exact metadata or N/P/I classification regressed: profile=\(elite9Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite9Scan.identifiedCamera)), clips=\(elite9Modes)")
                 return false
             }
+            guard elite9Scan.diagnostics.contains(where: {
+                $0.stage == "blackvue_parking_mode" &&
+                    $0.outcome == "classified_from_safe_setting" &&
+                    $0.detail.contains("motion_detection") &&
+                    !$0.detail.contains("private_setting")
+            }) else {
+                print("VERIFY FAIL: Elite 9 motion-mode scan did not record safe BlackVue parking-mode evidence: \(elite9Scan.diagnostics)")
+                return false
+            }
+
+            try Data("EV_PARKING_MODE=1\nMOTIONSENSOR=4\nprivate_setting=not-for-diagnostics\n".utf8).write(
+                to: elite9Source.appendingPathComponent("BlackVue/Config/config.ini")
+            )
+            let elite9TimelapseScan = try scanner.scan(sourceURL: elite9Source, profiles: profiles)
+            let elite9TimelapseModes = Dictionary(uniqueKeysWithValues: elite9TimelapseScan.clips.map { ($0.filename, $0.mode) })
+            guard elite9TimelapseModes["20260913_185449_PF.mp4"] == "parking_timelapse",
+                  elite9TimelapseModes["20260913_185449_PR.mp4"] == "parking_timelapse",
+                  elite9TimelapseModes["20260913_185600_IF.mp4"] == "parking_impact_detection",
+                  elite9TimelapseModes["20260913_185600_IR.mp4"] == "parking_impact_detection" else {
+                print("VERIFY FAIL: Elite 9 time-lapse setting did not classify P clips separately from I clips: \(elite9TimelapseModes)")
+                return false
+            }
 
             let elite10Source = temp.appendingPathComponent("BLACKVUE", isDirectory: true)
             guard let elite10Profile = profiles.first(where: { $0.id == "blackvue-elite-10" }),
@@ -1337,18 +1362,22 @@ enum VerificationTest {
             try Data("model = ELITE 10 v1.000(rev100)\nversion = 1.000\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/version.bin"))
             try Data("model = ELITE 10 v1.000(rev100)\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/micom_version.bin"))
             try Data("model = ELITE 10 v1.000(rev100)\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/smart_gsensor_version.bin"))
+            try Data("EV_PARKING_MODE=1\n".utf8).write(to: elite10Source.appendingPathComponent("BlackVue/Config/config.ini"))
             try Data(repeating: 37, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NF.mp4"))
             try Data(repeating: 38, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102800_NR.mp4"))
             try Data(repeating: 39, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102900_IF.mp4"))
             try Data(repeating: 40, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102900_IR.mp4"))
+            try Data(repeating: 41, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103000_PF.mp4"))
+            try Data(repeating: 42, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103000_PR.mp4"))
             let elite10Scan = try scanner.scan(sourceURL: elite10Source, profiles: profiles)
             guard elite10Scan.selectedProfile?.id == "blackvue-elite-10",
                   elite10Scan.identifiedCamera?.manufacturer == "BlackVue",
                   elite10Scan.identifiedCamera?.model == "Elite 10",
                   elite10Scan.identifiedCamera?.isSupported == true,
                   Set(elite10Scan.clips.map(\.channel)) == ["front", "rear"],
-                  elite10Scan.clips.filter({ $0.filename.hasPrefix("N") }).allSatisfy({ $0.mode == "normal" }),
-                  elite10Scan.clips.filter({ $0.filename.hasPrefix("I") }).allSatisfy({ $0.mode == "impact_event" }) else {
+                  elite10Scan.clips.filter({ $0.relativePath.contains("_N") }).allSatisfy({ $0.mode == "normal" }),
+                  elite10Scan.clips.filter({ $0.relativePath.contains("_I") }).allSatisfy({ $0.mode == "parking_impact_detection" }),
+                  elite10Scan.clips.filter({ $0.relativePath.contains("_P") }).allSatisfy({ $0.mode == "parking_timelapse" }) else {
                 print("VERIFY FAIL: remote-card-shaped BlackVue Elite 10 scan did not select the exact profile or classify normal/impact F/R clips: profile=\(elite10Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite10Scan.identifiedCamera)), clips=\(elite10Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")
                 return false
             }
@@ -1382,7 +1411,12 @@ enum VerificationTest {
                   dr970xLTEPlusScan.identifiedCamera?.isSupported == true,
                   Set(dr970xLTEPlusScan.clips.map(\.channel)) == ["front", "rear"],
                   dr970xLTEPlusScan.clips.filter({ $0.relativePath.contains("_N") }).allSatisfy({ $0.mode == "normal" }),
-                  dr970xLTEPlusScan.clips.filter({ $0.relativePath.contains("_P") }).allSatisfy({ $0.mode == "parking" }) else {
+                  dr970xLTEPlusScan.clips.filter({ $0.relativePath.contains("_P") }).allSatisfy({
+                      $0.mode == "parking_motion_or_timelapse" && $0.outputCategory == "Parking"
+                  }),
+                  dr970xLTEPlusScan.diagnostics.contains(where: {
+                      $0.stage == "blackvue_parking_mode" && $0.outcome == "kept_ambiguous"
+                  }) else {
                 print("VERIFY FAIL: real-card-shaped DR970X LTE Plus scan did not select and classify the exact profile: profile=\(dr970xLTEPlusScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: dr970xLTEPlusScan.identifiedCamera)), clips=\(dr970xLTEPlusScan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted()), diagnostics=\(dr970xLTEPlusScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false
             }

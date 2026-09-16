@@ -46,7 +46,7 @@ filename_patterns:
       N: normal
       E: event
       I: event_impact
-      P: parking
+      P: parking_motion_or_timelapse
     channels:
       F: front
       R: rear

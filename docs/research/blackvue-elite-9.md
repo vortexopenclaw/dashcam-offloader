@@ -27,6 +27,12 @@ The real Elite 9 sample at `/Volumes/BLACKVUE` confirmed:
 
 MP4 metadata also includes a `cprt` block with model and firmware fields, but that block includes private fields too. Use it only with field-level extraction and redaction.
 
+BlackVue's current filename reference defines `P` as either parking motion or
+parking time-lapse. The firmware 1.010 card pairs `EV_PARKING_MODE=0` with
+user-confirmed motion footage. Treat `EV_PARKING_MODE=1` as the alternate
+time-lapse option and keep `P` ambiguous if the allowlisted setting is missing;
+do not infer the subtype from the suffix alone.
+
 ## Privacy Notes
 
 - Do not ingest or export `BlackVue/Config/config.ini` by default because it contains private settings and network-related values.

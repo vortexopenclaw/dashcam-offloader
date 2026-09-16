@@ -48,6 +48,14 @@ Observed and user-confirmed mode letters:
 - `P` - parking motion detection. The firmware 1.010 submission confirms `20260913_185449_PF.mp4` is motion-triggered footage, not time-lapse.
 - `I` - parking impact detection while the camera is parked; `IF` is the front-camera variant and `IR` is the paired rear-camera variant.
 
+BlackVue also uses the same `P` filename code for time-lapse parking files. The
+filename therefore cannot distinguish the two modes by itself. Resolve `P`
+clips from the allowlisted `EV_PARKING_MODE` value in `config.ini`: observed
+value `0` is motion detection, while value `1` selects the camera's time-lapse
+parking option. If that safe setting is unavailable or unknown, keep the label
+as **Parking Motion Or Timelapse** rather than guessing from filename cadence or
+file size. `I` remains parking impact in either parking mode.
+
 Observed channel letters:
 
 - `F` - front.

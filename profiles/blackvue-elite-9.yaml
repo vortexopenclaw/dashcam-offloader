@@ -65,7 +65,7 @@ filename_patterns:
     channel_group: 4
     modes:
       N: normal
-      P: parking_motion_detection
+      P: parking_motion_or_timelapse
       I: parking_impact_detection
     channels:
       F: front

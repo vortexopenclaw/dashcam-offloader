@@ -57,7 +57,7 @@ filename_patterns:
     modes:
       M: manual_or_marked_driving
       N: normal
-      P: parking
+      P: parking_motion_or_timelapse
       I: impact_event
     channels:
       F: front
@@ -66,7 +66,7 @@ filename_patterns:
 modes:
   M: manual_or_marked_driving
   N: normal
-  P: parking
+  P: parking_motion_or_timelapse
   I: impact_event
 channels:
   F: front
