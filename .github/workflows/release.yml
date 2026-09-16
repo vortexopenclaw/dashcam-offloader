@@ -57,8 +57,6 @@ jobs:
       - name: Prepare and verify signed update manifest
         id: manifest
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           UPDATE_BASE_URL: ${{ vars.DASHCAM_OFFLOADER_UPDATE_BASE_URL || 'https://dashcam-offloader-updates.vortexradar.workers.dev' }}
           VERSION: 0.1.13
           ZIP_NAME: ${{ steps.package.outputs.zip_name }}
@@ -68,8 +66,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" || -z "${UPDATE_SIGNING_KEY:-}" ]]; then
-            echo "Required update-publishing credentials are not configured." >&2
+          if [[ -z "${UPDATE_SIGNING_KEY:-}" ]]; then
+            echo "The update-signing credential is not configured." >&2
             exit 1
           fi
 
@@ -113,7 +111,8 @@ jobs:
       - name: Stage Cloudflare archive and deploy Worker
         id: cloudflarestage
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
+          CLOUDFLARE_R2_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
+          CLOUDFLARE_WORKERS_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_WORKERS_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           BUCKET: dashcam-offloader-updates
           ZIP_PATH: ${{ steps.package.outputs.zip_path }}
@@ -135,9 +134,11 @@ jobs:
             done
           }
 
-          retry_cloudflare npx --yes wrangler@4.122.0 r2 object put \
+          retry_cloudflare env CLOUDFLARE_API_TOKEN="$CLOUDFLARE_R2_API_TOKEN" \
+            npx --yes wrangler@4.122.0 r2 object put \
             "$BUCKET/$ASSET_KEY" --file "$ZIP_PATH" --remote
-          retry_cloudflare npx --yes wrangler@4.122.0 deploy \
+          retry_cloudflare env CLOUDFLARE_API_TOKEN="$CLOUDFLARE_WORKERS_API_TOKEN" \
+            npx --yes wrangler@4.122.0 deploy \
             --config workers/updates/wrangler.toml
 
       - name: Publish latest release
@@ -153,13 +154,14 @@ jobs:
       - name: Activate public update manifest
         id: cloudflare
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
+          CLOUDFLARE_R2_API_TOKEN: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DASHCAM_OFFLOADER_ACCOUNT_ID }}
           BUCKET: dashcam-offloader-updates
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do
-            if npx --yes wrangler@4.122.0 r2 object put \
+            if env CLOUDFLARE_API_TOKEN="$CLOUDFLARE_R2_API_TOKEN" \
+              npx --yes wrangler@4.122.0 r2 object put \
               "$BUCKET/dashcam-offloader/latest.json" \
               --file build/latest.json \
               --content-type application/json \
