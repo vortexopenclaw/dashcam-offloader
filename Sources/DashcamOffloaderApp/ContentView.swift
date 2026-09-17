@@ -288,6 +288,11 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
+                    if viewModel.isCheckingCardHealth || viewModel.cardHealthReport.didComplete {
+                        Divider()
+                        cardHealthSection
+                    }
+
                     Divider()
                     detectionSection
                     Divider()
@@ -296,6 +301,55 @@ struct ContentView: View {
             }
             .padding(8)
         }
+    }
+
+    @ViewBuilder
+    private var cardHealthSection: some View {
+        if viewModel.isCheckingCardHealth {
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Checking video readability and camera-channel consistency…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            let report = viewModel.cardHealthReport
+            VStack(alignment: .leading, spacing: 8) {
+                Label(
+                    report.hasWarnings ? "Possible card problems found" : "No obvious card health issues found",
+                    systemImage: report.hasWarnings ? "exclamationmark.triangle.fill" : "checkmark.shield.fill"
+                )
+                .font(.subheadline.bold())
+                .foregroundStyle(report.hasWarnings ? Color.orange : Color.green)
+
+                ForEach(Array(report.issues.prefix(5))) { issue in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(issue.title)
+                            .font(.caption.bold())
+                        Text(issue.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if report.issues.count > 5 {
+                    Text("And \(report.issues.count - 5) more issue\(report.issues.count - 5 == 1 ? "" : "s").")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(cardHealthCoverageText(report))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func cardHealthCoverageText(_ report: CardHealthReport) -> String {
+        let checked = "Checked the headers, duration, and video tracks of \(report.checkedVideoCount) MP4/MOV file\(report.checkedVideoCount == 1 ? "" : "s"), plus synchronized channel groups."
+        guard report.skippedContainerCount > 0 else { return checked }
+        return "\(checked) \(report.skippedContainerCount) video file\(report.skippedContainerCount == 1 ? " uses" : "s use") another container, so only channel consistency was checked for \(report.skippedContainerCount == 1 ? "it" : "them")."
     }
 
     private var header: some View {

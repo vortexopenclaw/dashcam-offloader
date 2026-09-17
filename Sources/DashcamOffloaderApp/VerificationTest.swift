@@ -543,6 +543,100 @@ enum VerificationTest {
             try FileManager.default.createDirectory(at: source.appendingPathComponent("Photo", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 
+            let healthSource = temp.appendingPathComponent("health", isDirectory: true)
+            try FileManager.default.createDirectory(at: healthSource, withIntermediateDirectories: true)
+            let emptyVideo = healthSource.appendingPathComponent("empty.mp4")
+            let malformedVideo = healthSource.appendingPathComponent("malformed.mp4")
+            try Data().write(to: emptyVideo)
+            try Data(repeating: 0x7f, count: 2_048).write(to: malformedVideo)
+            let corruptReport = CardHealthAnalyzer().analyze(clips: [
+                ClipItem(
+                    sourceURL: emptyVideo,
+                    relativePath: "health/empty.mp4",
+                    filename: "empty.mp4",
+                    mode: "continuous",
+                    channel: "front",
+                    timestamp: nil,
+                    size: 0,
+                    extensionLowercased: "mp4",
+                    excludedReason: nil
+                ),
+                ClipItem(
+                    sourceURL: malformedVideo,
+                    relativePath: "health/malformed.mp4",
+                    filename: "malformed.mp4",
+                    mode: "continuous",
+                    channel: "front",
+                    timestamp: nil,
+                    size: 2_048,
+                    extensionLowercased: "mp4",
+                    excludedReason: nil
+                )
+            ])
+            guard corruptReport.didComplete,
+                  corruptReport.issues.contains(where: {
+                      $0.kind == .emptyVideo && $0.detail.contains("empty.mp4")
+                  }),
+                  corruptReport.issues.contains(where: {
+                      $0.kind == .unreadableVideo && $0.detail.contains("malformed.mp4")
+                  }) else {
+                print("VERIFY FAIL: card health did not detect empty and malformed video files")
+                return false
+            }
+
+            let baseTimestamp = Date(timeIntervalSince1970: 1_767_225_600)
+            var synchronizedClips: [ClipItem] = []
+            for index in 0..<4 {
+                let timestamp = baseTimestamp.addingTimeInterval(Double(index * 60))
+                for channel in (index == 3 ? ["front"] : ["front", "rear"]) {
+                    var clip = ClipItem(
+                        sourceURL: healthSource.appendingPathComponent("\(index)-\(channel).mp4"),
+                        relativePath: "health/\(index)-\(channel).mp4",
+                        filename: "\(index)-\(channel).mp4",
+                        mode: "continuous",
+                        channel: channel,
+                        timestamp: timestamp,
+                        size: 2_048,
+                        extensionLowercased: "mp4",
+                        excludedReason: nil
+                    )
+                    clip.timestampSource = .filename
+                    synchronizedClips.append(clip)
+                }
+            }
+            let channelIssues = CardHealthAnalyzer().missingChannelIssues(in: synchronizedClips)
+            guard channelIssues.count == 1,
+                  channelIssues.first?.kind == .missingChannel,
+                  channelIssues.first?.title == "Missing Rear recordings",
+                  channelIssues.first?.affectedFileCount == 1 else {
+                print("VERIFY FAIL: card health did not isolate the missing rear-camera group")
+                return false
+            }
+
+            var intermittentOptionalChannelClips: [ClipItem] = []
+            for index in 0..<10 {
+                let timestamp = baseTimestamp.addingTimeInterval(Double(index * 60))
+                for channel in (index < 2 ? ["front", "interior"] : ["front"]) {
+                    var clip = ClipItem(
+                        sourceURL: healthSource.appendingPathComponent("optional-\(index)-\(channel).mp4"),
+                        relativePath: "health/optional-\(index)-\(channel).mp4",
+                        filename: "optional-\(index)-\(channel).mp4",
+                        mode: "parking_motion",
+                        channel: channel,
+                        timestamp: timestamp,
+                        size: 2_048,
+                        extensionLowercased: "mp4",
+                        excludedReason: nil
+                    )
+                    clip.timestampSource = .filename
+                    intermittentOptionalChannelClips.append(clip)
+                }
+            }
+            guard CardHealthAnalyzer().missingChannelIssues(in: intermittentOptionalChannelClips).isEmpty else {
+                print("VERIFY FAIL: a briefly present optional channel was treated as card-wide")
+                return false
+            }
+
             try Data("model=E1PRO".utf8).write(to: source.appendingPathComponent("GPS/E1PRO_Settings.ini"))
             try Data(repeating: 1, count: 2048).write(to: source.appendingPathComponent("Normal/20260101_120000_00001_N_A.MP4"))
             try Data(repeating: 2, count: 1024).write(to: source.appendingPathComponent("Parking/20260101_121000_00002_P_A.MP4"))

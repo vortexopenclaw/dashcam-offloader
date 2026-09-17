@@ -24,9 +24,10 @@ likely dashcam profiles, classify clips, filter by mode/channel/date presets,
 preview and trim the download queue, copy to a chosen destination, organize
 downloads into one folder or by clip type, date, or camera, optionally append
 custom text to copied video filenames, optionally preserve camera settings/log
-files, show progress, stop an active download, skip matching duplicates, check
-for updates, submit feedback, and submit card-learning packages for new cameras
-or supported cameras with unobserved setups.
+files, check a scanned card for obvious unreadable/empty video files and missing
+camera-channel groups, show progress, stop an active download, skip matching
+duplicates, check for updates, submit feedback, and submit card-learning
+packages for new cameras or supported cameras with unobserved setups.
 
 The Electron experiment in `desktop/` proved the generic importer on Apple
 Silicon and Intel Macs, Linux, and Windows, but is now retired as a release
@@ -120,6 +121,8 @@ npm test
 - Optional camera settings/log copy for troubleshooting, stored separately from copied footage
 - Editable review queue before download
 - Clear progress and verification per card/job
+- Read-only post-scan card-health warnings for obvious video-container failures
+  and established camera channels missing from synchronized recording groups
 - Learn Card workflow for new models and alternate known-camera setups, excluding private identifiers and video content by default
 - Feedback submission for bug reports, feature requests, card learning, and optional sanitized scan summaries
 

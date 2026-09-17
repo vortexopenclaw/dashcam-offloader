@@ -17,8 +17,10 @@ final class TransferViewModel: ObservableObject {
     @Published var copyPlan: CopyPlan?
     @Published var copyProgress = CopyProgress()
     @Published var scanSummary = ScanSummary()
+    @Published var cardHealthReport = CardHealthReport()
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
+    @Published var isCheckingCardHealth = false
     @Published var showAllVolumes = false
     @Published var copyResults: [CopyPlanItem] = []
     @Published var supportFileResults: [SupportFileItem] = []
@@ -815,6 +817,8 @@ final class TransferViewModel: ObservableObject {
         identifiedCamera = nil
         selectedProfile = nil
         clips = []
+        cardHealthReport = CardHealthReport()
+        isCheckingCardHealth = false
         lastScannedFiles = []
         lastScanDiagnostics = []
         lastEffectiveScanSourceURL = nil
@@ -860,6 +864,8 @@ final class TransferViewModel: ObservableObject {
         excludedQueueClipIDs = []
         selectedQueueItemIDs = []
         scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
+        cardHealthReport = CardHealthReport()
+        isCheckingCardHealth = false
 
         Task { [weak self, profiles, selectedSource] in
             guard let self else { return }
@@ -910,6 +916,11 @@ final class TransferViewModel: ObservableObject {
                 )
                 self.statusMessage = "Scanned \(selectedSource.url.path). Found \(self.eligibleClips.count) downloadable items"
                 self.rebuildPlan()
+                self.startCardHealthCheck(
+                    clips: self.clips,
+                    source: selectedSource,
+                    generation: generation
+                )
             } catch {
                 guard generation == self.scanGeneration else { return }
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
@@ -918,6 +929,44 @@ final class TransferViewModel: ObservableObject {
                 self.isScanning = false
             }
         }
+    }
+
+    private func startCardHealthCheck(
+        clips: [ClipItem],
+        source: MountedSource,
+        generation: Int
+    ) {
+        guard importMode == .dashcamFootage else { return }
+        isCheckingCardHealth = true
+
+        Task { [weak self] in
+            let report = await Task.detached {
+                CardHealthAnalyzer().analyze(clips: clips)
+            }.value
+            guard let self,
+                  generation == self.scanGeneration,
+                  self.selectedSource?.id == source.id else { return }
+
+            self.cardHealthReport = report
+            self.isCheckingCardHealth = false
+            if report.hasWarnings {
+                self.statusMessage = "Card health warning: \(report.issues.count) issue\(report.issues.count == 1 ? "" : "s") found"
+                self.presentCardHealthAlert(report, sourceName: source.name)
+            } else {
+                self.statusMessage = "Scanned \(source.url.path). No obvious card health issues found"
+            }
+        }
+    }
+
+    private func presentCardHealthAlert(_ report: CardHealthReport, sourceName: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Card Health Warning"
+        let issueSummary = report.issues.prefix(5).map { "• \($0.title): \($0.detail)" }.joined(separator: "\n")
+        let remaining = report.issues.count > 5 ? "\n• \(report.issues.count - 5) more issue(s) shown in the app" : ""
+        alert.informativeText = "Dashcam Offloader found possible problems on \(sourceName).\n\n\(issueSummary)\(remaining)\n\nThe source card was only read; no files were changed."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     nonisolated static func profileAfterCompletedScan(
