@@ -44,9 +44,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.17</string>
+  <string>0.1.18</string>
   <key>CFBundleVersion</key>
-  <string>17</string>
+  <string>18</string>
   <key>DashcamOffloaderBuildCommit</key>
   <string>$BUILD_COMMIT</string>
   <key>LSMinimumSystemVersion</key>

@@ -58,7 +58,12 @@ enum ProfileParser {
         let confidence = scalar("confidence", in: lines) ?? "medium"
         let cameraType = scalar("type", in: lines)
         let folders = parseFolders(lines)
-        let patterns = parseFilenamePatterns(lines)
+        let profileModes = parseTopLevelModeMap(lines)
+        let patterns = parseFilenamePatterns(lines).map { pattern in
+            var pattern = pattern
+            pattern.modeMap = profileModes.merging(pattern.modeMap) { _, patternValue in patternValue }
+            return pattern
+        }
         let channels = parseChannels(lines, patterns: patterns)
         let parsedMaxChannels = parseMaxChannels(lines)
         let maxChannels = parsedMaxChannels ?? (channels.isEmpty ? nil : channels.count)
@@ -199,6 +204,18 @@ enum ProfileParser {
         flush()
 
         return patterns
+    }
+
+    /// A profile-wide mode legend is shared by all filename patterns unless a
+    /// pattern provides its own more-specific mapping.
+    private static func parseTopLevelModeMap(_ lines: [String]) -> [String: String] {
+        guard let range = topLevelBlock(named: "modes", in: lines) else { return [:] }
+        return lines[range].reduce(into: [:]) { map, line in
+            guard let pair = parseMapPair(line.trimmingCharacters(in: .whitespaces)),
+                  !pair.key.isEmpty,
+                  !pair.value.isEmpty else { return }
+            map[pair.key] = pair.value
+        }
     }
 
     private static func parseChannels(_ lines: [String], patterns: [FilenamePattern]) -> [String: String] {

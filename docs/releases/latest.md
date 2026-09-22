@@ -1,6 +1,5 @@
-# Dashcam Offloader 0.1.17
+# Dashcam Offloader 0.1.18
 
-- BlackVue Elite 9 manual `MF`/`MR` clips now appear as Manual Recordings
-  instead of Mixed Recordings.
-- BlackVue event/emergency `EF`/`ER` clips are selectable separately from
-  manual, normal, parking, and impact recordings.
+- BlackVue manual `MF`/`MR` clips are now recognized separately from Mixed
+  Recordings on every supported BlackVue profile, including the Elite 8, Elite
+  9, Elite 10, DR970X Plus, DR970X LTE Plus, and DR770X Box.

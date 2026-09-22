@@ -1526,6 +1526,8 @@ enum VerificationTest {
             try Data(repeating: 40, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_102900_IR.mp4"))
             try Data(repeating: 41, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103000_PF.mp4"))
             try Data(repeating: 42, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103000_PR.mp4"))
+            try Data(repeating: 43, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103100_MF.mp4"))
+            try Data(repeating: 44, count: 1024).write(to: elite10Source.appendingPathComponent("BlackVue/Record/20260616_103100_MR.mp4"))
             let elite10Scan = try scanner.scan(sourceURL: elite10Source, profiles: profiles)
             guard elite10Scan.selectedProfile?.id == "blackvue-elite-10",
                   elite10Scan.identifiedCamera?.manufacturer == "BlackVue",
@@ -1533,6 +1535,7 @@ enum VerificationTest {
                   elite10Scan.identifiedCamera?.isSupported == true,
                   Set(elite10Scan.clips.map(\.channel)) == ["front", "rear"],
                   elite10Scan.clips.filter({ $0.relativePath.contains("_N") }).allSatisfy({ $0.mode == "normal" }),
+                  elite10Scan.clips.filter({ $0.relativePath.contains("_M") }).allSatisfy({ $0.mode == "manual" }),
                   elite10Scan.clips.filter({ $0.relativePath.contains("_I") }).allSatisfy({ $0.mode == "parking_impact_detection" }),
                   elite10Scan.clips.filter({ $0.relativePath.contains("_P") }).allSatisfy({ $0.mode == "parking_timelapse" }) else {
                 print("VERIFY FAIL: remote-card-shaped BlackVue Elite 10 scan did not select the exact profile or classify normal/impact F/R clips: profile=\(elite10Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite10Scan.identifiedCamera)), clips=\(elite10Scan.clips.map { "\($0.filename):\($0.mode):\($0.channel)" }.sorted())")

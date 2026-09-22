@@ -35,7 +35,7 @@ folders:
     description: All video files (normal, event, parking in single folder)
 
 filename_patterns:
-  - pattern: "^(\\d{8})_(\\d{6})_([NEIP])([FR])\\.mp4$"
+  - pattern: "^(\\d{8})_(\\d{6})_([NEMIP])([FR])\\.mp4$"
     timestamp:
       date_group: 1
       time_group: 2
@@ -45,6 +45,7 @@ filename_patterns:
     modes:
       N: normal
       E: event
+      M: manual
       I: event_impact
       P: parking_motion_or_timelapse
     channels:
