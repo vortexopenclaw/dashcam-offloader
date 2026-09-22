@@ -53,7 +53,7 @@ folders:
     validation: real_card_sampled
     import: false
 filename_patterns:
-  - pattern: "^(\\d{8})_(\\d{6})_([NPI])([FR])\\.mp4$"
+  - pattern: "^(\\d{8})_(\\d{6})_([NEMPI])([FR])\\.mp4$"
     applies_to:
       - BlackVue/Record
     case_sensitive: true
@@ -65,6 +65,8 @@ filename_patterns:
     channel_group: 4
     modes:
       N: normal
+      E: event
+      M: manual
       P: parking_motion_or_timelapse
       I: parking_impact_detection
     channels:

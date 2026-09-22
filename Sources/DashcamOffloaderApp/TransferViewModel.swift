@@ -83,9 +83,12 @@ final class TransferViewModel: ObservableObject {
     var availableModes: [String] {
         Array(Set(footageClips.map(\.mode))).sorted { lhs, rhs in
             let preferred = [
+                "normal",
                 "regular_recording",
                 "continuous",
                 "looping",
+                "event",
+                "manual",
                 "driving_event",
                 "time_lapse",
                 "time_warp",

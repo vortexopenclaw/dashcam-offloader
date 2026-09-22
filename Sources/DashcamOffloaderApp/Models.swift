@@ -407,6 +407,12 @@ struct ClipItem: Identifiable, Hashable, Sendable {
         switch value.lowercased() {
         case "continuous":
             return "Driving"
+        case "normal":
+            return "Normal Recordings"
+        case "event":
+            return "Event / Emergency Recordings"
+        case "manual":
+            return "Manual Recordings"
         case "video":
             return "Video"
         case "regular_recording", "primary_media":

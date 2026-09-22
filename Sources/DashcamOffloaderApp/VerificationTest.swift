@@ -1402,6 +1402,10 @@ enum VerificationTest {
                 "20260913_185300_NR.mp4",
                 "20260913_185449_PF.mp4",
                 "20260913_185449_PR.mp4",
+                "20260913_185500_EF.mp4",
+                "20260913_185500_ER.mp4",
+                "20260913_185530_MF.mp4",
+                "20260913_185530_MR.mp4",
                 "20260913_185600_IF.mp4",
                 "20260913_185600_IR.mp4"
             ].enumerated() {
@@ -1417,9 +1421,13 @@ enum VerificationTest {
                   elite9Modes["20260913_185300_NF.mp4"] == "normal",
                   elite9Modes["20260913_185449_PF.mp4"] == "parking_motion_detection",
                   elite9Modes["20260913_185449_PR.mp4"] == "parking_motion_detection",
+                  elite9Modes["20260913_185500_EF.mp4"] == "event",
+                  elite9Modes["20260913_185500_ER.mp4"] == "event",
+                  elite9Modes["20260913_185530_MF.mp4"] == "manual",
+                  elite9Modes["20260913_185530_MR.mp4"] == "manual",
                   elite9Modes["20260913_185600_IF.mp4"] == "parking_impact_detection",
                   elite9Modes["20260913_185600_IR.mp4"] == "parking_impact_detection" else {
-                print("VERIFY FAIL: Elite 9 exact metadata or N/P/I classification regressed: profile=\(elite9Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite9Scan.identifiedCamera)), clips=\(elite9Modes)")
+                print("VERIFY FAIL: Elite 9 exact metadata or N/E/M/P/I classification regressed: profile=\(elite9Scan.selectedProfile?.id ?? "nil"), identified=\(String(describing: elite9Scan.identifiedCamera)), clips=\(elite9Modes)")
                 return false
             }
             guard elite9Scan.diagnostics.contains(where: {

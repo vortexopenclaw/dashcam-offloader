@@ -46,6 +46,8 @@ Examples:
 Observed and user-confirmed mode letters:
 
 - `N` - normal or continuous recording.
+- `E` - event / emergency recording.
+- `M` - manually saved recording. `MF` and `MR` are the front/rear pair.
 - `P` - parking motion detection. The firmware 1.010 submission confirms `20260913_185449_PF.mp4` is motion-triggered footage, not time-lapse.
 - `I` - parking impact detection while the camera is parked; `IF` is the front-camera variant and `IR` is the paired rear-camera variant.
 
