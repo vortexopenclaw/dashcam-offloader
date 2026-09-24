@@ -465,7 +465,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | I (interior) | driving / parking / manual | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `app_submission` |
 | R (rear) | driving / parking / manual | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `app_submission` |
 
-**Notes:** A firmware 1.6.0 3CH submission reported 1,089 MP4 clips. Its parking-motion, parking-impact, and parking-time-lapse classifications all reported 30 fps and 30-second clips at the same channel-specific bitrate class. This conflicts with earlier raw-card 5 fps/20-second time-lapse observations, so the row is app-submission metadata rather than an `ffprobe` baseline.
+**Notes:** A firmware 1.6.0 3CH submission reported 1,089 MP4 clips. The app's generic parking heuristic assigned 387 clips to a time-lapse group from regular cadence and large grouped file size, not camera settings or a time-lapse-specific media signal. Their 30 fps/30-second, driving-class metadata therefore does not confirm time-lapse and does not replace the earlier raw-card 5 fps/20-second observation.
 
 ## Not Found In This Pass
 

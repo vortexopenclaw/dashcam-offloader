@@ -1,5 +1,5 @@
-# Dashcam Offloader 0.1.19
+# Dashcam Offloader 0.1.20
 
-- Expanded Vueroid S1 4K Infinite reference data with a 3-channel firmware
-  1.6.0 card submission, including front, interior, rear, and parking-mode
-  metadata.
+- Refined the Vueroid S1 4K Infinite firmware 1.6.0 reference data to clearly
+  distinguish confirmed recordings from parking-mode estimates that still need
+  direct-file validation.

@@ -45,7 +45,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Camera | Driving Front | Parking Front | Approx Drop | Parking Mode Evidence | Notes |
 |---|---:|---:|---:|---|---|
 | Vueroid S1 QHD Infinite | ~22.0 Mbps | ~13.8-16.3 Mbps | ~26-37% lower | 5 fps time-lapse plus 30 fps impact | Time-lapse uses 20-second clips; impact clips retain ~22 Mbps front video. |
-| Vueroid S1 4K Infinite | ~48.0 Mbps | ~48.0 Mbps | none observed | Firmware 1.6.0 app submission | Time-lapse classification reported 30 fps/30-second clips at driving-class bitrate; needs raw-file confirmation. |
+| Vueroid S1 4K Infinite | ~48.0 Mbps | unknown | unknown | Firmware 1.6.0 app submission | The app's cadence/size heuristic labeled a 30 fps/30-second group as time-lapse; it is not confirmed. |
 | VIOFO A229 Pro | ~36.0 Mbps | ~4.1 Mbps | ~89% lower | PF/PI/PR parking files | Low-bitrate parking behavior in submitted card. |
 | VIOFO A329S | ~53-66 Mbps | ~53.3 Mbps | none to mild | PF/PI/PR parking files | Front parking sample can preserve full front bitrate. |
 | VIOFO A329T | ~65.5 Mbps | ~4.2 Mbps | ~94% lower | PF/PT/PR parking files | Parking clips stay very low bitrate across channels. |
@@ -69,7 +69,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Camera | Observed Channels | Driving Resolution Summary | Driving Bitrate Summary | Parking Summary |
 |---|---|---|---|---|
 | Vueroid S1 QHD Infinite | F/I/R | F/R 1440p30, I 1080p30; front-only 1440p60 also observed | F/R ~22 Mbps, I ~15 Mbps; 60 fps front ~24 Mbps | 5 fps time-lapse: F ~13.8-16.3, I ~7.8-8.5, R ~9.8-10.9 Mbps; 30 fps impact retains driving-class bitrate. |
-| Vueroid S1 4K Infinite | F/I/R | F 4K30, I 1080p30, R 1440p30 | F ~48 Mbps, I ~15 Mbps, R ~22 Mbps | Firmware 1.6.0 submission reported driving-class 30 fps/30-second clips for every classified parking subtype; raw-file confirmation needed. |
+| Vueroid S1 4K Infinite | F/I/R | F 4K30, I 1080p30, R 1440p30 | F ~48 Mbps, I ~15 Mbps, R ~22 Mbps | The app's cadence/size heuristic labeled a 30 fps/30-second group as time-lapse; raw files are needed to confirm its mode. |
 | BlackVue Elite 9 | F/R | F 4K30, R 1440p30 | F ~60 Mbps, R ~25 Mbps | Parking keeps similar bitrate in sample. |
 | BlackVue DR770X Box | F/O/R | All 1080p; front can be 60 fps | F ~16 Mbps, O/R ~10 Mbps | Parking/impact use same basic 1080p family. |
 | Thinkware U3000 Pro | F/R | F 4K30, R 1440p30 | F ~30 Mbps, R ~10 Mbps | Motion parking drops hard; event parking keeps 4K at ~12 Mbps. |
