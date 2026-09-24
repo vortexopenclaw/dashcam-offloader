@@ -1,5 +1,5 @@
-# Dashcam Offloader 0.1.18
+# Dashcam Offloader 0.1.19
 
-- BlackVue manual `MF`/`MR` clips are now recognized separately from Mixed
-  Recordings on every supported BlackVue profile, including the Elite 8, Elite
-  9, Elite 10, DR970X Plus, DR970X LTE Plus, and DR770X Box.
+- Expanded Vueroid S1 4K Infinite reference data with a 3-channel firmware
+  1.6.0 card submission, including front, interior, rear, and parking-mode
+  metadata.

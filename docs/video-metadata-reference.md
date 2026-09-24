@@ -13,6 +13,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | Source | Meaning |
 |---|---|
 | `ffprobe` | Measured directly from real footage |
+| `app_submission` | Privacy-sanitized media metadata reported by the app; not independently re-measured with `ffprobe` |
 | `mfr_spec` | From manufacturer product page or manual |
 | `assumed` | Inferred from hardware platform or era; not verified by sample footage |
 
@@ -456,6 +457,16 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 **Notes:** The driving clips use `YYYY_MMDD_HHMMSS_SEQ`. A real app-submitted Learn Card package for R2-4K Pro also confirmed a root `Video/` folder with 25 MP4 clips using this filename pattern.
 
+## Vueroid S1 4K Infinite
+
+| Channel | Mode | Codec | Resolution | FPS | Bitrate | Container | Source |
+|---|---|---|---|---|---|---|---|
+| F (front) | driving / parking / manual | H.264 | 3840x2160 | 30 | ~48.0 Mbps | MP4 | `app_submission` |
+| I (interior) | driving / parking / manual | H.264 | 1920x1080 | 30 | ~15.0 Mbps | MP4 | `app_submission` |
+| R (rear) | driving / parking / manual | H.264 | 2560x1440 | 30 | ~22.0 Mbps | MP4 | `app_submission` |
+
+**Notes:** A firmware 1.6.0 3CH submission reported 1,089 MP4 clips. Its parking-motion, parking-impact, and parking-time-lapse classifications all reported 30 fps and 30-second clips at the same channel-specific bitrate class. This conflicts with earlier raw-card 5 fps/20-second time-lapse observations, so the row is app-submission metadata rather than an `ffprobe` baseline.
+
 ## Not Found In This Pass
 
 No mounted media files were found for these models in this archive pass:
@@ -463,6 +474,6 @@ No mounted media files were found for these models in this archive pass:
 - 70mai T800 raw card-origin clips; the folder currently exposes produced/review-style media only
 - DJI Mini 3 Pro
 - Sony A7 III
-- Vueroid S1 4K Infinite
+
 
 Those rows stay on manual/spec-driven data until we get real footage samples.

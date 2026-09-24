@@ -642,4 +642,4 @@ Profiles should expose confidence levels:
 The first profile database entries are:
 
 - Thinkware U3000 Pro, based on `/Volumes/U3000PRO` and Thinkware documentation.
-- Vueroid S1 4K Infinite, based on official manual research and pending real-card validation.
+- Vueroid S1 4K Infinite, validated from real 1CH/2CH/3CH card footage plus a firmware 1.6.0 privacy-sanitized 3CH app submission.

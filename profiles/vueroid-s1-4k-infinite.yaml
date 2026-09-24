@@ -44,6 +44,15 @@ sampled_variants:
       - rear
 source_notes:
   - docs/card-profiles/vueroid-s1-4k-infinite.md
+  - >
+    Privacy-sanitized 3CH app training submission on firmware 1.6.0 confirmed
+    S1-4K-INFINITE metadata, 1,089 MP4 clips, and F+I+R coverage across driving,
+    manual, parking motion, parking impact, and parking time-lapse classifications.
+  - >
+    Firmware 1.6.0 metadata reports 4K30 H.264 front at about 48 Mbps, 1080p30
+    interior at about 15 Mbps, and 1440p30 rear at about 22 Mbps. It reported
+    30 fps, 30-second clips for parking time-lapse as well as motion and impact;
+    preserve the existing 5 fps/20-second rule pending direct raw-file review.
 detection:
   disqualifying:
     - path: CONFIG/config.bin

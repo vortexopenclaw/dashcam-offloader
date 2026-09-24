@@ -55,9 +55,9 @@ Use `scripts/review-feedback-submissions.py` to inspect Cloudflare KV submission
 Useful commands:
 
 ```bash
-scripts/review-feedback-submissions.py list --date 2026-06-09
-scripts/review-feedback-submissions.py search Botslab --date 2026-06-09
-scripts/review-feedback-submissions.py search ULTRADASH --date 2026-06-09
+scripts/review-feedback-submissions.py --date 2026-06-09 list
+scripts/review-feedback-submissions.py --date 2026-06-09 search Botslab
+scripts/review-feedback-submissions.py --date 2026-06-09 search ULTRADASH
 scripts/review-feedback-submissions.py get feedback/2026-06-09/<submission-id>.json
 ```
 

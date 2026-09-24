@@ -66,6 +66,18 @@ The app should probe one PARK clip per card using `AVURLAsset.tracks(withMediaTy
 
 Impact events during parking (PEVENT/PVT) are saved separately regardless of which PARK mode is active.
 
+### Firmware 1.6.0 observation
+
+A privacy-sanitized app training submission for a 3CH S1 4K Infinite on firmware
+1.6.0 confirmed 1,089 MP4 clips across driving, manual, parking motion, parking
+impact, and parking time-lapse classifications. Its video metadata reported H.264
+at 4K30/~48 Mbps front, 1080p30/~15 Mbps interior, and 1440p30/~22 Mbps rear.
+
+Unlike the earlier raw-card time-lapse samples, its 387 time-lapse-classified clips
+reported 30 fps and 30-second durations at driving-class bitrates. Keep the current
+5 fps/20-second time-lapse detection rule until direct raw files explain whether
+firmware 1.6.0 changes the encoding or the classification needs refinement.
+
 ## Related-File Grouping
 
 Group related files by date, time, and prefix (the `YYYYMMDD_HHMMSS_PREFIX` portion of the filename).

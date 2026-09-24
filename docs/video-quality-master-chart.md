@@ -20,6 +20,7 @@ Representative front-channel driving rows where measured files are 3840x2160 at 
 | Camera | Channels In Sample | Front Codec | Front File Resolution | FPS | Front Driving Bitrate | Source | Quality Notes |
 |---|---:|---|---|---:|---:|---|---|
 | BlackVue Elite 9 | 2 | HEVC | 3840x2160 | 30 | ~60.0 Mbps | ffprobe | Strong 4K-file bitrate; rear measured 1440p at ~25 Mbps. |
+| Vueroid S1 4K Infinite | 3 | H.264 | 3840x2160 | 30 | ~48.0 Mbps | app submission | Firmware 1.6.0 3CH metadata; rear 1440p/~22 Mbps and interior 1080p/~15 Mbps. |
 | BlackVue DR970X-2CH Plus | 2 | HEVC | 3840x2160 | 30 | ~60.0 Mbps | ffprobe | Front row only from camera-looking clips in mixed archive. |
 | VIOFO A329T | 3 | H.264 | 3840x2160 | 30 | ~65.5 Mbps | ffprobe | Highest measured H.264 front bitrate in current log; telephoto and rear 1440p at ~27 Mbps. |
 | VIOFO A329S | 3 | H.264 | 3840x2160 | 30 | ~53-66 Mbps | ffprobe | Front channel stays high even in 3CH sample. |
@@ -44,6 +45,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Camera | Driving Front | Parking Front | Approx Drop | Parking Mode Evidence | Notes |
 |---|---:|---:|---:|---|---|
 | Vueroid S1 QHD Infinite | ~22.0 Mbps | ~13.8-16.3 Mbps | ~26-37% lower | 5 fps time-lapse plus 30 fps impact | Time-lapse uses 20-second clips; impact clips retain ~22 Mbps front video. |
+| Vueroid S1 4K Infinite | ~48.0 Mbps | ~48.0 Mbps | none observed | Firmware 1.6.0 app submission | Time-lapse classification reported 30 fps/30-second clips at driving-class bitrate; needs raw-file confirmation. |
 | VIOFO A229 Pro | ~36.0 Mbps | ~4.1 Mbps | ~89% lower | PF/PI/PR parking files | Low-bitrate parking behavior in submitted card. |
 | VIOFO A329S | ~53-66 Mbps | ~53.3 Mbps | none to mild | PF/PI/PR parking files | Front parking sample can preserve full front bitrate. |
 | VIOFO A329T | ~65.5 Mbps | ~4.2 Mbps | ~94% lower | PF/PT/PR parking files | Parking clips stay very low bitrate across channels. |
@@ -67,6 +69,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Camera | Observed Channels | Driving Resolution Summary | Driving Bitrate Summary | Parking Summary |
 |---|---|---|---|---|
 | Vueroid S1 QHD Infinite | F/I/R | F/R 1440p30, I 1080p30; front-only 1440p60 also observed | F/R ~22 Mbps, I ~15 Mbps; 60 fps front ~24 Mbps | 5 fps time-lapse: F ~13.8-16.3, I ~7.8-8.5, R ~9.8-10.9 Mbps; 30 fps impact retains driving-class bitrate. |
+| Vueroid S1 4K Infinite | F/I/R | F 4K30, I 1080p30, R 1440p30 | F ~48 Mbps, I ~15 Mbps, R ~22 Mbps | Firmware 1.6.0 submission reported driving-class 30 fps/30-second clips for every classified parking subtype; raw-file confirmation needed. |
 | BlackVue Elite 9 | F/R | F 4K30, R 1440p30 | F ~60 Mbps, R ~25 Mbps | Parking keeps similar bitrate in sample. |
 | BlackVue DR770X Box | F/O/R | All 1080p; front can be 60 fps | F ~16 Mbps, O/R ~10 Mbps | Parking/impact use same basic 1080p family. |
 | Thinkware U3000 Pro | F/R | F 4K30, R 1440p30 | F ~30 Mbps, R ~10 Mbps | Motion parking drops hard; event parking keeps 4K at ~12 Mbps. |
@@ -104,4 +107,4 @@ Use these checks when comparing "4K" dashcams:
 - Bitrate changes by quality setting within the same camera.
 - Bitrate changes when the same model runs 1CH, 2CH, 3CH, or multiplex modes.
 - Time-lapse frame cadence versus encoded FPS for cameras that store time-lapse as normal 30 fps video.
-- Clean card-origin samples for Vueroid S1 4K Infinite, BlackVue Elite 10, BlackVue Elite 8 full front/rear set, Redtiger, and Wolfbox.
+- Clean raw-card samples for Vueroid S1 4K Infinite firmware 1.6.0, BlackVue Elite 10, BlackVue Elite 8 full front/rear set, Redtiger, and Wolfbox.
