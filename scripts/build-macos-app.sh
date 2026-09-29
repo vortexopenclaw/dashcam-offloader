@@ -13,10 +13,7 @@ RESOURCES_DIR="$CONTENTS_DIR/Resources"
 BUILD_COMMIT="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 
 # Override these only when the host's default Swift build engine/SDK is broken.
-SWIFT_BUILD_OPTIONS=()
-if [[ -n "${DASHCAM_SWIFT_BUILD_SYSTEM:-}" ]]; then
-  SWIFT_BUILD_OPTIONS+=(--build-system "$DASHCAM_SWIFT_BUILD_SYSTEM")
-fi
+SWIFT_BUILD_OPTIONS=(--build-system "${DASHCAM_SWIFT_BUILD_SYSTEM:-swiftbuild}")
 if [[ -n "${DASHCAM_SWIFT_SDK:-}" ]]; then
   SWIFT_BUILD_OPTIONS+=(--sdk "$DASHCAM_SWIFT_SDK")
 fi
