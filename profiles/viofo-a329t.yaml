@@ -45,7 +45,7 @@ folders:
   - path: DCIM/Movie/Parking
     mode: parking
     validation: app_submission_sampled
-    notes: Contains parking clips that may include low-bitrate continuous recording and motion-triggered auto-event recording. The app infers subtypes from timing and video specs when folder names do not distinguish them.
+    notes: On the owner's auto-event-detection card, Parking clips are motion-triggered. Timing and bitrate alone cannot reliably distinguish them from continuous low-bitrate parking clips; other A329T parking settings may differ.
   - path: DCIM/Movie/RO
     mode: protected
     validation: app_submission_sampled

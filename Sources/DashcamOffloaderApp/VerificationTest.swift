@@ -2315,7 +2315,7 @@ enum VerificationTest {
                 return false
             }
 
-            let a329tSource = temp.appendingPathComponent("A329T", isDirectory: true)
+            let a329tSource = temp.appendingPathComponent("UNLABELED-CARD", isDirectory: true)
             try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Movie/Parking", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Movie/RO", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: a329tSource.appendingPathComponent("DCIM/Photo", isDirectory: true), withIntermediateDirectories: true)
@@ -2349,6 +2349,34 @@ enum VerificationTest {
             }
             guard a329tScan.selectedProfile?.id == "viofo-a329t" else {
                 print("VERIFY FAIL: A329T fixture selected \(a329tScan.selectedProfile?.id ?? "nil"); candidates \(a329tScan.candidates.prefix(6).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" }); diagnostics \(a329tScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
+                return false
+            }
+            guard Set(a329tScan.clips.map(\.channel)) == ["front", "rear", "telephoto"],
+                  a329tScan.clips.filter({ $0.filename.hasSuffix("T.MP4") || $0.filename.hasSuffix("T.JPG") }).allSatisfy({ $0.channel == "telephoto" }),
+                  a329tScan.clips.filter({ $0.relativePath.contains("/RO/") && $0.isVideo }).allSatisfy({ $0.mode == "parking_impact_detection" }),
+                  !a329tScan.clips.contains(where: { $0.mode == "parking_continuous_low_bitrate" }) else {
+                print("VERIFY FAIL: A329T channels or parking subtype: \(Set(a329tScan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
+            // Exercise the filename-sampling path used for cards with >2,000 files.
+            let largeA329tSource = temp.appendingPathComponent("UNLABELED-LARGE-CARD", isDirectory: true)
+            try FileManager.default.createDirectory(at: largeA329tSource.appendingPathComponent("DCIM/Movie/Parking"), withIntermediateDirectories: true)
+            for index in 1...700 {
+                for suffix in ["F", "R", "T"] {
+                    try Data([UInt8(index % 256)]).write(to: largeA329tSource.appendingPathComponent(
+                        String(format: "DCIM/Movie/2026_0609_%02d%02d%02d_%06d%@.MP4", 10, index / 60, index % 60, index, suffix)
+                    ))
+                }
+            }
+            for suffix in ["PF", "PR", "PT"] {
+                try Data([1]).write(to: largeA329tSource.appendingPathComponent("DCIM/Movie/Parking/2026_0609_120000_900001\(suffix).MP4"))
+            }
+            let largeA329tScan = try scanner.scan(sourceURL: largeA329tSource, profiles: profiles)
+            guard largeA329tScan.selectedProfile?.id == "viofo-a329t",
+                  Set(largeA329tScan.clips.map(\.channel)) == ["front", "rear", "telephoto"],
+                  largeA329tScan.clips.filter({ $0.filename.hasSuffix("T.MP4") }).allSatisfy({ $0.channel == "telephoto" }) else {
+                print("VERIFY FAIL: large A329T card selected \(largeA329tScan.selectedProfile?.id ?? "nil") with channels \(Set(largeA329tScan.clips.map(\.channel)).sorted())")
                 return false
             }
 

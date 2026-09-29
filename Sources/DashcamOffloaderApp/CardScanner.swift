@@ -1485,6 +1485,13 @@ struct CardScanner {
             if totalFilenameMatches > 0 {
                 score += min(90, 15 + totalFilenameMatches)
                 evidence.append("filename pattern match (\(totalFilenameMatches))")
+                // Shared F/R filenames saturate the match score on large VIOFO cards.
+                // A real T/PT token is distinctive A329T evidence even at that cap.
+                if profile.id == "viofo-a329t",
+                   !matchedChannelTokens.isDisjoint(with: ["T", "PT"]) {
+                    score += 25
+                    evidence.append("telephoto T/PT filename channel")
+                }
                 if !matchedChannelTokens.isEmpty {
                     evidence.append("filename channel tokens \(matchedChannelTokens.sorted().joined(separator: ","))")
                 }
@@ -1526,9 +1533,20 @@ struct CardScanner {
             fileURL.deletingLastPathComponent().path
         }
         for folder in groupedByFolder.keys.sorted() {
-            for fileURL in groupedByFolder[folder, default: []].prefix(250) {
+            let folderFiles = groupedByFolder[folder, default: []]
+            for fileURL in folderFiles.prefix(250) {
                 let name = fileURL.lastPathComponent
                 if seen.insert(name).inserted {
+                    result.append(name)
+                }
+            }
+            // A large card can list all front/rear files before the telephoto
+            // files. Preserve one real sample of each A329T-only channel suffix.
+            for suffix in ["T", "PT"] {
+                let pattern = #"^\d{4}_\d{4}_\d{6}_\d+"# + suffix + #"\.(MP4|JPG)$"#
+                if let name = folderFiles.lazy.map(\.lastPathComponent).first(where: { name in
+                    name.range(of: pattern, options: .regularExpression) != nil
+                }), seen.insert(name).inserted {
                     result.append(name)
                 }
             }

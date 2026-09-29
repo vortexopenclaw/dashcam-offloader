@@ -58,9 +58,27 @@ The app scanner should treat parking subtypes as inferred labels, not physical c
 The resubmitted 3CH card confirms Front/Rear/Telephoto coverage at maximum
 bitrate. Normal driving was 4K30 H.264 front at approximately 65.5 Mbps and
 1440p30 H.264 rear/telephoto at approximately 27 Mbps. It also contained
-separate parking continuous/low-bitrate, impact-detection, protected, and
-photo groups. Parking continuous/low-bitrate was 4K30 front and 1440p30
-rear/telephoto at approximately 12.3 Mbps and 8.2 Mbps respectively.
+parking, impact-detection, protected, and photo groups. Parking clips were
+4K30 front and 1440p30 rear/telephoto at approximately 12.3 Mbps and
+8.2 Mbps respectively; their low bitrate does not establish continuous
+parking recording (see the owner's correction below).
+
+## 2026-09-29 3CH Learning Scan And Parking-Mode Correction
+
+A later app-submitted 3CH scan reported 5,729 media files with front, rear,
+and third-channel suffixes. Automatic selection fell back to New Dashcam
+because the shared VIOFO filename score tied with A229/A329S siblings; the
+third channel consequently appeared as Unknown. The A329T's `T`/`PT` suffixes
+are model-specific telephoto evidence, including on large cards where the
+scanner samples filenames.
+
+The owner confirmed this card uses **auto event detection**. All clips in
+`DCIM/Movie/Parking` are motion-triggered, and parking impact clips are in
+`DCIM/Movie/RO`; there is no continuous/low-bitrate parking recording on this
+card. The previous app inference labeled many short, lower-bitrate motion
+clips "Parking Continuous / Low Bitrate" from timing alone. That label is
+not evidence of the configured parking mode. Other A329T settings may behave
+differently, so do not hard-code this mode for every A329T card.
 
 ## Multiplexed Video
 

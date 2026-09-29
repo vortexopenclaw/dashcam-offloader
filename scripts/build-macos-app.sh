@@ -12,11 +12,23 @@ MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 BUILD_COMMIT="$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 
+# Override these only when the host's default Swift build engine/SDK is broken.
+SWIFT_BUILD_OPTIONS=()
+if [[ -n "${DASHCAM_SWIFT_BUILD_SYSTEM:-}" ]]; then
+  SWIFT_BUILD_OPTIONS+=(--build-system "$DASHCAM_SWIFT_BUILD_SYSTEM")
+fi
+if [[ -n "${DASHCAM_SWIFT_SDK:-}" ]]; then
+  SWIFT_BUILD_OPTIONS+=(--sdk "$DASHCAM_SWIFT_SDK")
+fi
+if [[ -n "${DASHCAM_SWIFT_SCRATCH_PATH:-}" ]]; then
+  SWIFT_BUILD_OPTIONS+=(--scratch-path "$DASHCAM_SWIFT_SCRATCH_PATH")
+fi
+
 cd "$ROOT_DIR"
 
-swift build -c "$CONFIGURATION" --product "$PRODUCT_NAME"
+swift build "${SWIFT_BUILD_OPTIONS[@]}" -c "$CONFIGURATION" --product "$PRODUCT_NAME"
 
-BIN_PATH="$(swift build -c "$CONFIGURATION" --show-bin-path)/$PRODUCT_NAME"
+BIN_PATH="$(swift build "${SWIFT_BUILD_OPTIONS[@]}" -c "$CONFIGURATION" --show-bin-path)/$PRODUCT_NAME"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"

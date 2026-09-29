@@ -84,8 +84,9 @@ extension CardScanner {
                 defaultPattern: defaultPattern ?? .motionDetection,
                 profileID: profileID
             )
-            let patternCounts = Dictionary(grouping: momentPatterns.values, by: { $0 })
-                .mapValues(\.count)
+            let patternCounts = Dictionary(grouping: momentPatterns.values.filter {
+                profileID != "viofo-a329t" || $0 != .continuousLowBitrate
+            }, by: { $0 }).mapValues(\.count)
 
             for clip in folderClips {
                 guard let timestamp = clip.timestamp else { continue }
@@ -102,6 +103,13 @@ extension CardScanner {
                 outcome: "classified",
                 detail: "\(folder.isEmpty ? "." : folder): \(moments.count) recording moments, \(patternCounts.map { "\($0.key.rawValue)=\($0.value)" }.sorted().joined(separator: ", "))"
             ))
+        }
+
+        if profileID == "viofo-a329t" {
+            // Timing and small file sizes do not distinguish A329T auto-event
+            // motion clips from continuous low-bitrate parking. Keep an
+            // unproven subtype as Parking instead of asserting continuous.
+            inferredByRelativePath = inferredByRelativePath.filter { $0.value != .continuousLowBitrate }
         }
 
         guard !inferredByRelativePath.isEmpty else {
