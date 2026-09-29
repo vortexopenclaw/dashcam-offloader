@@ -1,5 +1,4 @@
-# Dashcam Offloader 0.1.20
+# Dashcam Offloader 0.1.21
 
-- Refined the Vueroid S1 4K Infinite firmware 1.6.0 reference data to clearly
-  distinguish confirmed recordings from parking-mode estimates that still need
-  direct-file validation.
+- Identify the VIOFO A329T 3CH from telephoto `T`/`PT` filenames even on large, unlabeled cards, so the third camera appears as Telephoto rather than Unknown.
+- Avoid labeling A329T auto-event parking footage as continuous low-bitrate recording from file size or timing alone. Parking impacts in the RO folder remain identified.
