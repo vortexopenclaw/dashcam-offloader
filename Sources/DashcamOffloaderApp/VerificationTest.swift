@@ -2380,6 +2380,72 @@ enum VerificationTest {
                 return false
             }
 
+            // The private T340 submission omits filenames; this fixture tests
+            // the four-channel suffix shape inferred from its A329T candidate.
+            let t340Source = temp.appendingPathComponent("UNLABELED-T340-CARD", isDirectory: true)
+            try FileManager.default.createDirectory(at: t340Source.appendingPathComponent("DCIM/Movie/Parking"), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: t340Source.appendingPathComponent("DCIM/Movie/RO"), withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: t340Source.appendingPathComponent("DCIM/Photo"), withIntermediateDirectories: true)
+            for index in 1...12 {
+                let sequence = String(format: "%06d", 414000 + index)
+                let second = String(format: "%02d", index)
+                for suffix in ["F", "R", "I", "T"] {
+                    try Data([UInt8(index)]).write(to: t340Source.appendingPathComponent(
+                        "DCIM/Movie/2026_0609_1022\(second)_\(sequence)\(suffix).MP4"
+                    ))
+                }
+                for suffix in ["PF", "PR", "PI", "PT"] {
+                    try Data([UInt8(index)]).write(to: t340Source.appendingPathComponent(
+                        "DCIM/Movie/Parking/2026_0609_1122\(second)_\(sequence)\(suffix).MP4"
+                    ))
+                    try Data([UInt8(index)]).write(to: t340Source.appendingPathComponent(
+                        "DCIM/Movie/RO/2026_0609_1222\(second)_\(sequence)\(suffix).MP4"
+                    ))
+                    try Data([UInt8(index)]).write(to: t340Source.appendingPathComponent(
+                        "DCIM/Photo/2026_0609_1322\(second)_\(sequence)\(suffix).JPG"
+                    ))
+                }
+            }
+            let t340Scan = try scanner.scan(sourceURL: t340Source, profiles: profiles)
+            guard t340Scan.selectedProfile?.id == "viofo-t340",
+                  Set(t340Scan.clips.map(\.channel)) == ["front", "rear", "interior", "telephoto"],
+                  t340Scan.clips.filter({ $0.filename.hasSuffix("T.MP4") || $0.filename.hasSuffix("T.JPG") }).allSatisfy({ $0.channel == "telephoto" }),
+                  t340Scan.clips.filter({ $0.relativePath.contains("/RO/") && $0.isVideo }).allSatisfy({ $0.mode == "parking_impact_detection" }),
+                  !t340Scan.clips.contains(where: { $0.mode == "parking_continuous_low_bitrate" }) else {
+                print("VERIFY FAIL: T340 4CH profile, channels, or parking subtype: \(t340Scan.selectedProfile?.id ?? "nil"), \(Set(t340Scan.clips.map(\.channel)).sorted()), \(t340Scan.candidates.prefix(4).map { "\($0.profile.id)=\($0.score)" })")
+                return false
+            }
+            var t340Filters = FilterState()
+            t340Filters.selectedModes = Set(t340Scan.clips.map(\.mode))
+            t340Filters.selectedChannels = Set(t340Scan.clips.map(\.channel))
+            let t340Plan = CopyPlanner().makePlan(
+                sourceRoot: t340Source,
+                destinationRoot: destination,
+                profile: t340Scan.selectedProfile!,
+                clips: t340Scan.clips,
+                filters: t340Filters
+            )
+            guard t340Plan.items.count == t340Scan.clips.filter({ $0.excludedReason == nil && $0.isVideo }).count,
+                  Set(t340Plan.items.map(\.clip.channel)) == ["front", "rear", "interior", "telephoto"] else {
+                print("VERIFY FAIL: T340 four-channel transfer plan omitted recordings")
+                return false
+            }
+            let largeT340Source = temp.appendingPathComponent("UNLABELED-LARGE-T340-CARD", isDirectory: true)
+            try FileManager.default.createDirectory(at: largeT340Source.appendingPathComponent("DCIM/Movie"), withIntermediateDirectories: true)
+            for index in 1...550 {
+                for suffix in ["F", "R", "I", "T"] {
+                    try Data([UInt8(index % 256)]).write(to: largeT340Source.appendingPathComponent(
+                        String(format: "DCIM/Movie/2026_0609_%02d%02d%02d_%06d%@.MP4", 10, index / 60, index % 60, index, suffix)
+                    ))
+                }
+            }
+            let largeT340Scan = try scanner.scan(sourceURL: largeT340Source, profiles: profiles)
+            guard largeT340Scan.selectedProfile?.id == "viofo-t340",
+                  Set(largeT340Scan.clips.map(\.channel)) == ["front", "rear", "interior", "telephoto"] else {
+                print("VERIFY FAIL: large T340 4CH card selected \(largeT340Scan.selectedProfile?.id ?? "nil") with channels \(Set(largeT340Scan.clips.map(\.channel)).sorted())")
+                return false
+            }
+
             let cansonicZ4Source = temp.appendingPathComponent("ULTRADASH", isDirectory: true)
             try FileManager.default.createDirectory(at: cansonicZ4Source.appendingPathComponent("VIDEO", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: cansonicZ4Source.appendingPathComponent("PROTECTED", isDirectory: true), withIntermediateDirectories: true)

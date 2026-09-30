@@ -85,7 +85,7 @@ extension CardScanner {
                 profileID: profileID
             )
             let patternCounts = Dictionary(grouping: momentPatterns.values.filter {
-                profileID != "viofo-a329t" || $0 != .continuousLowBitrate
+                !["viofo-a329t", "viofo-t340"].contains(profileID ?? "") || $0 != .continuousLowBitrate
             }, by: { $0 }).mapValues(\.count)
 
             for clip in folderClips {
@@ -105,10 +105,9 @@ extension CardScanner {
             ))
         }
 
-        if profileID == "viofo-a329t" {
-            // Timing and small file sizes do not distinguish A329T auto-event
-            // motion clips from continuous low-bitrate parking. Keep an
-            // unproven subtype as Parking instead of asserting continuous.
+        if ["viofo-a329t", "viofo-t340"].contains(profileID ?? "") {
+            // Short, lower-bitrate VIOFO clips do not establish the camera's
+            // selected parking setting. Leave an unproven subtype as Parking.
             inferredByRelativePath = inferredByRelativePath.filter { $0.value != .continuousLowBitrate }
         }
 

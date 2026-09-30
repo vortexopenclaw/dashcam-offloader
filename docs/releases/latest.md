@@ -1,4 +1,7 @@
-# Dashcam Offloader 0.1.21
+# Dashcam Offloader 0.1.22
 
-- Identify the VIOFO A329T 3CH from telephoto `T`/`PT` filenames even on large, unlabeled cards, so the third camera appears as Telephoto rather than Unknown.
-- Avoid labeling A329T auto-event parking footage as continuous low-bitrate recording from file size or timing alone. Parking impacts in the RO folder remain identified.
+- Add experimental support for the submitted VIOFO T340 4CH card, including front, rear, interior, and telephoto labeling and four-channel transfer selection.
+- Distinguish the four-channel layout from similar three-channel VIOFO profiles, including on large cards.
+- Keep T340 parking clips' continuous/low-bitrate subtype unconfirmed when the camera's parking setting is unknown.
+
+The private submission did not include filename or folder samples. T340's exact filename/folder conventions still need confirmation with a read-only card scan; please report any misidentified clips.

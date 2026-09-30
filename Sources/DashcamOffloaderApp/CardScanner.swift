@@ -1492,6 +1492,15 @@ struct CardScanner {
                     score += 25
                     evidence.append("telephoto T/PT filename channel")
                 }
+                // The submitted T340 4CH scan has front, rear, interior, and
+                // telephoto views. Individual VIOFO suffixes are shared with
+                // three-channel siblings; the complete four-role set is the
+                // distinguishing shape, never T or I on its own.
+                if profile.id == "viofo-t340",
+                   matchedChannelTokens.isSuperset(of: ["F", "R", "I", "T"]) {
+                    score += 50
+                    evidence.append("four-channel F/R/I/T filename set")
+                }
                 if !matchedChannelTokens.isEmpty {
                     evidence.append("filename channel tokens \(matchedChannelTokens.sorted().joined(separator: ","))")
                 }
@@ -1540,9 +1549,10 @@ struct CardScanner {
                     result.append(name)
                 }
             }
-            // A large card can list all front/rear files before the telephoto
-            // files. Preserve one real sample of each A329T-only channel suffix.
-            for suffix in ["T", "PT"] {
+            // A large card can list front/rear files before the other views.
+            // Preserve actual interior and telephoto samples for four-channel
+            // detection as well as the A329T telephoto-only distinction.
+            for suffix in ["I", "T", "PI", "PT"] {
                 let pattern = #"^\d{4}_\d{4}_\d{6}_\d+"# + suffix + #"\.(MP4|JPG)$"#
                 if let name = folderFiles.lazy.map(\.lastPathComponent).first(where: { name in
                     name.range(of: pattern, options: .regularExpression) != nil
