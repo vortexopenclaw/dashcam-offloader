@@ -1515,9 +1515,17 @@ final class TransferViewModel: ObservableObject {
             )
         }
 
+        // Only camera-shaped media basenames, never directories or arbitrary names.
+        let mediaNamePattern = try! NSRegularExpression(
+            pattern: #"^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$"#,
+            options: [.caseInsensitive]
+        )
+        let feedbackFilenames = Array(Set(safeEligibleClips.map(\.sourceURL.lastPathComponent).filter { name in
+            let range = NSRange(name.startIndex..<name.endIndex, in: name)
+            return mediaNamePattern.firstMatch(in: name, range: range)?.range == range
+        })).sorted().prefix(100)
         return FeedbackScanSnapshot(
-            // Feedback must never transmit user-controlled source names,
-            // folder paths, or filenames. Structure is represented by counts.
+            // Feedback never transmits user-controlled source names or folder paths.
             volumeName: "",
             requestedSourceName: nil,
             effectiveSourceName: nil,
@@ -1544,7 +1552,7 @@ final class TransferViewModel: ObservableObject {
             folderSamples: [],
             directorySummaries: [],
             folderSummaries: [],
-            filenameSamples: [],
+            filenameSamples: Array(feedbackFilenames),
             filenamePatternSummaries: [],
             filenameSequenceSummaries: [],
             supportFileSamples: [],

@@ -1,7 +1,19 @@
 # VIOFO T340 4CH card evidence
 
-A private in-app training submission on 2026-09-30 identified the camera as **VIOFO T340, 4CH** (front, rear, interior, telephoto). Its sanitized scan reported 387 media files (371 MP4, 16 JPG), four channel groups, and a generic-card fallback after an A329T candidate was rejected. The fourth channel was Unknown. The submission excludes filenames and directory examples for privacy, so the exact filename pattern and folder layout in this experimental profile are **inferred from the A329T-pattern match**, not independently confirmed from the submitted card. No source videos or private identifiers are stored here.
+A private **submitted sanitized** scan received 2026-09-30 identified the owner's camera as VIOFO T340, 4CH. The owner's separately supplied filename examples, not the sanitized scan, include `2026_0930_121758_000266T.MP4`, adjacent `_000267I`, `_000268R`, `_000269F`, and `2026_1001_005952_000001F` through `_000004R.MP4`. These directly support the F/R/I/T suffixes and per-file sequence on those examples, but the scan itself has no filename or folder evidence. The owner confirmed the **Max** driving bitrate setting. No source card was available for a fresh read-only rescan.
 
-The official [VIOFO T340-series description](https://www.viofo.com/blogs/viofo-car-dash-camera-guide-faq-and-news/meet-the-new-viofo-lineup-t340-series-t330-series-a149-pro-duo-bp60) confirms that T340 4CH adds a telephoto camera to front, interior and rear channels. The profile uses F/R/I/T and PF/PR/PI/PT tokens; a full four-channel F/R/I/T set is required to favor T340 over similar VIOFO three-channel profiles on an unlabeled card. An isolated T or I suffix is not enough. Owners should test against real footage and report any suffix or directory differences.
+The sanitized scan counted **387 items: 371 MP4 and 16 JPG**. App-assigned channel counts are front 107, interior 108, rear 91, unknown 81. These totals include photos; unknown 81 is **not** a proven telephoto count. The app classified 305 items as Driving, 8 Driving Event, 40 Parking Continuous / Low Bitrate, 8 Parking Motion Detection, 10 Parking Impact Detection, and 16 JPEG. These are app classifications, not camera-settings confirmations.
 
-The app-inferred parking group in the submission included “Parking Continuous / Low Bitrate” for 40 files, but the camera's actual parking setting was not provided. The measured lower encoding bitrate does **not** establish continuous recording. This profile leaves unconfirmed continuous subtype as Parking rather than declaring the setting. Motion/impact labels based on structural evidence or timing remain provisional until a camera-settings-confirmed scan is available.
+Its 20 video-spec groups measured H.264 at 30 fps. The table lists MP4 counts and sampled bitrate ranges in Mb/s (rounded from bits/s):
+
+| App mode | Front 3840x2160 | Interior 2560x1440 | Rear 2560x1440 | Unknown 2560x1440 |
+|---|---|---|---|---|
+| Driving | 85, 32.0-65.0 | 86, 14.3-27.0 | 72, 14.3-40.1 | 62, 14.3-32.7 |
+| Driving Event | 2, 53.2-53.3 | 2, 27.0 | 2, 27.0 | 2, 27.0 |
+| Parking Continuous / Low Bitrate | 10, 10.64-10.65 | 10, 8.19-8.22 | 10, 8.19-8.21 | 10, 8.19-8.21 |
+| Parking Motion Detection | 2, 10.64-10.65 | 2, 8.19-8.23 | 2, 8.19-8.24 | 2, 8.19-8.21 |
+| Parking Impact Detection | 3, 13.2-31.8 | 3, 8.29-14.4 | 2, 11.6-14.4 | 2, 11.1-14.3 |
+
+**Review flags:** The older scan fell back to a generic profile after an A329T candidate. The `T` mapping is supported by owner-provided example names and the T340 four-camera layout, not proven by that sanitized aggregate alone. The T340 folder layout and parking PF/PR/PI/PT suffixes remain inferred and experimental. Lower parking bitrate cannot establish the selected parking subtype. A newly submitted scan with bounded camera-shaped basenames can validate suffix samples, but cannot prove a camera setting without owner confirmation. Do not publish private raw submissions or personal filenames.
+
+The official [VIOFO T340-series description](https://www.viofo.com/blogs/viofo-car-dash-camera-guide-faq-and-news/meet-the-new-viofo-lineup-t340-series-t330-series-a149-pro-duo-bp60) confirms front, interior, rear and telephoto cameras. The experimental profile requires a full four-channel F/R/I/T set to favor T340 over three-channel siblings on an unlabeled card. A sibling without I must not be claimed as T340.

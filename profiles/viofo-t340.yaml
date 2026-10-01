@@ -20,6 +20,7 @@ sampled_variant:
   validation: app_submission_sampled
 source_notes:
   - docs/card-profiles/viofo-t340.md
+  - F/R/I/T MP4 suffixes evidenced by owner-provided filenames; folder and parking suffixes remain inferred
 detection:
   supporting:
     - folder: DCIM/Movie

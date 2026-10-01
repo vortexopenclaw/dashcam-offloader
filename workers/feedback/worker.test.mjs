@@ -75,7 +75,7 @@ test("sanitizeScan strips unsafe setting values and keeps safe ones", () => {
   assert.deepEqual(snapshot.keys, ["model"]);
   assert.equal("volumeName" in scan, false);
   assert.equal("sampleRelativePaths" in scan, false);
-  assert.equal("filenameSamples" in scan, false);
+  assert.deepEqual(scan.filenameSamples, []);
 });
 
 test("sanitizeScan drops private paths, filenames, timestamps, evidence, and diagnostics", () => {
@@ -157,6 +157,21 @@ test("clientFingerprint is stable and salt-dependent", async () => {
   assert.match(unknown, /^[0-9a-f]{64}$/);
 });
 
+
+test("only bounded camera media basenames survive; paths and personal names do not", () => {
+  const valid = "2026_0930_121758_000266T.MP4";
+  const scan = sanitizeScan({filenameSamples: [valid, "2026_1001_005952_000001F.MP4",
+    "Family Trip/" + valid, "Jane_Doe_2026.mp4", "wifi_password.MP4",
+    "2026_0930_121758_000266T.mp4.exe", "47.61234_-122.12345.mp4",
+    ...Array(150).fill(valid)]});
+  assert.deepEqual(scan.filenameSamples.slice(0, 2), [valid, "2026_1001_005952_000001F.MP4"]);
+  assert.equal(scan.filenameSamples.length, 95);
+  assert.deepEqual(scan.filenamePatternSummaries, [
+    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCE_T.MP4", sampledCount: 94},
+    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCE_F.MP4", sampledCount: 1},
+  ]);
+  assert.equal(JSON.stringify(scan).includes("Family Trip"), false);
+});
 
 test("storage samples retain paired complete-file measurements without private fields", () => {
   const short = {fileSizeBytes:120000000,durationSeconds:30,width:3840,height:2160,

@@ -2380,8 +2380,8 @@ enum VerificationTest {
                 return false
             }
 
-            // The private T340 submission omits filenames; this fixture tests
-            // the four-channel suffix shape inferred from its A329T candidate.
+            // User-provided examples support F/R/I/T; the sanitized submission
+            // itself has no names. Parking suffixes and folder paths remain inferred.
             let t340Source = temp.appendingPathComponent("UNLABELED-T340-CARD", isDirectory: true)
             try FileManager.default.createDirectory(at: t340Source.appendingPathComponent("DCIM/Movie/Parking"), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: t340Source.appendingPathComponent("DCIM/Movie/RO"), withIntermediateDirectories: true)
@@ -2406,7 +2406,26 @@ enum VerificationTest {
                     ))
                 }
             }
+            let ownerExampleNames = [
+                "2026_0930_121758_000266T.MP4": "telephoto",
+                "2026_0930_121758_000267I.MP4": "interior",
+                "2026_0930_121758_000268R.MP4": "rear",
+                "2026_0930_121758_000269F.MP4": "front",
+                "2026_1001_005952_000001F.MP4": "front",
+                "2026_1001_005952_000002T.MP4": "telephoto",
+                "2026_1001_005952_000003I.MP4": "interior",
+                "2026_1001_005952_000004R.MP4": "rear"
+            ]
+            for name in ownerExampleNames.keys {
+                try Data([1]).write(to: t340Source.appendingPathComponent("DCIM/Movie/\(name)"))
+            }
             let t340Scan = try scanner.scan(sourceURL: t340Source, profiles: profiles)
+            guard ownerExampleNames.allSatisfy({ name, channel in
+                t340Scan.clips.contains { $0.filename == name && $0.channel == channel }
+            }) else {
+                print("VERIFY FAIL: owner-provided T340 filename channels")
+                return false
+            }
             guard t340Scan.selectedProfile?.id == "viofo-t340",
                   Set(t340Scan.clips.map(\.channel)) == ["front", "rear", "interior", "telephoto"],
                   t340Scan.clips.filter({ $0.filename.hasSuffix("T.MP4") || $0.filename.hasSuffix("T.JPG") }).allSatisfy({ $0.channel == "telephoto" }),

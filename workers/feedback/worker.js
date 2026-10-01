@@ -247,7 +247,26 @@ function sanitizeTraining(training) {
   };
 }
 
+function safeMediaBasename(name) {
+  return typeof name === "string" &&
+    /^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$/i.test(name);
+}
+
+function sampledFilenamePatterns(names) {
+  const counts = new Map();
+  for (const name of names) {
+    const match = /^\d{4}_\d{4}_\d{6}_\d{1,9}(PF|PR|PI|PT|F|R|I|T)\.(MP4|MOV|JPG|JPEG)$/i.exec(name);
+    if (!match) continue;
+    const pattern = `YYYY_MMDD_HHMMSS_SEQUENCE_${match[1].toUpperCase()}.${match[2].toUpperCase()}`;
+    counts.set(pattern, (counts.get(pattern) || 0) + 1);
+  }
+  return [...counts].map(([redactedPattern, sampledCount]) => ({redactedPattern, sampledCount}));
+}
+
 function sanitizeScan(scan) {
+  const filenameSamples = Array.isArray(scan.filenameSamples)
+    ? scan.filenameSamples.slice(0, 100).filter(safeMediaBasename)
+    : [];
   return {
     // Names and paths can be personal data on NAS and regular-video imports.
     identifiedCamera: sanitizeIdentifiedCamera(scan.identifiedCamera),
@@ -267,6 +286,9 @@ function sanitizeScan(scan) {
     timestampSourceCounts: countMap(scan.timestampSourceCounts),
     suspiciousTimestampItems: numberValue(scan.suspiciousTimestampItems),
     inferredParkingPatternCounts: countMap(scan.inferredParkingPatternCounts),
+    // Exact bounded camera-media basenames, never source paths or arbitrary names.
+    filenameSamples,
+    filenamePatternSummaries: sampledFilenamePatterns(filenameSamples),
     videoSpecSamples: [],
     videoSpecSummaries: Array.isArray(scan.videoSpecSummaries)
       ? scan.videoSpecSummaries.slice(0, MAX_VIDEO_SPEC_SUMMARIES).map(sanitizeVideoSpecSummary).filter(Boolean)
