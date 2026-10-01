@@ -52,9 +52,25 @@ def derive(key, record):
     training = payload.get("training") if isinstance(payload.get("training"), dict) else {}
     camera = scan.get("identifiedCamera") if isinstance(scan.get("identifiedCamera"), dict) else {}
     specs = []
-    for item in (scan.get("videoSpecSummaries") or [])[:64]:
+    for item in (scan.get("videoSpecSummaries") or [])[:120]:
         if not isinstance(item, dict):
             continue
+        paired = []
+        for sample in (item.get("storageRateSamples") or [])[:64]:
+            if not isinstance(sample, dict):
+                continue
+            size, duration = sample.get("fileSizeBytes"), sample.get("durationSeconds")
+            if not (isinstance(size, int) and not isinstance(size, bool) and 0 < size <= 1_000_000_000_000
+                    and isinstance(duration, (int, float)) and not isinstance(duration, bool)
+                    and 0 < duration <= 86_400):
+                continue
+            paired.append({
+                "fileSizeBytes": size, "durationSeconds": duration,
+                "width": measurement(sample.get("width")),
+                "height": measurement(sample.get("height")),
+                "nominalFrameRate": measurement(sample.get("nominalFrameRate")),
+                "videoBitrate": measurement(sample.get("videoBitrate")),
+            })
         specs.append({
             "mode": safe_label(item.get("mode")), "channel": safe_label(item.get("channel")),
             "fileCount": measurement(item.get("fileCount")),
@@ -63,6 +79,7 @@ def derive(key, record):
             "bitrateMin": measurement(item.get("sampleBitrateMin")),
             "bitrateMax": measurement(item.get("sampleBitrateMax")),
             "codecs": [v for v in (item.get("sampleCodecs") or [])[:6] if safe_label(v)],
+            "storageRateSamples": paired,
         })
     names = [name for name in (scan.get("filenameSamples") or [])[:100] if isinstance(name, str) and SAFE_MEDIA.fullmatch(name)]
     patterns = []

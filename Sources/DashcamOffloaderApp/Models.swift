@@ -1048,6 +1048,16 @@ struct FeedbackVideoSpecSummary: Codable, Hashable, Sendable {
     var sampleDurationMin: Double?
     var sampleDurationMax: Double?
     var storageRateSamples: [FeedbackStorageRateSample]?
+
+    func forSubmission() -> Self {
+        var safe = self
+        safe.folder = "."
+        safe.firstTimestamp = nil
+        safe.lastTimestamp = nil
+        safe.sampleRelativePaths = []
+        safe.storageRateSamples = Array((storageRateSamples ?? []).prefix(64))
+        return safe
+    }
 }
 
 struct FeedbackSettingSnapshot: Codable, Hashable, Sendable {

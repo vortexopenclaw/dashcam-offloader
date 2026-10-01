@@ -23,6 +23,24 @@ enum VerificationTest {
                 print("VERIFY FAIL: paired storage rates did not survive submission encoding")
                 return false
             }
+            let summaryJSON = """
+            {"folder":"Private/Drive","extensionLowercased":"mp4","mode":"continuous",
+             "fileCount":1,"totalFileSizeBytes":120000000,
+             "firstTimestamp":"2026-10-01T00:00:00Z","sampleRelativePaths":["Private/Drive/clip.mp4"],
+             "sampleCodecs":["H.264"],"sampleResolutions":["3840x2160"],"sampleFrameRates":[30],
+             "storageRateSamples":[{"fileSizeBytes":120000000,"durationSeconds":30,"videoBitrate":16000000}]}
+            """
+            let summary = try JSONDecoder().decode(FeedbackVideoSpecSummary.self, from: Data(summaryJSON.utf8))
+            let safeSummary = summary.forSubmission()
+            let safeJSON = String(decoding: try JSONEncoder().encode(safeSummary), as: UTF8.self)
+            guard safeSummary.folder == ".", safeSummary.firstTimestamp == nil,
+                  safeSummary.sampleRelativePaths.isEmpty,
+                  safeSummary.storageRateSamples?.first?.storageBytesPerSecond == 4_000_000,
+                  safeSummary.storageRateSamples?.first?.videoBitrate == 16_000_000,
+                  !safeJSON.contains("Private/Drive"), !safeJSON.contains("2026-10-01") else {
+                print("VERIFY FAIL: feedback snapshot dropped paired rates or exposed source paths")
+                return false
+            }
 
             guard let profilesURL = ProfileStore.defaultProfilesDirectory() else {
                 print("VERIFY FAIL: profiles directory not found")

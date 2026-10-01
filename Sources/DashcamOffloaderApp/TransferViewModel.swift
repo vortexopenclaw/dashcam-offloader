@@ -1453,32 +1453,7 @@ final class TransferViewModel: ObservableObject {
             from: safeEligibleClips.filter(\.isVideo),
             samples: videoSpecSamples,
             sourceRoot: sourceRoot
-        ).map { summary in
-            FeedbackVideoSpecSummary(
-                folder: ".",
-                extensionLowercased: summary.extensionLowercased,
-                mode: summary.mode,
-                displayMode: summary.displayMode,
-                outputCategory: summary.outputCategory,
-                channel: summary.channel,
-                inferredParkingPattern: summary.inferredParkingPattern,
-                fileCount: summary.fileCount,
-                totalFileSizeBytes: summary.totalFileSizeBytes,
-                minFileSizeBytes: summary.minFileSizeBytes,
-                maxFileSizeBytes: summary.maxFileSizeBytes,
-                firstTimestamp: nil,
-                lastTimestamp: nil,
-                timestampSourceCounts: summary.timestampSourceCounts,
-                sampleRelativePaths: [],
-                sampleCodecs: summary.sampleCodecs,
-                sampleResolutions: summary.sampleResolutions,
-                sampleFrameRates: summary.sampleFrameRates,
-                sampleBitrateMin: summary.sampleBitrateMin,
-                sampleBitrateMax: summary.sampleBitrateMax,
-                sampleDurationMin: summary.sampleDurationMin,
-                sampleDurationMax: summary.sampleDurationMax
-            )
-        }
+        ).map { $0.forSubmission() }
         let settingSnapshots = safeFiles
             .filter { isPotentialSettingsFile($0, sourceRoot: sourceRoot) }
             .prefix(20)
@@ -1986,7 +1961,22 @@ final class TransferViewModel: ObservableObject {
             return "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)|\(pattern)|\(folder)|\(clip.extensionLowercased)"
         }
 
-        for key in grouped.keys.sorted() {
+        // Cover distinct modes and channels before spending the bounded media
+        // inspection budget on additional folders of the same camera channel.
+        let orderedKeys = grouped.keys.sorted()
+        var coveredModeChannels: Set<String> = []
+        var priorityKeys: [String] = []
+        var remainingKeys: [String] = []
+        for key in orderedKeys {
+            guard let clip = grouped[key]?.first else { continue }
+            let modeChannel = "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)"
+            if coveredModeChannels.insert(modeChannel).inserted {
+                priorityKeys.append(key)
+            } else {
+                remainingKeys.append(key)
+            }
+        }
+        for key in priorityKeys + remainingKeys {
             let bucket = grouped[key, default: []]
             let byTimestamp = bucket.sorted { lhs, rhs in
                 if lhs.timestamp != rhs.timestamp {
@@ -2070,8 +2060,11 @@ final class TransferViewModel: ObservableObject {
             videoSpecBucketKey(for: clip)
         }
 
-        return grouped.keys
-            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        let orderedKeys = grouped.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        let measuredKeys = orderedKeys.filter { key in
+            grouped[key]?.contains { samplesByPath[sanitizedRelativePath(for: $0, sourceRoot: sourceRoot)] != nil } ?? false
+        }
+        return (measuredKeys + orderedKeys.filter { !measuredKeys.contains($0) })
             .prefix(120)
             .compactMap { key in
                 guard let bucket = grouped[key], let first = bucket.first else { return nil }
