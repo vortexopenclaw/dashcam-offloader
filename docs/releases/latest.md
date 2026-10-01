@@ -1,7 +1,7 @@
-# Dashcam Offloader 0.1.22
+# Dashcam Offloader 0.1.23
 
-- Add experimental support for the submitted VIOFO T340 4CH card, including front, rear, interior, and telephoto labeling and four-channel transfer selection.
-- Distinguish the four-channel layout from similar three-channel VIOFO profiles, including on large cards.
-- Keep T340 parking clips' continuous/low-bitrate subtype unconfirmed when the camera's parking setting is unknown.
+- Retain paired file-size and duration measurements, along with video bitrate, for each sampled camera channel and recording mode in submitted card scans. Private paths and timestamps stay excluded.
+- Give different modes and channels priority in the bounded media sample so large mixed backups do not consume the sample budget on one channel.
+- Keep paired measurements in the private ingestion review records without guessing a recording rate from unrelated minimum and maximum values.
 
-The private submission did not include filename or folder samples. T340's exact filename/folder conventions still need confirmation with a read-only card scan; please report any misidentified clips.
+Previously submitted scans cannot recover missing paired measurements. A new scan with this version is needed to verify each camera and each setting. Large backups containing other cameras should be scanned one camera card at a time for unambiguous identification.

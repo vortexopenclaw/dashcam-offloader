@@ -16,8 +16,6 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-sys.path.insert(0, str(Path.home() / ".openclaw/workspace/scripts"))
-from openclaw_env import load_openclaw_env  # noqa: E402
 
 NAMESPACE = "39129dc4017b48c6bd8b8f4848b25c76"
 KEY = re.compile(r"^feedback/\d{4}-\d{2}-\d{2}/([0-9a-fA-F-]{36})\.json$")
@@ -110,6 +108,8 @@ def derive(key, record):
 
 
 def credentials():
+    sys.path.insert(0, str(Path.home() / ".openclaw/workspace/scripts"))
+    from openclaw_env import load_openclaw_env
     load_openclaw_env()
     account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
     token = next((os.environ.get(k) for k in ("CLOUDFLARE_WORKERS_API_TOKEN", "CLOUDFLARE_DASHCAM_OFFLOADER_TOKEN") if os.environ.get(k)), None)
