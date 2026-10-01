@@ -48,10 +48,10 @@ class IngestTests(unittest.TestCase):
         self.assertTrue(any("cursor=next" in call for call in calls))
 
     def test_retains_paired_storage_and_video_rates_without_private_fields(self):
-        key = "feedback/2026-10-01/7d231c1f-3621-4590-8ec7-326170e544c2.json"
+        key = "feedback/2026-10-01/00000000-0000-0000-0000-000000000000.json"
         sample = {"fileSizeBytes": 405000000, "durationSeconds": 60,
                   "videoBitrate": 53200000, "width": 3840, "height": 2160,
-                  "relativePath": "/Users/private/clip.mp4", "gps": "secret"}
+                  "relativePath": "Camera/Private/clip.mp4", "gps": "secret"}
         groups = [{"mode": "continuous", "channel": "front",
                    "storageRateSamples": [sample, dict(sample, durationSeconds=0)]}]
         groups.extend({"mode": "parking", "channel": "rear"} for _ in range(119))
@@ -61,7 +61,7 @@ class IngestTests(unittest.TestCase):
         self.assertEqual(pair, [{"fileSizeBytes": 405000000, "durationSeconds": 60,
                                  "width": 3840, "height": 2160,
                                  "nominalFrameRate": None, "videoBitrate": 53200000}])
-        self.assertNotIn("/Users/", json.dumps(result))
+        self.assertNotIn("Camera/Private", json.dumps(result))
         self.assertNotIn("secret", json.dumps(result))
 
 
