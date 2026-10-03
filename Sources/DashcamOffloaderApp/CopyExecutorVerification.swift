@@ -45,6 +45,15 @@ enum CopyExecutorVerification {
         guard try await verifiesLargeCopiesBatchProgress(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
             return false
         }
+        guard try await verifiesOverlappedChecksumFailure(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
+        guard try await verifiesCancellationDuringPendingVerification(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
+        guard try await verifiesCompletedCopySurvivesLaterCancellation(sourceRoot: sourceRoot, destinationRoot: destinationRoot) else {
+            return false
+        }
 
         return true
     }
@@ -256,6 +265,108 @@ enum CopyExecutorVerification {
         return true
     }
 
+    private static func verifiesOverlappedChecksumFailure(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let first = sourceRoot.appendingPathComponent("overlap-first.MP4")
+        let second = sourceRoot.appendingPathComponent("overlap-second.MP4")
+        let firstDestination = destinationRoot.appendingPathComponent(first.lastPathComponent)
+        let secondDestination = destinationRoot.appendingPathComponent(second.lastPathComponent)
+        try Data(repeating: 4, count: 1024).write(to: first)
+        try Data(repeating: 5, count: 1024).write(to: second)
+        let gate = CopyVerificationGate()
+        let probe = await MainActor.run { CopyPipelineProbe(gate: gate) }
+        let executor = CopyExecutor(progressHandler: { progress in
+            probe.observe(progress)
+        }, verificationHook: { url in
+            guard url == firstDestination else { return }
+            gate.started.signal()
+            guard gate.release.wait(timeout: .now() + 5) == .success else { throw CopyError.checksumVerificationFailed }
+            // Same size, different contents: destination SHA256 must reject it.
+            try Data(repeating: 9, count: 1024).write(to: url)
+        })
+        let result = await executor.copy(plan: plan(sourceRoot: sourceRoot, destinationRoot: destinationRoot, items: [
+            item(source: first, relativePath: first.lastPathComponent, destination: firstDestination, expectedSize: 1024),
+            item(source: second, relativePath: second.lastPathComponent, destination: secondDestination, expectedSize: 1024)
+        ]))
+        let snapshot = await MainActor.run { (probe.overlapped, probe.completedWhenOverlapped, probe.latest) }
+        guard snapshot.0, snapshot.1 == 0, snapshot.2?.completedFiles == 2,
+              snapshot.2?.copiedBytes == 2048, snapshot.2?.isRunning == false,
+              result.mediaItems.map(\.status) == [.failed, .copied],
+              result.mediaItems.first?.message == CopyError.checksumVerificationFailed.localizedDescription,
+              !FileManager.default.fileExists(atPath: firstDestination.path),
+              try Data(contentsOf: secondDestination) == Data(repeating: 5, count: 1024) else {
+            print("VERIFY FAIL: copy did not overlap gated verification or recover from checksum failure")
+            return false
+        }
+        return true
+    }
+
+    private static func verifiesCancellationDuringPendingVerification(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let first = sourceRoot.appendingPathComponent("pending-cancel-first.MP4")
+        let second = sourceRoot.appendingPathComponent("pending-cancel-second.MP4")
+        let firstDestination = destinationRoot.appendingPathComponent(first.lastPathComponent)
+        let secondDestination = destinationRoot.appendingPathComponent(second.lastPathComponent)
+        try Data(repeating: 1, count: 1024).write(to: first)
+        try Data(repeating: 2, count: 1024).write(to: second)
+        let gate = CopyVerificationGate()
+        let probe = await MainActor.run { CopyPipelineProbe(gate: gate, cancelOnOverlap: true) }
+        let executor = CopyExecutor(progressHandler: { progress in
+            probe.observe(progress)
+        }, verificationHook: { url in
+            guard url == firstDestination else { return }
+            gate.started.signal()
+            guard gate.release.wait(timeout: .now() + 5) == .success else { throw CancellationError() }
+            // Hold verification until cancellation is observed, not just until Stop is pressed.
+            for _ in 0..<500 {
+                if Task.isCancelled { throw CancellationError() }
+                Thread.sleep(forTimeInterval: 0.001)
+            }
+            throw CopyError.checksumVerificationFailed
+        })
+        let task = Task { await executor.copy(plan: plan(sourceRoot: sourceRoot, destinationRoot: destinationRoot, items: [
+            item(source: first, relativePath: first.lastPathComponent, destination: firstDestination, expectedSize: 1024),
+            item(source: second, relativePath: second.lastPathComponent, destination: secondDestination, expectedSize: 1024)
+        ])) }
+        await MainActor.run { probe.task = task }
+        let result = await task.value
+        let overlapped = await MainActor.run { probe.overlapped }
+        guard overlapped, result.mediaItems.map(\.status) == [.cancelled, .cancelled],
+              !FileManager.default.fileExists(atPath: firstDestination.path),
+              !FileManager.default.fileExists(atPath: secondDestination.path) else {
+            print("VERIFY FAIL: cancellation during pending verification: overlap=\(overlapped) statuses=\(result.mediaItems.map(\.status)) firstExists=\(FileManager.default.fileExists(atPath: firstDestination.path)) secondExists=\(FileManager.default.fileExists(atPath: secondDestination.path))")
+            return false
+        }
+        return true
+    }
+
+    private static func verifiesCompletedCopySurvivesLaterCancellation(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
+        let first = sourceRoot.appendingPathComponent("completed-before-cancel.MP4")
+        let second = sourceRoot.appendingPathComponent("cancel-after-completion.MP4")
+        let firstDestination = destinationRoot.appendingPathComponent(first.lastPathComponent)
+        let secondDestination = destinationRoot.appendingPathComponent(second.lastPathComponent)
+        let recordingDate = Date(timeIntervalSince1970: 1_700_000_000)
+        try Data(repeating: 3, count: 1024).write(to: first)
+        try createSparseFile(at: second, size: 128 * 1024 * 1024)
+        var firstClip = clip(source: first, relativePath: first.lastPathComponent, size: 1024)
+        firstClip.timestamp = recordingDate
+        firstClip.timestampSource = .filename
+        let box = await MainActor.run { CompletedCopyCancellationBox(destination: firstDestination, recordingDate: recordingDate) }
+        let executor = CopyExecutor { progress in box.cancelAfterNextFileStarts(progress) }
+        let task = Task { await executor.copy(plan: plan(sourceRoot: sourceRoot, destinationRoot: destinationRoot, items: [
+            CopyPlanItem(clip: firstClip, destinationURL: firstDestination, status: .planned),
+            item(source: second, relativePath: second.lastPathComponent, destination: secondDestination, expectedSize: 128 * 1024 * 1024)
+        ])) }
+        await MainActor.run { box.task = task }
+        let result = await task.value
+        let cancelled = await MainActor.run { box.cancelled }
+        guard cancelled, result.mediaItems.map(\.status) == [.copied, .cancelled],
+              try Data(contentsOf: firstDestination) == Data(repeating: 3, count: 1024),
+              !FileManager.default.fileExists(atPath: secondDestination.path) else {
+            print("VERIFY FAIL: completed and verified copy was not retained when next file was cancelled")
+            return false
+        }
+        return true
+    }
+
     private static func runCopy(sourceRoot: URL, destinationRoot: URL, items: [CopyPlanItem]) async -> CopyRunResult {
         let executor = CopyExecutor { _ in }
         return await executor.copy(plan: plan(sourceRoot: sourceRoot, destinationRoot: destinationRoot, items: items))
@@ -305,6 +416,56 @@ enum CopyExecutorVerification {
         try handle.close()
     }
 
+}
+
+@MainActor
+private final class CopyPipelineProbe {
+    let gate: CopyVerificationGate
+    let cancelOnOverlap: Bool
+    var task: Task<CopyRunResult, Never>?
+    private(set) var overlapped = false
+    private(set) var completedWhenOverlapped = -1
+    private(set) var latest: CopyProgress?
+
+    init(gate: CopyVerificationGate, cancelOnOverlap: Bool = false) {
+        self.gate = gate
+        self.cancelOnOverlap = cancelOnOverlap
+    }
+
+    func observe(_ progress: CopyProgress) {
+        latest = progress
+        guard !overlapped, progress.copiedBytes >= 2048 else { return }
+        completedWhenOverlapped = progress.completedFiles
+        overlapped = gate.started.wait(timeout: .now() + 5) == .success
+        if cancelOnOverlap { task?.cancel() }
+        gate.release.signal()
+    }
+}
+
+private final class CopyVerificationGate: @unchecked Sendable {
+    let started = DispatchSemaphore(value: 0)
+    let release = DispatchSemaphore(value: 0)
+}
+
+@MainActor
+private final class CompletedCopyCancellationBox {
+    var task: Task<CopyRunResult, Never>?
+    private let destination: URL
+    private let recordingDate: Date
+    private(set) var cancelled = false
+
+    init(destination: URL, recordingDate: Date) {
+        self.destination = destination
+        self.recordingDate = recordingDate
+    }
+
+    func cancelAfterNextFileStarts(_ progress: CopyProgress) {
+        guard !cancelled, progress.copiedBytes > 1024,
+              let actualDate = try? FileManager.default.attributesOfItem(atPath: destination.path)[.modificationDate] as? Date,
+              abs(actualDate.timeIntervalSince(recordingDate)) < 1 else { return }
+        cancelled = true
+        task?.cancel()
+    }
 }
 
 @MainActor

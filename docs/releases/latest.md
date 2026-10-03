@@ -1,7 +1,6 @@
-# Dashcam Offloader 0.1.23
+# Dashcam Offloader 0.1.24
 
-- Retain paired file-size and duration measurements, along with video bitrate, for each sampled camera channel and recording mode in submitted card scans. Private paths and timestamps stay excluded.
-- Give different modes and channels priority in the bounded media sample so large mixed backups do not consume the sample budget on one channel.
-- Keep paired measurements in the private ingestion review records without guessing a recording rate from unrelated minimum and maximum values.
+- Overlap verification of a completed clip with copying the next clip, reducing idle time during large offloads without removing SHA-256 or size verification.
+- Keep at most one completed clip awaiting verification. Preserve successfully verified files if a later clip is cancelled, and remove partial or failed files.
 
-Previously submitted scans cannot recover missing paired measurements. A new scan with this version is needed to verify each camera and each setting. Large backups containing other cameras should be scanned one camera card at a time for unambiguous identification.
+Speed depends on the card, destination, and clip sizes. No speed increase is guaranteed on every setup.
