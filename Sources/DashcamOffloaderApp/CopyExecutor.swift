@@ -5,7 +5,14 @@ import CryptoKit
 struct CopyExecutor {
     private static let copyBufferSize = 8 * 1024 * 1024
 
+    private struct PendingCopy {
+        let item: CopyPlanItem
+        let verification: Task<Void, Error>
+    }
+
     var progressHandler: @MainActor (CopyProgress) -> Void
+    // Test seam for deterministic verification/copy overlap and injected corruption.
+    var verificationHook: (@Sendable (URL) throws -> Void)? = nil
 
     func copy(plan: CopyPlan) async -> CopyRunResult {
         let totalBytes = plan.selectedBytes
@@ -21,6 +28,7 @@ struct CopyExecutor {
 
         var results: [CopyPlanItem] = []
         var supportResults: [SupportFileItem] = []
+        var pending: PendingCopy?
         for item in plan.items {
             guard !Task.isCancelled else { break }
             var result = item
@@ -29,6 +37,10 @@ struct CopyExecutor {
 
             do {
                 if item.sourceFileCount > 1 {
+                    if let previous = pending {
+                        pending = nil
+                        await finish(previous, progress: &progress, results: &results)
+                    }
                     let exported = try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
                         progress.copiedBytes += copiedChunk
                         await update(progress)
@@ -43,38 +55,65 @@ struct CopyExecutor {
                         progress.copiedBytes += item.totalSize
                     }
                 } else {
-                    let copied = try await copyOne(
+                    // A repeated destination must not be treated as an existing verified file.
+                    if let previous = pending, previous.item.destinationURL == item.destinationURL {
+                        pending = nil
+                        await finish(previous, progress: &progress, results: &results)
+                    }
+                    let verification = try await copyOne(
                         sourceURL: item.clip.sourceURL,
                         destinationURL: item.destinationURL,
                         expectedSize: item.clip.size,
-                        modificationDate: reliableRecordingDate(for: item.clip)
+                        modificationDate: reliableRecordingDate(for: item.clip),
+                        beforeCompletion: {
+                            if let previous = pending {
+                                pending = nil
+                                await finish(previous, progress: &progress, results: &results)
+                            }
+                        }
                     ) { copiedChunk in
                         progress.copiedBytes += copiedChunk
                         await update(progress)
                     }
-                    progress.completedFiles += 1
-                    if copied {
-                        result.status = .copied
-                        result.message = "Copied"
+                    if let verification {
+                        pending = PendingCopy(item: result, verification: verification)
                     } else {
+                        if let previous = pending {
+                            pending = nil
+                            await finish(previous, progress: &progress, results: &results)
+                        }
+                        progress.completedFiles += 1
                         result.status = .skipped
                         result.message = "Already in destination"
                         progress.copiedBytes += item.clip.size
                     }
                 }
             } catch is CancellationError {
+                if let previous = pending {
+                    pending = nil
+                    await finish(previous, progress: &progress, results: &results)
+                }
                 result.status = .cancelled
                 result.message = "Stopped by user"
                 results.append(result)
                 await update(progress)
                 break
             } catch {
+                if let previous = pending {
+                    pending = nil
+                    await finish(previous, progress: &progress, results: &results)
+                }
                 progress.completedFiles += 1
                 result.status = .failed
                 result.message = error.localizedDescription
             }
-            results.append(result)
+            if result.status != .planned { results.append(result) }
             await update(progress)
+        }
+
+        if let previous = pending {
+            pending = nil
+            await finish(previous, progress: &progress, results: &results)
         }
 
         for item in plan.supportItems {
@@ -84,17 +123,25 @@ struct CopyExecutor {
             await update(progress)
 
             do {
-                let copied = try await copyOne(
+                let verification = try await copyOne(
                     sourceURL: item.sourceURL,
                     destinationURL: item.destinationURL,
                     expectedSize: item.size,
-                    modificationDate: nil
+                    modificationDate: nil,
+                    beforeCompletion: {}
                 ) { copiedChunk in
                     progress.copiedBytes += copiedChunk
                     await update(progress)
                 }
+                if let verification {
+                    try await withTaskCancellationHandler {
+                        try await verification.value
+                    } onCancel: {
+                        verification.cancel()
+                    }
+                }
                 progress.completedFiles += 1
-                if copied {
+                if verification != nil {
                     result.status = .copied
                     result.message = "Copied"
                 } else {
@@ -160,13 +207,38 @@ struct CopyExecutor {
         await progressHandler(updatedProgress)
     }
 
+    private func finish(_ pending: PendingCopy, progress: inout CopyProgress, results: inout [CopyPlanItem]) async {
+        var result = pending.item
+        if Task.isCancelled { pending.verification.cancel() }
+        do {
+            try await withTaskCancellationHandler {
+                try await pending.verification.value
+            } onCancel: {
+                pending.verification.cancel()
+            }
+            // A verified file stays complete even if a later copy was cancelled.
+            result.status = .copied
+            result.message = "Copied"
+        } catch is CancellationError {
+            result.status = .cancelled
+            result.message = "Stopped by user"
+        } catch {
+            result.status = .failed
+            result.message = error.localizedDescription
+        }
+        if result.status != .cancelled { progress.completedFiles += 1 }
+        results.append(result)
+        await update(progress)
+    }
+
     private func copyOne(
         sourceURL: URL,
         destinationURL: URL,
         expectedSize: Int64,
         modificationDate: Date?,
+        beforeCompletion: () async -> Void,
         progress: (Int64) async -> Void
-    ) async throws -> Bool {
+    ) async throws -> Task<Void, Error>? {
         let fileManager = FileManager.default
         let destination = destinationURL
         let destinationDirectory = destination.deletingLastPathComponent()
@@ -176,7 +248,7 @@ struct CopyExecutor {
             guard try filesHaveMatchingSHA256(sourceURL, destination) else {
                 throw CopyError.destinationConflict
             }
-            return false
+            return nil
         }
 
         let input = try FileHandle(forReadingFrom: sourceURL)
@@ -207,23 +279,40 @@ struct CopyExecutor {
             output.write(data)
             await progress(Int64(data.count))
         }
+        await beforeCompletion()
+        if Task.isCancelled { throw CancellationError() }
         try output.close()
         outputIsClosed = true
 
+        // Verification owns cleanup once this fully-written destination is handed off.
+        didFinishWriting = true
+        let sourceDigest = Array(sourceHasher.finalize())
+        return Task.detached {
+            do {
+                try Self.verifyCopiedFile(destination, expectedSize: expectedSize, sourceDigest: sourceDigest, modificationDate: modificationDate, hook: verificationHook)
+            } catch {
+                try? FileManager.default.removeItem(at: destination)
+                throw error
+            }
+        }
+    }
+
+    private static func verifyCopiedFile(_ destination: URL, expectedSize: Int64, sourceDigest: [UInt8], modificationDate: Date?, hook: (@Sendable (URL) throws -> Void)?) throws {
+        if Task.isCancelled { throw CancellationError() }
         let copiedSize = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init)
         guard copiedSize == expectedSize else {
             throw CopyError.sizeVerificationFailed
         }
-        let sourceDigest = Array(sourceHasher.finalize())
+        try hook?(destination)
+        if Task.isCancelled { throw CancellationError() }
         let destinationDigest = Array(try sha256Digest(for: destination))
         guard sourceDigest == destinationDigest else {
             throw CopyError.checksumVerificationFailed
         }
+        if Task.isCancelled { throw CancellationError() }
         if let modificationDate {
-            try fileManager.setAttributes([.modificationDate: modificationDate], ofItemAtPath: destination.path)
+            try FileManager.default.setAttributes([.modificationDate: modificationDate], ofItemAtPath: destination.path)
         }
-        didFinishWriting = true
-        return true
     }
 
     private func reliableRecordingDate(for clip: ClipItem) -> Date? {
@@ -235,10 +324,10 @@ struct CopyExecutor {
     }
 
     private func filesHaveMatchingSHA256(_ firstURL: URL, _ secondURL: URL) throws -> Bool {
-        try Array(sha256Digest(for: firstURL)) == Array(sha256Digest(for: secondURL))
+        try Array(Self.sha256Digest(for: firstURL)) == Array(Self.sha256Digest(for: secondURL))
     }
 
-    private func sha256Digest(for url: URL) throws -> SHA256.Digest {
+    private static func sha256Digest(for url: URL) throws -> SHA256.Digest {
         let input = try FileHandle(forReadingFrom: url)
         defer { try? input.close() }
         var hasher = SHA256()
