@@ -448,7 +448,7 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 | F (front) | driving | HEVC | 3840x2160 | 30 | ~25.0237 Mbps | MP4 | `ffprobe` |
 | R (rear) | driving | HEVC | 1920x1080 | 30 | ~11.1216 Mbps | MP4 | `ffprobe` |
 
-**Storage-rate verification (2026-09-08):** Probed original driving files using complete file size divided by duration. Matched front/rear pair at 20240903-210812. Both files are 60.340789 seconds.
+**Storage-rate verification (2026-09-08):** Probed original driving files using complete file size divided by duration. Matched front/rear pair. Both files are 60.340789 seconds. Original filenames and recording timestamps are withheld.
 
 ## Rove R2-4K Pro
 
@@ -486,7 +486,7 @@ Those rows stay on manual/spec-driven data until we get real footage samples.
 | I (interior) | driving | H.264 | 1920x1080 | 30 | ~17.196 Mbps | MP4 | `ffprobe` |
 | R (rear) | driving | H.264 | 2560x1440 | 30 | ~25.222 Mbps | MP4 | `ffprobe` |
 
-**Storage-rate measurement (2026-09-08):** Direct INF driving clips from a complete 3CH set (20250922_114903), each 60.032 seconds. Front/interior/rear file sizes: 412876800 / 129040384 / 189267968 bytes. Rates above use complete file size divided by duration, including preallocated padding, not just encoded video. Video streams measured about 48 / 15 / 22 Mbps. A later complete 2CH pair (20260603_212826) confirmed the same front/rear file sizes and duration. Excluded shortened 46.528-second end clips from the baseline. Quality menu selection is unconfirmed. Reduced-channel estimates assume unchanged per-channel file allocation.
+**Storage-rate measurement (2026-09-08):** Direct INF driving clips from a complete 3CH set, each 60.032 seconds. Front/interior/rear file sizes: 412876800 / 129040384 / 189267968 bytes. Rates above use complete file size divided by duration, including preallocated padding, not just encoded video. Video streams measured about 48 / 15 / 22 Mbps. A later complete 2CH pair confirmed the same front/rear file sizes and duration. Excluded shortened 46.528-second end clips from the baseline. Quality menu selection is unconfirmed. Reduced-channel estimates assume unchanged per-channel file allocation. Original filenames and recording timestamps are withheld.
 
 ### A119 Mini 2 — isolated 60 fps storage-rate check (2026-09-08)
 
@@ -569,15 +569,15 @@ Matched 45.045-second FH/RH pair (201120_082835_077). Alexa-protected driving cl
 
 ### Additional resolution/FPS witnesses (2026-09-08)
 
-Vantrue N5 1944p option: complete 20240614_125501_00080_N_A/B/C/D set.
+Vantrue N5 1944p option: complete matched driving-channel A/B/C/D set.
 Front is 2592x1944 at 30fps, 123731968 bytes / 60 seconds. The three other
 1080p30 cameras are 77594624 bytes each over about 60 seconds. Compared with
 the 1440p baseline, this is a distinct observed configuration, not a bitrate
 inferred from resolution.
 
-70mai 4K Omni front 60fps option: native NO20250516-092136-001948F driving
+70mai 4K Omni front 60fps option: native NO-prefixed front driving
 file, HEVC 3840x2160 at 60/1fps, 243305578 bytes / 60.032 seconds. The 30fps
-sample was NO20250501-153114-000028F. Quality/session differences mean the
+sample was a separate NO-prefixed front driving file. Quality/session differences mean the
 storage difference must not be attributed to FPS alone.
 
 ## DOD LS500W
