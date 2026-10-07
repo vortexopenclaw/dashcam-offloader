@@ -10,6 +10,8 @@ Validation rule: use files copied straight from the dashcam whenever possible, s
 
 ## Source Key
 
+For the VIOFO T340 four-channel Normal / Low Power sample, see the [mode-specific measured ranges and per-camera HDR settings](card-profiles/viofo-t340.md#normal-bitrate--low-power-parking-sample-reviewed-2026-10-07). Front is about 31.95 Mbps driving; interior, rear and telephoto are about 14.33 Mbps each. Parking is about 4.095 Mbps per camera. All are H.264 at 30 fps; front is 3840x2160 and the other cameras are 2560x1440. Source: `app_submission`. These are video-only measurements, not certified whole-file storage rates.
+
 | Source | Meaning |
 |---|---|
 | `ffprobe` | Measured directly from real footage |

@@ -1,6 +1,25 @@
 # VIOFO T340 4CH card evidence
 
-A private **submitted sanitized** scan received 2026-09-30 identified the owner's camera as VIOFO T340, 4CH. The owner's separately supplied filename examples, not the sanitized scan, include `2026_0930_121758_000266T.MP4`, adjacent `_000267I`, `_000268R`, `_000269F`, and `2026_1001_005952_000001F` through `_000004R.MP4`. These directly support the F/R/I/T suffixes and per-file sequence on those examples, but the scan itself has no filename or folder evidence. The owner confirmed the **Max** driving bitrate setting. No source card was available for a fresh read-only rescan.
+## Normal bitrate / Low Power parking sample reviewed 2026-10-07
+
+The owner confirms four-channel recording, **Normal** driving bitrate and **Low Power** parking. HDR is on for front and interior, off for rear and telephoto. These are owner-reported settings, not settings extracted from the video.
+
+The sanitized app submission contains **256 MP4 files**, 64 per camera: 29 driving and 35 parking per camera. Eight video-spec groups measured **H.264 at 30 fps** throughout. Values below are encoded-video bitrate ranges, in decimal Mbps, reported by the app (`app_submission`), not independently re-measured with ffprobe.
+
+| Camera | Resolution | HDR (owner-confirmed) | Normal driving Mbps | Low Power parking Mbps |
+|---|---|---|---|---|
+| front | 3840x2160 | on | 31.940932-31.953844 | 4.094852-4.096339 |
+| interior | 2560x1440 | on | 14.329020-14.336068 | 4.094864-4.097066 |
+| rear | 2560x1440 | off | 14.333394-14.335724 | 4.094978-4.095841 |
+| telephoto | 2560x1440 | off | 14.332282-14.335972 | 4.095185-4.096227 |
+
+The three 2K cameras have essentially equal bitrate despite the mixed HDR settings in this configuration. This is not a controlled HDR toggle test and cannot prove that HDR never changes bitrate. Combined encoded-video bitrate is approximately **74.95 Mbps driving** and **16.38 Mbps parking**. Low Power preserves the measured resolution and frame rate while lowering encoded bitrate; the front drops about 87% and each 2K camera about 71%.
+
+No paired file-size/duration measurements were supplied. These values do **not** certify whole-file storage rate or recording time; audio, container overhead and padding remain unmeasured. Low Power is the owner-confirmed setting, not independent evidence of continuous, motion or impact triggering. Redacted folder paths do not validate the inferred card layout. Keep this Normal-setting sample separate from the older Max-setting ranges below.
+
+## Historical Max-setting sample
+
+A private **submitted sanitized** scan reviewed 2026-09-30 identified the owner's camera as VIOFO T340, 4CH. Separately supplied filename examples follow the generalized `YYYY_MMDD_HHMMSS_SEQUENCE_[F/R/I/T].MP4` family. These support F/R/I/T suffixes and per-file sequence, but the sanitized scan itself has no filename or folder evidence. The owner confirmed the **Max** driving bitrate setting; the broad historical ranges below are not one controlled settings comparison. No source card was available for a fresh read-only rescan.
 
 The sanitized scan counted **387 items: 371 MP4 and 16 JPG**. App-assigned channel counts are front 107, interior 108, rear 91, unknown 81. These totals include photos; unknown 81 is **not** a proven telephoto count. The app classified 305 items as Driving, 8 Driving Event, 40 Parking Continuous / Low Bitrate, 8 Parking Motion Detection, 10 Parking Impact Detection, and 16 JPEG. These are app classifications, not camera-settings confirmations.
 

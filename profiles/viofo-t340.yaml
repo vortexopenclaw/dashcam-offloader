@@ -20,6 +20,8 @@ sampled_variant:
   validation: app_submission_sampled
 source_notes:
   - docs/card-profiles/viofo-t340.md
+  - "Normal / Low Power 4CH sample: H.264 at 30 fps; front 3840x2160 at ~31.95 Mbps driving, other cameras 2560x1440 at ~14.33 Mbps; parking ~4.095 Mbps each"
+  - "Owner confirms HDR on front/interior, off rear/telephoto; not a controlled HDR comparison and not complete-file storage-rate evidence"
   - F/R/I/T MP4 suffixes evidenced by owner-provided filenames; folder and parking suffixes remain inferred
 detection:
   supporting:

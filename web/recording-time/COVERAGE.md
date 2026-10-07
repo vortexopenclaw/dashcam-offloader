@@ -47,6 +47,10 @@ Escort MAXcam 360c, Rove R2-4K, Tesla TeslaCam, Thinkware ARC 700 and ARC 900 st
 
 Broader catalog-only coverage is still incomplete. Unreleased H1 remains excluded.
 
+### T340 evidence update reviewed 2026-10-07
+
+The new T340 four-channel Normal / Low Power scan adds eight encoded-video bitrate ranges and owner-confirmed per-camera HDR settings to the camera database. It supplies no paired file-size/duration measurements, so no certified whole-file rate or new recording-time preset is added. The existing preset count remains unchanged. See [the reviewed sample](../../docs/card-profiles/viofo-t340.md#normal-bitrate--low-power-parking-sample-reviewed-2026-10-07); do not pair unrelated aggregate size and duration extrema.
+
 ## Correction made
 
 Cansonic UltraDash Z4 Standard Edition was missed by the old video-reference-only eligibility check. Its profile has explicitly driving-folder video measurements for High/Highest quality: Front and Telephoto 4K30, Rear 1440p30. Added them as submitted-video estimates with overhead caveats. Did not use PROTECTED parking clips or label video-stream rates as complete file sizes.
