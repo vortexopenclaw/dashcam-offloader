@@ -1591,20 +1591,7 @@ struct CardLearningSheet: View {
                         if !scanPreview.settingSnapshots.isEmpty {
                             Text("\(scanPreview.settingSnapshots.count) allowlisted model/settings summary item(s)")
                         }
-                        if !scanPreview.directorySummaries.isEmpty {
-                            Text("Camera-relative folders (unrecognized names anonymized)").fontWeight(.semibold)
-                            ForEach(scanPreview.directorySummaries, id: \.path) { folder in
-                                Text("\(folder.path) · \(folder.directMediaFileCount) media files")
-                            }
-                        }
-                        if !scanPreview.mediaFileSamples.isEmpty {
-                            Text("\(scanPreview.mediaFileSamples.count) sampled camera files with folder, recording type, channel and protection flags").fontWeight(.semibold)
-                            ForEach(Array(scanPreview.mediaFileSamples.enumerated()), id: \.offset) { _, file in
-                                Text("\(file.folder)/\(file.filename) · \(file.outputCategory) · \(file.channel) · read-only: \(file.filesystemReadOnly.map { $0 ? "yes" : "no" } ?? "unknown")")
-                            }
-                        }
-                        Text("Camera filenames may contain recording times. Never shared: host paths, source names, personal folder names, media, GPS, serials, network identifiers or credentials. Source files are never changed.")
-                            .foregroundStyle(.secondary)
+                        CardLearningStructurePreview(directories: scanPreview.directorySummaries, files: scanPreview.mediaFileSamples)
                     }
                     .font(.caption)
                     .padding(.top, 6)
