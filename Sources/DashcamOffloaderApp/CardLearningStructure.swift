@@ -9,7 +9,12 @@ struct CardLearningPaths {
         "recordings", "video", "videos", "front", "rear", "interior", "cabin",
         "telephoto", "side", "continuous", "motion", "impact", "timelapse", "sos",
         "cont_rec", "evt_rec", "manual_rec", "parking_rec", "motion_rec", "sos_rec",
-        "incabin_rec", "normal_rec", "event_rec", "park_rec", "inf_rec", "photo_rec"
+        "incabin_rec", "normal_rec", "event_rec", "park_rec", "inf_rec", "photo_rec",
+        "blackvue", "teslacam", "recentclips", "savedclips", "sentryclips", "roadscout",
+        "escort_m1", "maxcam360c", "rec", "clip", "inf", "pevent", "lapse", "lockedvideo",
+        "secvideo", "safety_box", "bookmark", "originalfiles", "panophoto", "private",
+        "avchd", "m4root", "360cardvr", "100", "back_emr", "back_norm", "front_emer",
+        "rear_emer", "front_norm", "rear_norm", "emr", "norm", "motion_timelapse_rec"
     ]
     private var aliases: [String: String] = [:]
 
