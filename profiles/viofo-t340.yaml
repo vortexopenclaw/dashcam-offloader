@@ -22,7 +22,8 @@ source_notes:
   - docs/card-profiles/viofo-t340.md
   - "Normal / Low Power 4CH sample: H.264 at 30 fps; front 3840x2160 at ~31.95 Mbps driving, other cameras 2560x1440 at ~14.33 Mbps; parking ~4.095 Mbps each"
   - "Owner confirms HDR on front/interior, off rear/telephoto; not a controlled HDR comparison and not complete-file storage-rate evidence"
-  - F/R/I/T MP4 suffixes evidenced by owner-provided filenames; folder and parking suffixes remain inferred
+  - "High / Low Bitrate 4CH sample: front ~36.86 Mbps driving, 2K cameras ~21.30 Mbps; parking ~4.095 Mbps each; 20 Protected MP4 retain High driving rates"
+  - "Sampled F/R/I/T and PF/PR/PI/PT MP4 suffixes and F/R/I/T JPG suffixes are submission-verified; folders and emergency-specific naming remain inferred"
 detection:
   supporting:
     - folder: DCIM/Movie
@@ -55,7 +56,7 @@ filename_patterns:
       - DCIM/Movie/Parking
       - DCIM/Movie/RO
     case_sensitive: true
-    validation: inferred
+    validation: app_submission_sampled
     timestamp:
       year_group: 1
       month_day_group: 2

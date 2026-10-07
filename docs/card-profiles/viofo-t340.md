@@ -1,5 +1,22 @@
 # VIOFO T340 4CH card evidence
 
+## High bitrate / Low Bitrate parking sample reviewed 2026-10-07
+
+The owner confirms **High** driving bitrate, **Low Bitrate** parking and manual emergency button events. This scan contains **100 media items**: 40 Driving MP4, 20 Protected MP4, 28 Parking MP4 and 12 JPG. Each camera has 10 driving, five protected and seven parking videos, plus three photos. All 12 video groups report H.264 at 30 fps; front is 3840x2160 and interior/rear/telephoto are 2560x1440. HDR and firmware were not recorded with this submission; do not silently carry settings forward.
+
+| Camera | High driving Mbps | Protected Mbps | Low Bitrate parking Mbps |
+|---|---|---|---|
+| front | 36.847188-36.867416 | 36.800028-36.872988 | 4.094099-4.099248 |
+| interior | 21.297184-21.324242 | 21.297322-21.302340 | 4.094853-4.099727 |
+| rear | 21.297310-21.314644 | 21.288770-21.299056 | 4.094983-4.098455 |
+| telephoto | 21.297458-21.317968 | 21.289786-21.298966 | 4.095149-4.096421 |
+
+Parking is approximately **4.095 Mbps per camera**, effectively matching the earlier Normal-driving sample. However, the earlier owner label was **Low Power**, whereas this one is **Low Bitrate**. These are not automatically equivalent settings: VIOFO lists Low Power Impact Detection separately from Low Bitrate Recording. This proves matching observed parking rates across these two scans, not a controlled Normal-versus-High comparison of an identically confirmed parking setting. Low and Max driving with confirmed Low Bitrate parking remain to be tested. Protected videos retain approximately the High driving bitrate; their sampled duration range is 8.533333-60 seconds, which does not establish a fixed emergency-event window or buffering policy.
+
+The bounded basename sample includes 72 MP4 and eight JPG names. MP4 suffix counts are 11 each F/R/I/T and seven each PF/PR/PI/PT; JPG suffix counts are two each F/R/I/T. Their generalized family is `YYYY_MMDD_HHMMSS_SEQUENCE[F/R/I/T/PF/PR/PI/PT].MP4` and `YYYY_MMDD_HHMMSS_SEQUENCE[F/R/I/T].JPG`, with no separator between sequence and suffix. These validate the sampled channel suffixes and filename family, including parking P prefixes. There is no separate emergency token among the sampled names, but names are not linked to recording categories and the sample is incomplete. Therefore an emergency-specific naming rule, exact protected folder, event-to-clip grouping and all-four-camera synchronization remain unverified. Folder paths, directory summaries and clip-group summaries were stripped or absent. Do not claim `DCIM/Movie/RO` is card-validated from this scan.
+
+No paired file-size/duration samples are present. Independent minimum/maximum sizes and durations cannot be paired to certify storage rate. The recording-time calculator is unchanged. Other parking-mode filename conventions, mode switching and event behavior still need setting-labeled structural scans.
+
 ## Normal bitrate / Low Power parking sample reviewed 2026-10-07
 
 The owner confirms four-channel recording, **Normal** driving bitrate and **Low Power** parking. HDR is on for front and interior, off for rear and telephoto. These are owner-reported settings, not settings extracted from the video.
@@ -33,6 +50,6 @@ Its 20 video-spec groups measured H.264 at 30 fps. The table lists MP4 counts an
 | Parking Motion Detection | 2, 10.64-10.65 | 2, 8.19-8.23 | 2, 8.19-8.24 | 2, 8.19-8.21 |
 | Parking Impact Detection | 3, 13.2-31.8 | 3, 8.29-14.4 | 2, 11.6-14.4 | 2, 11.1-14.3 |
 
-**Review flags:** The older scan fell back to a generic profile after an A329T candidate. The `T` mapping is supported by owner-provided example names and the T340 four-camera layout, not proven by that sanitized aggregate alone. The T340 folder layout and parking PF/PR/PI/PT suffixes remain inferred and experimental. Lower parking bitrate cannot establish the selected parking subtype. A newly submitted scan with bounded camera-shaped basenames can validate suffix samples, but cannot prove a camera setting without owner confirmation. Do not publish private raw submissions or personal filenames.
+**Review flags:** The older scan fell back to a generic profile after an A329T candidate. The `T` mapping was supported by owner-provided example names and the four-camera layout, not proven by that historical aggregate alone. The newer High-setting scan validates sampled F/R/I/T and PF/PR/PI/PT suffixes, but folder layout remains inferred and experimental. Lower parking bitrate cannot establish the selected parking subtype. Do not publish private raw submissions or personal filenames.
 
 The official [VIOFO T340-series description](https://www.viofo.com/blogs/viofo-car-dash-camera-guide-faq-and-news/meet-the-new-viofo-lineup-t340-series-t330-series-a149-pro-duo-bp60) confirms front, interior, rear and telephoto cameras. The experimental profile requires a full four-channel F/R/I/T set to favor T340 over three-channel siblings on an unlabeled card. A sibling without I must not be claimed as T340.

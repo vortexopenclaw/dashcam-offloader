@@ -20,6 +20,7 @@ Representative front-channel driving rows where measured files are 3840x2160 at 
 | Camera | Channels In Sample | Front Codec | Front File Resolution | FPS | Front Driving Bitrate | Source | Quality Notes |
 |---|---:|---|---|---:|---:|---|---|
 | VIOFO T340 | 4 | H.264 | 3840x2160 | 30 | ~31.95 Mbps | app submission | Owner-confirmed Normal setting; 2K interior/rear/telephoto ~14.33 Mbps each. HDR on front/interior, off rear/telephoto; not a controlled HDR comparison. |
+| VIOFO T340 | 4 | H.264 | 3840x2160 | 30 | ~36.86 Mbps | app submission | Owner-confirmed High setting; 2K interior/rear/telephoto ~21.30 Mbps each. Protected videos retain similar rates. HDR and firmware not recorded for this submission. |
 | BlackVue Elite 9 | 2 | HEVC | 3840x2160 | 30 | ~60.0 Mbps | ffprobe | Strong 4K-file bitrate; rear measured 1440p at ~25 Mbps. |
 | Vueroid S1 4K Infinite | 3 | H.264 | 3840x2160 | 30 | ~48.0 Mbps | app submission | Firmware 1.6.0 3CH metadata; rear 1440p/~22 Mbps and interior 1080p/~15 Mbps. |
 | BlackVue DR970X-2CH Plus | 2 | HEVC | 3840x2160 | 30 | ~60.0 Mbps | ffprobe | Front row only from camera-looking clips in mixed archive. |
@@ -46,6 +47,7 @@ These rows compare measured front-channel driving quality against measured parki
 | Camera | Driving Front | Parking Front | Approx Drop | Parking Mode Evidence | Notes |
 |---|---:|---:|---:|---|---|
 | VIOFO T340 | ~31.95 Mbps | ~4.095 Mbps | ~87% lower | Owner-confirmed Low Power setting | Four-channel H.264/30 fps sample; each 2K camera also ~4.095 Mbps parking. Trigger subtype and complete-file storage rate unverified. |
+| VIOFO T340 | ~36.86 Mbps | ~4.095 Mbps | ~89% lower | Owner-confirmed Low Bitrate setting | High driving sample. Parking matches the earlier observed rates, but the earlier setting was labeled Low Power; mode equivalence is not established. |
 | Vueroid S1 QHD Infinite | ~22.0 Mbps | ~13.8-16.3 Mbps | ~26-37% lower | 5 fps time-lapse plus 30 fps impact | Time-lapse uses 20-second clips; impact clips retain ~22 Mbps front video. |
 | Vueroid S1 4K Infinite | ~48.0 Mbps | unknown | unknown | Firmware 1.6.0 app submission | The app's cadence/size heuristic labeled a 30 fps/30-second group as time-lapse; it is not confirmed. |
 | VIOFO A229 Pro | ~36.0 Mbps | ~4.1 Mbps | ~89% lower | PF/PI/PR parking files | Low-bitrate parking behavior in submitted card. |
