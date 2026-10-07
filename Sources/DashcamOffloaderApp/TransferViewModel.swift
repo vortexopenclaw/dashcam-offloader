@@ -1445,6 +1445,21 @@ final class TransferViewModel: ObservableObject {
         let safeEligibleClips = eligibleClips.filter { clip in
             safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
         }
+        var learningPaths = CardLearningPaths()
+        let directorySummaries = makeDirectorySummaries(sourceRoot: sourceRoot).compactMap { summary -> FeedbackDirectorySummary? in
+            guard let path = learningPaths.folder(summary.path) else { return nil }
+            var safe = summary
+            safe.path = path
+            safe.sampleFilenames = []
+            return safe
+        }
+        let folderSummaries = makeFolderSummaries(from: safeFiles, sourceRoot: sourceRoot).compactMap { summary -> FeedbackFolderSummary? in
+            guard let path = learningPaths.folder(summary.path) else { return nil }
+            var safe = summary
+            safe.path = path
+            return safe
+        }
+        let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips, sourceRoot: sourceRoot, paths: &learningPaths)
         let videoSpecSamples = makeVideoSpecSamples(
             from: representativeVideoClips(safeEligibleClips),
             sourceRoot: sourceRoot
@@ -1453,7 +1468,11 @@ final class TransferViewModel: ObservableObject {
             from: safeEligibleClips.filter(\.isVideo),
             samples: videoSpecSamples,
             sourceRoot: sourceRoot
-        ).map { $0.forSubmission() }
+        ).map { summary in
+            var safe = summary
+            safe.folder = learningPaths.folder(summary.folder) ?? "."
+            return safe.forSubmission()
+        }
         let settingSnapshots = safeFiles
             .filter { isPotentialSettingsFile($0, sourceRoot: sourceRoot) }
             .prefix(20)
@@ -1500,7 +1519,7 @@ final class TransferViewModel: ObservableObject {
             return mediaNamePattern.firstMatch(in: name, range: range)?.range == range
         })).sorted().prefix(100)
         return FeedbackScanSnapshot(
-            // Feedback never transmits user-controlled source names or folder paths.
+            // Host paths/source names stay private; only sanitized relative structure is sent.
             volumeName: "",
             requestedSourceName: nil,
             effectiveSourceName: nil,
@@ -1523,10 +1542,10 @@ final class TransferViewModel: ObservableObject {
             suspiciousTimestampItems: eligibleClips.filter(\.hasSuspiciousTimestamp).count,
             inferredParkingPatternCounts: inferredParkingPatternCounts,
             sampleRelativePaths: [],
-            rootFolders: [],
+            rootFolders: Array(Set(directorySummaries.compactMap { $0.path == "." ? nil : $0.path.split(separator: "/").first.map(String.init) })).sorted(),
             folderSamples: [],
-            directorySummaries: [],
-            folderSummaries: [],
+            directorySummaries: directorySummaries,
+            folderSummaries: folderSummaries,
             filenameSamples: Array(feedbackFilenames),
             filenamePatternSummaries: [],
             filenameSequenceSummaries: [],
@@ -1537,7 +1556,8 @@ final class TransferViewModel: ObservableObject {
             videoSpecSummaries: videoSpecSummaries,
             settingSnapshots: Array(settingSnapshots),
             candidates: Array(candidates),
-            scanDiagnostics: Array(feedbackDiagnostics)
+            scanDiagnostics: Array(feedbackDiagnostics),
+            mediaFileSamples: mediaFileSamples
         )
     }
 

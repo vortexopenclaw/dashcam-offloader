@@ -941,6 +941,7 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var settingSnapshots: [FeedbackSettingSnapshot]
     var candidates: [FeedbackCandidateSnapshot]
     var scanDiagnostics: [ScanDiagnosticEntry]
+    var mediaFileSamples: [FeedbackMediaFileSample] = []
 }
 
 struct FeedbackDirectorySummary: Codable, Hashable, Sendable {
@@ -1051,7 +1052,7 @@ struct FeedbackVideoSpecSummary: Codable, Hashable, Sendable {
 
     func forSubmission() -> Self {
         var safe = self
-        safe.folder = "."
+        safe.folder = CardLearningPaths.acceptedFolder(folder) ?? "."
         safe.firstTimestamp = nil
         safe.lastTimestamp = nil
         safe.sampleRelativePaths = []

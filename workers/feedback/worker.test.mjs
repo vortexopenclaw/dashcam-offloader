@@ -167,10 +167,35 @@ test("only bounded camera media basenames survive; paths and personal names do n
   assert.deepEqual(scan.filenameSamples.slice(0, 2), [valid, "2026_1001_005952_000001F.MP4"]);
   assert.equal(scan.filenameSamples.length, 95);
   assert.deepEqual(scan.filenamePatternSummaries, [
-    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCE_T.MP4", sampledCount: 94},
-    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCE_F.MP4", sampledCount: 1},
+    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCET.MP4", sampledCount: 94},
+    {redactedPattern: "YYYY_MMDD_HHMMSS_SEQUENCEF.MP4", sampledCount: 1},
   ]);
   assert.equal(JSON.stringify(scan).includes("Family Trip"), false);
+});
+
+test("camera structure and per-file protection survive the final storage sanitizer", () => {
+  const filename = "2000_0101_000000_00001F.MP4";
+  const sample = {folder:"DCIM/Movie/RO", filename, mode:"protected", outputCategory:"Protected",
+    channel:"front", fileSizeBytes:1000, permissionBits:0o444, filesystemReadOnly:false,
+    userImmutable:false, systemImmutable:false, volumeReadOnly:false};
+  const scan = sanitizeScan({directorySummaries:[{path:"DCIM/Movie/RO", directMediaFileCount:4},
+    {path:"Family Trip"}, {path:"../DCIM"}, {path:"/DCIM"}, {path:"DCIM//Movie"}],
+    folderSummaries:[{path:"DCIM/Movie/Parking",fileCount:8},{path:"Family Trip"}],
+    videoSpecSummaries:[{folder:"DCIM/Movie/Parking"}],
+    mediaFileSamples:[sample, {...sample,folder:"Family Trip"}, {...sample,filename:"secret.mp4"},
+      {...sample,folder:"folder-1/Movie",permissionBits:0o644},
+      {...sample,permissionBits:null, userImmutable:"yes"}]});
+  assert.equal(scan.directorySummaries.length,1);
+  assert.equal(scan.directorySummaries[0].path,"DCIM/Movie/RO");
+  assert.equal(scan.folderSummaries.length,1);
+  assert.equal(scan.videoSpecSummaries[0].folder,"DCIM/Movie/Parking");
+  assert.equal(scan.mediaFileSamples.length,3);
+  assert.equal(scan.mediaFileSamples[0].filesystemReadOnly,true);
+  assert.equal(scan.mediaFileSamples[1].filesystemReadOnly,false);
+  assert.equal(scan.mediaFileSamples[2].filesystemReadOnly,null);
+  assert.equal(scan.mediaFileSamples[2].userImmutable,null);
+  assert.equal(JSON.stringify(scan).includes("Family Trip"),false);
+  assert.equal(sanitizeScan({mediaFileSamples:Array(200).fill(sample)}).mediaFileSamples.length,120);
 });
 
 test("storage samples retain paired complete-file measurements without private fields", () => {

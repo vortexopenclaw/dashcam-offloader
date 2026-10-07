@@ -1,6 +1,5 @@
-# Dashcam Offloader 0.1.24
+# Dashcam Offloader 0.1.25
 
-- Overlap verification of a completed clip with copying the next clip, reducing idle time during large offloads without removing SHA-256 or size verification.
-- Keep at most one completed clip awaiting verification. Preserve successfully verified files if a later clip is cancelled, and remove partial or failed files.
-
-Speed depends on the card, destination, and clip sizes. No speed increase is guaranteed on every setup. A Viofo card throughput comparison still needs a real-card offload with this build.
+- Card-learning submissions now include camera-relative folder structure and sampled files linked to their recording type and camera channel.
+- Include existing file read-only permissions, lock flags and read-only volume status to help distinguish emergency recordings. Source files are never changed.
+- Review the new evidence before submitting. Camera folder names are retained; unrecognized folder names are anonymized. Host paths, source names and media remain private.

@@ -257,10 +257,43 @@ function sampledFilenamePatterns(names) {
   for (const name of names) {
     const match = /^\d{4}_\d{4}_\d{6}_\d{1,9}(PF|PR|PI|PT|F|R|I|T)\.(MP4|MOV|JPG|JPEG)$/i.exec(name);
     if (!match) continue;
-    const pattern = `YYYY_MMDD_HHMMSS_SEQUENCE_${match[1].toUpperCase()}.${match[2].toUpperCase()}`;
+    const pattern = `YYYY_MMDD_HHMMSS_SEQUENCE${match[1].toUpperCase()}.${match[2].toUpperCase()}`;
     counts.set(pattern, (counts.get(pattern) || 0) + 1);
   }
   return [...counts].map(([redactedPattern, sampledCount]) => ({redactedPattern, sampledCount}));
+}
+
+const CAMERA_DIRECTORIES = new Set([
+  "dcim", "movie", "movies", "photo", "photos", "parking", "park", "ro", "normal",
+  "event", "events", "emergency", "manual", "protected", "record", "recordings",
+  "video", "videos", "front", "rear", "interior", "cabin", "telephoto", "side",
+  "continuous", "motion", "impact", "timelapse", "sos", "cont_rec", "evt_rec",
+  "manual_rec", "parking_rec", "motion_rec", "sos_rec", "incabin_rec", "normal_rec",
+  "event_rec", "park_rec", "inf_rec", "photo_rec",
+]);
+
+function cameraFolder(path) {
+  if (path === ".") return path;
+  if (typeof path !== "string" || path.length > 1024) return null;
+  const parts = path.split("/");
+  return parts.length <= 12 && parts.every(part => CAMERA_DIRECTORIES.has(part.toLowerCase()) ||
+    /^(?:\d{3}[A-Za-z]{3,8}|folder-[1-9]\d{0,3})$/.test(part)) ? path : null;
+}
+
+function mediaFileSample(sample) {
+  if (!sample || typeof sample !== "object" || Array.isArray(sample)) return null;
+  const folder = cameraFolder(sample.folder);
+  if (!folder || !safeMediaBasename(sample.filename)) return null;
+  const bits = Number.isInteger(sample.permissionBits) && sample.permissionBits >= 0 && sample.permissionBits <= 0o777
+    ? sample.permissionBits : null;
+  const flag = value => typeof value === "boolean" ? value : null;
+  const token = value => typeof value === "string" && /^[a-zA-Z0-9 _/-]{1,80}$/.test(value) ? value : null;
+  return {folder, filename: sample.filename, mode: token(sample.mode),
+    outputCategory: token(sample.outputCategory), channel: token(sample.channel),
+    fileSizeBytes: nullableNumber(sample.fileSizeBytes), permissionBits: bits,
+    filesystemReadOnly: bits === null ? null : (bits & 0o222) === 0,
+    userImmutable: flag(sample.userImmutable), systemImmutable: flag(sample.systemImmutable),
+    volumeReadOnly: flag(sample.volumeReadOnly)};
 }
 
 function sanitizeScan(scan) {
@@ -289,6 +322,14 @@ function sanitizeScan(scan) {
     // Exact bounded camera-media basenames, never source paths or arbitrary names.
     filenameSamples,
     filenamePatternSummaries: sampledFilenamePatterns(filenameSamples),
+    directorySummaries: Array.isArray(scan.directorySummaries) ? scan.directorySummaries.slice(0, 160)
+      .filter(summary => summary && cameraFolder(summary.path)).map(summary => ({
+        ...sanitizeDirectorySummary(summary), path: cameraFolder(summary.path), sampleFilenames: []
+      })) : [],
+    folderSummaries: Array.isArray(scan.folderSummaries) ? scan.folderSummaries.slice(0, 160)
+      .filter(summary => summary && cameraFolder(summary.path)).map(sanitizeFolderSummary).filter(Boolean) : [],
+    rootFolders: Array.isArray(scan.rootFolders) ? scan.rootFolders.slice(0, 160).filter(path => cameraFolder(path)) : [],
+    mediaFileSamples: Array.isArray(scan.mediaFileSamples) ? scan.mediaFileSamples.slice(0, 120).map(mediaFileSample).filter(Boolean) : [],
     videoSpecSamples: [],
     videoSpecSummaries: Array.isArray(scan.videoSpecSummaries)
       ? scan.videoSpecSummaries.slice(0, MAX_VIDEO_SPEC_SUMMARIES).map(sanitizeVideoSpecSummary).filter(Boolean)
@@ -486,7 +527,7 @@ function sanitizeVideoSpecSummary(summary) {
   }
 
   return {
-    folder: ".",
+    folder: cameraFolder(summary.folder) || ".",
     extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
     mode: optionalString(summary.mode),
     displayMode: optionalString(summary.displayMode),

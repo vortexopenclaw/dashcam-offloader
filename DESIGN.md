@@ -1,5 +1,24 @@
 # Design
 
+## 2026-10-07 Card-learning structural evidence
+
+Objective: retain camera-relative folders, including empty directories, and
+bounded per-file folder/mode/channel/protection linkage through both the app
+and receiver. Exact camera directory vocabulary is preserved; other directory
+names use consistent per-snapshot opaque labels. Host paths/source names stay
+excluded. The source remains read-only: inspect POSIX write bits, immutable
+flags and volume status without changing permissions or interpreting every
+read-only file as an emergency event. Missing attributes remain unknown.
+
+Success checks: a locked synthetic T340 file retains RO-folder/channel linkage
+through JSON encoding and receiver sanitization; unrelated private directory
+names and traversal paths do not survive; representative sampling includes
+rare protected groups. Native/package verification and the user-reviewed
+learning preview pass. Receiver deployment must precede app feed activation.
+
+Rollback: restore the prior feedback Worker version and signed 0.1.24 feed
+through the existing release mechanism. Retain prior immutable app assets.
+
 ## Product Goal
 
 Build a Mac-first open-source tool that automates and simplifies offloading dashcam footage from one or more microSD cards into a user-selected destination. The app should understand each dashcam's folder structure and filename conventions well enough to classify clips by camera model, recording mode, channel, and date/time before planning and verifying the copy.

@@ -1,5 +1,15 @@
 # VIOFO T340 4CH card evidence
 
+## Owner-confirmed settings vocabulary
+
+Driving bitrate has four settings: **Low, Normal, High, Maximum**. Earlier
+owner shorthand "Max" means Maximum. Keep **Low Bitrate** continuous parking
+separate from **Low Power Impact Detection**, which waits in standby and wakes
+for an impact. The owner expects impact-triggered Low Power recording to return
+to full driving bitrate; a controlled, setting-labeled impact sample is still
+needed to verify its bitrate on this firmware. Lower encoded bitrate alone
+cannot identify the parking mode.
+
 ## High bitrate / Low Bitrate parking sample reviewed 2026-10-07
 
 The owner confirms **High** driving bitrate, **Low Bitrate** parking and manual emergency button events. This scan contains **100 media items**: 40 Driving MP4, 20 Protected MP4, 28 Parking MP4 and 12 JPG. Each camera has 10 driving, five protected and seven parking videos, plus three photos. All 12 video groups report H.264 at 30 fps; front is 3840x2160 and interior/rear/telephoto are 2560x1440. HDR and firmware were not recorded with this submission; do not silently carry settings forward.

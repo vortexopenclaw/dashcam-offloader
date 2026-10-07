@@ -2054,7 +2054,8 @@ enum VerificationTest {
             }
             guard let wolfboxLearningSnapshot,
                   wolfboxLearningSnapshot.scannedFiles > 0,
-                  wolfboxLearningSnapshot.directorySummaries.isEmpty,
+                  !wolfboxLearningSnapshot.directorySummaries.isEmpty,
+                  wolfboxLearningSnapshot.directorySummaries.allSatisfy({ CardLearningPaths.acceptedFolder($0.path) != nil }),
                   wolfboxLearningSnapshot.folderSamples.isEmpty,
                   wolfboxLearningSnapshot.sampleRelativePaths.isEmpty else {
                 print("VERIFY FAIL: Wolfbox learning snapshot did not preserve statistics while redacting paths")
@@ -2438,6 +2439,37 @@ enum VerificationTest {
                 try Data([1]).write(to: t340Source.appendingPathComponent("DCIM/Movie/\(name)"))
             }
             let t340Scan = try scanner.scan(sourceURL: t340Source, profiles: profiles)
+            let lockedURL = t340Source.appendingPathComponent("DCIM/Movie/RO/2026_0609_122201_414001PF.MP4")
+            try FileManager.default.setAttributes([.posixPermissions: 0o444], ofItemAtPath: lockedURL.path)
+            let t340Learning = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in
+                let model = TransferViewModel()
+                model.profiles = profiles
+                model.loadScanResultForVerification(source: MountedSource(url: t340Source, name: "Private Card"), scanResult: t340Scan)
+                return model.makeFeedbackScanSnapshot()
+            }
+            guard let t340Learning,
+                  t340Learning.directorySummaries.contains(where: { $0.path == "DCIM/Movie/RO" }),
+                  let locked = t340Learning.mediaFileSamples.first(where: { $0.filename == lockedURL.lastPathComponent }),
+                  locked.folder == "DCIM/Movie/RO", locked.filesystemReadOnly == true,
+                  locked.permissionBits == 0o444, locked.channel == "front",
+                  t340Learning.mediaFileSamples.contains(where: { $0.folder == "DCIM/Movie/Parking" }),
+                  t340Learning.mediaFileSamples.count <= 120,
+                  !String(decoding: try JSONEncoder().encode(t340Learning), as: UTF8.self).contains(t340Source.path),
+                  (try FileManager.default.attributesOfItem(atPath: lockedURL.path)[.posixPermissions] as? NSNumber)?.intValue == 0o444 else {
+                print("VERIFY FAIL: card-learning folder/file linkage, read-only evidence or source immutability")
+                return false
+            }
+            var learningPaths = CardLearningPaths()
+            guard learningPaths.folder("DCIM/Movie/RO") == "DCIM/Movie/RO",
+                  learningPaths.folder("Family Trip/Movie") == "folder-1/Movie",
+                  learningPaths.folder("Family Trip/Photo") == "folder-1/Photo",
+                  learningPaths.folder("Other Trip/Movie") == "folder-2/Movie",
+                  learningPaths.folder("../DCIM") == nil,
+                  CardLearningPaths.acceptedFolder("Family Trip/Movie") == nil,
+                  CardLearningPaths.acceptedFolder("/DCIM/Movie") == nil else {
+                print("VERIFY FAIL: structural learning leaked private folder names or collapsed distinct directories")
+                return false
+            }
             guard ownerExampleNames.allSatisfy({ name, channel in
                 t340Scan.clips.contains { $0.filename == name && $0.channel == channel }
             }) else {
@@ -2798,8 +2830,8 @@ enum VerificationTest {
                   nestedVueroidLearningSnapshot.selectedProfileID == "vueroid-s1-4k-infinite",
                   nestedVueroidLearningSnapshot.effectiveSourceName == nil,
                   nestedVueroidLearningSnapshot.effectiveSourceRelativePath == nil,
-                  nestedVueroidLearningSnapshot.rootFolders.isEmpty,
-                  nestedVueroidLearningSnapshot.directorySummaries.isEmpty,
+                  !nestedVueroidLearningSnapshot.directorySummaries.isEmpty,
+                  nestedVueroidLearningSnapshot.directorySummaries.allSatisfy({ CardLearningPaths.acceptedFolder($0.path) != nil }),
                   nestedVueroidLearningSnapshot.sampleRelativePaths.isEmpty else {
                 print("VERIFY FAIL: nested Vueroid learning snapshot retained a source identifier or path")
                 return false

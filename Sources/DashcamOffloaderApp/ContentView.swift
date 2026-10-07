@@ -1393,7 +1393,7 @@ struct FeedbackSheet: View {
             Toggle("Include anonymous scan statistics", isOn: $includeScan)
                 .disabled(!viewModel.scanSummary.hasScan)
 
-            Text("Optional statistics exclude source names, folder paths, and filenames.")
+            Text("Optional scan evidence includes camera-relative folders, camera filenames and file protection flags. Source names and personal paths are excluded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -1573,6 +1573,7 @@ struct CardLearningSheet: View {
 
             if let scanPreview {
                 DisclosureGroup("Review privacy-safe scan summary") {
+                    ScrollView {
                     VStack(alignment: .leading, spacing: 7) {
                         Text("\(scanPreview.scannedFiles) files counted · \(scanPreview.copyableItems) downloadable · \(scanPreview.excludedItems) excluded")
                         learningPreviewRow("Channels", counts: scanPreview.channelCounts)
@@ -1590,11 +1591,25 @@ struct CardLearningSheet: View {
                         if !scanPreview.settingSnapshots.isEmpty {
                             Text("\(scanPreview.settingSnapshots.count) allowlisted model/settings summary item(s)")
                         }
-                        Text("Never shared: source or folder paths, raw filenames, recording timestamps, media, GPS, serials, network identifiers, or credentials.")
+                        if !scanPreview.directorySummaries.isEmpty {
+                            Text("Camera-relative folders (unrecognized names anonymized)").fontWeight(.semibold)
+                            ForEach(scanPreview.directorySummaries, id: \.path) { folder in
+                                Text("\(folder.path) · \(folder.directMediaFileCount) media files")
+                            }
+                        }
+                        if !scanPreview.mediaFileSamples.isEmpty {
+                            Text("\(scanPreview.mediaFileSamples.count) sampled camera files with folder, recording type, channel and protection flags").fontWeight(.semibold)
+                            ForEach(Array(scanPreview.mediaFileSamples.enumerated()), id: \.offset) { _, file in
+                                Text("\(file.folder)/\(file.filename) · \(file.outputCategory) · \(file.channel) · read-only: \(file.filesystemReadOnly.map { $0 ? "yes" : "no" } ?? "unknown")")
+                            }
+                        }
+                        Text("Camera filenames may contain recording times. Never shared: host paths, source names, personal folder names, media, GPS, serials, network identifiers or credentials. Source files are never changed.")
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption)
                     .padding(.top, 6)
+                    }
+                    .frame(maxHeight: 300)
                 }
             }
 
