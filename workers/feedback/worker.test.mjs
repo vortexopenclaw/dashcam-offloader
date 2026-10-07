@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import worker, { FeedbackRateLimiter } from "./worker.js";
 import {
   validateFeedback,
   sanitizeFeedback,
@@ -196,6 +197,29 @@ test("camera structure and per-file protection survive the final storage sanitiz
   assert.equal(scan.mediaFileSamples[2].userImmutable,null);
   assert.equal(JSON.stringify(scan).includes("Family Trip"),false);
   assert.equal(sanitizeScan({mediaFileSamples:Array(200).fill(sample)}).mediaFileSamples.length,120);
+});
+
+test("submission uses a real namespace ID, stores structure and enforces the rate limit", async () => {
+  let counter;
+  const storage = {get: async () => counter, put: async (_key, value) => { counter = value; }};
+  const limiter = new FeedbackRateLimiter({storage:{transaction: async callback => callback(storage)}});
+  const ids = new Set();
+  const records = [];
+  const env = {RATE_LIMIT_SALT:"synthetic-verifier-salt-not-a-secret".repeat(2),
+    FEEDBACK_RATE_LIMITER:{idFromName(name) { const id = {name}; ids.add(id); return id; },
+      get(id) { assert.ok(ids.has(id), "namespace.get requires an ID from idFromName"); return limiter; }},
+    FEEDBACK_KV:{put: async (_key, record) => records.push(JSON.parse(record))}};
+  const request = () => new Request("https://example.com/feedback", {method:"POST",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"bug",message:"Synthetic verifier",
+      scan:{directorySummaries:[{path:"DCIM/Movie/RO"}],mediaFileSamples:[{
+        folder:"DCIM/Movie/RO",filename:"2000_0101_000000_00001F.MP4",mode:"protected",
+        outputCategory:"Protected",channel:"front",permissionBits:0o444}]}})});
+  assert.equal((await worker.fetch(request(),env)).status,202);
+  assert.equal(records[0].scan.mediaFileSamples[0].filesystemReadOnly,true);
+  assert.equal(records[0].scan.directorySummaries[0].path,"DCIM/Movie/RO");
+  for (let n = 1; n < 20; n++) assert.equal((await worker.fetch(request(),env)).status,202);
+  assert.equal((await worker.fetch(request(),env)).status,429);
+  assert.equal(records.length,20);
 });
 
 test("storage samples retain paired complete-file measurements without private fields", () => {

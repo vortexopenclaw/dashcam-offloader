@@ -108,7 +108,8 @@ async function checkRateLimit(request, env) {
   }
 
   const clientID = await hashedClientID(request, env);
-  const response = await env.FEEDBACK_RATE_LIMITER.get(clientID).fetch("https://rate-limit/check", {
+  const objectID = env.FEEDBACK_RATE_LIMITER.idFromName(clientID);
+  const response = await env.FEEDBACK_RATE_LIMITER.get(objectID).fetch("https://rate-limit/check", {
     method: "POST",
   });
   return response.json();

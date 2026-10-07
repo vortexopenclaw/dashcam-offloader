@@ -1,5 +1,18 @@
 # Lessons
 
+## 2026-10-07 Receiver deployment requires stored-record verification
+
+- Sanitizer tests and a successful Worker deployment do not prove submissions
+  work. The live service had not deployed the repository's Durable Object
+  rate limiter: its legacy `new_classes` migration failed on the free plan,
+  which requires `new_sqlite_classes`. Inspect existing bindings before a
+  migration correction; preserve KV data and existing secrets.
+- `DurableObjectNamespace.get` requires a namespace ID, not an arbitrary client
+  hash string. Convert the salted client fingerprint using `idFromName` first.
+  A full handler/storage regression must cover this API contract, successful
+  structural storage and rate limiting. Verify the same fields in an actual
+  private stored synthetic submission before app feed activation.
+
 ## 2026-10-07 No-reply identity for GitHub merges
 
 - A no-reply source commit does not guarantee a no-reply GitHub merge commit.
