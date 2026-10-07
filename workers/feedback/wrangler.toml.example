@@ -2,6 +2,15 @@ name = "dashcam-offloader-feedback"
 main = "worker.js"
 compatibility_date = "2026-06-08"
 
+[durable_objects]
+bindings = [{ name = "FEEDBACK_RATE_LIMITER", class_name = "FeedbackRateLimiter" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FeedbackRateLimiter"]
+
+# A RATE_LIMIT_SALT secret of at least 32 characters is required.
+
 # Optional. Comma-separated origins if browser clients are added later.
 # The Mac app is not browser-CORS constrained.
 # ALLOWED_ORIGINS = "https://example.com"

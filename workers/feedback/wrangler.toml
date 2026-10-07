@@ -9,7 +9,7 @@ bindings = [
 
 [[migrations]]
 tag = "v1"
-new_classes = ["FeedbackRateLimiter"]
+new_sqlite_classes = ["FeedbackRateLimiter"]
 
 [[kv_namespaces]]
 binding = "FEEDBACK_KV"
