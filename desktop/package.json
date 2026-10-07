@@ -45,11 +45,11 @@
     "electron-updater": "6.8.9"
   },
   "devDependencies": {
-    "electron": "43.4.0",
+    "electron": "43.7.8",
     "electron-builder": "26.15.3"
   },
   "allowScripts": {
-    "electron@43.4.0": true,
+    "electron@43.7.8": true,
     "electron-winstaller@5.4.0": true
   }
 }
