@@ -1,5 +1,15 @@
 # Lessons
 
+## 2026-10-07 No-reply identity for GitHub merges
+
+- A no-reply source commit does not guarantee a no-reply GitHub merge commit.
+  Merge reviewed PRs with `gh pr merge --author-email
+  vortexopenclaw@users.noreply.github.com`, in addition to checking the expected
+  head SHA and preserving branches. Do not weaken the privacy audit to accept
+  other author addresses. Verify the resulting main commit and post-merge CI.
+- If an incorrect merge identity has already landed, preserve history and make
+  a focused no-reply follow-up commit. Do not force-push or rewrite public history.
+
 ## 2026-06-08 Dashcam Operations Research Before Implementation
 
 - When dashcam behavior is uncertain, check manufacturer manuals/docs, real app-submitted card scans, mounted-card samples, NAS archive samples, and reliable references before implementing.
