@@ -29,7 +29,8 @@ if [[ -n "$unexpected_emails" ]]; then
   failures=1
 fi
 
-author_email="$(git log -1 --format='%ae')"
+# PR checks use a GitHub-generated merge commit; audit the contributor head instead.
+author_email="$(git log -1 --format='%ae' "${PRIVACY_AUDIT_COMMIT:-HEAD}")"
 if [[ ! "$author_email" =~ @(users\.)?noreply\.github\.com$ ]]; then
   echo "Privacy audit failed: the current commit author must use a GitHub no-reply address." >&2
   failures=1
