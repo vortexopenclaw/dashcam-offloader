@@ -1,5 +1,25 @@
 # Design
 
+## 2026-10-08 Learning capture across quality changes
+
+Objective: capture recent complete recordings even when older quality settings
+dominate the card and the newest clip is a short stopped recording. Use
+already-scanned file sizes and times to choose bounded metadata representatives;
+do not infer a quality setting from file size alone. Include the newest repeated
+size cohort, recent clips and frequent sizes; share the 64-video inspection
+budget round-robin across camera/mode/folder groups. Preserve existing source
+read-only and submission privacy boundaries.
+
+Success checks: a 20-group fixture retains older and newer complete recordings
+from all four driving channels without exceeding 64 samples; the connected
+T340 card's outgoing learning JSON includes measured full-minute Normal and
+Maximum sizes, and the receiver retains those paired measurements. Adjacent
+parking/protected sampling and native/package/privacy verification pass.
+
+Rollback: revert the focused sampler change and retain the prior signed app
+archive/feed through the existing release mechanism. No card writes or receiver
+schema change are needed.
+
 ## 2026-10-07 Card-learning structural evidence
 
 Objective: retain camera-relative folders, including empty directories, and

@@ -1964,69 +1964,7 @@ final class TransferViewModel: ObservableObject {
     }
 
     private func representativeVideoClips(_ clips: [ClipItem]) -> [ClipItem] {
-        let videoClips = clips.filter(\.isVideo)
-        guard !videoClips.isEmpty else { return [] }
-
-        var selected: [ClipItem] = []
-        var seenKeys: Set<String> = []
-        let maximumSamples = 64
-
-        // Do not open every video merely to decide which ones to inspect. On a
-        // large card that turns a small, privacy-safe submission into thousands
-        // of synchronous AVFoundation reads. Choose bounded representatives by
-        // already-scanned mode/channel/folder data, then inspect only those.
-        let grouped = Dictionary(grouping: videoClips) { clip in
-            let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
-            let pattern = clip.inferredParkingPattern?.rawValue ?? "none"
-            return "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)|\(pattern)|\(folder)|\(clip.extensionLowercased)"
-        }
-
-        // Cover distinct modes and channels before spending the bounded media
-        // inspection budget on additional folders of the same camera channel.
-        let orderedKeys = grouped.keys.sorted()
-        var coveredModeChannels: Set<String> = []
-        var priorityKeys: [String] = []
-        var remainingKeys: [String] = []
-        for key in orderedKeys {
-            guard let clip = grouped[key]?.first else { continue }
-            let modeChannel = "\(clip.outputCategory)|\(clip.displayMode)|\(clip.channel)"
-            if coveredModeChannels.insert(modeChannel).inserted {
-                priorityKeys.append(key)
-            } else {
-                remainingKeys.append(key)
-            }
-        }
-        for key in priorityKeys + remainingKeys {
-            let bucket = grouped[key, default: []]
-            let byTimestamp = bucket.sorted { lhs, rhs in
-                if lhs.timestamp != rhs.timestamp {
-                    return (lhs.timestamp ?? .distantPast) < (rhs.timestamp ?? .distantPast)
-                }
-                return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
-            }
-            let bucketSamples = [
-                byTimestamp.first,
-                byTimestamp[safe: byTimestamp.count / 2],
-                byTimestamp.last,
-                bucket.max(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) }),
-                bucket.min(by: { (fileSizeBytes(for: $0.sourceURL) ?? 0) < (fileSizeBytes(for: $1.sourceURL) ?? 0) })
-            ]
-            for sample in bucketSamples.compactMap({ $0 }) {
-                guard seenKeys.insert(sample.id).inserted else { continue }
-                selected.append(sample)
-                if selected.count >= maximumSamples { break }
-            }
-            if selected.count >= maximumSamples { break }
-        }
-
-        if selected.count < 8 {
-            for clip in videoClips where !selected.contains(clip) {
-                selected.append(clip)
-                if selected.count >= maximumSamples { break }
-            }
-        }
-
-        return selected
+        CardLearningVideoSampler.select(clips)
     }
 
     private func videoClipOrder(_ lhs: ClipItem, _ rhs: ClipItem) -> Bool {

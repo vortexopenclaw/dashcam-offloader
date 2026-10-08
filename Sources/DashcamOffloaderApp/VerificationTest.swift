@@ -3,6 +3,33 @@ import Foundation
 enum VerificationTest {
     static func run() -> Bool {
         do {
+            // Older settings dominate the card, then two complete recordings
+            // at a new setting are followed by a short stopped recording.
+            var samplingClips: [ClipItem] = []
+            for mode in ["continuous", "parking", "protected", "manual", "parking_motion_detection"] {
+                for channel in ["front", "rear", "interior", "telephoto"] {
+                    for index in 0..<103 {
+                        let size: Int64 = index < 100 ? 402_653_184 : (index < 102 ? 243_269_632 : 42_074_112)
+                        let path = "\(mode)/\(channel)-\(index).MP4"
+                        samplingClips.append(ClipItem(sourceURL: URL(fileURLWithPath: "/synthetic/\(path)"),
+                            relativePath: path, filename: "\(channel)-\(index).MP4", mode: mode,
+                            channel: channel, timestamp: Date(timeIntervalSince1970: Double(index)),
+                            size: size, extensionLowercased: "mp4"))
+                    }
+                }
+            }
+            let selected = CardLearningVideoSampler.select(samplingClips)
+            guard selected.count == CardLearningVideoSampler.maximumSamples,
+                  Set(selected.map(\.id)).count == selected.count,
+                  CardLearningVideoSampler.select(samplingClips.reversed()).map(\.id) == selected.map(\.id),
+                  Set(selected.map { "\($0.mode)|\($0.channel)" }).count == 20,
+                  ["front", "rear", "interior", "telephoto"].allSatisfy({ channel in
+                      selected.contains { $0.mode == "continuous" && $0.channel == channel && $0.size == 243_269_632 }
+                      && selected.contains { $0.mode == "continuous" && $0.channel == channel && $0.size == 402_653_184 }
+                  }), CardLearningVideoSampler.select([]).isEmpty else {
+                print("VERIFY FAIL: bounded sampling missed recent complete recordings or starved a mode/channel")
+                return false
+            }
             // Equal file sizes with different durations must keep their own rates.
             let short = FeedbackStorageRateSample(fileSizeBytes: 120_000_000, durationSeconds: 30,
                                                   videoBitrate: 16_000_000)

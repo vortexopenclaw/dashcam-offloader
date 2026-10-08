@@ -91,6 +91,19 @@ enum ScanDiagnostic {
         do {
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             let result = try CardScanner().scanWithOSD(sourceURL: sourceURL, profiles: profiles)
+            if arguments.contains("--learning-json") {
+                let snapshot = MainActor.assumeIsolated { () -> FeedbackScanSnapshot? in
+                    let model = TransferViewModel()
+                    model.profiles = profiles
+                    model.loadScanResultForVerification(source: MountedSource(url: sourceURL, name: "Card"), scanResult: result)
+                    return model.makeFeedbackScanSnapshot()
+                }
+                guard let snapshot else { return false }
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                print(String(decoding: try encoder.encode(snapshot), as: UTF8.self))
+                return true
+            }
             let selected = result.selectedProfile ?? .genericNewDashcam
 
             let confidence = result.candidates.first?.confidence.rawValue ?? "None"

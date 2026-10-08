@@ -12,12 +12,21 @@ cannot identify the parking mode.
 
 ## Quality and storage charts reviewed 2026-10-08
 
+**Firmware: 1.0_260911**, owner-confirmed for the current card. A direct
+read-only check confirms two consecutive full-minute Normal recording sets:
+front 243,269,632 bytes at 31.950230-31.951216 Mbps; rear, interior and
+telephoto each 111,149,056 bytes at 14.334517-14.336068 Mbps. All are H.264,
+30 fps, 4K front and 1440p add-ons. Full-minute add-on sizes match exactly;
+encoded driving rates differ by less than 0.01 Mbps across the three add-ons
+at each sampled quality setting. No cross-camera bitrate averaging is needed.
+
 [Front, add-on, combined storage and parking charts](https://vortexopenclaw.github.io/dashcam-camera-profiles/t340-comparison.html)
 include PNG/SVG downloads and a CSV. They compare Low, Normal, High, Maximum,
 and separately confirmed Low Bitrate parking. Representative whole-file
-four-channel consumption is 482.34 MB/min Low, 763.36 High, 1,019.22 Maximum,
-and 134.22 Low Bitrate parking. Normal is **video-only estimated** 562.11 MB/min;
-its original scan lacks paired size/duration samples. All units are decimal.
+four-channel consumption is 482.34 MB/min Low, **576.72 Normal**, 763.36 High,
+1,019.22 Maximum, and 134.22 Low Bitrate parking. Normal is now measured
+whole-file storage: **34.603 GB/hour**, or **7.40 hours** on nominal 256 GB.
+This supersedes the prior video-only estimate. All units are decimal.
 Runtime on a nominal 256 GB card is capacity divided by rate, without formatting,
 reserved partitions or protected-file deductions. It is not measured loop retention.
 
@@ -36,7 +45,7 @@ have the same full-minute sizes and essentially the same bitrates, with no
 clear front gain after disconnecting telephoto. Settings are still not a fully
 controlled firmware/HDR/multiplexing comparison.
 
-Typical sampled Auto Event motion-labelled clips are 45 seconds: front
+The plotted Auto Event motion-labelled clips are 45 seconds: front
 62,914,560 bytes at about 10.65 Mbps; each add-on 48,234,496 bytes at about
 8.19 Mbps. Normalized active consumption is **16.61 GB/hour combined**,
 versus 8.05 for four-channel Low Bitrate parking. One telephoto 45-second
@@ -45,8 +54,8 @@ notes this variation rather than claiming every add-on Auto Event clip is equal.
 Impact-labelled samples have broad rates and variable durations, including
 front about 10.65-33.05 Mbps and add-ons about 8.19-14.43 Mbps; do not assign
 one impact bitrate, claim these are all newly triggered in the selected mode,
-or equate Auto Event Detection with Low Power Impact Detection. Event duty cycle
-is unknown, so recorded-footage hours are not elapsed parked time.
+or equate Auto Event Detection with Low Power Impact Detection. The parking
+charts compare storage while recording, with no elapsed parked-time estimate.
 
 ## Maximum bitrate three-channel sample reviewed 2026-10-08
 
