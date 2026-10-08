@@ -10,6 +10,54 @@ to full driving bitrate; a controlled, setting-labeled impact sample is still
 needed to verify its bitrate on this firmware. Lower encoded bitrate alone
 cannot identify the parking mode.
 
+## Maximum bitrate three-channel sample reviewed 2026-10-08
+
+The owner confirms T340 with **front, rear and interior, telephoto disconnected**,
+and **Maximum** driving bitrate. The scan contains 39 media: 21 driving MP4,
+six parking MP4, six protected parking MP4 and six JPG, 13 items per camera.
+All nine video groups report H.264/30 fps, front 3840x2160 and rear/interior
+2560x1440. Firmware, HDR, multiplexing and exact parking setting were not supplied.
+
+| Camera | Maximum driving Mbps | Paired full 60-second file size |
+|---|---|---|
+| front | 53.182404-53.252076 | 402,653,184 bytes (402.65 MB / 384 MiB) |
+| interior | 27.030822-27.033636 | 205,520,896 bytes (205.52 MB / 196 MiB) |
+| rear | 27.030958-27.036422 | 205,520,896 bytes (205.52 MB / 196 MiB) |
+
+Combined encoded video is about **107.30 Mbps**. The paired full-minute files
+occupy **48.82 decimal GB/hour combined**, including audio/container/padding.
+Short 13.866667-second samples are 94,371,840 bytes front and 48,234,496 bytes
+per 2K camera; compare matched durations rather than raw file sizes.
+Parking remains about 4.095 Mbps per camera. Full-minute parking files occupy
+33,554,432 bytes each, or **6.04 decimal GB/hour for three channels**.
+Protected parking in RO also measures about 4.09 Mbps; app impact labels are
+not proof of the trigger or Low Power mode.
+
+### Comparison with historical four-channel Maximum evidence
+
+The older owner-labeled Maximum 4CH scan exists, but its continuous-recording
+ranges are mixed and its fourth channel was unidentified by the app. Its
+cleaner **driving-event groups** report front 53.242328-53.282004 Mbps,
+interior 27.033494-27.034546 and rear 27.033642-27.038436, closely matching
+the new three-channel Maximum rates. There is **no clear measured increase in
+front bitrate after disconnecting telephoto** in this comparison. It remains
+provisional: continuous 3CH and protected 4CH groups are not a matched control.
+
+The historical 4CH event-group maximum file sizes are 402,653,184 bytes front
+and 205,520,896 bytes on each other channel, exactly matching the new full-minute
+3CH sizes for shared cameras. However, the old size and duration extrema were
+not paired per clip; this does not certify old 60-second file rates. If a clean
+4CH Maximum test repeats the same per-channel full-minute sizes, adding a
+telephoto file of 205,520,896 bytes/minute would give **61.15 GB/hour**, versus
+48.82 for three channels. That is a **conditional projection**, not measured
+4CH Maximum total storage.
+
+The app safely fell back to generic import and ranked A229 Plus first for this
+3CH card. The T340 profile's four-channel discriminator cannot identify T340
+from shared three-channel folder/filename evidence alone. The owner-confirmed
+T340 identity is retained in the reference without claiming successful automatic
+identification or changing a sibling detector without unique evidence.
+
 ## Low bitrate structural sample reviewed 2026-10-08
 
 The owner identifies the latest submission as **Low driving bitrate**, with
@@ -80,10 +128,10 @@ both labels as conflicting evidence rather than silently assigning a mode.
 
 ### Future configuration comparisons
 
-The owner plans three-channel and multiplexing scans. Compare exact connected
+The owner plans configuration and multiplexing scans. Compare exact connected
 camera roles, driving quality, parking mode, resolution/fps, HDR, firmware and
-multiplexing setting independently. A higher front bitrate with three channels
-and any multiplexing effect are hypotheses, not measured results yet.
+multiplexing setting independently. The newer Maximum three-channel scan is
+documented above; multiplexing effects remain unmeasured.
 
 ## High bitrate / Low Bitrate parking sample reviewed 2026-10-07
 
