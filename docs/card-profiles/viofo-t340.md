@@ -10,6 +10,81 @@ to full driving bitrate; a controlled, setting-labeled impact sample is still
 needed to verify its bitrate on this firmware. Lower encoded bitrate alone
 cannot identify the parking mode.
 
+## Low bitrate structural sample reviewed 2026-10-08
+
+The owner identifies the latest submission as **Low driving bitrate**, with
+front/rear/interior/telephoto recording. The submission contains **2,104 media
+items**: 2,032 driving MP4 (508 per camera), 36 parking MP4 (nine per camera),
+20 protected-folder MP4 (four driving and one parking per camera), and 16 JPG.
+All 16 video groups are H.264 at 30 fps, front 3840x2160 and other cameras
+2560x1440. HDR, firmware, multiplexing and the exact parking setting were not
+supplied for this scan. The latest owner's Low label applies to this scan,
+not the earlier High resubmission.
+
+| Camera | Low driving Mbps | Protected driving Mbps | Parking Mbps | Protected parking Mbps |
+|---|---|---|---|---|
+| front | 27.033812-27.064794 | 27.030366-27.044604 | 4.095301-4.095867 | 4.117371 |
+| interior | 11.876286-11.878153 | 11.878194-11.878413 | 4.094853-4.095778 | 4.096414 |
+| rear | 11.875882-11.878477 | 11.878027-11.878515 | 4.095137-4.095935 | 4.095149 |
+| telephoto | 11.878389-11.879034 | 11.877543-11.878365 | 4.095119-4.095836 | 4.095510 |
+
+Combined Low driving video is approximately **62.67 Mbps**, versus **74.95 Mbps
+Normal** and **100.76 Mbps High** in the earlier four-channel scans. These are
+app-reported encoded-video measurements, not an independent ffprobe analysis.
+Parking remains about 4.095 Mbps per camera across these scans, but unmatched
+or uncertain parking settings prevent a controlled mode-equivalence claim.
+
+### Observed folder, filename and protection linkage
+
+- `DCIM/Movie`: 2,032 driving MP4, sampled suffixes F/R/I/T.
+- `DCIM/Movie/Parking`: 36 parking MP4, sampled suffixes PF/PR/PI/PT.
+- `DCIM/Movie/RO`: 16 protected driving MP4 using F/R/I/T and four protected
+  parking MP4 using PF/PR/PI/PT. No extra emergency suffix appears in these samples.
+- `DCIM/Photo`: 16 JPG, including both F/R/I/T and PF/PR/PI/PT suffix families.
+
+All 20 RO files are present in the bounded 120-file structural sample and
+report `userImmutable=true`; the other 100 sampled media report false.
+All sampled files report POSIX 0700, `filesystemReadOnly=false`,
+`systemImmutable=false` and `volumeReadOnly=false`. Thus immutable lock evidence,
+not missing POSIX write permissions, distinguishes the protected clips on this
+mount. The scanner inspected these attributes without changing them.
+
+The protected sample has four driving filename-timestamp sets and one parking
+set, each containing all four camera roles. This supports four-channel grouping
+by filename timestamp, not frame-exact synchronization, a fixed event window,
+or proof of what triggered protection. The app calls the RO parking clips
+`parking_impact_detection`; this is an **app inference**. Their low bitrate does
+not demonstrate full-rate wake-up in Low Power Impact Detection, nor prove that
+a physical impact rather than manual locking created them.
+
+### Paired whole-file storage measurements
+
+This scan supplies paired size/duration samples. Full 60-second Low driving
+clips are 205,520,896 bytes front and 92,274,688 bytes per 2K camera: combined
+**28.94 decimal GB/hour**. Low encoded-video-only storage is about **28.20 GB/hour**;
+whole-file measurements include padding, audio and container overhead. Short
+clips vary in whole-file rate and must not be substituted for full clips.
+Full 60-second parking clips occupy 33,554,432 bytes per camera, or about
+**8.05 decimal GB/hour combined**, versus about 7.37 GB/hour video-only.
+
+The earlier High submission was resubmitted on 2026-10-08 with the same
+100-item counts and video ranges. It adds paired samples but no folder
+structure and is not an independent quality-setting test. Full 60-second
+driving files occupy 278,921,216 bytes front and 161,480,704 bytes per 2K camera,
+or **45.80 decimal GB/hour combined**. Keep these configuration-specific
+measurements separate; no calculator preset was changed.
+
+**Label conflict:** the original Normal submission's notes say "low bitrate
+parking mode", while the earlier Discord description says "low power". Preserve
+both labels as conflicting evidence rather than silently assigning a mode.
+
+### Future configuration comparisons
+
+The owner plans three-channel and multiplexing scans. Compare exact connected
+camera roles, driving quality, parking mode, resolution/fps, HDR, firmware and
+multiplexing setting independently. A higher front bitrate with three channels
+and any multiplexing effect are hypotheses, not measured results yet.
+
 ## High bitrate / Low Bitrate parking sample reviewed 2026-10-07
 
 The owner confirms **High** driving bitrate, **Low Bitrate** parking and manual emergency button events. This scan contains **100 media items**: 40 Driving MP4, 20 Protected MP4, 28 Parking MP4 and 12 JPG. Each camera has 10 driving, five protected and seven parking videos, plus three photos. All 12 video groups report H.264 at 30 fps; front is 3840x2160 and interior/rear/telephoto are 2560x1440. HDR and firmware were not recorded with this submission; do not silently carry settings forward.
