@@ -100,10 +100,6 @@ Submissions should include `appVersion`, `identifiedCamera`, selected profile/ca
   - A329T no longer misidentifies as A229 Plus when telephoto `T/PT` filename evidence is present.
   - A229-family folder evidence alone is not enough to force an A229 sibling.
 
-- **Vueroid H1**
-  - Detects from `CONFIG/config.bin` model text like `H1-QHD-INFINITE`.
-  - Treat as 1CH/front-only from H1 evidence.
-
 - **GoPro HERO / MAX / Mission family**
   - Profiles: `profiles/gopro-hero9-black.yaml`, `profiles/gopro-hero-action-camera.yaml`
   - Docs: `docs/card-profiles/gopro-hero9-black.md`, `docs/card-profiles/gopro-hero-action-camera.md`

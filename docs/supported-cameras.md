@@ -21,7 +21,6 @@ which applies.
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
 - Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
 - Botslab G980H - profile drafted from an app learning submission and real 4CH card sample. Detected from `MISC/G980HMCN5291.TXT`; unknown `360CARDVR` cards should not be assigned this model without exact marker evidence.
-- Vueroid H1 - profile drafted from an app learning submission and one real 1CH card sample. Detected from `CONFIG/config.bin` model text.
 - Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 - Vueroid S1 QHD Infinite - exact config-metadata detection with 1CH, 2CH, and 3CH variants learned from four app submissions; firmware 1.0.4 30 fps 3CH, 60 fps front-only, 5 fps time-lapse parking, and 30 fps parking-impact behavior observed.
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.

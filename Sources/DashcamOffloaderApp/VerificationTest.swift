@@ -83,10 +83,6 @@ enum VerificationTest {
                 print("VERIFY FAIL: missing Vueroid S1 4K Infinite profile")
                 return false
             }
-            guard profiles.contains(where: { $0.id == "vueroid-h1" }) else {
-                print("VERIFY FAIL: missing Vueroid H1 profile")
-                return false
-            }
             guard profiles.first(where: { $0.id == "70mai-x800" })?.maxChannels == 2,
                   profiles.contains(where: { $0.id == "70mai-4k-omni" }) == false else {
                 print("VERIFY FAIL: 70mai 4K Omni X800 canonical profile or duplicate removal failed")
@@ -564,18 +560,6 @@ enum VerificationTest {
                 print("VERIFY FAIL: identified Vueroid S1 QHD did not prefill its catalog model and 3CH setup")
                 return false
             }
-            let h1ManualSelectorState = MainActor.assumeIsolated { () -> Bool in
-                let viewModel = TransferViewModel()
-                viewModel.profiles = profiles
-                return viewModel.cameraModelsByBrand
-                    .flatMap(\.models)
-                    .contains { $0.brand == "Vueroid" && $0.model == "H1" }
-            }
-            guard !h1ManualSelectorState else {
-                print("VERIFY FAIL: unreleased Vueroid H1 appears in the manual picker")
-                return false
-            }
-
             let temp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("dashcam-offloader-verify-\(UUID().uuidString)", isDirectory: true)
             defer { try? FileManager.default.removeItem(at: temp) }
@@ -2926,45 +2910,6 @@ enum VerificationTest {
                     print("VERIFY FAIL: Vueroid boot log was not planned")
                     return false
                 }
-            }
-
-            let vueroidH1Source = temp.appendingPathComponent("H1-QHD-INF", isDirectory: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("EVENT", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("PARK", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("PEVENT", isDirectory: true), withIntermediateDirectories: true)
-            try FileManager.default.createDirectory(at: vueroidH1Source.appendingPathComponent("USER", isDirectory: true), withIntermediateDirectories: true)
-            try Data("H1-QHD-INFINITE V0.5.9\u{0}May 13 2026, 12:23:13\u{0}H1-QHD-INFINITE".utf8).write(to: vueroidH1Source.appendingPathComponent("CONFIG/config.bin"))
-            try Data("[2026/06/09-16:31:03] BOOT 12.6V 030`C 1CH".utf8).write(to: vueroidH1Source.appendingPathComponent("CONFIG/.boot.log"))
-            try Data(repeating: 31, count: 1024).write(to: vueroidH1Source.appendingPathComponent("INF/20260515_214744_INF_N.mp4"))
-            try Data(repeating: 32, count: 1024).write(to: vueroidH1Source.appendingPathComponent("EVENT/20260515_215208_EVT_N.mp4"))
-            try Data(repeating: 33, count: 1024).write(to: vueroidH1Source.appendingPathComponent("PARK/20260609_163241_PRK_N.mp4"))
-            try Data(repeating: 34, count: 1024).write(to: vueroidH1Source.appendingPathComponent("PEVENT/20260609_163325_PVT_N.mp4"))
-            try Data(repeating: 35, count: 1024).write(to: vueroidH1Source.appendingPathComponent("USER/20260609_163354_USR_N.mp4"))
-
-            let vueroidH1Scan = try scanner.scan(sourceURL: vueroidH1Source, profiles: profiles)
-            guard vueroidH1Scan.candidates.first?.profile.id == "vueroid-h1" else {
-                print("VERIFY FAIL: Vueroid H1 was not top candidate: \(vueroidH1Scan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score)" })")
-                return false
-            }
-            guard vueroidH1Scan.candidates.first?.confidence == .high else {
-                print("VERIFY FAIL: Vueroid H1 did not score high confidence")
-                return false
-            }
-            let h1DownloadableClips = vueroidH1Scan.clips.filter { $0.excludedReason == nil }
-            guard Set(h1DownloadableClips.map(\.channel)) == ["front"] else {
-                print("VERIFY FAIL: Vueroid H1 should be front-only: selected \(vueroidH1Scan.selectedProfile?.id ?? "nil"), candidates \(vueroidH1Scan.candidates.prefix(3).map { "\($0.profile.id)=\($0.score):\($0.evidence.joined(separator: "|"))" }), channels \(Set(h1DownloadableClips.map(\.channel)).sorted())")
-                return false
-            }
-            let h1CategoryCounts = Dictionary(grouping: h1DownloadableClips, by: \.outputCategory).mapValues(\.count)
-            guard h1CategoryCounts["Driving"] == 1,
-                  h1CategoryCounts["Protected"] == 1,
-                  h1CategoryCounts["Parking"] == 1,
-                  h1CategoryCounts["Parking Events"] == 1,
-                  h1CategoryCounts["Other"] == 1 else {
-                print("VERIFY FAIL: Vueroid H1 output groups wrong: \(h1CategoryCounts)")
-                return false
             }
 
             let thinkwareSource = temp.appendingPathComponent("thinkware-u3000-pro", isDirectory: true)
