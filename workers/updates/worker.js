@@ -214,6 +214,12 @@ export default {
         return notFound();
       }
 
+      // Superseded archives remain private for rollback, not public downloads.
+      const manifest = await loadManifest(env);
+      if (!manifest || assetName !== manifest.assetName) {
+        return notFound();
+      }
+
       const object = await env.UPDATES_BUCKET.get(`dashcam-offloader/releases/${assetName}`);
       if (!object) {
         return notFound();

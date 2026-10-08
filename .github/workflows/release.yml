@@ -23,6 +23,7 @@ jobs:
         run: |
           bash scripts/privacy-audit.sh
           node --test workers/feedback/worker.test.mjs
+          node --test workers/updates/worker.test.mjs
           python3 -m unittest discover -s scripts -p 'test_scan_storage_rates.py'
           python3 -m unittest discover -s scripts -p 'test_ingest_submitted_scans.py'
 
