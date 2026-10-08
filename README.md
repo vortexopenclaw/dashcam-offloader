@@ -128,7 +128,7 @@ npm test
 
 ## Supported Cameras
 
-The app currently ships 51 camera profiles. “Supported” means the app has a
+The app currently ships 55 profiles. “Supported” means the app has a
 profile that can safely identify or classify that camera's media. Exact
 automatic model recognition requires unique on-card evidence; where that is
 not yet available, the profile remains available for manual selection. See
