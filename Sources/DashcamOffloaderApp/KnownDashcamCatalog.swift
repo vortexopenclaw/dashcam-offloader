@@ -78,6 +78,8 @@ enum KnownDashcamCatalog {
         model("Vueroid", "D10-F2W", channels: 2, roles: ["front", "rear"]),
 
         // VIOFO
+        model("VIOFO", "T330W", channels: 3, roles: ["front", "rear", "interior"], notes: "T330 family with a different rear-camera variant. Exact T330W model stamp confirmed in owner-provided video frames; shared filenames alone are not an exact identifier."),
+        model("VIOFO", "T330", channels: 3, roles: ["front", "rear", "interior"], notes: "T330 family; the connected rear camera distinguishes T330W. Exact non-W OSD wording has not been sampled."),
         model("VIOFO", "A329S", channels: 3, roles: ["front", "rear", "interior"], notes: "Multiplex video capable."),
         model("VIOFO", "A329T", channels: 3, roles: ["front", "rear", "telephoto"], notes: "Telephoto channel token T observed."),
         model("VIOFO", "A229 Pro", channels: 3, roles: ["front", "rear", "interior"]),

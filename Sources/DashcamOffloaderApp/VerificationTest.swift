@@ -688,6 +688,53 @@ enum VerificationTest {
             try FileManager.default.createDirectory(at: emptySource, withIntermediateDirectories: true)
 
             let scanner = CardScanner()
+            guard let t330WProfile = profiles.first(where: { $0.id == "viofo-t330w" }),
+                  t330WProfile.osdSpec?.matchStrings == ["VIOFO T330W"],
+                  KnownDashcamCatalog.models.contains(where: { $0.manufacturer == "VIOFO" && $0.model == "T330W" }) else {
+                print("VERIFY FAIL: T330W exact-stamp profile or catalog identity missing")
+                return false
+            }
+            let t330WSource = temp.appendingPathComponent("Unlabeled-T330W-fixture", isDirectory: true)
+            for folder in ["DCIM/Movie", "DCIM/Movie/Parking", "DCIM/Movie/RO", "DCIM/Photo"] {
+                try FileManager.default.createDirectory(at: t330WSource.appendingPathComponent(folder), withIntermediateDirectories: true)
+            }
+            let t330WNames = ["2026_1010_152138_000028F.MP4", "2026_1010_152138_000029I.MP4", "2026_1010_152138_000030R.MP4"]
+            for name in t330WNames {
+                try Data([1]).write(to: t330WSource.appendingPathComponent("DCIM/Movie/\(name)"))
+            }
+            for name in ["2026_1010_155138_000031PF.MP4", "2026_1010_155138_000032PI.MP4", "2026_1010_155138_000033PR.MP4"] {
+                try Data([1]).write(to: t330WSource.appendingPathComponent("DCIM/Movie/RO/\(name)"))
+            }
+            let t330WithoutStamp = try scanner.scan(sourceURL: t330WSource, profiles: profiles)
+            guard t330WithoutStamp.selectedProfile?.id == DashcamProfile.genericNewDashcam.id,
+                  !t330WithoutStamp.clips.contains(where: { $0.channel == "unknown" }) else {
+                print("VERIFY FAIL: T330W shared VIOFO layout was falsely exact-identified or lost channels")
+                return false
+            }
+            if let ownerFrameVideo = ProcessInfo.processInfo.environment["DASHCAM_T330W_VIDEO_FIXTURE"] {
+                let fixtureURL = URL(fileURLWithPath: ownerFrameVideo)
+                let frontURL = t330WSource.appendingPathComponent("DCIM/Movie/\(t330WNames[0])")
+                try FileManager.default.removeItem(at: frontURL)
+                try FileManager.default.copyItem(at: fixtureURL, to: frontURL)
+                let t330WithStamp = try scanner.scanWithOSD(sourceURL: t330WSource, profiles: profiles)
+                guard t330WithStamp.selectedProfile?.id == t330WProfile.id,
+                      t330WithStamp.clips.contains(where: { $0.channel == "front" }),
+                      t330WithStamp.clips.filter({ $0.relativePath.contains("/RO/") }).allSatisfy({ $0.mode != "parking_impact_detection" }),
+                      t330WithStamp.diagnostics.contains(where: { $0.stage == "osd_ocr_probe" && $0.profileID == t330WProfile.id && $0.outcome == "matched" }) else {
+                    print("VERIFY FAIL: T330W stamp OCR, channels or neutral RO parking classification")
+                    return false
+                }
+                if let noStampVideo = ProcessInfo.processInfo.environment["DASHCAM_T330W_NO_STAMP_VIDEO_FIXTURE"] {
+                    try FileManager.default.removeItem(at: frontURL)
+                    try FileManager.default.copyItem(at: URL(fileURLWithPath: noStampVideo), to: frontURL)
+                    let noStampScan = try scanner.scanWithOSD(sourceURL: t330WSource, profiles: profiles)
+                    guard noStampScan.selectedProfile?.id == DashcamProfile.genericNewDashcam.id,
+                          !noStampScan.diagnostics.contains(where: { $0.stage == "osd_ocr_probe" && $0.profileID == t330WProfile.id && $0.outcome == "matched" }) else {
+                        print("VERIFY FAIL: card without a model stamp falsely matched T330W")
+                        return false
+                    }
+                }
+            }
             guard let arc700Profile = profiles.first(where: { $0.id == "thinkware-arc-700" }),
                   let arc900Profile = profiles.first(where: { $0.id == "thinkware-arc-900" }) else {
                 print("VERIFY FAIL: ARC 700/900 manual-backed seed profiles did not load")

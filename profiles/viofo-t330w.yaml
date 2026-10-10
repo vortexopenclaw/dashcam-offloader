@@ -1,0 +1,89 @@
+id: viofo-t330w
+manufacturer: VIOFO
+model: T330W
+status: experimental
+source_notes:
+  - docs/card-profiles/viofo-t330w.md
+detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_10pct
+      matches: "VIOFO T330W"
+      notes: >
+        Owner-provided frames show the exact model stamp near the bottom center
+        of front, rear, and interior footage. Do not infer this model from the
+        shared VIOFO card layout when the camera model stamp is disabled.
+  supporting:
+    - folder: DCIM/Movie
+    - folder: DCIM/Movie/Parking
+    - folder: DCIM/Movie/RO
+    - folder: DCIM/Photo
+folders:
+  - path: DCIM/Movie
+    mode: continuous
+    validation: app_submission_sampled
+  - path: DCIM/Movie/Parking
+    mode: parking
+    validation: app_submission_sampled
+  - path: DCIM/Movie/RO
+    mode: protected
+    validation: app_submission_sampled
+    notes: >
+      May contain time-lapse parking clips, as confirmed for the owner's
+      1-fps Night Vision test; do not infer impact detection from RO alone.
+  - path: DCIM/Photo
+    mode: still_image
+    validation: app_submission_sampled
+filename_patterns:
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.MP4$"
+    applies_to:
+      - DCIM/Movie
+      - DCIM/Movie/Parking
+      - DCIM/Movie/RO
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+    sequence_group: 4
+    channel_group: 5
+  - pattern: "^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)(F|I|R|PF|PI|PR)\\.JPG$"
+    applies_to:
+      - DCIM/Photo
+    case_sensitive: true
+    timestamp:
+      year_group: 1
+      month_day_group: 2
+      time_group: 3
+      format: YYYY_MMDD_HHMMSS
+channels:
+  F: front
+  I: interior
+  R: rear
+  PF: parking_front
+  PI: parking_interior
+  PR: parking_rear
+grouping:
+  keys:
+    - year
+    - month_day
+    - time
+  expected_sets:
+    normal:
+      - F
+      - I
+      - R
+    parking:
+      - PF
+      - PI
+      - PR
+exclude:
+  - .Trashes/**
+  - .fseventsd/**
+  - .Spotlight-V100/**
+  - "._*"
+  - format.txt
+  - DCIM/.diskdb
+  - DCIM/Movie/.dashcamexport/**

@@ -41,6 +41,13 @@ extension CardScanner {
             if blackVueParkingPaths.contains(clip.relativePath) {
                 continue
             }
+            // On T330W the owner's RO/PF clips included time-lapse parking.
+            // RO + parking suffix alone cannot establish an impact event.
+            if profileID == "viofo-t330w" &&
+                relativeFolderPath(for: clip.relativePath).lowercased() == "dcim/movie/ro" &&
+                hasParkingChannelSuffix(clip.filename) {
+                continue
+            }
             if let explicitPattern = explicitParkingPattern(for: clip) {
                 inferredByRelativePath[clip.relativePath] = explicitPattern
             }
