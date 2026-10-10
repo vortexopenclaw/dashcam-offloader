@@ -423,7 +423,7 @@ struct ContentView: View {
                             } label: {
                                 Label("Review & Submit", systemImage: "graduationcap")
                             }
-                            .disabled(!viewModel.scanSummary.hasScan)
+                            .disabled(viewModel.isScanning || !viewModel.scanSummary.hasScan)
                         }
                     }
                 }
@@ -1457,9 +1457,13 @@ struct CardLearningSheet: View {
     @State private var notes = ""
     @State private var contact = ""
     @State private var scanPreview: FeedbackScanSnapshot?
+    @State private var previewScanRevision = -1
 
     private var canSubmit: Bool {
-        viewModel.scanSummary.hasScan &&
+        !viewModel.isScanning && viewModel.scanSummary.hasScan &&
+            scanPreview != nil && previewScanRevision == viewModel.scanRevision &&
+            (!viewModel.eligibleClips.contains(where: \.isVideo) ||
+                scanPreview?.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) == true) &&
             !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !viewModel.isSubmittingFeedback
@@ -1492,7 +1496,7 @@ struct CardLearningSheet: View {
                 .buttonStyle(.borderless)
             }
 
-            if viewModel.scanSummary.hasScan {
+            if !viewModel.isScanning && viewModel.scanSummary.hasScan {
                 HStack(spacing: 14) {
                     Label("Card scan ready", systemImage: "checkmark.circle")
                     Label(viewModel.selectedProfile?.displayName ?? "No profile match", systemImage: "camera")
@@ -1500,7 +1504,7 @@ struct CardLearningSheet: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             } else {
-                Text("Scan the card first, then submit the learning package.")
+                Text(viewModel.isScanning ? "Scanning card; wait for completion before submitting." : "Scan the card first, then submit the learning package.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1572,6 +1576,12 @@ struct CardLearningSheet: View {
                 .foregroundStyle(.secondary)
 
             if let scanPreview {
+                if viewModel.eligibleClips.contains(where: \.isVideo) &&
+                    !scanPreview.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) {
+                    Label("No video bitrate was measured. Check that the card is readable and rescan before submitting.", systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
                 DisclosureGroup("Review privacy-safe scan summary") {
                     ScrollView {
                     VStack(alignment: .leading, spacing: 7) {
@@ -1581,11 +1591,10 @@ struct CardLearningSheet: View {
                         if !scanPreview.videoSpecSummaries.isEmpty {
                             Text("Measured video groups")
                                 .fontWeight(.semibold)
-                            ForEach(Array(scanPreview.videoSpecSummaries.prefix(8).enumerated()), id: \.offset) { _, summary in
+                            Text("Ranges reflect sampled clips in each folder/mode/channel, not one setting for the whole card. Label each test in notes if modes share a folder.")
+                                .foregroundStyle(.secondary)
+                            ForEach(Array(scanPreview.videoSpecSummaries.enumerated()), id: \.offset) { _, summary in
                                 Text(learningVideoSummary(summary))
-                            }
-                            if scanPreview.videoSpecSummaries.count > 8 {
-                                Text("+ \(scanPreview.videoSpecSummaries.count - 8) more measured groups")
                             }
                         }
                         if !scanPreview.settingSnapshots.isEmpty {
@@ -1628,6 +1637,7 @@ struct CardLearningSheet: View {
         .onAppear {
             viewModel.feedbackMessage = ""
             scanPreview = viewModel.makeFeedbackScanSnapshot()
+            previewScanRevision = viewModel.scanRevision
             prefillFromScanIfNeeded()
         }
     }
@@ -1710,6 +1720,10 @@ struct CardLearningSheet: View {
     }
 
     private func submitLearningPackage() {
+        guard canSubmit else {
+            viewModel.feedbackMessage = "Card scan is incomplete or has changed. Finish scanning and reopen this window."
+            return
+        }
         let training = CardTrainingDetails(
             manufacturer: manufacturer.trimmingCharacters(in: .whitespacesAndNewlines),
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -1731,6 +1745,7 @@ struct CardLearningSheet: View {
             contact: contact,
             includeScan: true,
             scanSnapshot: scanPreview,
+            scanRevisionAtPreview: previewScanRevision,
             training: training,
             successMessage: "Learning package submitted successfully.",
             onSuccess: {

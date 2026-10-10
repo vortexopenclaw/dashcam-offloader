@@ -3,6 +3,11 @@ import Foundation
 enum VerificationTest {
     static func run() -> Bool {
         do {
+            guard ScanSummary(sourcePath: "/Volumes/CARD").hasScan == false,
+                  ScanSummary(sourcePath: "/Volumes/CARD", scannedFiles: 1).hasScan else {
+                print("VERIFY FAIL: a selected card path was treated as a completed file scan")
+                return false
+            }
             // Older settings dominate the card, then two complete recordings
             // at a new setting are followed by a short stopped recording.
             var samplingClips: [ClipItem] = []
@@ -2456,7 +2461,22 @@ enum VerificationTest {
                 let model = TransferViewModel()
                 model.profiles = profiles
                 model.loadScanResultForVerification(source: MountedSource(url: t340Source, name: "Private Card"), scanResult: t340Scan)
-                return model.makeFeedbackScanSnapshot()
+                let completed = model.makeFeedbackScanSnapshot()
+                // A rescanning sheet must not reuse a previously valid preview.
+                model.isScanning = true
+                guard model.makeFeedbackScanSnapshot() == nil else { return nil }
+                model.submitFeedback(kind: .training, message: "Test", contact: "", includeScan: true,
+                                     scanSnapshot: completed, scanRevisionAtPreview: model.scanRevision,
+                                     training: CardTrainingDetails(manufacturer: "VIOFO", model: "T340", channelSetup: "4CH", notes: ""))
+                guard model.feedbackMessage.contains("incomplete"), !model.isSubmittingFeedback else { return nil }
+                model.isScanning = false
+                // Video-shaped placeholders still cannot be submitted as a
+                // bitrate test if AVFoundation cannot read any video tracks.
+                model.submitFeedback(kind: .training, message: "Test", contact: "", includeScan: true,
+                                     scanSnapshot: completed, scanRevisionAtPreview: model.scanRevision,
+                                     training: CardTrainingDetails(manufacturer: "VIOFO", model: "T340", channelSetup: "4CH", notes: ""))
+                guard model.feedbackMessage.contains("No video bitrate"), !model.isSubmittingFeedback else { return nil }
+                return completed
             }
             guard let t340Learning,
                   t340Learning.directorySummaries.contains(where: { $0.path == "DCIM/Movie/RO" }),
