@@ -23,6 +23,7 @@ which applies.
 - Botslab G980H - profile drafted from an app learning submission and real 4CH card sample. Detected from `MISC/G980HMCN5291.TXT`; unknown `360CARDVR` cards should not be assigned this model without exact marker evidence.
 - Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 - Vueroid S1 QHD Infinite - exact config-metadata detection with 1CH, 2CH, and 3CH variants learned from four app submissions; firmware 1.0.4 30 fps 3CH, 60 fps front-only, 5 fps time-lapse parking, and 30 fps parking-impact behavior observed.
+- VIOFO T330W - experimental 3CH profile from two app learning submissions and three owner-provided video frames showing the exact `VIOFO T330W` bottom-center stamp. The shared VIOFO folder/filename layout does not identify the model by itself; local OCR can identify it when the configurable stamp is enabled. T330 is the same main-camera family with a different rear-camera variant, but the non-W stamp has not been validated. See `docs/card-profiles/viofo-t330w.md`.
 - VIOFO A329S - base model profile. One real 3CH sample card inspected.
 - VIOFO A329T - related telephoto model profile drafted from official VIOFO product references and user-provided filename evidence. No real card inspected yet.
 - BlackVue Elite 9 - base model profile. One real 2CH sample card inspected.

@@ -1,7 +1,6 @@
-# Dashcam Offloader 0.1.28
+# Dashcam Offloader 0.1.29
 
-- Prevent a card-learning submission before a complete, nonempty file scan, or after a card rescan changes the reviewed data.
-- Refuse learning submissions with unreadable video bitrate metadata rather than silently sending only folder counts. Show an actionable warning in the review window.
-- Show every measured video group in the review window; bitrate ranges are samples by folder, recording mode, and camera channel, not one setting assumed for the entire card.
-- Scanning remains read-only. Existing footage can be rescanned without formatting the card.
-- An incomplete or unreadable learning scan must be corrected before submission; it is not reported as a successful camera test.
+- Identify VIOFO T330W by the exact `VIOFO T330W` model stamp in a front-channel video frame during ambiguous VIOFO scans.
+- Include an experimental T330W profile for F/I/R and PF/PI/PR channel mapping and the card's Movie, Parking, RO, and Photo folders. Shared VIOFO folder layouts alone remain insufficient for exact identification; T330W RO/PF clips no longer become impact events solely from their location.
+- List T330 and T330W as a family with differing rear-camera variants; the non-W model stamp has not yet been validated.
+- Scanning and OCR remain local and read-only; video frames are not uploaded with scan feedback.
