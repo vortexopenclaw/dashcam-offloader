@@ -832,7 +832,7 @@ struct ScanSummary: Hashable, Sendable {
     var modeCounts: [String: Int] = [:]
 
     var hasScan: Bool {
-        !sourcePath.isEmpty
+        !sourcePath.isEmpty && scannedFiles > 0
     }
 
     var sortedCategoryCounts: [(String, Int)] {

@@ -20,6 +20,7 @@ final class TransferViewModel: ObservableObject {
     @Published var cardHealthReport = CardHealthReport()
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
+    @Published private(set) var scanRevision = 0
     @Published var isCheckingCardHealth = false
     @Published var showAllVolumes = false
     @Published var copyResults: [CopyPlanItem] = []
@@ -813,6 +814,7 @@ final class TransferViewModel: ObservableObject {
 
     private func clearSourceDerivedState(for source: MountedSource?) {
         scanGeneration += 1
+        scanRevision += 1
         profileSelectionRevision += 1
         isScanning = false
         copyProgress = CopyProgress()
@@ -856,6 +858,7 @@ final class TransferViewModel: ObservableObject {
         }
 
         scanGeneration += 1
+        scanRevision += 1
         let generation = scanGeneration
         let profileRevisionAtStart = profileSelectionRevision
         isScanning = true
@@ -1357,6 +1360,7 @@ final class TransferViewModel: ObservableObject {
         contact: String,
         includeScan: Bool,
         scanSnapshot: FeedbackScanSnapshot? = nil,
+        scanRevisionAtPreview: Int? = nil,
         training: CardTrainingDetails? = nil,
         successMessage: String = "Feedback submitted successfully.",
         onSuccess: (@MainActor () -> Void)? = nil
@@ -1365,6 +1369,27 @@ final class TransferViewModel: ObservableObject {
         guard !trimmedMessage.isEmpty else {
             feedbackMessage = "Add a short note before submitting"
             return
+        }
+        // A selected source path is not evidence that a scan completed. Refuse
+        // stale previews and missing metadata instead of submitting folder-only data.
+        let submittedScan: FeedbackScanSnapshot?
+        if kind == .training || includeScan {
+            guard !isScanning, scanSummary.hasScan,
+                  scanRevisionAtPreview == nil || scanRevisionAtPreview == scanRevision,
+                  let currentScan = makeFeedbackScanSnapshot(),
+                  currentScan.scannedFiles > 0, currentScan.copyableItems > 0,
+                  scanSnapshot == nil || scanSnapshot == currentScan else {
+                feedbackMessage = "Card scan is incomplete or has changed. Finish scanning and reopen the submission window."
+                return
+            }
+            if kind == .training && eligibleClips.contains(where: \.isVideo) &&
+                !currentScan.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) {
+                feedbackMessage = "No video bitrate could be measured. Check the card and rescan before submitting."
+                return
+            }
+            submittedScan = currentScan
+        } else {
+            submittedScan = nil
         }
 
         isSubmittingFeedback = true
@@ -1377,10 +1402,9 @@ final class TransferViewModel: ObservableObject {
             appVersion: appVersionString(),
             createdAt: ISO8601DateFormatter().string(from: Date()),
             training: training,
-            // The learning window has already built the user-reviewed snapshot.
-            // Reusing it avoids reopening and inspecting the card a second time
-            // when the user presses Submit.
-            scan: includeScan ? (scanSnapshot ?? makeFeedbackScanSnapshot()) : nil
+            // Rebuild and compare with the reviewed preview to reject a changed
+            // card or stale learning sheet before the network request begins.
+            scan: submittedScan
         )
 
         Task { [weak self, feedbackService] in
@@ -1397,7 +1421,9 @@ final class TransferViewModel: ObservableObject {
     }
 
     func makeFeedbackScanSnapshot() -> FeedbackScanSnapshot? {
-        guard scanSummary.hasScan else { return nil }
+        guard !isScanning, scanSummary.hasScan,
+              selectedSource?.url.path == scanSummary.sourcePath,
+              lastScannedFiles.count == scanSummary.scannedFiles else { return nil }
 
         let requestedSourceRoot = selectedSource?.url
         let sourceRoot = lastEffectiveScanSourceURL ?? requestedSourceRoot
