@@ -2,6 +2,17 @@
 
 Quick cross-camera reference for channel layout, measured file metadata, and parking-mode quality behavior.
 
+## T330W mixed-setting bitrate and storage reference (reviewed 2026-10-11)
+
+### New Low and 10-fps time-lapse cohort
+
+A completed 108-file mixed-card scan retained all 60 files from the preceding scan. Owner-labeled **Low driving** clips (excluding the transition clip) measure ~27.03 Mb/s front and ~11.88 Mb/s on each add-on. A full three-channel 60-second file set is **390,070,272 bytes**, or **23.404 GB per encoded hour**. Owner-labeled **10-fps time-lapse parking** yielded two complete triplets in `Parking` and two complete triplets in `RO`, with the same full-file sizes and nominal 30-fps playback; start spacing of three minutes is consistent with 10-fps capture but does not independently verify capture cadence or `RO` trigger. The owner measured **588 mA average** in this parking setting, with voltage unknown. [Exact per-channel bitrates, paired sizes and durations](card-profiles/viofo-t330w.md#low-driving-and-10-fps-time-lapse-scan-reviewed-2026-10-11) and the 21 new numeric samples are retained separately from previous settings.
+
+
+### Prior Medium, High and Maximum cohorts
+
+A three-channel owner-labeled T330W card was rescanned without formatting. The previous 36 files remain, alongside 24 additions. [The T330W evidence table](card-profiles/viofo-t330w.md#mixed-settings-card-measurements-reviewed-2026-10-11) preserves all 12 sampled setting/channel groups: High and Maximum driving, 1-fps Night Vision time-lapse parking, and Auto Event Detection parking. The earlier owner-confirmed Medium driving files total **465,567,744 bytes/min (27.934 GB/hour)** across three channels; low-bitrate parking files total **100,663,296 bytes/min (6.040 GB/hour) while actively recording**. Measured full-minute High and Maximum driving file triplets use **601,882,624 bytes/min (36.113 GB/hour) High** or **671,088,640 bytes/min (40.265 GB/hour) Maximum**, including file overhead. The time-lapse group's nominal 30-fps playback and its 60-second file sizes must **not** be treated as 60 seconds of parked wall time; the Auto Event triplet lasts about 58 seconds and does not establish idle duty cycle. The separate low-bitrate parking generation is not averaged into these cohorts. The paired anonymous numeric samples are recorded in `web/recording-time/storage-evidence.json`, with the canonical camera profile and mirrored evidence in the camera-profile repository.
+
 This chart is for research and comparison, not model identification. Resolution, bitrate, codec, and frame rate can be user-configurable and firmware-dependent. Prefer real card-origin clips over product-page claims.
 
 ## Validation Rules

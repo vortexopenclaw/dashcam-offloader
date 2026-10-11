@@ -51,6 +51,10 @@ Broader catalog-only coverage is still incomplete. Unreleased H1 remains exclude
 
 The new T340 four-channel Normal / Low Power scan adds eight encoded-video bitrate ranges and owner-confirmed per-camera HDR settings to the camera database. It supplies no paired file-size/duration measurements, so no certified whole-file rate or new recording-time preset is added. The existing preset count remains unchanged. See [the reviewed sample](../../docs/card-profiles/viofo-t340.md#normal-bitrate--low-power-parking-sample-reviewed-2026-10-07); do not pair unrelated aggregate size and duration extrema.
 
+## T330W mixed-setting evidence reviewed 2026-10-11
+
+Retained 84 paired size/duration/video-bitrate samples in `storage-evidence.json` from three completed owner-labeled card scans: 33 Medium/low-rate, 30 mixed High/Maximum/1-fps time-lapse/Auto Event, and 21 new Low-driving/10-fps time-lapse samples. Each record has an explicit `settingsLabel` separating Low, Medium (originally submitted as Normal), High, and Maximum driving from low-bitrate parking, 1-fps Night Vision time-lapse, Auto Event Detection, and the separately unconfirmed low-rate `RO` clips. Both old and new files coexisted on an unformatted card. Representative complete 60-second three-channel driving files total 601,882,624 bytes High or 671,088,640 bytes Maximum. The time-lapse video's nominal 30-fps playback is not its capture cadence; an Auto Event Detection active clip cannot establish wall-clock parking retention. These raw measurements do not automatically add calculator presets. See [reviewed T330W evidence](../../docs/card-profiles/viofo-t330w.md#mixed-settings-card-measurements-reviewed-2026-10-11).
+
 ## Correction made
 
 Cansonic UltraDash Z4 Standard Edition was missed by the old video-reference-only eligibility check. Its profile has explicitly driving-folder video measurements for High/Highest quality: Front and Telephoto 4K30, Rear 1440p30. Added them as submitted-video estimates with overhead caveats. Did not use PROTECTED parking clips or label video-stream rates as complete file sizes.
