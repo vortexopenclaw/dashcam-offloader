@@ -4,6 +4,10 @@ Quick cross-camera reference for channel layout, measured file metadata, and par
 
 ## T330W mixed-setting bitrate and storage reference (reviewed 2026-10-11)
 
+### Longer 849-file confirmation scan
+
+A later completed T330W scan held 774 driving MP4, 24 Parking MP4, 30 protected `RO` MP4 and 21 photos, totaling **108.61 decimal GB**. It added 24 distinct Low/10-fps paired evidence records after deduplicating repeated numerical samples, for 108 T330W evidence pairs across all setting generations. The complete Low and 10-fps parking triplet size remains **390,070,272 bytes per 60 seconds of playback**; interrupted files have different byte sizes and must not be treated as full loops. The app's “Parking Motion Detection” label conflicts with the owner's 10-fps time-lapse setting and is an inference, not a verified trigger. The bounded 120-file sample cannot prove that every file from the preceding 108-file scan survived. [Detailed sizes, rates and provenance](card-profiles/viofo-t330w.md#longer-low--10-fps-card-scan-reviewed-2026-10-11).
+
 ### New Low and 10-fps time-lapse cohort
 
 A completed 108-file mixed-card scan retained all 60 files from the preceding scan. Owner-labeled **Low driving** clips (excluding the transition clip) measure ~27.03 Mb/s front and ~11.88 Mb/s on each add-on. A full three-channel 60-second file set is **390,070,272 bytes**, or **23.404 GB per encoded hour**. Owner-labeled **10-fps time-lapse parking** yielded two complete triplets in `Parking` and two complete triplets in `RO`, with the same full-file sizes and nominal 30-fps playback; start spacing of three minutes is consistent with 10-fps capture but does not independently verify capture cadence or `RO` trigger. The owner measured **588 mA average** in this parking setting, with voltage unknown. [Exact per-channel bitrates, paired sizes and durations](card-profiles/viofo-t330w.md#low-driving-and-10-fps-time-lapse-scan-reviewed-2026-10-11) and the 21 new numeric samples are retained separately from previous settings.
