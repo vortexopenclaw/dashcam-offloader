@@ -2,6 +2,34 @@
 
 Quick cross-camera reference for channel layout, measured file metadata, and parking-mode quality behavior.
 
+## Separate Maximum camera cohorts (reviewed 2026-10-12)
+
+An owner-installed **T340 4CH**, explicitly labeled Maximum, has a completed
+5,957-item app 0.1.29 scan. Front continuous samples measure
+**53.153592–53.306612 Mbps**, with representative complete-minute files of
+402,653,184 bytes front and 205,520,896 bytes per 2K add-on (~27.03 Mbps).
+Protected front minutes retain 53.244356–53.253248 Mbps. Firmware, HDR and
+configuration snapshots were not supplied. Short clips and lower-rate outliers
+remain separate paired evidence; the label does not certify one whole-card mode.
+
+A **different bench-tested T340 4CH** currently confirms Maximum through a
+strict non-secret configuration allowlist (Video Bitrate=3), firmware
+VIOFO_T340_V1.0_260911, multiplex/time-lapse off, HDR front/interior on and
+rear/telephoto off. Completed driving minutes measure **40.958778 Mbps front**
+and **23.756661–23.757080 Mbps add-ons**, with 310,378,496 / 180,355,072 bytes.
+Older October 8 clips from the same bench unit already match this lower band,
+with historical settings unknown; enabling station mode today did not newly
+produce it. Wi-Fi causation remains unestablished.
+
+A separate current **T330W 3CH**, owner-confirmed Maximum on firmware
+1.0_260910, measures **40.961859 / 23.756732 / 23.756889 Mbps** front/interior/rear,
+with the same respective minute sizes as the bench T340. Representative size
+sums normalize to **61.153 / 51.087 / 40.265 decimal GB/hour** for these three
+cohorts. Per-channel scan pairs lack cross-channel timestamps, so the first sum
+is not proof of a synchronized set. Do not collapse Maximum into a universal
+model bitrate or infer a controlled configuration comparison. Historical higher
+rates remain intact. [Full provenance and sampling limits](card-profiles/viofo-t340.md#separate-maximum-camera-cohorts-reviewed-2026-10-12).
+
 ## T330W mixed-setting bitrate and storage reference (reviewed 2026-10-11)
 
 ### Longer 849-file confirmation scan
