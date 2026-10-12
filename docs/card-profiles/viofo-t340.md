@@ -1,5 +1,50 @@
 # VIOFO T340 4CH card evidence
 
+## Separate Maximum camera cohorts reviewed 2026-10-12
+
+A completed app **0.1.29** scan received **2026-10-12 17:17 UTC** contains
+**5,957 copyable media items** from an owner-installed T340 4CH camera. The owner
+explicitly confirms **Maximum**. This is a different physical camera from the
+bench-tested T340 below. No firmware, HDR or configuration snapshots accompany
+this scan; do not carry the older chart's firmware/settings into this cohort.
+
+| Cohort | Front video Mbps | Add-on video Mbps | Representative complete 60-second sizes |
+|---|---|---|---|
+| Owner-installed T340 4CH, Maximum | continuous 53.153592–53.306612; representative 53.241536 / 53.242484 | full-minute driving about 27.03 each | front 402,653,184 bytes; interior/rear/telephoto 205,520,896 each |
+| Separate bench-tested T340 4CH, Maximum | 40.958778 | interior 23.757080; rear 23.756678; telephoto 23.756661 | front 310,378,496 bytes; each add-on 180,355,072 |
+| Separate current T330W 3CH, owner-confirmed Maximum | 40.961859 | interior 23.756732; rear 23.756889 | front 310,378,496 bytes; each add-on 180,355,072 |
+
+Owner-installed protected driving front samples measure **53.244356–53.253248
+Mbps**, also 402,653,184 bytes / 60 seconds; the protection trigger is unknown.
+The scan's paired samples include a 400,556,032-byte front minute, short clips,
+and a 31.966667-second telephoto clip at 23.755656 Mbps. These remain separate
+records, not substitutions for representative complete minutes or proof that
+the whole card used one setting. Per-channel `storageRateSamples` pair size,
+duration and bitrate, but have no intrinsic cross-channel timestamps: equal
+durations do not establish a synchronized four-channel recording set.
+Representative full-minute size sums normalize to **61.153 GB/hour** for the
+owner-installed T340, **51.087 GB/hour** for the bench T340, and **40.265 GB/hour**
+for the current T330W; these are whole-file rates, not video-only bitrate or
+measured retention. The prior higher-rate T340 observations remain valid cohorts.
+
+The bench T340's current firmware is **VIOFO_T340_V1.0_260911**. A strict
+non-secret configuration allowlist confirms **Video Bitrate=3 (Maximum)**,
+multiplex off, time-lapse off, HDR front/interior on and rear/telephoto off.
+Older October 8 clips from this same bench unit already match about 41/23.75
+Mbps, but their capture settings are not established. Enabling station mode
+today therefore did not newly produce the lower-rate observation; this is not
+proof that Wi-Fi caused the difference. Current T330W firmware is **1.0_260910**;
+its HDR/multiplex/time-lapse settings are not established by these measurements.
+Model name and a setting called Maximum do not establish one universal bitrate,
+and this is not a controlled firmware/HDR/configuration comparison.
+
+The mirrored anonymous storage-evidence databases add **28 owner-installed
+T340 driving/protected pairs, four bench T340 driving pairs and three current
+T330W driving pairs**, deduplicated by setting/channel/size/duration/video bitrate
+within physical-camera cohorts, not rounded ranges. Parking samples from the new
+scan are outside this Maximum-driving update; no parking setting is inferred.
+No camera detection, calculator preset or app behavior is changed.
+
 ## Owner-confirmed settings vocabulary
 
 Driving bitrate has four settings: **Low, Normal, High, Maximum**. Earlier
