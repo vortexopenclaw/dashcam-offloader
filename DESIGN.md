@@ -682,3 +682,17 @@ The first profile database entries are:
 
 - Thinkware U3000 Pro, based on `/Volumes/U3000PRO` and Thinkware documentation.
 - Vueroid S1 4K Infinite, validated from real 1CH/2CH/3CH card footage plus a firmware 1.6.0 privacy-sanitized 3CH app submission.
+
+## Five-angle VIOFO multicam export
+
+Objective: create editable FCPXML with four individual camera angles and a fifth 2×2 grid, locally and without audio synchronization analysis.
+
+Group by source folder, recording date, parking/driving filename family, and timestamp. Per-channel sequence counters are not shared. Read track metadata only. Reject incomplete or duplicate timestamp groups, overlaps, rotation, and mixed frame rates with actionable errors. Preserve gaps and align all five views at zero, without copying incidental demo offsets or conforming 30 fps sources to 29.97 fps.
+
+Build one compound sequence per camera, normalize to the front-camera canvas, then compose a half-scale grid referencing those compounds. Front is upper left, interior upper right, telephoto lower left, rear lower right. Grid audio uses front only. The multicam references all five compounds, preserving later angle cuts and editable transforms.
+
+Support an explicit existing-folder export and an opt-in post-download export. Post-download XML references only successful destination transfers, never source-card paths. Save new unique XML files and keep failed-export messages separate from successful copy results.
+
+Appended filename descriptions do not participate in pairing. Preserve them as local asset-clip start markers and camera-labeled aggregate markers on the outer multicam and grid at the recording timestamp. Preserve containing folder names in multicam names and a start marker. Descriptions remain user text, not inferred recording settings.
+
+Success checks: native-rate rational timing, filename recognition including appended download labels, five angle references, mixed 4K/1440p source formats, grid placement and audio, gap preservation, invalid/incomplete/duplicate guards, FCPXML import, packaged verification, and signed updater upgrade. Rollback: disable post-download creation or restore the previous signed release; source footage is unchanged.

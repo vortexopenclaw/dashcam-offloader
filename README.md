@@ -48,6 +48,16 @@ Firmware filename knowledge is maintainer research only: public firmware downloa
 
 ## Run The Prototype
 
+### Five-angle Final Cut multicams
+
+For four-channel VIOFO footage, enable **Create five-angle Final Cut multicams after download**, or use **Create Final Cut Multicams from Folder...** for footage already copied. Include all four channels for each recording timestamp. The app saves a new FCPXML; **Open Multicams in Final Cut** imports the clips into an event, ready to add to a timeline and cut between angles.
+
+The five views are front, interior, rear, telephoto, and an editable grid (front upper left, interior upper right, telephoto lower left, rear lower right). The grid retains front audio only. Pairing uses the filename date/time and F/I/R/T or PF/PI/PR/PT suffix, not the per-camera sequence counter or audio analysis. Appended descriptions remain part of the source names and become recording-start markers, labeled by camera on the multicam. Folder names are retained in multicam names and start markers.
+
+Recording gaps and shorter camera tracks remain gaps, with no speed change. Each folder/date/parking-or-driving family becomes a separate multicam. Missing channels, duplicate timestamps, overlapping recordings, and mixed frame rates are reported rather than guessed. Original videos remain unchanged and must stay available at their exported paths.
+
+### Launch and build
+
 From the repo root:
 
 ```bash

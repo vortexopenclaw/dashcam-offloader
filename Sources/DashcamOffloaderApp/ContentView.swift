@@ -754,6 +754,25 @@ struct ContentView: View {
 
                 Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
                     .disabled(viewModel.destinationURL == nil)
+                if viewModel.recognizesFourChannelFootage {
+                    Toggle("Create five-angle Final Cut multicams after download", isOn: $viewModel.createMulticamWhenComplete)
+                        .disabled(viewModel.copyProgress.isRunning || viewModel.isCreatingMulticam)
+                }
+                Button("Create Final Cut Multicams from Folder...") {
+                    viewModel.chooseMulticamFolder()
+                }
+                .disabled(viewModel.copyProgress.isRunning || viewModel.isCreatingMulticam)
+                Text("Four camera views plus a 2×2 grid. Filename alignment, no audio analysis.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if !viewModel.multicamMessage.isEmpty {
+                    Text(viewModel.multicamMessage)
+                        .font(.caption)
+                        .textSelection(.enabled)
+                }
+                if viewModel.lastMulticamURL != nil {
+                    Button("Open Multicams in Final Cut") { viewModel.openMulticam() }
+                }
 
                 expandableSection("Download options", isExpanded: $showDownloadOptions) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -1322,7 +1341,7 @@ struct ContentView: View {
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.destinationURL == nil || (viewModel.copyPlan?.items.isEmpty ?? true))
+                    .disabled(viewModel.isCreatingMulticam || viewModel.destinationURL == nil || (viewModel.copyPlan?.items.isEmpty ?? true))
                 }
             }
         }

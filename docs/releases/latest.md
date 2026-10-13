@@ -1,6 +1,8 @@
-# Dashcam Offloader 0.1.29
+# Dashcam Offloader 0.1.30
 
-- Identify VIOFO T330W by the exact `VIOFO T330W` model stamp in a front-channel video frame during ambiguous VIOFO scans.
-- Include an experimental T330W profile for F/I/R and PF/PI/PR channel mapping and the card's Movie, Parking, RO, and Photo folders. Shared VIOFO folder layouts alone remain insufficient for exact identification; T330W RO/PF clips no longer become impact events solely from their location.
-- List T330 and T330W as a family with differing rear-camera variants; the non-W model stamp has not yet been validated.
-- Scanning and OCR remain local and read-only; video frames are not uploaded with scan feedback. When the model stamp is disabled or unreadable, the app must leave the exact model unconfirmed.
+- Create editable five-angle Final Cut multicams from four-channel VIOFO footage: front, interior, rear, telephoto, and a 2×2 grid.
+- Match F/I/R/T and PF/PI/PR/PT filenames by recording timestamp, without audio analysis. Keep source frame rate, recording gaps, and original downloaded media.
+- Grid layout: front upper left, interior upper right, telephoto lower left, rear lower right. Retain front-camera audio and mute the other grid tracks.
+- Create multicams automatically after download or choose an existing footage folder. Open the saved FCPXML in Final Cut to import the editable clips.
+- Preserve appended filename descriptions as recording-start markers, with camera labels on the multicam. Keep folder names in multicam names and markers, and retain per-camera clip annotations.
+- Report missing channels, duplicate recordings, overlapping timestamps, and unsupported mixed frame rates instead of guessing. Existing downloads and XML files are never overwritten by multicam creation.
