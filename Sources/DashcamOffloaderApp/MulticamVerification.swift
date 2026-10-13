@@ -20,12 +20,6 @@ enum MulticamVerification {
                         && MulticamExporter.identify("2026_0101_120000_000001F.JPG") == nil,
                         "invalid date or photo accepted")
             do {
-                try MulticamExporter.validate(Array(inputs.dropLast()))
-                throw MulticamExporter.Failure.message("missing channel was accepted")
-            } catch MulticamExporter.Failure.message(let text) {
-                try require(text.contains("missing Rear"), text)
-            }
-            do {
                 try MulticamExporter.validate(inputs + [inputs[0]])
                 throw MulticamExporter.Failure.message("duplicate channel was accepted")
             } catch MulticamExporter.Failure.message(let text) {
@@ -40,6 +34,12 @@ enum MulticamVerification {
                         height: input.identity.channel == "F" ? 2160 : 1440,
                         frameDuration: CMTime(value: 1, timescale: 30), audioChannels: 1, audioRate: 48000)
                 }
+            }
+            do {
+                _ = try MulticamExporter.render(videos(Array(inputs.dropLast())))
+                throw MulticamExporter.Failure.message("missing channel was accepted")
+            } catch MulticamExporter.Failure.message(let text) {
+                try require(text.contains("missing Rear"), text)
             }
             let xml = try MulticamExporter.render(videos(allInputs))
             let doc = try XMLDocument(xmlString: xml)
@@ -102,6 +102,55 @@ enum MulticamVerification {
                 stamps: ["120000", "120002", "120004"], notes: ["Night front", "", "Night front"]))))
             try require(try cleared.nodes(forXPath: "//asset-clip/marker").count == 2,
                         "untagged footage did not end the previous section")
+            let drives = inputs + MulticamExporter.inputs(urls: names.map {
+                URL(fileURLWithPath: "/synthetic/Camera & Clips/\($0.replacingOccurrences(of: "120000", with: "160000"))")
+            }) + MulticamExporter.inputs(urls: names.map {
+                URL(fileURLWithPath: "/synthetic/Camera & Clips/\($0.replacingOccurrences(of: "0101", with: "0102"))")
+            })
+            let drivesDoc = try XMLDocument(xmlString: MulticamExporter.render(videos(drives)))
+            try require(try drivesDoc.nodes(forXPath: "//multicam").count == 3, "separate drives combined")
+            try require(try drivesDoc.nodes(forXPath: "//mc-clip[@duration='60/30s']").count == 3, "drive timelines not reset")
+            let boundary = inputs + MulticamExporter.inputs(urls: names.map {
+                URL(fileURLWithPath: "/synthetic/Camera & Clips/\($0.replacingOccurrences(of: "120000", with: "120502"))")
+            })
+            try require(MulticamExporter.sessions(videos(boundary)).count == 1, "five-minute tolerance did not use clip ends")
+            let split = inputs + MulticamExporter.inputs(urls: names.map {
+                URL(fileURLWithPath: "/synthetic/Camera & Clips/\($0.replacingOccurrences(of: "120000", with: "120503"))")
+            })
+            try require(MulticamExporter.sessions(videos(split)).count == 2, "gap above five minutes not split")
+            let moved = MulticamExporter.inputs(urls: names.enumerated().map { index, name in
+                URL(fileURLWithPath: "/synthetic/Card/DCIM/Movie/\(index == 0 ? "RO/" : "")\(name)")
+            })
+            let movedDoc = try XMLDocument(xmlString: MulticamExporter.render(videos(moved)))
+            try require(try movedDoc.nodes(forXPath: "//multicam").count == 1, "RO camera separated from matching set")
+            try require(try movedDoc.nodes(forXPath: "//media-rep[contains(@src, '/RO/')]").count == 1, "RO original URL lost")
+            let emergency = MulticamExporter.inputs(urls: [URL(fileURLWithPath:
+                "/synthetic/Camera & Clips/RO/LOCKED_2026_0101_120001_000005EF Impact & note.MP4")])
+            try require(emergency.count == 1 && emergency[0].identity.channel == "F"
+                        && !emergency[0].identity.parking && emergency[0].identity.annotation == "Impact & note",
+                        "emergency filename identity or annotation lost")
+            let emergencyDoc = try XMLDocument(xmlString: MulticamExporter.render(videos(allInputs + emergency)))
+            try require(try emergencyDoc.nodes(forXPath: "//multicam").count == 1, "partial emergency recording split drive")
+            try require(try emergencyDoc.nodes(forXPath: "//asset").count == 9, "emergency asset dropped")
+            try require(try emergencyDoc.nodes(forXPath: "//asset-clip[@offset='0/30s' and @duration='30/30s']").count == 1,
+                        "overlapping front clip not cut at emergency start")
+            try require(try emergencyDoc.nodes(forXPath: "//asset-clip[@offset='30/30s' and @duration='60/30s']").count == 1,
+                        "emergency recording not aligned by timestamp")
+            var longer = videos(inputs)
+            longer[0] = MulticamExporter.Video(input: longer[0].input, duration: 10,
+                width: 3840, height: 2160, frameDuration: CMTime(value: 1, timescale: 30), audioChannels: 1, audioRate: 48000)
+            let resumed = try XMLDocument(xmlString: MulticamExporter.render(longer + videos(emergency)))
+            try require(try resumed.nodes(forXPath: "//asset-clip[@offset='90/30s' and @start='90/30s' and @duration='210/30s']").count == 1,
+                        "normal recording did not resume after short emergency overlap")
+            try require(try resumed.nodes(forXPath: "//asset").count == 5, "resumed original asset duplicated")
+            let parkedEmergency = MulticamExporter.inputs(urls: [URL(fileURLWithPath:
+                "/synthetic/Card/DCIM/Movie/Parking/RO/2026_0101_120000_000005EF.MP4")])
+            try require(parkedEmergency.first?.identity.parking == true,
+                        "parking emergency was mistaken for driving")
+            let differentAlbums = inputs + MulticamExporter.inputs(urls: names.map {
+                URL(fileURLWithPath: "/synthetic/Other Album/\($0)")
+            })
+            try require(MulticamExporter.sessions(videos(differentAlbums)).count == 2, "independent albums collapsed")
             print("MULTICAM VERIFY PASS: filename groups, missing/duplicate guards, five angles, grid, audio, gaps, native rate, XML escaping, mode separation")
             return true
         } catch {

@@ -46,7 +46,7 @@ enum MulticamExporter {
 
     static func identify(_ filename: String) -> Identity? {
         guard URL(fileURLWithPath: filename).pathExtension.lowercased() == "mp4",
-              let regex = try? NSRegularExpression(pattern: "^(\\d{4}_\\d{4}_\\d{6})_\\d+(P?[FIRT])(?=$|[ ._-])", options: .caseInsensitive),
+              let regex = try? NSRegularExpression(pattern: "^(?:(?:EMERGENCY|EVENT|LOCKED|RO)[ _-]+)?(\\d{4}_\\d{4}_\\d{6})_\\d+((?:P|E|L)?[FIRT])(?=$|[ ._-])", options: .caseInsensitive),
               let match = regex.firstMatch(in: filename, range: NSRange(filename.startIndex..., in: filename)),
               let stampRange = Range(match.range(at: 1), in: filename),
               let channelRange = Range(match.range(at: 2), in: filename) else { return nil }
@@ -67,9 +67,50 @@ enum MulticamExporter {
 
     static func inputs(urls: [URL]) -> [Input] {
         urls.compactMap { url in
-            guard let identity = identify(url.lastPathComponent) else { return nil }
-            return Input(url: url, identity: identity, namespace: url.deletingLastPathComponent().standardizedFileURL.path)
+            guard var identity = identify(url.lastPathComponent) else { return nil }
+            if url.deletingLastPathComponent().pathComponents.contains(where: {
+                ["parking", "parking events"].contains($0.lowercased())
+            }) && !identity.parking {
+                identity = Identity(stamp: identity.stamp, date: identity.date, channel: identity.channel,
+                    parking: true, annotation: identity.annotation)
+            }
+            return Input(url: url, identity: identity, namespace: recordingNamespace(url))
         }
+    }
+
+    // Strip only recognized recording-category/channel folders, never arbitrary album names.
+    static func recordingNamespace(_ url: URL) -> String {
+        let categories: Set<String> = ["ro", "readonly", "read-only", "locked", "protected",
+            "emergency", "event", "events", "normal", "continuous", "driving", "parking", "parking events",
+            "front", "rear", "interior", "telephoto", "front cam", "rear cam", "interior cam", "telephoto cam"]
+        var folder = url.deletingLastPathComponent().standardizedFileURL
+        while categories.contains(folder.lastPathComponent.lowercased()) {
+            folder.deleteLastPathComponent()
+        }
+        return folder.path
+    }
+
+    // Five minutes of uncovered recording time separates drives; short gaps remain visible.
+    // Filename dates are camera-local wall-clock values (parsed in UTC to avoid DST shifts).
+    static func sessions(_ videos: [Video]) -> [[Video]] {
+        var result: [[Video]] = []
+        for entry in Dictionary(grouping: videos, by: { key($0.input) }).sorted(by: { $0.key < $1.key }) {
+            var session: [Video] = []
+            var coveredUntil = Date.distantPast
+            for video in entry.value.sorted(by: {
+                if $0.input.identity.date != $1.input.identity.date { return $0.input.identity.date < $1.input.identity.date }
+                return $0.input.url.path < $1.input.url.path
+            }) {
+                if !session.isEmpty && video.input.identity.date.timeIntervalSince(coveredUntil) > 300 {
+                    result.append(session)
+                    session = []
+                }
+                session.append(video)
+                coveredUntil = max(coveredUntil, video.input.identity.date.addingTimeInterval(video.duration))
+            }
+            if !session.isEmpty { result.append(session) }
+        }
+        return result
     }
 
     static func folderInputs(_ root: URL) throws -> [Input] {
@@ -101,10 +142,7 @@ enum MulticamExporter {
             guard counts.values.allSatisfy({ $0.count == 1 }) else {
                 throw Failure.message("Duplicate camera files at \(group[0].identity.stamp). Select a folder containing one camera recording set.")
             }
-            let missing = channels.filter { counts[$0] == nil }
-            guard missing.isEmpty else {
-                throw Failure.message("Recording \(group[0].identity.stamp) is missing \(missing.compactMap { labels[$0] }.joined(separator: ", ")). Include all four channels before creating a multicam.")
-            }
+
         }
     }
 
@@ -149,7 +187,7 @@ enum MulticamExporter {
         defer { try? FileManager.default.removeItem(at: staging) }
         try Data(document.utf8).write(to: staging, options: .withoutOverwriting)
         try FileManager.default.moveItem(at: staging, to: output)
-        return Result(url: output, multicamCount: Set(inputs.map(key)).count, recordingCount: inputs.count / 4)
+        return Result(url: output, multicamCount: sessions(videos).count, recordingCount: Set(inputs.map { "\(key($0))|\($0.identity.stamp)" }).count)
     }
 
     static func escape(_ value: String) -> String {
@@ -164,14 +202,56 @@ enum MulticamExporter {
         "\(frames * frameDuration.value)/\(frameDuration.timescale)s"
     }
 
+    struct Segment {
+        let videoIndex: Int
+        let offset: Int64
+        let sourceStart: Int64
+        var length: Int64
+    }
+
+    // Latest-starting clip wins an overlap, but the underlying clip resumes afterwards.
+    static func segments(_ videos: [Video], starts: [String: Int64], fd: CMTime) throws -> [Segment] {
+        let offsets = videos.map { starts[$0.input.identity.stamp]! }
+        let ends = zip(videos, offsets).map { $0.1 + Int64(($0.0.duration / fd.seconds).rounded()) }
+        guard Set(offsets).count == offsets.count else {
+            throw Failure.message("Camera timestamps are too close to align at this frame rate.")
+        }
+        let begin = Dictionary(uniqueKeysWithValues: offsets.enumerated().map { ($0.element, $0.offset) })
+        let finish = Dictionary(grouping: ends.indices, by: { ends[$0] })
+        let boundaries = Set(offsets + ends).sorted()
+        var active = Set<Int>()
+        var result: [Segment] = []
+        for index in boundaries.indices.dropLast() {
+            let offset = boundaries[index]
+            for ended in finish[offset] ?? [] { active.remove(ended) }
+            if let started = begin[offset] { active.insert(started) }
+            guard let selected = active.max() else { continue }
+            let length = boundaries[index + 1] - offset
+            if let last = result.last, last.videoIndex == selected && last.offset + last.length == offset {
+                result[result.count - 1].length += length
+            } else {
+                result.append(Segment(videoIndex: selected, offset: offset,
+                    sourceStart: offset - offsets[selected], length: length))
+            }
+        }
+        return result
+    }
+
     static func render(_ videos: [Video]) throws -> String {
         try validate(videos.map(\.input))
         var resources: [String] = []
         var event: [String] = []
         var nextID = 0
         func id() -> String { nextID += 1; return "r\(nextID)" }
-        for (index, entry) in Dictionary(grouping: videos, by: { key($0.input) }).sorted(by: { $0.key < $1.key }).enumerated() {
-            let sorted = entry.value.sorted { $0.input.identity.date < $1.input.identity.date }
+        for (index, session) in sessions(videos).enumerated() {
+            let sorted = session.sorted {
+                if $0.input.identity.date != $1.input.identity.date { return $0.input.identity.date < $1.input.identity.date }
+                return $0.input.url.path < $1.input.url.path
+            }
+            let missing = channels.filter { channel in !sorted.contains { $0.input.identity.channel == channel } }
+            guard missing.isEmpty else {
+                throw Failure.message("Drive starting \(sorted[0].input.identity.stamp) is missing \(missing.compactMap { labels[$0] }.joined(separator: ", ")). Include all four channels before creating a multicam.")
+            }
             let front = sorted.first { $0.input.identity.channel == "F" }!
             let fd = front.frameDuration
             guard sorted.allSatisfy({ abs($0.frameDuration.seconds - fd.seconds) < 0.000001 }) else {
@@ -189,11 +269,8 @@ enum MulticamExporter {
                 guard let shortest = durations.min(), let longest = durations.max(), shortest > 0 else {
                     throw Failure.message("Invalid camera duration at \(group.key). Check the recording files.")
                 }
-                guard start >= total else {
-                    throw Failure.message("Overlapping filename timestamps at \(group.key). Export those recordings separately.")
-                }
                 starts[group.key] = start
-                total = start + longest
+                total = max(total, start + longest)
             }
             let duration = time(frames: total, frameDuration: fd)
             let folderLabel = URL(fileURLWithPath: front.input.namespace).lastPathComponent
@@ -226,21 +303,31 @@ enum MulticamExporter {
                 compounds[channel] = compound
                 var spine: [String] = []
                 var cursor: Int64 = 0
-                for video in sorted.filter({ $0.input.identity.channel == channel }) {
-                    let stamp = video.input.identity.stamp
-                    let start = starts[stamp]!
-                    let length = Int64((video.duration / fd.seconds).rounded())
+                let cameraVideos = sorted.filter { $0.input.identity.channel == channel }
+                var assetIDs: [URL: (format: String, asset: String)] = [:]
+                for segment in try segments(cameraVideos, starts: starts, fd: fd) {
+                    let video = cameraVideos[segment.videoIndex]
+                    let start = segment.offset
+                    let length = segment.length
                     if start > cursor {
                         spine.append("<gap name=\"Recording gap\" offset=\"\(time(frames: cursor, frameDuration: fd))\" start=\"0s\" duration=\"\(time(frames: start - cursor, frameDuration: fd))\"/>")
                     }
-                    let sourceFormat = id()
-                    let asset = id()
-                    resources.append("<format id=\"\(sourceFormat)\" frameDuration=\"\(time(frames: 1, frameDuration: fd))\" width=\"\(video.width)\" height=\"\(video.height)\" colorSpace=\"1-1-1 (Rec. 709)\"/>")
-                    let audio = video.audioChannels > 0 ? " hasAudio=\"1\" audioSources=\"1\" audioChannels=\"\(video.audioChannels)\" audioRate=\"\(video.audioRate)\"" : ""
-                    resources.append("<asset id=\"\(asset)\" name=\"\(escape(video.input.url.deletingPathExtension().lastPathComponent))\" start=\"0s\" duration=\"\(time(frames: Int64((video.duration / fd.seconds).rounded()), frameDuration: fd))\" hasVideo=\"1\" format=\"\(sourceFormat)\"\(audio)><media-rep kind=\"original-media\" src=\"\(escape(video.input.url.absoluteString))\"/></asset>")
+                    let sourceFormat: String
+                    let asset: String
+                    if let existing = assetIDs[video.input.url] {
+                        sourceFormat = existing.format
+                        asset = existing.asset
+                    } else {
+                        sourceFormat = id()
+                        asset = id()
+                        assetIDs[video.input.url] = (sourceFormat, asset)
+                        resources.append("<format id=\"\(sourceFormat)\" frameDuration=\"\(time(frames: 1, frameDuration: fd))\" width=\"\(video.width)\" height=\"\(video.height)\" colorSpace=\"1-1-1 (Rec. 709)\"/>")
+                        let audio = video.audioChannels > 0 ? " hasAudio=\"1\" audioSources=\"1\" audioChannels=\"\(video.audioChannels)\" audioRate=\"\(video.audioRate)\"" : ""
+                        resources.append("<asset id=\"\(asset)\" name=\"\(escape(video.input.url.deletingPathExtension().lastPathComponent))\" start=\"0s\" duration=\"\(time(frames: Int64((video.duration / fd.seconds).rounded()), frameDuration: fd))\" hasVideo=\"1\" format=\"\(sourceFormat)\"\(audio)><media-rep kind=\"original-media\" src=\"\(escape(video.input.url.absoluteString))\"/></asset>")
+                    }
                     let note = video.input.identity.annotation
-                    let annotation = sectionStarts.contains(video.input.url) ? marker(note, start: 0) : ""
-                    spine.append("<asset-clip ref=\"\(asset)\" offset=\"\(time(frames: start, frameDuration: fd))\" start=\"0s\" duration=\"\(time(frames: length, frameDuration: fd))\" format=\"\(sourceFormat)\"><adjust-conform type=\"fit\"/>\(annotation)</asset-clip>")
+                    let annotation = segment.sourceStart == 0 && sectionStarts.contains(video.input.url) ? marker(note, start: 0) : ""
+                    spine.append("<asset-clip ref=\"\(asset)\" offset=\"\(time(frames: start, frameDuration: fd))\" start=\"\(time(frames: segment.sourceStart, frameDuration: fd))\" duration=\"\(time(frames: length, frameDuration: fd))\" format=\"\(sourceFormat)\"><adjust-conform type=\"fit\"/>\(annotation)</asset-clip>")
                     cursor = start + length
                 }
                 if cursor < total {

@@ -1,10 +1,7 @@
-# Dashcam Offloader 0.1.30
+# Dashcam Offloader 0.1.31
 
-- Create editable five-angle Final Cut multicams from four-channel VIOFO footage: front, interior, rear, telephoto, and a 2×2 grid.
-- Match F/I/R/T and PF/PI/PR/PT filenames by recording timestamp, without audio analysis. Keep source frame rate, recording gaps, and original downloaded media.
-- Grid layout: front upper left, interior upper right, telephoto lower left, rear lower right. Retain front-camera audio and mute the other grid tracks.
-- Create multicams automatically after download or choose an existing footage folder. Open the saved FCPXML in Final Cut to import the editable clips.
-- Preserve appended filename descriptions as recording-start markers, with camera labels on the multicam. Keep folder names in multicam names and markers, and retain per-camera clip annotations.
-- Adjacent recordings with the same camera label share one section-start marker; a changed label, untagged recording, or recording gap starts a new section.
-- Do not cache mutable updater manifests or latest downloads, so update checks reflect an activated release rather than a five-minute-old version.
-- Report missing channels, duplicate recordings, overlapping timestamps, and unsupported mixed frame rates instead of guessing. Existing downloads and XML files are never overwritten by multicam creation.
+- Create a separate five-angle multicam for each drive: a different recording day or more than five minutes without footage starts a new timeline. Short recording gaps are preserved.
+- Keep normal and protected/RO recordings in the same drive across recognized recording-category folders. Camera timestamps and channel identity, not sequence numbers or file permissions, determine placement.
+- Recognize explicit Emergency/Event/Locked/RO filename prefixes and E/L camera suffix variants while preserving appended notes. These variants are supported defensively, not a claim that every camera uses them.
+- Allow single-channel emergency segments alongside a complete four-camera drive. Overlapping clips switch at the next same-camera timestamp without stretching footage, and normal footage resumes after a short overlapping emergency clip; missing cameras appear as gaps.
+- Refuse ambiguous duplicate same-camera timestamps and drives missing an entire camera instead of guessing. Originals remain unchanged.
