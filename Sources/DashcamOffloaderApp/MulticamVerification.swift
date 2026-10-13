@@ -76,6 +76,32 @@ enum MulticamVerification {
             try require(try stopped.nodes(forXPath: "//gap[@name='Camera stopped' and @duration='30/30s']").count == 1,
                         "short channel was trimmed or stretched")
             try require(try stopped.nodes(forXPath: "//asset[not(@hasAudio)]").count == 1, "silent footage acquired audio")
+            func sectionInputs(stamps: [String], notes: [String]) -> [MulticamExporter.Input] {
+                zip(stamps, notes).flatMap { stamp, note in
+                    MulticamExporter.inputs(urls: names.map { name in
+                        let renamed = name.replacingOccurrences(of: "120000", with: stamp)
+                        let labeled = renamed.contains("000001F") && !note.isEmpty
+                            ? renamed.replacingOccurrences(of: ".MP4", with: " \(note).MP4") : renamed
+                        return URL(fileURLWithPath: "/synthetic/Sections/\(labeled)")
+                    })
+                }
+            }
+            let continuous = try XMLDocument(xmlString: MulticamExporter.render(videos(sectionInputs(
+                stamps: ["120000", "120002", "120004"], notes: ["Night front", "Night front", "Day front"]))))
+            try require(try continuous.nodes(forXPath: "//asset-clip/marker").count == 2,
+                        "continuous repeated label produced per-clip markers")
+            try require(try continuous.nodes(forXPath: "//mc-clip/marker[@start='60/30s']").isEmpty,
+                        "second adjacent recording incorrectly started a new section")
+            try require(try continuous.nodes(forXPath: "//mc-clip/marker[@start='120/30s']").count == 1,
+                        "changed label did not start a new section")
+            let disconnected = try XMLDocument(xmlString: MulticamExporter.render(videos(sectionInputs(
+                stamps: ["120000", "120004"], notes: ["Night front", "Night front"]))))
+            try require(try disconnected.nodes(forXPath: "//asset-clip/marker").count == 2,
+                        "recording gap did not restart a labeled section")
+            let cleared = try XMLDocument(xmlString: MulticamExporter.render(videos(sectionInputs(
+                stamps: ["120000", "120002", "120004"], notes: ["Night front", "", "Night front"]))))
+            try require(try cleared.nodes(forXPath: "//asset-clip/marker").count == 2,
+                        "untagged footage did not end the previous section")
             print("MULTICAM VERIFY PASS: filename groups, missing/duplicate guards, five angles, grid, audio, gaps, native rate, XML escaping, mode separation")
             return true
         } catch {

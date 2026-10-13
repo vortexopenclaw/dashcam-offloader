@@ -200,8 +200,22 @@ enum MulticamExporter {
             func marker(_ label: String, start: Int64) -> String {
                 "<marker start=\"\(time(frames: start, frameDuration: fd))\" duration=\"\(time(frames: 1, frameDuration: fd))\" value=\"\(escape(label))\"/>"
             }
+            var sectionStarts = Set<URL>()
+            for channel in channels {
+                var previousNote = ""
+                var previousEnd: Int64 = -1
+                for video in sorted.filter({ $0.input.identity.channel == channel }) {
+                    let note = video.input.identity.annotation
+                    let start = starts[video.input.identity.stamp]!
+                    if !note.isEmpty && (note != previousNote || abs(start - previousEnd) > 1) {
+                        sectionStarts.insert(video.input.url)
+                    }
+                    previousNote = note
+                    previousEnd = start + Int64((video.duration / fd.seconds).rounded())
+                }
+            }
             let sectionMarkers = marker("Folder: \(folderLabel)", start: 0) + groups.map { group in
-                let notes = group.value.filter { !$0.input.identity.annotation.isEmpty }.sorted {
+                let notes = group.value.filter { sectionStarts.contains($0.input.url) }.sorted {
                     $0.input.identity.channel < $1.input.identity.channel
                 }.map { "\(labels[$0.input.identity.channel]!): \($0.input.identity.annotation)" }
                 return notes.isEmpty ? "" : marker(notes.joined(separator: " | "), start: starts[group.key]!)
@@ -225,7 +239,7 @@ enum MulticamExporter {
                     let audio = video.audioChannels > 0 ? " hasAudio=\"1\" audioSources=\"1\" audioChannels=\"\(video.audioChannels)\" audioRate=\"\(video.audioRate)\"" : ""
                     resources.append("<asset id=\"\(asset)\" name=\"\(escape(video.input.url.deletingPathExtension().lastPathComponent))\" start=\"0s\" duration=\"\(time(frames: Int64((video.duration / fd.seconds).rounded()), frameDuration: fd))\" hasVideo=\"1\" format=\"\(sourceFormat)\"\(audio)><media-rep kind=\"original-media\" src=\"\(escape(video.input.url.absoluteString))\"/></asset>")
                     let note = video.input.identity.annotation
-                    let annotation = note.isEmpty ? "" : marker(note, start: 0)
+                    let annotation = sectionStarts.contains(video.input.url) ? marker(note, start: 0) : ""
                     spine.append("<asset-clip ref=\"\(asset)\" offset=\"\(time(frames: start, frameDuration: fd))\" start=\"0s\" duration=\"\(time(frames: length, frameDuration: fd))\" format=\"\(sourceFormat)\"><adjust-conform type=\"fit\"/>\(annotation)</asset-clip>")
                     cursor = start + length
                 }

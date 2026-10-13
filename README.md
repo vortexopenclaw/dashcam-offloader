@@ -56,6 +56,8 @@ The five views are front, interior, rear, telephoto, and an editable grid (front
 
 Recording gaps and shorter camera tracks remain gaps, with no speed change. Each folder/date/parking-or-driving family becomes a separate multicam. Missing channels, duplicate timestamps, overlapping recordings, and mixed frame rates are reported rather than guessed. Original videos remain unchanged and must stay available at their exported paths.
 
+Adjacent clips with the same appended description are one labeled section with one start marker. A changed/cleared description or a recording gap starts a new section.
+
 ### Launch and build
 
 From the repo root:
