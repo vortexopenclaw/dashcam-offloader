@@ -16,7 +16,7 @@ function environment() {
       async get(key) {
         reads.push(key);
         if (key === "dashcam-offloader/latest.json") {
-          return { json: async () => manifest };
+          return { body: JSON.stringify(manifest), httpEtag: '"manifest"', json: async () => manifest, writeHttpMetadata() {} };
         }
         return { body: "archive bytes", writeHttpMetadata() {} };
       },
@@ -53,4 +53,17 @@ test("older installed clients can still use the latest download endpoint", async
   );
   assert.equal(response.status, 200);
   assert.equal(env.reads.at(-1), manifest.assetKey);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+});
+
+test("manual update checks do not cache a superseded latest manifest", async () => {
+  for (const method of ["GET", "HEAD"]) {
+    const env = environment();
+    const response = await worker.fetch(
+      new Request("https://updates.example/dashcam-offloader/latest.json", { method }), env,
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(env.reads, ["dashcam-offloader/latest.json"]);
+  }
 });

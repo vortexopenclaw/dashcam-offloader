@@ -6,4 +6,5 @@
 - Create multicams automatically after download or choose an existing footage folder. Open the saved FCPXML in Final Cut to import the editable clips.
 - Preserve appended filename descriptions as recording-start markers, with camera labels on the multicam. Keep folder names in multicam names and markers, and retain per-camera clip annotations.
 - Adjacent recordings with the same camera label share one section-start marker; a changed label, untagged recording, or recording gap starts a new section.
+- Do not cache mutable updater manifests or latest downloads, so update checks reflect an activated release rather than a five-minute-old version.
 - Report missing channels, duplicate recordings, overlapping timestamps, and unsupported mixed frame rates instead of guessing. Existing downloads and XML files are never overwritten by multicam creation.

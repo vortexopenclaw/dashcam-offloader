@@ -697,4 +697,6 @@ Appended filename descriptions do not participate in pairing. Preserve them as l
 
 Identical annotations on adjacent recordings in one camera stream form one section with a single start marker, both on source clips and the multicam/grid. Reset the section when the annotation changes or clears, or when the next timestamp is more than one frame from the previous video end. Keep every original clip and its full name; marker coalescing never alters media timing.
 
+Updater freshness: mutable latest-manifest and latest-download responses use no-store; explicit client requests bypass local and intermediary caches. Immutable archives and unrelated Worker endpoints retain their existing behavior. Verify both response headers and the previous released client's upgrade against the activated feed.
+
 Success checks: native-rate rational timing, filename recognition including appended download labels, five angle references, mixed 4K/1440p source formats, grid placement and audio, gap preservation, invalid/incomplete/duplicate guards, FCPXML import, packaged verification, and signed updater upgrade. Rollback: disable post-download creation or restore the previous signed release; source footage is unchanged.

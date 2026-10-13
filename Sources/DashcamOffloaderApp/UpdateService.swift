@@ -118,7 +118,9 @@ struct UpdateService: @unchecked Sendable {
     private static let updateBundleIdentifier = "com.vortexopenclaw.dashcam-offloader"
 
     func fetchManifest() async throws -> AppUpdateManifest {
-        let (data, response) = try await session.data(from: manifestURL)
+        var request = URLRequest(url: manifestURL, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw UpdateServiceError.invalidManifestResponse
@@ -157,7 +159,9 @@ struct UpdateService: @unchecked Sendable {
             throw UpdateServiceError.invalidManifestResponse
         }
 
-        let (downloadedURL, response) = try await session.download(from: manifest.downloadURL)
+        var request = URLRequest(url: manifest.downloadURL, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        let (downloadedURL, response) = try await session.download(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode) else {
             throw UpdateServiceError.invalidDownloadResponse
