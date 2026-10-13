@@ -121,11 +121,11 @@ async function loadManifest(env) {
   return object.json();
 }
 
-function responseHeaders(object, contentType) {
+function responseHeaders(object, contentType, cacheControl = "public, max-age=300") {
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "public, max-age=300");
+  headers.set("cache-control", cacheControl);
   headers.set("access-control-allow-origin", "*");
   if (contentType) {
     headers.set("content-type", contentType);
@@ -170,7 +170,7 @@ export default {
         return notFound();
       }
       return new Response(request.method === "HEAD" ? null : object.body, {
-        headers: responseHeaders(object, "application/json; charset=utf-8"),
+        headers: responseHeaders(object, "application/json; charset=utf-8", "no-store"),
       });
     }
 
@@ -202,7 +202,7 @@ export default {
         return notFound();
       }
 
-      const headers = responseHeaders(object, "application/zip");
+      const headers = responseHeaders(object, "application/zip", "no-store");
       headers.set("content-disposition", `attachment; filename="${manifest.assetName ?? "Dashcam-Offloader.zip"}"`);
       return new Response(request.method === "HEAD" ? null : object.body, { headers });
     }
