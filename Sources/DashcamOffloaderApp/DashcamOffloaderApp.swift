@@ -4,6 +4,26 @@ import SwiftUI
 @main
 struct DashcamOffloaderApp: App {
     init() {
+        if let index = CommandLine.arguments.firstIndex(of: "--create-multicam") {
+            guard CommandLine.arguments.count > index + 2 else {
+                print("Usage: --create-multicam <footage-folder> <new-output.fcpxml>")
+                Foundation.exit(1)
+            }
+            let folder = URL(fileURLWithPath: CommandLine.arguments[index + 1], isDirectory: true)
+            let output = URL(fileURLWithPath: CommandLine.arguments[index + 2])
+            Task {
+                do {
+                    let inputs = try MulticamExporter.folderInputs(folder)
+                    let result = try await MulticamExporter.create(inputs: inputs, output: output)
+                    print("MULTICAM PASS: \(result.multicamCount) multicams, \(result.recordingCount) recording sets")
+                    Foundation.exit(0)
+                } catch {
+                    print("MULTICAM FAIL: \(error.localizedDescription)")
+                    Foundation.exit(1)
+                }
+            }
+            RunLoop.current.run()
+        }
         if CommandLine.arguments.contains("--verify-update-manifest") {
             let result = UpdateManifestDiagnostic.run(arguments: CommandLine.arguments)
             Foundation.exit(result ? 0 : 1)
@@ -17,7 +37,7 @@ struct DashcamOffloaderApp: App {
             Foundation.exit(result ? 0 : 1)
         }
         if CommandLine.arguments.contains("--verify") || CommandLine.arguments.contains("--smoke-test") {
-            guard VerificationTest.run() && UpdateChecksumVerification.run() else {
+            guard VerificationTest.run() && UpdateChecksumVerification.run() && MulticamVerification.run() else {
                 Foundation.exit(1)
             }
             Task {

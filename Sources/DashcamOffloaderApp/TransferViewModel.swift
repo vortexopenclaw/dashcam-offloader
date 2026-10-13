@@ -29,6 +29,10 @@ final class TransferViewModel: ObservableObject {
     @Published var openDestinationWhenComplete = false
     @Published var ejectSourceWhenComplete = false
     @Published var outputNamingOptions = OutputNamingOptions()
+    @Published var createMulticamWhenComplete = false
+    @Published var isCreatingMulticam = false
+    @Published var multicamMessage = ""
+    @Published var lastMulticamURL: URL?
     @Published var isSubmittingFeedback = false
     @Published var feedbackMessage = ""
     @Published var selectedQueueItemIDs: Set<CopyPlanItem.ID> = []
@@ -1174,7 +1178,7 @@ final class TransferViewModel: ObservableObject {
             statusMessage = limitIDs.isEmpty ? "Nothing selected to download" : "Selected files are no longer in the queue"
             return
         }
-        guard !copyProgress.isRunning else { return }
+        guard !copyProgress.isRunning && !isCreatingMulticam else { return }
 
         if retryingItemIDs != nil {
             statusMessage = "Retrying \(runPlan.items.count) failed files..."
@@ -1199,6 +1203,9 @@ final class TransferViewModel: ObservableObject {
             saveLastDownloadDestination(runPlan.destinationRoot)
             let baseMessage = copyProgress.summary.isEmpty ? "Download complete" : copyProgress.summary
             var finalMessage = baseMessage
+            if !Task.isCancelled && createMulticamWhenComplete {
+                await exportDownloadedMulticam()
+            }
             if !Task.isCancelled && openDestinationWhenComplete {
                 openOutputDirectory()
             }
@@ -1218,6 +1225,66 @@ final class TransferViewModel: ObservableObject {
         let failedIDs = Set(copyResults.filter { $0.status == .failed }.map(\.id))
         guard !failedIDs.isEmpty else { return }
         startCopy(retryingItemIDs: failedIDs)
+    }
+
+    var recognizesFourChannelFootage: Bool {
+        Set(clips.compactMap { MulticamExporter.identify($0.filename)?.channel }) == Set(MulticamExporter.channels)
+    }
+
+    func chooseMulticamFolder() {
+        guard !isCreatingMulticam && !copyProgress.isRunning else { return }
+        let panel = NSOpenPanel()
+        panel.title = "Choose downloaded four-channel VIOFO footage"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = lastOutputDirectory ?? destinationURL
+        guard panel.runModal() == .OK, let folder = panel.url else { return }
+        let save = NSSavePanel()
+        save.title = "Save Final Cut multicams"
+        save.nameFieldStringValue = "Dashcam Multicams-\(UUID().uuidString.prefix(8)).fcpxml"
+        save.directoryURL = folder
+        guard save.runModal() == .OK, let output = save.url else { return }
+        Task {
+            isCreatingMulticam = true
+            multicamMessage = "Reading video metadata..."
+            lastMulticamURL = nil
+            defer { isCreatingMulticam = false }
+            do {
+                let inputs = try await Task.detached { try MulticamExporter.folderInputs(folder) }.value
+                let result = try await MulticamExporter.create(inputs: inputs, output: output)
+                recordMulticamResult(result)
+            } catch {
+                multicamMessage = "Multicam not created: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    func exportDownloadedMulticam() async {
+        guard let folder = lastOutputDirectory else { return }
+        isCreatingMulticam = true
+        multicamMessage = "Creating Final Cut multicams..."
+        lastMulticamURL = nil
+        defer { isCreatingMulticam = false }
+        do {
+            // Never reference failed transfers, source cards, or unrelated destination media.
+            let urls = copyResults.filter { $0.status == .copied || $0.status == .skipped }.map(\.destinationURL)
+            let inputs = MulticamExporter.inputs(urls: urls)
+            let output = folder.appendingPathComponent("Dashcam Multicams-\(UUID().uuidString).fcpxml")
+            let result = try await MulticamExporter.create(inputs: inputs, output: output)
+            recordMulticamResult(result)
+        } catch {
+            multicamMessage = "Download kept; multicam not created: \(error.localizedDescription)"
+        }
+    }
+
+    private func recordMulticamResult(_ result: MulticamExporter.Result) {
+        lastMulticamURL = result.url
+        multicamMessage = "Created \(result.multicamCount) five-angle multicam(s), \(result.recordingCount) recording set(s)."
+    }
+
+    func openMulticam() {
+        if let lastMulticamURL { NSWorkspace.shared.open(lastMulticamURL) }
     }
 
     var failedResultCount: Int {
