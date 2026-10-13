@@ -695,4 +695,6 @@ Support an explicit existing-folder export and an opt-in post-download export. P
 
 Appended filename descriptions do not participate in pairing. Preserve them as local asset-clip start markers and camera-labeled aggregate markers on the outer multicam and grid at the recording timestamp. Preserve containing folder names in multicam names and a start marker. Descriptions remain user text, not inferred recording settings.
 
+Identical annotations on adjacent recordings in one camera stream form one section with a single start marker, both on source clips and the multicam/grid. Reset the section when the annotation changes or clears, or when the next timestamp is more than one frame from the previous video end. Keep every original clip and its full name; marker coalescing never alters media timing.
+
 Success checks: native-rate rational timing, filename recognition including appended download labels, five angle references, mixed 4K/1440p source formats, grid placement and audio, gap preservation, invalid/incomplete/duplicate guards, FCPXML import, packaged verification, and signed updater upgrade. Rollback: disable post-download creation or restore the previous signed release; source footage is unchanged.
