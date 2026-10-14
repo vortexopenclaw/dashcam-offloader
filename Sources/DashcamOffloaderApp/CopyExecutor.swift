@@ -2,8 +2,9 @@
 import Foundation
 import CryptoKit
 
-struct CopyExecutor {
+struct CopyExecutor: Sendable {
     private static let copyBufferSize = 8 * 1024 * 1024
+    private static let progressInterval: TimeInterval = 0.2
 
     private struct PendingCopy {
         let item: CopyPlanItem
@@ -15,6 +16,20 @@ struct CopyExecutor {
     var verificationHook: (@Sendable (URL) throws -> Void)? = nil
 
     func copy(plan: CopyPlan) async -> CopyRunResult {
+        // File I/O and SHA256 must not inherit the caller's UI actor. Forward Stop
+        // explicitly because an unstructured worker does not inherit cancellation.
+        let worker = Task.detached(priority: .userInitiated) {
+            await copyInBackground(plan: plan, delivery: CopyProgressDelivery(handler: progressHandler))
+        }
+        return await withTaskCancellationHandler {
+            if Task.isCancelled { worker.cancel() }
+            return await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    private func copyInBackground(plan: CopyPlan, delivery: CopyProgressDelivery) async -> CopyRunResult {
         let totalBytes = plan.selectedBytes
         let startDate = Date()
         var progress = CopyProgress(
@@ -24,7 +39,7 @@ struct CopyExecutor {
             startedAt: startDate,
             updatedAt: startDate
         )
-        await update(progress)
+        await update(progress, delivery: delivery)
 
         var results: [CopyPlanItem] = []
         var supportResults: [SupportFileItem] = []
@@ -33,17 +48,17 @@ struct CopyExecutor {
             guard !Task.isCancelled else { break }
             var result = item
             progress.currentFile = item.displayFilename
-            await update(progress)
+            await update(progress, delivery: delivery)
 
             do {
                 if item.sourceFileCount > 1 {
                     if let previous = pending {
                         pending = nil
-                        await finish(previous, progress: &progress, results: &results)
+                        await finish(previous, progress: &progress, results: &results, delivery: delivery)
                     }
                     let exported = try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
                         progress.copiedBytes += copiedChunk
-                        await update(progress)
+                        await update(progress, delivery: delivery)
                     }
                     progress.completedFiles += 1
                     if exported {
@@ -58,7 +73,7 @@ struct CopyExecutor {
                     // A repeated destination must not be treated as an existing verified file.
                     if let previous = pending, previous.item.destinationURL == item.destinationURL {
                         pending = nil
-                        await finish(previous, progress: &progress, results: &results)
+                        await finish(previous, progress: &progress, results: &results, delivery: delivery)
                     }
                     let verification = try await copyOne(
                         sourceURL: item.clip.sourceURL,
@@ -68,19 +83,19 @@ struct CopyExecutor {
                         beforeCompletion: {
                             if let previous = pending {
                                 pending = nil
-                                await finish(previous, progress: &progress, results: &results)
+                                await finish(previous, progress: &progress, results: &results, delivery: delivery)
                             }
                         }
-                    ) { copiedChunk in
+                    ) { copiedChunk, waitForUI in
                         progress.copiedBytes += copiedChunk
-                        await update(progress)
+                        await update(progress, delivery: delivery, waitForUI: waitForUI)
                     }
                     if let verification {
                         pending = PendingCopy(item: result, verification: verification)
                     } else {
                         if let previous = pending {
                             pending = nil
-                            await finish(previous, progress: &progress, results: &results)
+                            await finish(previous, progress: &progress, results: &results, delivery: delivery)
                         }
                         progress.completedFiles += 1
                         result.status = .skipped
@@ -91,36 +106,36 @@ struct CopyExecutor {
             } catch is CancellationError {
                 if let previous = pending {
                     pending = nil
-                    await finish(previous, progress: &progress, results: &results)
+                    await finish(previous, progress: &progress, results: &results, delivery: delivery)
                 }
                 result.status = .cancelled
                 result.message = "Stopped by user"
                 results.append(result)
-                await update(progress)
+                await update(progress, delivery: delivery)
                 break
             } catch {
                 if let previous = pending {
                     pending = nil
-                    await finish(previous, progress: &progress, results: &results)
+                    await finish(previous, progress: &progress, results: &results, delivery: delivery)
                 }
                 progress.completedFiles += 1
                 result.status = .failed
                 result.message = error.localizedDescription
             }
             if result.status != .planned { results.append(result) }
-            await update(progress)
+            await update(progress, delivery: delivery)
         }
 
         if let previous = pending {
             pending = nil
-            await finish(previous, progress: &progress, results: &results)
+            await finish(previous, progress: &progress, results: &results, delivery: delivery)
         }
 
         for item in plan.supportItems {
             guard !Task.isCancelled else { break }
             var result = item
             progress.currentFile = item.relativePath
-            await update(progress)
+            await update(progress, delivery: delivery)
 
             do {
                 let verification = try await copyOne(
@@ -129,9 +144,9 @@ struct CopyExecutor {
                     expectedSize: item.size,
                     modificationDate: nil,
                     beforeCompletion: {}
-                ) { copiedChunk in
+                ) { copiedChunk, waitForUI in
                     progress.copiedBytes += copiedChunk
-                    await update(progress)
+                    await update(progress, delivery: delivery, waitForUI: waitForUI)
                 }
                 if let verification {
                     try await withTaskCancellationHandler {
@@ -153,7 +168,7 @@ struct CopyExecutor {
                 result.status = .cancelled
                 result.message = "Stopped by user"
                 supportResults.append(result)
-                await update(progress)
+                await update(progress, delivery: delivery)
                 break
             } catch {
                 progress.completedFiles += 1
@@ -161,7 +176,7 @@ struct CopyExecutor {
                 result.message = error.localizedDescription
             }
             supportResults.append(result)
-            await update(progress)
+            await update(progress, delivery: delivery)
         }
 
         let stopped = Task.isCancelled ||
@@ -196,18 +211,18 @@ struct CopyExecutor {
             progress.copiedBytes = max(progress.copiedBytes, totalBytes)
         }
         progress.updatedAt = Date()
-        await update(progress)
+        await update(progress, delivery: delivery)
 
         return CopyRunResult(mediaItems: results, supportItems: supportResults)
     }
 
-    private func update(_ progress: CopyProgress) async {
+    private func update(_ progress: CopyProgress, delivery: CopyProgressDelivery, waitForUI: Bool = true) async {
         var updatedProgress = progress
         updatedProgress.updatedAt = Date()
-        await progressHandler(updatedProgress)
+        await delivery.publish(updatedProgress, waitForUI: waitForUI)
     }
 
-    private func finish(_ pending: PendingCopy, progress: inout CopyProgress, results: inout [CopyPlanItem]) async {
+    private func finish(_ pending: PendingCopy, progress: inout CopyProgress, results: inout [CopyPlanItem], delivery: CopyProgressDelivery) async {
         var result = pending.item
         if Task.isCancelled { pending.verification.cancel() }
         do {
@@ -228,7 +243,7 @@ struct CopyExecutor {
         }
         if result.status != .cancelled { progress.completedFiles += 1 }
         results.append(result)
-        await update(progress)
+        await update(progress, delivery: delivery)
     }
 
     private func copyOne(
@@ -237,7 +252,7 @@ struct CopyExecutor {
         expectedSize: Int64,
         modificationDate: Date?,
         beforeCompletion: () async -> Void,
-        progress: (Int64) async -> Void
+        progress: (Int64, Bool) async -> Void
     ) async throws -> Task<Void, Error>? {
         let fileManager = FileManager.default
         let destination = destinationURL
@@ -268,6 +283,8 @@ struct CopyExecutor {
             }
         }
         var sourceHasher = SHA256()
+        var unreportedBytes: Int64 = 0
+        var lastProgressTime: TimeInterval?
 
         while true {
             if Task.isCancelled {
@@ -277,8 +294,18 @@ struct CopyExecutor {
             guard !data.isEmpty else { break }
             sourceHasher.update(data: data)
             output.write(data)
-            await progress(Int64(data.count))
+            unreportedBytes += Int64(data.count)
+            let now = ProcessInfo.processInfo.systemUptime
+            // Report the first chunk for prompt feedback/Stop, then at most 5 Hz.
+            // UI rendering must not become a per-buffer throughput dependency.
+            if lastProgressTime == nil || now - lastProgressTime! >= Self.progressInterval {
+                await progress(unreportedBytes, lastProgressTime == nil)
+                unreportedBytes = 0
+                lastProgressTime = ProcessInfo.processInfo.systemUptime
+            }
         }
+        // Flush before joining verification so byte accounting and overlap remain exact.
+        if unreportedBytes > 0 { await progress(unreportedBytes, true) }
         await beforeCompletion()
         if Task.isCancelled { throw CancellationError() }
         try output.close()
@@ -435,6 +462,34 @@ struct CopyExecutor {
         default:
             throw CopyError.videoConcatenationFailed(exportSession.error?.localizedDescription ?? "Export failed")
         }
+    }
+}
+
+// One in-flight UI callback and one latest snapshot: a slow view cannot build an
+// unbounded task queue or stall byte I/O. File boundaries/final state drain it.
+private actor CopyProgressDelivery {
+    let handler: @MainActor (CopyProgress) -> Void
+    private var latest: CopyProgress?
+    private var deliveryTask: Task<Void, Never>?
+
+    init(handler: @escaping @MainActor (CopyProgress) -> Void) {
+        self.handler = handler
+    }
+
+    func publish(_ progress: CopyProgress, waitForUI: Bool) async {
+        latest = progress
+        if deliveryTask == nil {
+            deliveryTask = Task { await drain() }
+        }
+        if waitForUI { await deliveryTask?.value }
+    }
+
+    private func drain() async {
+        while let progress = latest {
+            latest = nil
+            await handler(progress)
+        }
+        deliveryTask = nil
     }
 }
 

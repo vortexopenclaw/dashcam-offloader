@@ -55,7 +55,7 @@ enum CopyExecutorVerification {
             return false
         }
 
-        return true
+        return await CopyThroughputVerification.run()
     }
 
     private static func verifiesBasicCopy(sourceRoot: URL, destinationRoot: URL) async throws -> Bool {
@@ -257,9 +257,9 @@ enum CopyExecutorVerification {
         let copiedByteUpdates = await MainActor.run { progressBox.copiedByteUpdates }
 
         guard result.mediaItems.first?.status == .copied,
-              copiedByteUpdates == 3,
+              (2...3).contains(copiedByteUpdates),
               try fileSize(at: destination) == Int64(byteCount) else {
-            print("VERIFY FAIL: large copies did not use 8 MiB progress batches: updates=\(copiedByteUpdates)")
+            print("VERIFY FAIL: large copies did not flush bounded progress batches: updates=\(copiedByteUpdates)")
             return false
         }
         return true
