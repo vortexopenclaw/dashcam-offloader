@@ -148,37 +148,10 @@ enum MulticamExporter {
 
     static func create(inputs: [Input], output: URL) async throws -> Result {
         try validate(inputs)
-        var videos: [Video] = []
-        for input in inputs.sorted(by: { $0.url.path < $1.url.path }) {
-            try Task.checkCancellation()
-            let asset = AVURLAsset(url: input.url)
-            guard let track = try await asset.loadTracks(withMediaType: .video).first else {
-                throw Failure.message("No video track in \(input.url.lastPathComponent).")
-            }
-            // Audio encoder padding must not extend a video past the next filename timestamp.
-            let duration = try await track.load(.timeRange).duration.seconds
-            let size = try await track.load(.naturalSize)
-            let transform = try await track.load(.preferredTransform)
-            let frameDuration = try await track.load(.minFrameDuration)
-            let oriented = size.applying(transform)
-            guard duration.isFinite, duration > 0, frameDuration.isNumeric, frameDuration.seconds > 0,
-                  abs(oriented.width) > 0, abs(oriented.height) > 0,
-                  transform == .identity else {
-                throw Failure.message("Unsupported duration, frame rate, or rotation in \(input.url.lastPathComponent).")
-            }
-            var audioChannels = 0
-            var audioRate = 0
-            if let audio = try await asset.loadTracks(withMediaType: .audio).first,
-               let description = try await audio.load(.formatDescriptions).first,
-               let format = CMAudioFormatDescriptionGetStreamBasicDescription(description) {
-                audioChannels = Int(format.pointee.mChannelsPerFrame)
-                audioRate = Int(format.pointee.mSampleRate)
-            }
-            videos.append(Video(input: input, duration: duration, width: Int(abs(oriented.width)),
-                height: Int(abs(oriented.height)), frameDuration: frameDuration,
-                audioChannels: audioChannels, audioRate: audioRate))
-        }
+        let videos = try await loadVideos(inputs)
+        try Task.checkCancellation()
         let document = try render(videos)
+        try Task.checkCancellation()
         guard !FileManager.default.fileExists(atPath: output.path) else {
             throw Failure.message("That XML file already exists. Choose a new filename.")
         }
@@ -186,8 +159,64 @@ enum MulticamExporter {
         let staging = output.deletingLastPathComponent().appendingPathComponent(".multicam-\(UUID().uuidString).fcpxml")
         defer { try? FileManager.default.removeItem(at: staging) }
         try Data(document.utf8).write(to: staging, options: .withoutOverwriting)
+        try Task.checkCancellation()
         try FileManager.default.moveItem(at: staging, to: output)
         return Result(url: output, multicamCount: sessions(videos).count, recordingCount: Set(inputs.map { "\(key($0))|\($0.identity.stamp)" }).count)
+    }
+
+    // Probe headers only, never decode or re-encode. Keep outstanding file reads bounded
+    // for external disks, while avoiding one serial AVFoundation round trip per clip.
+    static func loadVideos(_ inputs: [Input]) async throws -> [Video] {
+        let sorted = inputs.sorted { $0.url.path < $1.url.path }
+        return try await withThrowingTaskGroup(of: (Int, Video).self) { group in
+            var next = 0
+            var videos = [Video?](repeating: nil, count: sorted.count)
+            for index in 0..<min(4, sorted.count) {
+                group.addTask { (index, try await loadVideo(sorted[index])) }
+                next += 1
+            }
+            while let (index, video) = try await group.next() {
+                try Task.checkCancellation()
+                videos[index] = video
+                if next < sorted.count {
+                    let index = next
+                    group.addTask { (index, try await loadVideo(sorted[index])) }
+                    next += 1
+                }
+            }
+            return videos.map { $0! }
+        }
+    }
+
+    static func loadVideo(_ input: Input) async throws -> Video {
+        try Task.checkCancellation()
+        let asset = AVURLAsset(url: input.url)
+        guard let track = try await asset.loadTracks(withMediaType: .video).first else {
+            throw Failure.message("No video track in \(input.url.lastPathComponent).")
+        }
+        // Audio encoder padding must not extend a video past the next filename timestamp.
+        let duration = try await track.load(.timeRange).duration.seconds
+        let size = try await track.load(.naturalSize)
+        let transform = try await track.load(.preferredTransform)
+        let frameDuration = try await track.load(.minFrameDuration)
+        let oriented = size.applying(transform)
+        guard duration.isFinite, duration > 0, frameDuration.isNumeric, frameDuration.seconds > 0,
+              abs(oriented.width) > 0, abs(oriented.height) > 0,
+              transform == .identity else {
+            throw Failure.message("Unsupported duration, frame rate, or rotation in \(input.url.lastPathComponent).")
+        }
+        var audioChannels = 0
+        var audioRate = 0
+        if let audio = try await asset.loadTracks(withMediaType: .audio).first,
+           let description = try await audio.load(.formatDescriptions).first,
+           let format = CMAudioFormatDescriptionGetStreamBasicDescription(description) {
+            audioChannels = Int(format.pointee.mChannelsPerFrame)
+            audioRate = Int(format.pointee.mSampleRate)
+        }
+        try Task.checkCancellation()
+        return Video(input: input, duration: duration, width: Int(abs(oriented.width)),
+            height: Int(abs(oriented.height)), frameDuration: frameDuration,
+            audioChannels: audioChannels, audioRate: audioRate)
     }
 
     static func escape(_ value: String) -> String {
