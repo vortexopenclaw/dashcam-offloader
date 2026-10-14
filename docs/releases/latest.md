@@ -1,7 +1,7 @@
-# Dashcam Offloader 0.1.31
+# Dashcam Offloader 0.1.32
 
-- Create a separate five-angle multicam for each drive: a different recording day or more than five minutes without footage starts a new timeline. Short recording gaps are preserved.
-- Keep normal and protected/RO recordings in the same drive across recognized recording-category folders. Camera timestamps and channel identity, not sequence numbers or file permissions, determine placement.
-- Recognize explicit Emergency/Event/Locked/RO filename prefixes and E/L camera suffix variants while preserving appended notes. These variants are supported defensively, not a claim that every camera uses them.
-- Allow single-channel emergency segments alongside a complete four-camera drive. Overlapping clips switch at the next same-camera timestamp without stretching footage, and normal footage resumes after a short overlapping emergency clip; missing cameras appear as gaps.
-- Refuse ambiguous duplicate same-camera timestamps and drives missing an entire camera instead of guessing. Originals remain unchanged.
+- Keep byte copying independent of periodic UI progress updates, so a busy interface cannot pause every copy buffer. Progress is coalesced and refreshed at a bounded rate.
+- Preserve SHA256 destination verification, existing-file conflict checks, recording timestamps, and cancellation cleanup.
+- Read multicam metadata for up to four clips concurrently. All five angles, including the 2×2 grid, reference the original videos without re-encoding.
+- Retain per-drive separation, protected-footage alignment, missing-view gaps, and duplicate guards. Source cards remain unchanged.
+- Read-only, uncached four-channel card tests measured about 85 MB/s raw reads and 72–73 MB/s copying with checksum verification. A deliberately delayed UI callback test improved from about 25 to 54 MB/s; actual throughput depends on the card, reader, destination, and host. These tests do not establish the cause of a particular 8 MB/s transfer.
