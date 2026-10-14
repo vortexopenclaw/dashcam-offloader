@@ -14,6 +14,9 @@ struct CopyExecutor: Sendable {
     var progressHandler: @MainActor (CopyProgress) -> Void
     // Test seam for deterministic verification/copy overlap and injected corruption.
     var verificationHook: (@Sendable (URL) throws -> Void)? = nil
+    // Test seams: monotonic cadence and an I/O gate receiving bytes already written.
+    var progressClock: @Sendable () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+    var beforeChunkHook: (@Sendable (Int64) throws -> Void)? = nil
 
     func copy(plan: CopyPlan) async -> CopyRunResult {
         // File I/O and SHA256 must not inherit the caller's UI actor. Forward Stop
@@ -284,24 +287,27 @@ struct CopyExecutor: Sendable {
         }
         var sourceHasher = SHA256()
         var unreportedBytes: Int64 = 0
+        var writtenBytes: Int64 = 0
         var lastProgressTime: TimeInterval?
 
         while true {
             if Task.isCancelled {
                 throw CancellationError()
             }
+            try beforeChunkHook?(writtenBytes)
             let data = input.readData(ofLength: Self.copyBufferSize)
             guard !data.isEmpty else { break }
             sourceHasher.update(data: data)
             output.write(data)
             unreportedBytes += Int64(data.count)
-            let now = ProcessInfo.processInfo.systemUptime
+            writtenBytes += Int64(data.count)
+            let now = progressClock()
             // Report the first chunk for prompt feedback/Stop, then at most 5 Hz.
             // UI rendering must not become a per-buffer throughput dependency.
             if lastProgressTime == nil || now - lastProgressTime! >= Self.progressInterval {
                 await progress(unreportedBytes, lastProgressTime == nil)
                 unreportedBytes = 0
-                lastProgressTime = ProcessInfo.processInfo.systemUptime
+                lastProgressTime = progressClock()
             }
         }
         // Flush before joining verification so byte accounting and overlap remain exact.

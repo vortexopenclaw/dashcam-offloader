@@ -11,7 +11,8 @@ enum CopyThroughputVerification {
             try fm.createDirectory(at: root, withIntermediateDirectories: true)
             let source = root.appendingPathComponent("source.MP4")
             let destination = root.appendingPathComponent("destination.MP4")
-            let size: Int64 = 256 * 1024 * 1024
+            let bufferBytes: Int64 = 8 * 1024 * 1024
+            let size = 6 * bufferBytes
             fm.createFile(atPath: source.path, contents: nil)
             let handle = try FileHandle(forWritingTo: source)
             try handle.truncate(atOffset: UInt64(size))
@@ -22,17 +23,43 @@ enum CopyThroughputVerification {
             let item = CopyPlanItem(clip: clip, destinationURL: destination, status: .planned)
             let plan = CopyPlan(sourceRoot: root, destinationRoot: root, profile: .genericNewDashcam,
                                 clips: [clip], items: [item])
-            let probe = ThroughputProgressProbe()
-            let result = await CopyExecutor { probe.observe($0) }.copy(plan: plan)
-            guard result.mediaItems.map(\.status) == [.copied],
-                  probe.latest?.copiedBytes == size, probe.latest?.completedFiles == 1,
-                  probe.latest?.isRunning == false, probe.monotonic,
-                  probe.byteUpdates >= 2, probe.byteUpdates < 32,
-                  !probe.tooFrequent else {
-                print("VERIFY FAIL: throttled progress lost bytes or remained buffer-bound: updates=\(probe.byteUpdates)")
+
+            // No elapsed logical time: only the prompt first chunk and final flush,
+            // regardless of how long the host takes to write or render each buffer.
+            let frozenProbe = ThroughputProgressProbe()
+            let frozenResult = await CopyExecutor(progressHandler: { frozenProbe.observe($0) },
+                                                  progressClock: { 0 }).copy(plan: plan)
+            guard frozenResult.mediaItems.map(\.status) == [.copied],
+                  frozenProbe.finished(size: size), frozenProbe.byteSnapshots == [bufferBytes, size] else {
+                print("VERIFY FAIL: frozen-clock progress did not batch buffers: \(frozenProbe.byteSnapshots)")
                 return false
             }
-            print("VERIFY PASS: copy progress throttled with exact final bytes (\(probe.byteUpdates) updates / 32 buffers)")
+            print("VERIFY PASS: frozen clock batches buffers with exact first/final bytes")
+
+            try fm.removeItem(at: destination)
+            let clock = CopyVerificationClock()
+            let periodicObserved = DispatchSemaphore(value: 0)
+            let probe = ThroughputProgressProbe()
+            let result = await CopyExecutor(progressHandler: {
+                probe.observe($0)
+                if $0.copiedBytes == 3 * bufferBytes || $0.copiedBytes == 5 * bufferBytes {
+                    periodicObserved.signal()
+                }
+            }, progressClock: { clock.now() }, beforeChunkHook: { bytes in
+                // Let each periodic snapshot drain before advancing logical time;
+                // callback scheduling/coalescing must not change this cadence check.
+                if bytes == 3 * bufferBytes || bytes == 5 * bufferBytes {
+                    try waitForCopyGate(periodicObserved)
+                }
+                let times: [TimeInterval] = [0, 0.199, 0.2, 0.399, 0.4, 0.599]
+                clock.set(times[min(Int(bytes / bufferBytes), times.count - 1)])
+            }).copy(plan: plan)
+            guard result.mediaItems.map(\.status) == [.copied], probe.finished(size: size),
+                  probe.byteSnapshots == [bufferBytes, 3 * bufferBytes, 5 * bufferBytes, size] else {
+                print("VERIFY FAIL: controlled-clock cadence or final flush lost bytes: \(probe.byteSnapshots)")
+                return false
+            }
+            print("VERIFY PASS: controlled clock emits at 0/0.2/0.4 seconds and flushes final bytes")
 
             // A duplicate path must wait for pending verification and then hash-check,
             // not overwrite or accept a still-unverified file.
@@ -47,27 +74,34 @@ enum CopyThroughputVerification {
             }
             print("VERIFY PASS: repeated destination preserves verification-before-skip")
 
-            // Block a periodic MainActor callback until the background writer has
-            // finished. A per-buffer awaited UI callback deadlocks this bounded probe.
+            // Force a periodic callback at chunk two. Hold it on MainActor until
+            // the next real write reaches its gate, not until the whole file finishes.
+            // Awaiting periodic UI delivery instead deadlocks this bounded handshake.
             try fm.removeItem(at: destination)
             let slowDestination = root.appendingPathComponent("slow-destination.MP4")
-            let slowSize: Int64 = 1024 * 1024 * 1024
-            let growingHandle = try FileHandle(forWritingTo: source)
-            try growingHandle.truncate(atOffset: UInt64(slowSize))
-            try growingHandle.close()
-            var slowClip = clip
-            slowClip.size = slowSize
             let slowPlan = CopyPlan(sourceRoot: root, destinationRoot: root, profile: .genericNewDashcam,
-                                    clips: [slowClip], items: [CopyPlanItem(clip: slowClip, destinationURL: slowDestination, status: .planned)])
-            let slowProbe = SlowCopyProgressProbe(destination: slowDestination)
-            let slowResult = await CopyExecutor { slowProbe.observe($0) }.copy(plan: slowPlan)
-            guard slowProbe.blockedPeriodicUpdate, slowProbe.writerCompletedWhileUIBlocked,
+                                    clips: [clip], items: [CopyPlanItem(clip: clip, destinationURL: slowDestination, status: .planned)])
+            let slowClock = CopyVerificationClock()
+            let uiEntered = DispatchSemaphore(value: 0)
+            let nextChunkWritten = DispatchSemaphore(value: 0)
+            let slowProbe = SlowCopyProgressProbe(periodicBytes: 2 * bufferBytes,
+                                                 uiEntered: uiEntered, nextChunkWritten: nextChunkWritten)
+            let slowResult = await CopyExecutor(progressHandler: { slowProbe.observe($0) },
+                                               progressClock: { slowClock.now() }, beforeChunkHook: { bytes in
+                // Do not even read chunk three until MainActor is blocked. At the
+                // following gate, chunk three has genuinely been written during it.
+                if bytes == 2 * bufferBytes { try waitForCopyGate(uiEntered) }
+                if bytes == 3 * bufferBytes { nextChunkWritten.signal() }
+                slowClock.set(bytes >= bufferBytes ? 0.25 : 0)
+            }).copy(plan: slowPlan)
+            guard slowProbe.blockedPeriodicUpdate, slowProbe.nextChunkWrittenWhileUIBlocked,
                   slowResult.mediaItems.map(\.status) == [.copied],
-                  slowProbe.latest?.copiedBytes == slowSize, slowProbe.latest?.isRunning == false else {
-                print("VERIFY FAIL: slow UI callback stalled the background writer: blocked=\(slowProbe.blockedPeriodicUpdate) finished=\(slowProbe.writerCompletedWhileUIBlocked) last=\(slowProbe.lastObservedSize) progress=\(slowProbe.latest?.copiedBytes ?? -1) statuses=\(slowResult.mediaItems.map(\.status))")
+                  slowProbe.latest?.copiedBytes == size, slowProbe.latest?.completedFiles == 1,
+                  slowProbe.latest?.isRunning == false else {
+                print("VERIFY FAIL: slow UI callback stalled the next buffer write: blocked=\(slowProbe.blockedPeriodicUpdate) advanced=\(slowProbe.nextChunkWrittenWhileUIBlocked) statuses=\(slowResult.mediaItems.map(\.status))")
                 return false
             }
-            print("VERIFY PASS: byte I/O continues while a periodic MainActor callback is blocked")
+            print("VERIFY PASS: next buffer writes while a forced periodic MainActor callback is blocked")
 
             let cancelled = Task { await CopyExecutor { _ in }.copy(plan: plan) }
             cancelled.cancel()
@@ -85,54 +119,74 @@ enum CopyThroughputVerification {
     }
 }
 
+// Timeouts bound broken synchronization only; they are not throughput thresholds.
+private func waitForCopyGate(_ gate: DispatchSemaphore) throws {
+    guard gate.wait(timeout: .now() + 10) == .success else {
+        throw CopyGateError.timedOut
+    }
+}
+
+private enum CopyGateError: LocalizedError {
+    case timedOut
+    var errorDescription: String? { "Copy verification synchronization gate timed out" }
+}
+
+private final class CopyVerificationClock: @unchecked Sendable {
+    private let lock = NSLock()
+    private var time: TimeInterval = 0
+
+    func now() -> TimeInterval {
+        lock.lock()
+        defer { lock.unlock() }
+        return time
+    }
+
+    func set(_ time: TimeInterval) {
+        lock.lock()
+        defer { lock.unlock() }
+        self.time = time
+    }
+}
+
 @MainActor
 private final class SlowCopyProgressProbe {
-    let destination: URL
+    let periodicBytes: Int64
+    let uiEntered: DispatchSemaphore
+    let nextChunkWritten: DispatchSemaphore
     var latest: CopyProgress?
     var blockedPeriodicUpdate = false
-    var writerCompletedWhileUIBlocked = false
-    var lastObservedSize: Int64 = -1
+    var nextChunkWrittenWhileUIBlocked = false
 
-    init(destination: URL) { self.destination = destination }
+    init(periodicBytes: Int64, uiEntered: DispatchSemaphore, nextChunkWritten: DispatchSemaphore) {
+        self.periodicBytes = periodicBytes
+        self.uiEntered = uiEntered
+        self.nextChunkWritten = nextChunkWritten
+    }
 
     func observe(_ progress: CopyProgress) {
-        let previousBytes = latest?.copiedBytes ?? 0
         latest = progress
-        guard !blockedPeriodicUpdate, previousBytes > 0,
-              progress.copiedBytes > previousBytes, progress.copiedBytes < progress.totalBytes else { return }
+        guard !blockedPeriodicUpdate, progress.copiedBytes == periodicBytes else { return }
         blockedPeriodicUpdate = true
-        let deadline = ProcessInfo.processInfo.systemUptime + 5
-        while ProcessInfo.processInfo.systemUptime < deadline {
-            if let size = try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber {
-                lastObservedSize = size.int64Value
-                if lastObservedSize == progress.totalBytes {
-                    writerCompletedWhileUIBlocked = true
-                    return
-                }
-            }
-            Thread.sleep(forTimeInterval: 0.002)
-        }
+        uiEntered.signal()
+        nextChunkWrittenWhileUIBlocked = (try? waitForCopyGate(nextChunkWritten)) != nil
     }
 }
 
 @MainActor
 private final class ThroughputProgressProbe {
     var latest: CopyProgress?
-    var byteUpdates = 0
+    var byteSnapshots: [Int64] = []
     var monotonic = true
-    var tooFrequent = false
-    private var lastByteTime: TimeInterval?
 
     func observe(_ progress: CopyProgress) {
         if let latest, progress.copiedBytes < latest.copiedBytes { monotonic = false }
         if progress.copiedBytes > (latest?.copiedBytes ?? 0) {
-            let now = ProcessInfo.processInfo.systemUptime
-            // The last partial batch is intentionally flushed without waiting.
-            if let lastByteTime, progress.copiedBytes < progress.totalBytes,
-               now - lastByteTime < 0.19 { tooFrequent = true }
-            lastByteTime = now
-            byteUpdates += 1
+            byteSnapshots.append(progress.copiedBytes)
         }
         latest = progress
+    }
+
+    func finished(size: Int64) -> Bool {
+        monotonic && latest?.copiedBytes == size && latest?.completedFiles == 1 && latest?.isRunning == false
     }
 }
