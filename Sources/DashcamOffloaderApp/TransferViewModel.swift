@@ -1246,11 +1246,7 @@ final class TransferViewModel: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.directoryURL = lastOutputDirectory ?? destinationURL
         guard panel.runModal() == .OK, let folder = panel.url else { return }
-        let save = NSSavePanel()
-        save.title = "Save Final Cut multicams"
-        save.nameFieldStringValue = "Dashcam Multicams-\(UUID().uuidString.prefix(8)).fcpxml"
-        save.directoryURL = folder
-        guard save.runModal() == .OK, let output = save.url else { return }
+        let output = folder.appendingPathComponent("Dashcam Multicams-\(UUID().uuidString).fcpxml")
         Task {
             isCreatingMulticam = true
             multicamMessage = "Reading video metadata..."
