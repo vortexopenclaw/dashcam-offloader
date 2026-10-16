@@ -28,6 +28,28 @@ struct CardHealthGroupEvidence: Hashable, Sendable {
 }
 
 extension CardHealthIssue {
+    var alertSummary: String {
+        if let group = unmatchedGroups.first {
+            let mode = group.mode.replacingOccurrences(of: "_", with: " ").capitalized
+            return "\(group.unmatchedChannel): \(affectedFileCount) unmatched \(mode) timestamp group\(affectedFileCount == 1 ? "" : "s")."
+        }
+        return "\(title): \(affectedFileCount) file\(affectedFileCount == 1 ? "" : "s")."
+    }
+
+    /// Keep sibling files together when a timestamp/path matches, but hide unrelated groups.
+    func evidence(matching query: String) -> CardHealthIssue? {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if query.isEmpty || title.localizedCaseInsensitiveContains(query) || kind.rawValue.localizedCaseInsensitiveContains(query) { return self }
+        var result = self
+        result.files = files.filter { "\($0.channel): \($0.relativePath)".localizedCaseInsensitiveContains(query) }
+        result.unmatchedGroups = unmatchedGroups.filter { group in
+            group.heading.localizedCaseInsensitiveContains(query) || group.presentFiles.contains {
+                "\($0.channel): \($0.relativePath)".localizedCaseInsensitiveContains(query)
+            }
+        }
+        return result.files.isEmpty && result.unmatchedGroups.isEmpty ? nil : result
+    }
+
     var reportText: String {
         var lines = [title, detail]
         lines += files.map { "  \($0.channel): \($0.relativePath)" }
@@ -82,7 +104,7 @@ struct CardHealthDetailsView: View {
     @State private var actionMessage = ""
 
     private var matchingIssues: [CardHealthIssue] {
-        report.issues.filter { query.isEmpty || $0.reportText.localizedCaseInsensitiveContains(query) }
+        report.issues.compactMap { $0.evidence(matching: query) }
     }
 
     var body: some View {
@@ -95,7 +117,7 @@ struct CardHealthDetailsView: View {
             Text("\(report.issues.count) issues • Metadata checks only, not a full video decode.")
             Text("Potential unmatched channels are grouped by exact filename second and mode. Start-time offsets or mode/protection classification can split related recordings. This does not confirm recording loss or corruption.")
                 .font(.callout).foregroundStyle(.secondary)
-            TextField("Search all issues, channels, timestamps and paths", text: $query)
+            TextField("Search all issues, channels, timestamps, and paths", text: $query)
                 .textFieldStyle(.roundedBorder)
             Text("Showing \(matchingIssues.count) of \(report.issues.count) issues. Group times are UTC.")
                 .font(.caption).foregroundStyle(.secondary)

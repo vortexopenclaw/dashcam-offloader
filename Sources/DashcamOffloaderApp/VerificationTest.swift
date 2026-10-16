@@ -707,6 +707,22 @@ enum VerificationTest {
                 print("VERIFY FAIL: complete empty/unreadable evidence truncated beyond three filenames")
                 return false
             }
+            var searchIssue = manyIssues[0]
+            var anotherGroup = searchIssue.unmatchedGroups[0]
+            anotherGroup.timestamp = anotherGroup.timestamp.addingTimeInterval(60)
+            anotherGroup.presentFiles[0].relativePath = "health/other-group.mp4"
+            searchIssue.unmatchedGroups.append(anotherGroup)
+            guard searchIssue.evidence(matching: "3-front.mp4")?.unmatchedGroups.count == 1,
+                  searchIssue.evidence(matching: "other-group.mp4")?.unmatchedGroups.count == 1,
+                  searchIssue.evidence(matching: searchIssue.title)?.unmatchedGroups.count == 2,
+                  searchIssue.evidence(matching: "nonexistent-fixture") == nil,
+                  fullReport.issues[0].evidence(matching: fullReport.issues[0].files[0].filename)?.files.count == 1,
+                  searchIssue.unmatchedGroups.count == 2,
+                  channelIssues.first?.alertSummary == "Rear: 1 unmatched Continuous timestamp group.",
+                  !fullReport.issues[0].alertSummary.contains(fileFixtures[0].filename) else {
+                print("VERIFY FAIL: card-health search did not narrow evidence or mutated the full report")
+                return false
+            }
             fullReport.issues += manyIssues
             let reportURL = destination.appendingPathComponent("health-report.txt")
             try fullReport.save(to: reportURL)

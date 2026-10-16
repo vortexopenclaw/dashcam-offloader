@@ -975,7 +975,7 @@ final class TransferViewModel: ObservableObject {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "Card Health Warning"
-        let issueSummary = report.issues.prefix(5).map { "• \($0.title): \($0.detail)" }.joined(separator: "\n")
+        let issueSummary = report.issues.prefix(5).map { "• \($0.alertSummary)" }.joined(separator: "\n")
         let remaining = report.issues.count > 5 ? "\n• \(report.issues.count - 5) more issue(s); choose View All Issues for the complete evidence" : ""
         alert.informativeText = "Dashcam Offloader found possible problems on \(sourceName).\n\n\(issueSummary)\(remaining)\n\nThe source card was only read; no files were changed."
         alert.addButton(withTitle: "View All Issues…")
