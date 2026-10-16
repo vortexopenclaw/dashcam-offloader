@@ -13,6 +13,8 @@ struct CardHealthIssue: Identifiable, Hashable, Sendable {
     var title: String
     var detail: String
     var affectedFileCount: Int
+    var files: [CardHealthFileEvidence] = []
+    var unmatchedGroups: [CardHealthGroupEvidence] = []
 }
 
 struct CardHealthReport: Hashable, Sendable {
@@ -20,6 +22,7 @@ struct CardHealthReport: Hashable, Sendable {
     var checkedVideoCount: Int = 0
     var skippedContainerCount: Int = 0
     var issues: [CardHealthIssue] = []
+    var sourceRoot: URL? = nil
 
     var hasWarnings: Bool { !issues.isEmpty }
 }
@@ -27,16 +30,16 @@ struct CardHealthReport: Hashable, Sendable {
 struct CardHealthAnalyzer {
     private let metadataProbeExtensions: Set<String> = ["mp4", "mov"]
 
-    func analyze(clips: [ClipItem]) -> CardHealthReport {
+    func analyze(clips: [ClipItem], sourceRoot: URL? = nil) -> CardHealthReport {
         let videos = clips.filter { $0.isVideo && $0.excludedReason == nil }
-        var emptyFilenames: [String] = []
-        var unreadableFilenames: [String] = []
+        var emptyFiles: [CardHealthFileEvidence] = []
+        var unreadableFiles: [CardHealthFileEvidence] = []
         var checkedCount = 0
         var skippedCount = 0
 
         for clip in videos {
             if clip.size <= 0 {
-                emptyFilenames.append(clip.filename)
+                emptyFiles.append(CardHealthFileEvidence(clip))
                 checkedCount += 1
                 continue
             }
@@ -50,10 +53,12 @@ struct CardHealthAnalyzer {
             let duration = asset.duration.seconds
             let hasVideoTrack = !asset.tracks(withMediaType: .video).isEmpty
             if !duration.isFinite || duration <= 0 || !hasVideoTrack {
-                unreadableFilenames.append(clip.filename)
+                unreadableFiles.append(CardHealthFileEvidence(clip))
             }
         }
 
+        let emptyFilenames = emptyFiles.map(\.filename)
+        let unreadableFilenames = unreadableFiles.map(\.filename)
         var issues: [CardHealthIssue] = []
         if !emptyFilenames.isEmpty {
             let emptyCount = emptyFilenames.count
@@ -64,7 +69,8 @@ struct CardHealthAnalyzer {
                 detail: emptyCount == 1
                     ? "1 video file is zero bytes and was not written successfully: \(emptyFilenames[0])."
                     : "\(emptyCount) video files are zero bytes and may not have been written successfully: \(filenameSummary(emptyFilenames)).",
-                affectedFileCount: emptyCount
+                affectedFileCount: emptyCount,
+                files: emptyFiles
             ))
         }
         if !unreadableFilenames.isEmpty {
@@ -72,9 +78,10 @@ struct CardHealthAnalyzer {
             issues.append(CardHealthIssue(
                 id: "unreadable-video",
                 kind: .unreadableVideo,
-                title: "Unreadable video files",
-                detail: "\(unreadableCount) MP4 or MOV file\(unreadableCount == 1 ? " may be" : "s may be") truncated or corrupt because \(unreadableCount == 1 ? "it does" : "they do") not expose a valid video track and duration: \(filenameSummary(unreadableFilenames)).",
-                affectedFileCount: unreadableCount
+                title: "Video metadata could not be read",
+                detail: "\(unreadableCount) MP4 or MOV file\(unreadableCount == 1 ? " does" : "s do") not expose a valid video track and duration to this metadata check (not a full decode or confirmed corruption): \(filenameSummary(unreadableFilenames)).",
+                affectedFileCount: unreadableCount,
+                files: unreadableFiles
             ))
         }
         issues.append(contentsOf: missingChannelIssues(in: videos))
@@ -83,7 +90,8 @@ struct CardHealthAnalyzer {
             didComplete: true,
             checkedVideoCount: checkedCount,
             skippedContainerCount: skippedCount,
-            issues: issues
+            issues: issues,
+            sourceRoot: sourceRoot
         )
     }
 
@@ -98,9 +106,10 @@ struct CardHealthAnalyzer {
         var issues: [CardHealthIssue] = []
 
         for (mode, modeClips) in groupsByMode {
-            let timestampGroups = Dictionary(grouping: modeClips) {
+            let clipsBySecond = Dictionary(grouping: modeClips) {
                 Int($0.timestamp!.timeIntervalSince1970)
-            }.values.map { clips in
+            }
+            let timestampGroups = clipsBySecond.values.map { clips in
                 Set(clips.compactMap { normalizedChannel($0.channel) })
             }
             // Treat a channel as established only when it appears throughout at
@@ -118,14 +127,20 @@ struct CardHealthAnalyzer {
             guard expectedChannels.count >= 2 else { continue }
 
             for channel in expectedChannels.sorted() {
-                let missingCount = timestampGroups.filter { !$0.contains(channel) }.count
+                let unmatchedGroups = clipsBySecond.keys.sorted().compactMap { second -> CardHealthGroupEvidence? in
+                    let clips = clipsBySecond[second]!
+                    guard !clips.contains(where: { normalizedChannel($0.channel) == channel }) else { return nil }
+                    return CardHealthGroupEvidence(timestamp: Date(timeIntervalSince1970: Double(second)), mode: mode, unmatchedChannel: displayChannel(channel), presentFiles: clips.map(CardHealthFileEvidence.init).sorted { $0.relativePath < $1.relativePath })
+                }
+                let missingCount = unmatchedGroups.count
                 guard missingCount > 0 else { continue }
                 issues.append(CardHealthIssue(
                     id: "missing-channel-\(mode)-\(channel)",
                     kind: .missingChannel,
-                    title: "Missing \(displayChannel(channel)) recordings",
-                    detail: "\(missingCount) of \(timestampGroups.count) \(displayMode(mode)) timestamp group\(timestampGroups.count == 1 ? "" : "s") are missing the \(displayChannel(channel).lowercased()) channel while other camera channels continue recording.",
-                    affectedFileCount: missingCount
+                    title: "Potential unmatched \(displayChannel(channel)) channel",
+                    detail: "\(missingCount) of \(timestampGroups.count) \(displayMode(mode)) exact-second timestamp group\(timestampGroups.count == 1 ? "" : "s") have no matching \(displayChannel(channel).lowercased()) file in this mode. Different start times or mode/protection classification can split related recordings; this is not confirmed recording loss.",
+                    affectedFileCount: missingCount,
+                    unmatchedGroups: unmatchedGroups
                 ))
             }
         }

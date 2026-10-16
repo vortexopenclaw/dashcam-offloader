@@ -18,6 +18,7 @@ final class TransferViewModel: ObservableObject {
     @Published var copyProgress = CopyProgress()
     @Published var scanSummary = ScanSummary()
     @Published var cardHealthReport = CardHealthReport()
+    @Published var isCardHealthDetailsPresented = false
     @Published var statusMessage = "Ready"
     @Published var isScanning = false
     @Published private(set) var scanRevision = 0
@@ -827,6 +828,7 @@ final class TransferViewModel: ObservableObject {
         selectedProfile = nil
         clips = []
         cardHealthReport = CardHealthReport()
+        isCardHealthDetailsPresented = false
         isCheckingCardHealth = false
         lastScannedFiles = []
         lastScanDiagnostics = []
@@ -875,6 +877,7 @@ final class TransferViewModel: ObservableObject {
         selectedQueueItemIDs = []
         scanSummary = ScanSummary(sourcePath: selectedSource.url.path)
         cardHealthReport = CardHealthReport()
+        isCardHealthDetailsPresented = false
         isCheckingCardHealth = false
 
         Task { [weak self, profiles, selectedSource] in
@@ -951,7 +954,7 @@ final class TransferViewModel: ObservableObject {
 
         Task { [weak self] in
             let report = await Task.detached {
-                CardHealthAnalyzer().analyze(clips: clips)
+                CardHealthAnalyzer().analyze(clips: clips, sourceRoot: source.url)
             }.value
             guard let self,
                   generation == self.scanGeneration,
@@ -973,10 +976,13 @@ final class TransferViewModel: ObservableObject {
         alert.alertStyle = .warning
         alert.messageText = "Card Health Warning"
         let issueSummary = report.issues.prefix(5).map { "• \($0.title): \($0.detail)" }.joined(separator: "\n")
-        let remaining = report.issues.count > 5 ? "\n• \(report.issues.count - 5) more issue(s) shown in the app" : ""
+        let remaining = report.issues.count > 5 ? "\n• \(report.issues.count - 5) more issue(s); choose View All Issues for the complete evidence" : ""
         alert.informativeText = "Dashcam Offloader found possible problems on \(sourceName).\n\n\(issueSummary)\(remaining)\n\nThe source card was only read; no files were changed."
+        alert.addButton(withTitle: "View All Issues…")
         alert.addButton(withTitle: "OK")
-        alert.runModal()
+        if alert.runModal() == .alertFirstButtonReturn {
+            isCardHealthDetailsPresented = true
+        }
     }
 
     nonisolated static func profileAfterCompletedScan(

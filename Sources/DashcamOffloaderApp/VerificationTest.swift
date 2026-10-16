@@ -641,11 +641,106 @@ enum VerificationTest {
             let channelIssues = CardHealthAnalyzer().missingChannelIssues(in: synchronizedClips)
             guard channelIssues.count == 1,
                   channelIssues.first?.kind == .missingChannel,
-                  channelIssues.first?.title == "Missing Rear recordings",
+                  channelIssues.first?.title == "Potential unmatched Rear channel",
                   channelIssues.first?.affectedFileCount == 1 else {
                 print("VERIFY FAIL: card health did not isolate the missing rear-camera group")
                 return false
             }
+
+            guard let unmatched = channelIssues.first?.unmatchedGroups.first,
+                  unmatched.timestamp == baseTimestamp.addingTimeInterval(180),
+                  unmatched.mode == "continuous", unmatched.unmatchedChannel == "Rear",
+                  unmatched.presentFiles.map(\.relativePath) == ["health/3-front.mp4"] else {
+                print("VERIFY FAIL: unmatched channel evidence did not retain exact timestamp/mode/present path")
+                return false
+            }
+            // Preserve the exact-second/mode heuristic: an offset or differently
+            // classified counterpart is not silently merged into the group.
+            var offsetClips = synchronizedClips
+            var offsetRear = synchronizedClips[1]
+            offsetRear.timestamp = baseTimestamp.addingTimeInterval(181)
+            offsetRear.filename = "offset-rear.mp4"
+            offsetRear.relativePath = "Parking/offset-rear.mp4"
+            offsetClips.append(offsetRear)
+            let offsetIssues = CardHealthAnalyzer().missingChannelIssues(in: offsetClips)
+            guard offsetIssues.count == 2,
+                  offsetIssues.first(where: { $0.title.contains("Front") })?.unmatchedGroups.first?.timestamp == baseTimestamp.addingTimeInterval(181),
+                  offsetIssues.first(where: { $0.title.contains("Rear") })?.unmatchedGroups.first?.timestamp == baseTimestamp.addingTimeInterval(180) else {
+                print("VERIFY FAIL: exact-second offset evidence was merged or mislabeled")
+                return false
+            }
+            offsetRear.timestamp = baseTimestamp.addingTimeInterval(180)
+            offsetRear.mode = "protected"
+            let separateModeIssues = CardHealthAnalyzer().missingChannelIssues(in: synchronizedClips + [offsetRear])
+            guard separateModeIssues == channelIssues else {
+                print("VERIFY FAIL: mode-separated counterpart changed existing grouping heuristic")
+                return false
+            }
+            // Six distinct modes exceed the old five-issue preview.
+            var manyModeClips: [ClipItem] = []
+            for modeIndex in 0..<6 {
+                manyModeClips += synchronizedClips.map { clip in
+                    var copy = clip
+                    copy.mode = "fixture_\(modeIndex)"
+                    return copy
+                }
+            }
+            let manyIssues = CardHealthAnalyzer().missingChannelIssues(in: manyModeClips)
+            guard manyIssues.count == 6, manyIssues.allSatisfy({ $0.unmatchedGroups.count == 1 }) else {
+                print("VERIFY FAIL: full issue list truncated")
+                return false
+            }
+            var fileFixtures: [ClipItem] = []
+            for index in 0..<7 {
+                for isEmpty in [true, false] {
+                    let filename = "fixture-\(index)-\(isEmpty).mp4"
+                    let url = healthSource.appendingPathComponent(filename)
+                    try (isEmpty ? Data() : Data(repeating: 0x7f, count: 128)).write(to: url)
+                    fileFixtures.append(ClipItem(sourceURL: url, relativePath: filename,
+                        filename: filename, mode: "fixture", channel: "front", timestamp: nil,
+                        size: isEmpty ? 0 : 128, extensionLowercased: "mp4", excludedReason: nil))
+                }
+            }
+            var fullReport = CardHealthAnalyzer().analyze(clips: fileFixtures, sourceRoot: healthSource)
+            guard fullReport.issues.count == 2, fullReport.issues.allSatisfy({ $0.files.count == 7 }),
+                  fileFixtures.allSatisfy({ fullReport.fullText.contains($0.filename) }) else {
+                print("VERIFY FAIL: complete empty/unreadable evidence truncated beyond three filenames")
+                return false
+            }
+            fullReport.issues += manyIssues
+            let reportURL = destination.appendingPathComponent("health-report.txt")
+            try fullReport.save(to: reportURL)
+            guard try String(contentsOf: reportURL, encoding: .utf8) == fullReport.fullText,
+                  manyIssues.allSatisfy({ fullReport.fullText.contains($0.reportText) }),
+                  fullReport.revealableURL(for: fullReport.issues[0].files[0]) != nil else {
+                print("VERIFY FAIL: report save/reveal evidence mismatch")
+                return false
+            }
+            do {
+                try fullReport.save(to: reportURL)
+                print("VERIFY FAIL: report overwrote existing destination")
+                return false
+            } catch { }
+            do {
+                try fullReport.save(to: healthSource.appendingPathComponent("must-not-write.txt"))
+                print("VERIFY FAIL: report wrote inside source")
+                return false
+            } catch { }
+            let sourceLink = destination.appendingPathComponent("source-link")
+            try FileManager.default.createSymbolicLink(at: sourceLink, withDestinationURL: healthSource)
+            do {
+                try fullReport.save(to: sourceLink.appendingPathComponent("must-not-write.txt"))
+                print("VERIFY FAIL: report wrote through source symlink")
+                return false
+            } catch { }
+            var outsideFile = fullReport.issues[0].files[0]
+            outsideFile.sourceURL = reportURL
+            guard fullReport.revealableURL(for: outsideFile) == nil,
+                  !FileManager.default.fileExists(atPath: healthSource.appendingPathComponent("must-not-write.txt").path) else {
+                print("VERIFY FAIL: source containment guard failed")
+                return false
+            }
+            print("VERIFY PASS: card health full evidence (8 issues, 14 file entries), exact unmatched groups, report round-trip, no-overwrite and source/symlink protection")
 
             var intermittentOptionalChannelClips: [ClipItem] = []
             for index in 0..<10 {

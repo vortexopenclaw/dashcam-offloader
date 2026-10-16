@@ -69,6 +69,9 @@ struct ContentView: View {
             }
             .help("Updates and feedback")
         }
+        .sheet(isPresented: $viewModel.isCardHealthDetailsPresented) {
+            CardHealthDetailsView(report: viewModel.cardHealthReport)
+        }
         .sheet(isPresented: $isFeedbackPresented) {
             FeedbackSheet(viewModel: viewModel)
         }
@@ -339,6 +342,10 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if report.hasWarnings {
+                    Button("View All Issues…") { viewModel.isCardHealthDetailsPresented = true }
+                }
+
                 Text(cardHealthCoverageText(report))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -347,7 +354,7 @@ struct ContentView: View {
     }
 
     private func cardHealthCoverageText(_ report: CardHealthReport) -> String {
-        let checked = "Checked the headers, duration, and video tracks of \(report.checkedVideoCount) MP4/MOV file\(report.checkedVideoCount == 1 ? "" : "s"), plus synchronized channel groups."
+        let checked = "Checked the headers, duration, and video tracks of \(report.checkedVideoCount) MP4/MOV file\(report.checkedVideoCount == 1 ? "" : "s"), plus exact-second filename channel groups (not confirmed synchronized events)."
         guard report.skippedContainerCount > 0 else { return checked }
         return "\(checked) \(report.skippedContainerCount) video file\(report.skippedContainerCount == 1 ? " uses" : "s use") another container, so only channel consistency was checked for \(report.skippedContainerCount == 1 ? "it" : "them")."
     }
