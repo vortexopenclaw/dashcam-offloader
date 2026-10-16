@@ -65,7 +65,7 @@ extension CardHealthReport {
     var fullText: String {
         (["Dashcam Offloader — Card Health Report",
           "\(issues.count) issues; \(checkedVideoCount) video files checked; \(skippedContainerCount) other-container files skipped for metadata probing.",
-          "Read-only metadata checks, not a full decode. Unmatched channels use filename timestamps grouped by exact second and classified mode, not proven synchronized events. Start-time offsets and mode/protection classification can separate related recordings. No confirmed loss or corruption is implied. Timestamps below are ISO 8601 UTC.",
+          "Read-only metadata checks, not a full decode. Unmatched channels use filename timestamps grouped by exact second and classified mode, not proven synchronized events. Start-time offsets and mode/protection classification can separate related recordings. No confirmed loss or corruption is implied. Timestamps below are rendered in ISO 8601 UTC from parsed values; the camera clock timezone has not been independently verified. Refer to the original filenames for the recorded clock text.",
           "This private report contains recording filenames and relative folders. Review before sharing."] + issues.map(\.reportText)).joined(separator: "\n\n")
     }
 
@@ -119,7 +119,7 @@ struct CardHealthDetailsView: View {
                 .font(.callout).foregroundStyle(.secondary)
             TextField("Search all issues, channels, timestamps, and paths", text: $query)
                 .textFieldStyle(.roundedBorder)
-            Text("Showing \(matchingIssues.count) of \(report.issues.count) issues. Group times are UTC.")
+            Text("Showing \(matchingIssues.count) of \(report.issues.count) issues. Parsed times rendered in UTC; original camera-clock text is in the filenames.")
                 .font(.caption).foregroundStyle(.secondary)
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
