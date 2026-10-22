@@ -21,6 +21,7 @@ which applies.
 - Thinkware U3000 Pro - profile drafted from one real card and official documentation.
 - Thinkware U3000 - profile drafted from one real card. 2-channel (F/R), no interior cabin support.
 - Botslab G980H - profile drafted from an app learning submission and real 4CH card sample. Detected from `MISC/G980HMCN5291.TXT`; unknown `360CARDVR` cards should not be assigned this model without exact marker evidence.
+- Vueroid H1 QHD Infinite - public front-only seed profile restored from historical firmware V0.5.9 card evidence, with exact H1 config recognition. Exact parking subtype and current retail firmware behavior remain unverified. See [historical evidence](card-profiles/vueroid-h1.md).
 - Vueroid S1 4K Infinite - base model profile with 1CH, 2CH, and 3CH variants. One real 3CH sample card inspected.
 - Vueroid S1 QHD Infinite - exact config-metadata detection with 1CH, 2CH, and 3CH variants learned from four app submissions; firmware 1.0.4 30 fps 3CH, 60 fps front-only, 5 fps time-lapse parking, and 30 fps parking-impact behavior observed.
 - VIOFO T330W - experimental 3CH profile from two app learning submissions and three owner-provided video frames showing the exact `VIOFO T330W` bottom-center stamp. The shared VIOFO folder/filename layout does not identify the model by itself; local OCR can identify it when the configurable stamp is enabled. T330 is the same main-camera family with a different rear-camera variant, but the non-W stamp has not been validated. See `docs/card-profiles/viofo-t330w.md`.

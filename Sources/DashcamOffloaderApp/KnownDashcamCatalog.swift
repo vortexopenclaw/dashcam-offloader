@@ -24,12 +24,6 @@ struct KnownDashcamModel: Hashable, Sendable {
 /// Internal model knowledge used for learning prefill and future candidate
 /// hints. Entries here are not supported camera profiles.
 enum KnownDashcamCatalog {
-    /// Retained for exact-card detection, but withheld from manual selection
-    /// until the product has a public release.
-    static func isManualSelectorExcluded(manufacturer: String, model: String) -> Bool {
-        compact(manufacturer) == "vueroid" && compact(model) == "h1"
-    }
-
     private static let genericVolumeLabels: Set<String> = [
         "blackvue",
         "dashcam",
@@ -50,7 +44,7 @@ enum KnownDashcamCatalog {
 
     static let models: [KnownDashcamModel] = [
         // Vueroid
-        model("Vueroid", "H1", channels: 1, roles: ["front"], notes: "Observed card signature H1-QHD-INFINITE."),
+        model("Vueroid", "H1 QHD Infinite", aliases: ["H1", "H1 QHD", "H1QHD", "H1-QHD", "H1-QHD-INFINITE"], channels: 1, roles: ["front"], notes: "Historical H1-QHD-INFINITE V0.5.9 card evidence confirms front-only 1CH recording. Exact parking subtype and current retail firmware behavior are unverified."),
         model(
             "Vueroid",
             "S1 4K Infinite",

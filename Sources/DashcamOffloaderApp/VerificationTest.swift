@@ -509,10 +509,6 @@ enum VerificationTest {
                 let viewModel = TransferViewModel()
                 viewModel.profiles = profiles
                 return KnownDashcamCatalog.models.compactMap { knownModel in
-                    guard !KnownDashcamCatalog.isManualSelectorExcluded(
-                        manufacturer: knownModel.manufacturer,
-                        model: knownModel.model
-                    ) else { return nil }
                     let brand = ManufacturerDisplayFormatter.displayName(for: knownModel.manufacturer)
                     let choices = viewModel.cameraModelsByBrand.first { $0.brand == brand }?.models ?? []
                     return choices.contains(where: { $0.model == knownModel.model })
@@ -2902,6 +2898,65 @@ enum VerificationTest {
                 return false
             }
 
+            // Synthetic H1 fixture based on historical layout, not private media or filenames.
+            let h1Aliases = ["H1", "H1 QHD", "H1QHD", "H1-QHD", "H1-QHD-INFINITE", "H1 QHD Infinite"]
+            guard h1Aliases.allSatisfy({
+                KnownDashcamCatalog.exactModelMatch(manufacturer: "Vueroid", modelText: $0)?.model == "H1 QHD Infinite"
+            }),
+                  KnownDashcamCatalog.exactModelMention("model=H1-QHD-INFINITE V0.5.9", manufacturer: "Vueroid")?.model == "H1 QHD Infinite" else {
+                print("VERIFY FAIL: H1 public aliases did not resolve to the canonical model")
+                return false
+            }
+            let h1SelectorOK = MainActor.assumeIsolated { () -> Bool in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                let choices = viewModel.cameraModelsByBrand.first { $0.brand == "Vueroid" }?.models ?? []
+                let h1Choices = choices.filter { $0.model == "H1 QHD Infinite" }
+                let supportedChoiceOK = h1Choices.count == 1 && h1Choices.first?.profile?.id == "vueroid-h1"
+                    && h1Choices.first?.isCatalogOnly == false
+                    && !choices.contains(where: { $0.model == "H1" })
+                viewModel.profiles = []
+                let catalogChoice = viewModel.cameraModelsByBrand.first { $0.brand == "Vueroid" }?
+                    .models.first { $0.model == "H1 QHD Infinite" }
+                return supportedChoiceOK && catalogChoice?.isCatalogOnly == true
+            }
+            guard h1SelectorOK else {
+                print("VERIFY FAIL: H1 public selector missing, duplicated, or catalog-only")
+                return false
+            }
+            let h1Source = temp.appendingPathComponent("synthetic-h1-card", isDirectory: true)
+            for folder in ["CONFIG", "INF", "EVENT", "PARK", "PEVENT", "USER"] {
+                try FileManager.default.createDirectory(at: h1Source.appendingPathComponent(folder), withIntermediateDirectories: true)
+            }
+            try Data("H1-QHD-INFINITE V0.5.9\u{0}H1-QHD-INFINITE".utf8).write(to: h1Source.appendingPathComponent("CONFIG/config.bin"))
+            try Data("Synthetic boot evidence: 1CH; DRIVE TO PARK".utf8).write(to: h1Source.appendingPathComponent("CONFIG/.boot.log"))
+            for (folder, token) in [("INF", "INF"), ("EVENT", "EVT"), ("PARK", "PRK"), ("PEVENT", "PVT"), ("USER", "USR")] {
+                try Data(repeating: 31, count: 1024).write(to: h1Source.appendingPathComponent("\(folder)/20000101_120000_\(token)_N.mp4"))
+            }
+            let h1Scan = try scanner.scan(sourceURL: h1Source, profiles: profiles)
+            let h1Clips = h1Scan.clips.filter { $0.excludedReason == nil }
+            let h1Categories = Dictionary(grouping: h1Clips, by: \.outputCategory).mapValues(\.count)
+            guard h1Scan.selectedProfile?.id == "vueroid-h1",
+                  h1Scan.candidates.first?.confidence == .high,
+                  h1Scan.identifiedCamera?.model == "H1 QHD Infinite",
+                  h1Scan.identifiedCamera?.isSupported == true,
+                  !h1Scan.candidates.contains(where: { $0.profile.id.hasPrefix("vueroid-s1-") }),
+                  h1Clips.count == 5,
+                  Set(h1Clips.map(\.channel)) == ["front"],
+                  h1Categories == ["Driving": 1, "Protected": 1, "Parking": 1, "Parking Events": 1, "Other": 1],
+                  h1Clips.contains(where: { $0.mode == "parking" }) else {
+                print("VERIFY FAIL: synthetic H1 exact identity, channels, categories, or unknown parking subtype changed")
+                return false
+            }
+            // 1CH and shared folders cannot establish H1 identity without its exact marker.
+            try FileManager.default.removeItem(at: h1Source.appendingPathComponent("CONFIG/config.bin"))
+            let h1WithoutMarker = try scanner.scan(sourceURL: h1Source, profiles: profiles)
+            guard h1WithoutMarker.selectedProfile?.id == "generic-new-dashcam" else {
+                print("VERIFY FAIL: shared Vueroid structure or 1CH incorrectly selected an exact model")
+                return false
+            }
+            print("VERIFY PASS: synthetic H1 public selector, aliases, exact identity, front-only categories, and unknown parking subtype")
+
             let vueroidSource = temp.appendingPathComponent("vueroid-s1", isDirectory: true)
             try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("CONFIG", isDirectory: true), withIntermediateDirectories: true)
             try FileManager.default.createDirectory(at: vueroidSource.appendingPathComponent("INF", isDirectory: true), withIntermediateDirectories: true)
@@ -2914,7 +2969,8 @@ enum VerificationTest {
             try Data("boot ok".utf8).write(to: vueroidSource.appendingPathComponent(".boot.log"))
 
             let vueroidScan = try scanner.scan(sourceURL: vueroidSource, profiles: profiles)
-            guard vueroidScan.candidates.first?.profile.id == "vueroid-s1-4k-infinite" else {
+            guard vueroidScan.candidates.first?.profile.id == "vueroid-s1-4k-infinite",
+                  !vueroidScan.candidates.contains(where: { $0.profile.id == "vueroid-h1" }) else {
                 print("VERIFY FAIL: Vueroid S1 was not top candidate")
                 return false
             }
@@ -2946,6 +3002,7 @@ enum VerificationTest {
 
             let vueroidQHDScan = try scanner.scan(sourceURL: vueroidQHDSource, profiles: profiles)
             guard vueroidQHDScan.selectedProfile?.id == "vueroid-s1-qhd-infinite",
+                  !vueroidQHDScan.candidates.contains(where: { $0.profile.id == "vueroid-h1" }),
                   vueroidQHDScan.identifiedCamera?.model == "S1 QHD Infinite",
                   vueroidQHDScan.identifiedCamera?.isSupported == true,
                   Set(vueroidQHDScan.clips.map(\.channel)) == Set(["front", "interior", "rear"]),

@@ -387,7 +387,7 @@ extension CardScanner {
     func vueroidModelText(in raw: String) -> String? {
         let normalized = raw.uppercased()
         if normalized.contains("H1-QHD-INFINITE") {
-            return "H1"
+            return "H1 QHD Infinite"
         }
         if normalized.contains("S1-4K") ||
             normalized.contains("S1 4K") {

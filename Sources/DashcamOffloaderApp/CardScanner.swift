@@ -612,7 +612,7 @@ struct CardScanner {
     }
 
     private func requiresExplicitModelEvidence(_ profile: DashcamProfile) -> Bool {
-        ["botslab-g980h"].contains(profile.id)
+        ["botslab-g980h", "vueroid-h1"].contains(profile.id)
     }
 
     private func hasSameManufacturerAmbiguity(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> Bool {

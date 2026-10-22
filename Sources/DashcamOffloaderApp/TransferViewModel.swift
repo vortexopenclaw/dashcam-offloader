@@ -240,10 +240,6 @@ final class TransferViewModel: ObservableObject {
         var grouped: [String: [String: CameraModelChoice]] = [:]
 
         for profile in profiles {
-            guard !KnownDashcamCatalog.isManualSelectorExcluded(
-                manufacturer: profile.manufacturer,
-                model: profile.model
-            ) else { continue }
             let brand = profile.displayManufacturer
             let key = Self.cameraModelKey(profile.model)
             let knownModel = KnownDashcamCatalog.exactModelMatch(
@@ -260,10 +256,6 @@ final class TransferViewModel: ObservableObject {
         }
 
         for model in KnownDashcamCatalog.models {
-            guard !KnownDashcamCatalog.isManualSelectorExcluded(
-                manufacturer: model.manufacturer,
-                model: model.model
-            ) else { continue }
             let brand = ManufacturerDisplayFormatter.displayName(for: model.manufacturer)
             let key = Self.cameraModelKey(model.model)
             if grouped[brand, default: [:]][key] == nil {
