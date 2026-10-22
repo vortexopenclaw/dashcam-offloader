@@ -1,5 +1,5 @@
-# Dashcam Offloader 0.1.35
+# Dashcam Offloader 0.1.36
 
-- Add public Vueroid H1 QHD Infinite selection and exact model recognition, including common H1 aliases.
-- Restore the historical front-only H1 folder and filename profile, keeping H1 separate from S1 cameras. Historical firmware V0.5.9 evidence does not guarantee current retail behavior or a specific parking subtype.
-- Source cards remain read-only. Existing S1 profiles, card-health checks, and verified-copy behavior are unchanged.
+- Correct Vantrue E1 Pro S recognition without confusing it with the older E1 Pro.
+- Use short Vantrue model names such as E1, E1 Pro, E1 Pro S, S1, and S1 Pro, while retaining older names as compatibility aliases.
+- Keep shared or conflicting Vantrue evidence unconfirmed instead of selecting the wrong model. Source cards remain read-only.

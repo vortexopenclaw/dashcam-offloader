@@ -166,29 +166,30 @@ enum KnownDashcamCatalog {
         model("BlackVue", "DR590X", channels: 2, roles: ["front", "rear"]),
 
         // Vantrue
-        model("Vantrue", "Nexus 5S", aliases: ["N5S"], channels: 4, roles: ["front", "rear", "left", "right"]),
-        model("Vantrue", "Nexus 5", aliases: ["N5"], channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Vantrue", "N5S", aliases: ["Nexus 5S", "Nexus5S"], channels: 4, roles: ["front", "rear", "left", "right"]),
+        model("Vantrue", "N5", aliases: ["Nexus 5", "Nexus5"], channels: 4, roles: ["front", "rear", "left", "right"]),
         model("Vantrue", "N4 Pro S", aliases: ["Nexus 4 Pro S", "N4PROS", "N4 ProS"], channels: 3, roles: ["front", "interior", "rear"], resolutions: ["front": "4K", "interior": "1080p", "rear": "2.5K"], parkingModes: ["collision detection", "motion detection", "low bitrate recording", "low frame rate recording"], notes: "Official page lists 4K front, 1080p cabin, 2.5K rear."),
-        model("Vantrue", "Nexus 4 Pro", aliases: ["N4 Pro"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "N4 Pro", aliases: ["Nexus 4 Pro", "Nexus4Pro"], channels: 3, roles: ["front", "interior", "rear"]),
         model("Vantrue", "N4 S", aliases: ["N4S"], channels: 3, roles: ["front", "interior", "rear"]),
-        model("Vantrue", "OnDash N4", aliases: ["N4"], channels: 3, roles: ["front", "interior", "rear"]),
-        model("Vantrue", "Nexus 2X", aliases: ["N2X"], channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "N4", aliases: ["OnDash N4", "OnDashN4"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "N2X", aliases: ["Nexus 2X", "Nexus2X"], channels: 2, roles: ["front", "rear"]),
         model("Vantrue", "N2 Pro", channels: 2, roles: ["front", "interior"]),
         model("Vantrue", "N2S", channels: 2, roles: ["front", "interior"]),
         model("Vantrue", "E360 ACE", aliases: ["E360 Ace"], channels: 2, roles: ["panoramic_front", "rear"], notes: "E360 family variants: E360, E360 Plus, E360 ACE. Front/cabin panoramic stream plus optional rear camera."),
         model("Vantrue", "E360 Plus", channels: 2, roles: ["panoramic_front", "rear"]),
         model("Vantrue", "E360", channels: 2, roles: ["panoramic_front", "rear"]),
-        model("Vantrue", "Element 3", aliases: ["E3"], channels: 3, roles: ["front", "interior", "rear"]),
-        model("Vantrue", "Element 2", aliases: ["E2"], channels: 2, roles: ["front", "rear"]),
-        model("Vantrue", "Element 1 Pro", aliases: ["E1 Pro", "E1PRO"], channels: 1, roles: ["front"]),
-        model("Vantrue", "Element 1", aliases: ["E1"], channels: 1, roles: ["front"]),
+        model("Vantrue", "E3", aliases: ["Element 3", "Element3"], channels: 3, roles: ["front", "interior", "rear"]),
+        model("Vantrue", "E2", aliases: ["Element 2", "Element2"], channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "E1 Pro S", aliases: ["E1 ProS", "E1PROS"], channels: 1, roles: ["front"], notes: "Distinct front-only model confirmed by exact GPS/E1PROS_Settings.ini support filename. Shared folders and video specifications do not establish identity."),
+        model("Vantrue", "E1 Pro", aliases: ["Element 1 Pro", "Element1Pro", "E1 Pro", "E1PRO"], channels: 1, roles: ["front"]),
+        model("Vantrue", "E1", aliases: ["Element 1", "Element1"], channels: 1, roles: ["front"]),
         model("Vantrue", "E1 Lite", channels: 1, roles: ["front"]),
         model("Vantrue", "E2 Pro", aliases: ["E2PRO"], notes: "Official manual-listed model; card layout and channel configuration still need a submitted scan."),
-        model("Vantrue", "S1 Pro", channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "S1 Pro", aliases: ["S1 Pro", "Sonnet 1 Pro", "Sonnet1Pro"], channels: 2, roles: ["front", "rear"]),
         model("Vantrue", "S1 Pro Max", aliases: ["S1PROMAX"], notes: "Official manual-listed model; card layout and channel configuration still need a submitted scan."),
-        model("Vantrue", "S1", channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "S1", aliases: ["Sonnet 1", "Sonnet1"], channels: 2, roles: ["front", "rear"]),
         model("Vantrue", "S2", channels: 2, roles: ["front", "rear"]),
-        model("Vantrue", "Falcon 1", aliases: ["F1"], channels: 2, roles: ["front", "rear"]),
+        model("Vantrue", "F1", aliases: ["Falcon 1", "Falcon1"], channels: 2, roles: ["front", "rear"]),
         model("Vantrue", "P2", notes: "Official manual-listed model; card layout and channel configuration still need a submitted scan."),
         model("Vantrue", "N1 Pro", aliases: ["N1PRO"], notes: "Official manual-listed model; card layout and channel configuration still need a submitted scan."),
         model("Vantrue", "N2", notes: "Official manual-listed model; card layout and channel configuration still need a submitted scan."),
@@ -373,6 +374,18 @@ enum KnownDashcamCatalog {
         let normalizedManufacturer = manufacturer.map(compact)
         guard !normalizedModelText.isEmpty else { return nil }
 
+        // Settings is a filename suffix, not part of the camera token. In
+        // particular, E1PRO_Settings must never become E1PROS after compaction.
+        if normalizedManufacturer == "vantrue",
+           modelText.lowercased().hasSuffix("_settings.ini") {
+            let basename = URL(fileURLWithPath: modelText).lastPathComponent
+            guard let range = basename.range(of: #"^[A-Za-z0-9]+(?=_Settings\.ini$)"#,
+                                             options: [.regularExpression, .caseInsensitive]) else {
+                return nil
+            }
+            return exactModelMatch(manufacturer: "Vantrue", modelText: String(basename[range]))
+        }
+
         var bestMatch: (model: KnownDashcamModel, length: Int)?
         for model in models {
             if let normalizedManufacturer,
@@ -415,7 +428,9 @@ enum KnownDashcamCatalog {
         KnownDashcamModel(
             manufacturer: manufacturer,
             model: model,
-            aliases: aliases,
+            aliases: manufacturer == "Vantrue"
+                ? aliases.flatMap { [$0, "Vantrue \($0)"] }
+                : aliases,
             channels: channels,
             channelRoles: roles,
             channelResolutions: resolutions,

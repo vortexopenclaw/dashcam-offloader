@@ -1,0 +1,103 @@
+id: vantrue-e1-pro-s
+manufacturer: Vantrue
+model: E1 Pro S
+status: seed
+confidence: high
+confidence_note: "Owner-confirmed E1 Pro S card with exact GPS/E1PROS_Settings.ini marker, 12 MP4 clips, and 3 JPG photos. Shared media grammar is not model identity."
+
+channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: real_card_sampled
+
+sampled_variant:
+  channels: 1
+  roles:
+    - front
+
+detection:
+  high_confidence:
+    - path: GPS/E1PROS_Settings.ini
+      exists: true
+      note: "Whole model token must match the catalog, be a regular file, and have no conflicting model markers. No settings values are read."
+    - filename_pattern:
+        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        note: "Shared Vantrue single-front-channel media grammar, not distinguishing model evidence."
+    - folders:
+        required_all:
+          - Normal
+          - Parking
+          - Photo
+          - GPS
+        note: "Event also existed but was empty. Model-specific marker is required for automatic selection."
+  medium_confidence:
+    - filename_pattern:
+        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        note: "Family-only evidence; cannot select E1 Pro S or E1 Pro without explicit model evidence."
+  not_reliable:
+    - firmware:
+        note: "VT-EFI242 was owner-reported only. No model or firmware token was found in bounded container-header inspection; no firmware detection rule is asserted."
+    - resolution:
+        note: "Codec, dimensions, bitrate, and playback FPS are not identity or capture-behavior evidence. Mixed parking capture behavior cannot be inferred from encoded 30 FPS."
+    - volume_label:
+        note: "Volume labels are user-renamable."
+
+folders:
+  - path: Normal
+    mode: normal
+    prefixes: [N]
+    validation: real_card_sampled
+  - path: Parking
+    mode: parking
+    prefixes: [P, E, T]
+    validation: real_card_and_owner_attributed_media_sampled
+    note: "Filename mode tokens describe labels, not proof of uniform capture behavior within a clip."
+  - path: Event
+    mode: event
+    prefixes: [E]
+    validation: real_card_sampled_empty
+  - path: Photo
+    mode: photo
+    validation: real_card_sampled
+  - path: GPS
+    mode: settings
+    import: false
+    validation: real_card_sampled
+    note: "Only the safe model-coded basename is used. Private settings values and GPS trails are not identity evidence."
+
+filename_patterns:
+  - pattern: '^(\\d{8})_(\\d{6})_(\\d{5})_([NPET])_([A])\\.(MP4|JPG)$'
+    timestamp:
+      date_group: 1
+      time_group: 2
+      format: YYYYMMDD_HHMMSS
+    seq_group: 3
+    mode_group: 4
+    channel_group: 5
+    modes:
+      N: normal
+      P: parking
+      E: event
+      T: timelapse
+    channels:
+      A: front
+
+channels:
+  A:
+    position: front
+    validation: real_card_sampled
+
+evidence_limits:
+  - "N/E/P/T front-channel tokens were observed in card or owner-attributed historical media; those media filenames are shared with other Vantrue models."
+  - "No B mode-token filename was reported in the inspected evidence. B/TurboBoot meaning and classification remain unverified, with no invented mode mapping."
+  - "Parking event and timelapse tokens are recording labels, not an assertion of uniform parking capture behavior."
+
+exclude:
+  - '^\\._'
+  - .Spotlight-V100/**
+  - .fseventsd/**
+  - '*.bin'
+  - 'unique_device_ids'
+  - 'real_gps_coordinates'
+  - 'real_gps_trails'

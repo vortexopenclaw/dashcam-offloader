@@ -434,7 +434,7 @@ enum VerificationTest {
                   KnownDashcamCatalog.exactVolumeLabelMatch("ELITE 10")?.model == "Elite 10",
                   KnownDashcamCatalog.exactBlackVueModelMention("model = ELITE 10 v1.000(rev100)")?.model == "Elite 10",
                   KnownDashcamCatalog.exactModelMention("Device Name:U3000PRO", manufacturer: "Thinkware")?.model == "U3000 Pro",
-                  KnownDashcamCatalog.exactModelMention("E1PRO_Settings.ini", manufacturer: "Vantrue")?.model == "Element 1 Pro",
+                  KnownDashcamCatalog.exactModelMention("E1PRO_Settings.ini", manufacturer: "Vantrue")?.model == "E1 Pro",
                   KnownDashcamCatalog.exactModelMention("systemKind=\"ILCE-7M3\"", manufacturer: "Sony")?.model == "A7 III",
                   KnownDashcamCatalog.exactModelMention("model=S1 4K", manufacturer: "Vueroid")?.model == "S1 4K Infinite",
                   KnownDashcamCatalog.exactVolumeLabelMatch("NO NAME") == nil,
@@ -520,6 +520,13 @@ enum VerificationTest {
                 print("VERIFY FAIL: researched catalog models missing from the manual picker: \(missingCatalogChoices)")
                 return false
             }
+            let vantruePickerModels = MainActor.assumeIsolated { () -> [String] in
+                let viewModel = TransferViewModel()
+                viewModel.profiles = profiles
+                return viewModel.cameraModelsByBrand.first { $0.brand == "Vantrue" }?.models.map(\.model) ?? []
+            }
+            guard VantrueNamingVerification.run(vantruePickerModels: vantruePickerModels),
+                  VantrueIdentityVerification.run(profiles: profiles) else { return false }
             guard let s1QHDModel = KnownDashcamCatalog.models.first(where: {
                 $0.manufacturer == "Vueroid" && $0.model == "S1 QHD Infinite"
             }),
@@ -1817,12 +1824,12 @@ enum VerificationTest {
             let untrainedVantrueScan = try scanner.scan(sourceURL: untrainedVantrueSource, profiles: [])
             guard untrainedVantrueScan.selectedProfile?.id == "generic-new-dashcam",
                   untrainedVantrueScan.identifiedCamera?.manufacturer == "Vantrue",
-                  untrainedVantrueScan.identifiedCamera?.model == "Element 1 Pro",
+                  untrainedVantrueScan.identifiedCamera?.model == "E1 Pro",
                   untrainedVantrueScan.identifiedCamera?.isSupported == false,
                   untrainedVantrueScan.diagnostics.contains(where: {
                       $0.stage == "safe_model_metadata" &&
                           $0.detail.contains("GPS/E1PRO_Settings.ini") &&
-                          $0.detail.contains("Element 1 Pro")
+                          $0.detail.contains("E1 Pro")
                   }) else {
                 print("VERIFY FAIL: untrained Vantrue model-coded settings filename should identify known catalog model while staying generic: profile=\(untrainedVantrueScan.selectedProfile?.id ?? "nil"), identified=\(String(describing: untrainedVantrueScan.identifiedCamera)), diagnostics=\(untrainedVantrueScan.diagnostics.map { "\($0.stage):\($0.outcome):\($0.detail)" })")
                 return false

@@ -20,7 +20,7 @@ detection:
   high_confidence:
     - path: GPS/E1PRO_Settings.ini
       exists: true
-      note: "Model-specific settings filename observed on the sampled E1 Pro card."
+      note: "Exact regular-file settings basename identifies E1 Pro only, not E1 Pro S. Conflicting or unknown model markers fail closed; settings values are never read."
     - filename_pattern:
         regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
         note: "Vantrue sequence filename with single front channel A."
@@ -34,7 +34,7 @@ detection:
   medium_confidence:
     - filename_pattern:
         regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
-        note: "Without E1PRO_Settings.ini, this is a Vantrue single-channel family match and should require user confirmation."
+        note: "Shared Vantrue family grammar only. Exact model evidence is required; folders/media alone cannot select E1 Pro or E1 Pro S."
   not_reliable:
     - volume_label:
         note: "Sample volume label was Untitled and is user-renamable."

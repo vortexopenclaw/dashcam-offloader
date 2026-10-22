@@ -511,6 +511,11 @@ struct CardScanner {
             return "Top candidate scored only low confidence, so the card was treated as unrecognized"
         }
 
+        if candidate.profile.manufacturer.caseInsensitiveCompare("Vantrue") == .orderedSame,
+           vantrueSettingsIdentity(sourceURL: sourceURL).rejected {
+            return "Vantrue settings filenames contain conflicting or unknown model tokens. Treating this as an unrecognized/new camera rather than choosing a sibling model."
+        }
+
         if knownCatalogVolumeMatches(candidate, sourceURL: sourceURL) {
             return nil
         }
@@ -612,7 +617,7 @@ struct CardScanner {
     }
 
     private func requiresExplicitModelEvidence(_ profile: DashcamProfile) -> Bool {
-        ["botslab-g980h", "vueroid-h1"].contains(profile.id)
+        ["botslab-g980h", "vueroid-h1", "vantrue-e1-pro", "vantrue-e1-pro-s"].contains(profile.id)
     }
 
     private func hasSameManufacturerAmbiguity(_ candidate: DetectionCandidate, allCandidates: [DetectionCandidate]) -> Bool {
@@ -1878,6 +1883,17 @@ struct CardScanner {
         guard let path = rule.path else { return false }
         let evidenceURL = sourceURL.appendingPathComponent(path)
         guard fileManager.fileExists(atPath: evidenceURL.path) else { return false }
+
+        // Validate the complete marker set before treating any settings path as
+        // identity evidence. Never read private settings values.
+        if path.lowercased().hasPrefix("gps/"),
+           path.lowercased().hasSuffix("_settings.ini") {
+            guard let info = safeVantrueModelMetadataInfo(sourceURL: sourceURL),
+                  let expected = KnownDashcamCatalog.exactModelMention(
+                    URL(fileURLWithPath: path).lastPathComponent, manufacturer: "Vantrue"
+                  ) else { return false }
+            return info.matchedModel?.model == expected.model
+        }
 
         if rule.exists == true || rule.contains == nil {
             return true

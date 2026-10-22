@@ -307,29 +307,50 @@ extension CardScanner {
     }
 
     func safeVantrueModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
+        vantrueSettingsIdentity(sourceURL: sourceURL).info
+    }
+
+    func vantrueSettingsIdentity(sourceURL: URL) -> (info: SafeModelMetadataInfo?, rejected: Bool) {
         let gpsFolderURL = sourceURL.appendingPathComponent("GPS", isDirectory: true)
-        guard let gpsFiles = try? fileManager.contentsOfDirectory(
+        guard let folderValues = try? gpsFolderURL.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
+              folderValues.isDirectory == true, folderValues.isSymbolicLink != true,
+              let gpsFiles = try? fileManager.contentsOfDirectory(
             at: gpsFolderURL,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
-        ) else { return nil }
+        ) else { return (nil, false) }
 
-        for fileURL in gpsFiles {
+        // Inspect names and file types only. Settings values can contain private data.
+        // A whole token must match: E1PROS and unknown suffixes are not E1PRO.
+        let pattern = #"^([A-Za-z0-9]+)_Settings\.ini$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return (nil, false) }
+        var matches: [(filename: String, model: KnownDashcamModel)] = []
+        for fileURL in gpsFiles.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             let filename = fileURL.lastPathComponent
-            guard filename.localizedCaseInsensitiveContains("_Settings.ini"),
-                  let matchedModel = KnownDashcamCatalog.exactModelMention(filename, manufacturer: "Vantrue") else {
+            let nsFilename = filename as NSString
+            guard let match = regex.firstMatch(in: filename, range: NSRange(location: 0, length: nsFilename.length)),
+                  match.range.length == nsFilename.length else {
                 continue
             }
-            return SafeModelMetadataInfo(
-                manufacturer: "Vantrue",
-                modelText: matchedModel.model,
-                firmwareVersion: nil,
-                sourcePath: "GPS/\(filename)",
-                valueLabel: "model-coded settings filename",
-                stage: "safe_model_metadata"
-            )
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]),
+                  values.isRegularFile == true, values.isSymbolicLink != true else { continue }
+            let token = nsFilename.substring(with: match.range(at: 1))
+            guard let model = KnownDashcamCatalog.exactModelMatch(manufacturer: "Vantrue", modelText: token) else {
+                return (nil, true)
+            }
+            matches.append((filename, model))
         }
-        return nil
+        // Never pick the first enumerated sibling on a mixed/stale settings card.
+        guard let first = matches.first else { return (nil, false) }
+        guard matches.allSatisfy({ $0.model.model == first.model.model }) else { return (nil, true) }
+        return (SafeModelMetadataInfo(
+            manufacturer: "Vantrue",
+            modelText: first.model.model,
+            firmwareVersion: nil,
+            sourcePath: "GPS/\(first.filename)",
+            valueLabel: "model-coded settings filename",
+            stage: "safe_model_metadata"
+        ), false)
     }
 
     func safeVIOFOModelMetadataInfo(sourceURL: URL) -> SafeModelMetadataInfo? {
