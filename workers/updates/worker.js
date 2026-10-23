@@ -174,21 +174,9 @@ export default {
       });
     }
 
-    if (path.startsWith("/dashcam-offloader/desktop/")) {
-      const assetName = decodeURIComponent(path.slice("/dashcam-offloader/desktop/".length));
-      if (!assetName || assetName.includes("/") || assetName.includes("\\")) {
-        return notFound();
-      }
-      const object = await env.UPDATES_BUCKET.get(`${DESKTOP_UPDATE_PREFIX}${assetName}`);
-      if (!object) {
-        return notFound();
-      }
-      const contentType = assetName.endsWith(".yml")
-        ? "text/yaml; charset=utf-8"
-        : "application/octet-stream";
-      return new Response(request.method === "HEAD" ? null : object.body, {
-        headers: responseHeaders(object, contentType),
-      });
+    // Retired Electron distribution is unavailable; retain R2 bytes privately.
+    if (path === "/dashcam-offloader/desktop" || path.startsWith(`/${DESKTOP_UPDATE_PREFIX}`)) {
+      return jsonResponse({ error: "retired_electron_distribution" }, 410);
     }
 
     if (path === "/dashcam-offloader/download/latest") {
