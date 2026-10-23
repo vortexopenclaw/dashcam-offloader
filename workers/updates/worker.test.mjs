@@ -24,6 +24,18 @@ function environment() {
   };
 }
 
+test("retired Electron prefix never reads private archival objects", async () => {
+  for (const suffix of ["", "/", "/latest-mac.yml", "/latest.yml", "/latest-linux.yml", "/Dashcam%20Offloader-0.2.0-arm64-mac.zip", "/unknown.zip", "/%2e%2e%2flatest.json"]) {
+    for (const method of ["GET", "HEAD"]) {
+      const env = environment();
+      const response = await worker.fetch(new Request(`https://updates.example/dashcam-offloader/desktop${suffix}`, { method }), env);
+      assert.equal(response.status, 410);
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.deepEqual(env.reads, []);
+    }
+  }
+});
+
 test("superseded archive URLs do not expose retained rollback data", async () => {
   const env = environment();
   const response = await worker.fetch(

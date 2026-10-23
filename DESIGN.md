@@ -1,5 +1,22 @@
 # Design
 
+## 2026-10-23 Retired Electron distribution withdrawal
+
+User-authorized reversible withdrawal only: return no-store HTTP 410 for the
+entire retired `dashcam-offloader/desktop/` prefix without reading or deleting
+its private R2 objects. Retain the beta GitHub release and asset as a draft,
+with its original tag and archive bytes unchanged. Preserve the current native
+signed manifest, archive, version and GitHub latest release exactly. Deploy
+only the updates Worker; do not run the app release workflow.
+
+Success: legacy GET/HEAD routes return 410 without bucket access; current
+manifest and both native download routes remain unchanged; anonymous GitHub
+beta release and asset requests fail, while authenticated draft retrieval
+returns the original archive hash. Already downloaded copies and previously
+issued CDN URLs cannot be recalled by this change. Rollback evidence retains
+the previous Worker deployment and beta bytes, but do not restore public access
+without a new explicit security decision.
+
 ## 2026-10-08 Learning capture across quality changes
 
 Objective: capture recent complete recordings even when older quality settings
