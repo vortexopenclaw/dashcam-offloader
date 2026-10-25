@@ -30,6 +30,7 @@ sampled_variant:
     - telephoto
   validation: app_submission_sampled
 source_notes:
+  - https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/6ebff930a4ebf0dae0038c9c59d4cdbd19d38d26/docs/data/a329t-v2.2_260815-1ch-evidence.json
   - docs/card-profiles/viofo-a329t.md
   - docs/research/viofo-a329t.md
 detection:
