@@ -73,6 +73,12 @@ struct OSDProbe {
                 let candidateLower = candidate.lowercased()
                 let candidateCompact = compactModelToken(candidate)
                 guard !candidateCompact.isEmpty else { continue }
+                // A329TC and A329TW are distinct models, not A329T stamps.
+                // Keep the new native A329T profile fail-closed on those suffixes.
+                if candidateCompact == "viofoa329t",
+                   observed.range(of: #"(?i)(?<![a-z0-9])VIOFO\s*A329T(?![a-z0-9])"#, options: .regularExpression) == nil {
+                    continue
+                }
                 guard observedLower.contains(candidateLower) || observedCompact.contains(candidateCompact) else {
                     continue
                 }

@@ -157,37 +157,21 @@ final class TransferViewModel: ObservableObject {
         !filters.selectedModes.isEmpty && !filters.selectedChannels.isEmpty
     }
 
+    // Set only by the bounded native metadata sample for this exact scan revision.
+    private var observedMultitrackRevision: Int?
+
     var inferredLearningChannelSetup: (count: Int, description: String) {
-        if (selectedProfile == nil || selectedProfile?.id == DashcamProfile.genericNewDashcam.id),
-           let catalogModel = identifiedCatalogModel,
-           let channelCount = catalogModel.channels,
-           channelCount > 0 {
-            let labels = orderedChannelLabels(from: catalogModel.channelRoles)
-            let description = labels.isEmpty
-                ? defaultChannelDescription(for: channelCount)
-                : labels.joined(separator: " / ")
-            return (min(max(channelCount, 1), 4), description)
-        }
-
-        let scannedLabels = orderedChannelLabels(from: footageClips.map(\.channel))
-        if !scannedLabels.isEmpty {
-            return (min(max(scannedLabels.count, 1), 4), scannedLabels.joined(separator: " / "))
-        }
-
-        let profileChannels = selectedProfile?.channels ?? [:]
-        if selectedProfile?.id != DashcamProfile.genericNewDashcam.id, !profileChannels.isEmpty {
-            let labels = orderedChannelLabels(from: profileChannels.values)
-            if !labels.isEmpty {
-                return (min(max(labels.count, 1), 4), labels.joined(separator: " / "))
-            }
-        }
-
-        let groupedCount = inferredSynchronizedChannelCount()
-        if groupedCount > 1 {
-            return (groupedCount, defaultChannelDescription(for: groupedCount))
-        }
-
-        return (1, defaultChannelDescription(for: 1))
+        // Model/profile channels describe supported variants, not this inventory.
+        // Count only classified video roles. Unknown tokens, timestamps, photos,
+        // and a single multiplex/primary stream do not establish camera count.
+        let videos = eligibleClips.filter(\.isVideo)
+        let physicalRoles: Set<String> = ["front", "rear", "interior", "left", "right", "telephoto"]
+        let roles = videos.compactMap { normalizedPhysicalChannelLabel($0.channel) }
+        guard !isScanning, observedMultitrackRevision != scanRevision, !videos.isEmpty, roles.count == videos.count,
+              roles.allSatisfy({ physicalRoles.contains($0) }) else { return (0, "") }
+        let labels = orderedChannelLabels(from: roles)
+        guard labels.count <= 4 else { return (0, "") }
+        return (labels.count, labels.joined(separator: " / "))
     }
 
     var inferredLearningCameraIdentity: (manufacturer: String, model: String)? {
@@ -355,17 +339,6 @@ final class TransferViewModel: ObservableObject {
         default:
             return normalized
         }
-    }
-
-    private func inferredSynchronizedChannelCount() -> Int {
-        let groups = Dictionary(grouping: footageClips) { clip in
-            if clip.timestampSource == .filename, let timestamp = clip.timestamp {
-                return "timestamp:\(Int(timestamp.timeIntervalSince1970))"
-            }
-            return "stem:\(clip.filenameStemWithoutChannelHint)"
-        }
-        let count = groups.values.map(\.count).max() ?? 1
-        return min(max(count, 1), 4)
     }
 
     private func defaultChannelDescription(for count: Int) -> String {
@@ -1547,6 +1520,7 @@ final class TransferViewModel: ObservableObject {
             return safe
         }
         let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips, sourceRoot: sourceRoot, paths: &learningPaths)
+        observedMultitrackRevision = nil
         let videoSpecSamples = makeVideoSpecSamples(
             from: representativeVideoClips(safeEligibleClips),
             sourceRoot: sourceRoot
@@ -2065,7 +2039,9 @@ final class TransferViewModel: ObservableObject {
         clips.compactMap { clip in
             let fileURL = clip.sourceURL
             let asset = AVURLAsset(url: fileURL)
-            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+            let videoTracks = asset.tracks(withMediaType: .video)
+            if videoTracks.count > 1 { observedMultitrackRevision = scanRevision }
+            guard let videoTrack = videoTracks.first else {
                 return nil
             }
 
