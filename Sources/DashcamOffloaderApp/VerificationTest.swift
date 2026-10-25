@@ -525,7 +525,8 @@ enum VerificationTest {
                 viewModel.profiles = profiles
                 return viewModel.cameraModelsByBrand.first { $0.brand == "Vantrue" }?.models.map(\.model) ?? []
             }
-            guard VantrueNamingVerification.run(vantruePickerModels: vantruePickerModels),
+            guard ObservedChannelVerification.run(profiles: profiles),
+                  VantrueNamingVerification.run(vantruePickerModels: vantruePickerModels),
                   VantrueIdentityVerification.run(profiles: profiles) else { return false }
             guard let s1QHDModel = KnownDashcamCatalog.models.first(where: {
                 $0.manufacturer == "Vueroid" && $0.model == "S1 QHD Infinite"
@@ -563,9 +564,9 @@ enum VerificationTest {
             }
             guard s1QHDLearningPrefill.0?.manufacturer == "Vueroid",
                   s1QHDLearningPrefill.0?.model == "S1 QHD Infinite",
-                  s1QHDLearningPrefill.1.count == 3,
-                  s1QHDLearningPrefill.1.description == "Front / Rear / Interior" else {
-                print("VERIFY FAIL: identified Vueroid S1 QHD did not prefill its catalog model and 3CH setup")
+                  s1QHDLearningPrefill.1.count == 1,
+                  s1QHDLearningPrefill.1.description == "Front" else {
+                print("VERIFY FAIL: identified Vueroid S1 QHD did not preserve its model and observed 1CH setup")
                 return false
             }
             let temp = FileManager.default.temporaryDirectory

@@ -526,7 +526,7 @@ struct ContentView: View {
                         : "Camera profile included"
                 )
                 if let channels = details.channels {
-                    cameraDetailRow("Channels", String(channels))
+                    cameraDetailRow("Model channel capacity", String(channels))
                 }
                 if !details.channelRoles.isEmpty {
                     cameraDetailRow(
@@ -1478,7 +1478,8 @@ struct CardLearningSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var manufacturer = ""
     @State private var model = ""
-    @State private var selectedChannelCount = 1
+    @State private var channelSelection = LearningChannelSelection()
+    private var selectedChannelCount: Int { channelSelection.count }
     @State private var channelDescription = ""
     @State private var notes = ""
     @State private var contact = ""
@@ -1496,8 +1497,7 @@ struct CardLearningSheet: View {
     }
 
     private var channelSetup: String {
-        let description = channelDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-        return "\(selectedChannelCount)CH: \(description.isEmpty ? channelPlaceholder : description)"
+        channelSelection.reportSetup(description: channelDescription, placeholder: channelPlaceholder)
     }
 
     private var channelPlaceholder: String {
@@ -1547,11 +1547,15 @@ struct CardLearningSheet: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Camera channels")
+                Text("Observed video channels (editable)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Suggestions use observed video roles, not connected-camera counts. Partial cards and multiplexed video may need correction.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 10) {
-                    Picker("Camera channels", selection: $selectedChannelCount) {
+                    Picker("Camera channels", selection: Binding(get: { selectedChannelCount }, set: { channelSelection.choose($0) })) {
+                        Text("Unknown").tag(0)
                         ForEach(1...4, id: \.self) { count in
                             Text("\(count)CH").tag(count)
                         }
@@ -1698,7 +1702,7 @@ struct CardLearningSheet: View {
 
     private func prefillFromScanIfNeeded() {
         let inferred = viewModel.inferredLearningChannelSetup
-        selectedChannelCount = inferred.count
+        channelSelection.prefill(inferred.count)
 
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             if let selectedCatalogModel {
