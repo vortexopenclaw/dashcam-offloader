@@ -22,10 +22,26 @@ class TransferHierarchyTests(unittest.TestCase):
         self.assertEqual(MAIN.count(".buttonStyle(.borderedProminent)"), 1)
         footer = section("footer", "unused")
         self.assertIn("viewModel.startCopy()", footer)
-        self.assertIn(".keyboardShortcut(.defaultAction)", footer)
+        self.assertNotIn(".keyboardShortcut(.defaultAction)", MAIN)
         self.assertIn("viewModel.cancelCopy()", footer)
         self.assertIn("viewModel.destinationURL == nil", footer)
         self.assertIn("viewModel.isCreatingMulticam", footer)
+
+    def test_collapsed_filters_show_actual_selection(self):
+        summary = section("filtersSection", "downloadFiltersDisclosure")
+        self.assertIn('Text("Active filters")', summary)
+        self.assertIn("TransferFilterSummary.lines(", summary)
+        self.assertNotIn("DisclosureGroup", summary)
+        self.assertNotIn("showDownloadFilters", summary)
+        for value in ["filters", "hasVideoItems", "hasPhotoItems", "hasGPSItems",
+                      "availableModes", "availableChannels"]:
+            self.assertIn(f"viewModel.{value}", summary)
+        self.assertIn(".fixedSize(horizontal: false, vertical: true)", summary)
+
+    def test_destination_copy_matches_conflict_policy(self):
+        destination = section("destinationSection", "downloadOptionsSection")
+        self.assertIn("Matching files are skipped; conflicting files are not overwritten.", destination)
+        self.assertNotIn("Existing files are skipped.", destination)
 
     def test_native_disclosures_start_collapsed(self):
         for state, label in [

@@ -741,7 +741,7 @@ struct ContentView: View {
                         Text(viewModel.destinationURL?.path ?? "No download folder selected")
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
-                        Text("Copies are saved here. Existing files are skipped.")
+                        Text("Copies are saved here. Matching files are skipped; conflicting files are not overwritten.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -819,6 +819,30 @@ struct ContentView: View {
     }
 
     private var filtersSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if viewModel.scanSummary.hasScan {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Active filters")
+                        .font(.callout.weight(.semibold))
+                    ForEach(TransferFilterSummary.lines(
+                        filters: viewModel.filters,
+                        hasVideos: viewModel.hasVideoItems,
+                        hasPhotos: viewModel.hasPhotoItems,
+                        hasGPS: viewModel.hasGPSItems,
+                        modes: viewModel.availableModes,
+                        channels: viewModel.availableChannels
+                    ), id: \.self) { line in
+                        Text(line)
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            downloadFiltersDisclosure
+        }
+    }
+
+    private var downloadFiltersDisclosure: some View {
         DisclosureGroup("Filters & extras", isExpanded: $showDownloadFilters) {
             VStack(alignment: .leading, spacing: 14) {
                 if viewModel.scanSummary.hasScan {
@@ -1347,7 +1371,6 @@ struct ContentView: View {
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
                     .disabled(viewModel.isCreatingMulticam || viewModel.destinationURL == nil || (viewModel.copyPlan?.items.isEmpty ?? true))
                 }
             }

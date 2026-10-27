@@ -1,7 +1,55 @@
 import Foundation
 
 enum VerificationTest {
+    static func verifyFilterSummaries() -> Bool {
+        var summaryFilters = FilterState()
+        summaryFilters.selectedModes = ["normal"]
+        summaryFilters.selectedChannels = ["front"]
+        func filterLines(_ modes: [String], _ channels: [String] = ["front", "rear"]) -> String {
+            TransferFilterSummary.lines(filters: summaryFilters, hasVideos: true,
+                hasPhotos: true, hasGPS: true, modes: modes, channels: channels).joined(separator: "\n")
+        }
+        let mixedSummary = filterLines(["normal", "time_lapse"])
+        guard mixedSummary.contains("Videos included"),
+              mixedSummary.contains("Photos excluded"), mixedSummary.contains("GPS logs excluded"),
+              mixedSummary.contains("\(ClipItem.displayLabel(for: "normal")) included"),
+              mixedSummary.contains("\(ClipItem.displayLabel(for: "time_lapse")) excluded"),
+              mixedSummary.contains("Front included"), mixedSummary.contains("Rear excluded"),
+              !mixedSummary.contains("Date range:") else {
+            print("VERIFY FAIL: mixed active filter summary omitted selection/exclusion state")
+            return false
+        }
+        summaryFilters.selectedModes = []
+        guard filterLines(["time_lapse"]).contains("Videos excluded"),
+              filterLines(["time_lapse"]).contains("\(ClipItem.displayLabel(for: "time_lapse")) excluded") else {
+            print("VERIFY FAIL: time-lapse-only summary hid excluded footage")
+            return false
+        }
+        summaryFilters.selectedModes = ["time_lapse"]
+        summaryFilters.includePhotos = true
+        summaryFilters.includeGPS = true
+        summaryFilters.datePreset = .lastWeek
+        guard filterLines(["time_lapse"]).contains("Videos included"),
+              filterLines(["time_lapse"]).contains("Photos included"),
+              filterLines(["time_lapse"]).contains("GPS logs included"),
+              filterLines(["time_lapse"]).contains("Date range: Last week") else {
+            print("VERIFY FAIL: active filter summary did not reflect changed selections")
+            return false
+        }
+        summaryFilters.datePreset = .custom
+        let customSummary = filterLines(["time_lapse"])
+        guard customSummary.contains(summaryFilters.startDate.formatted(date: .abbreviated, time: .omitted)),
+              customSummary.contains(summaryFilters.endDate.formatted(date: .abbreviated, time: .omitted)),
+              customSummary.contains("Date range: Custom") else {
+            print("VERIFY FAIL: custom date summary omitted selected boundaries")
+            return false
+        }
+        print("VERIFY PASS: active filter summaries cover mixed, time-lapse-only, changed types/channels and date boundaries")
+        return true
+    }
+
     static func run() -> Bool {
+        guard verifyFilterSummaries() else { return false }
         do {
             guard ScanSummary(sourcePath: "/Volumes/CARD").hasScan == false,
                   ScanSummary(sourcePath: "/Volumes/CARD", scannedFiles: 1).hasScan else {
