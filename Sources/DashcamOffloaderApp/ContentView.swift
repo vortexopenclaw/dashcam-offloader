@@ -19,8 +19,10 @@ struct ContentView: View {
     @StateObject var viewModel: TransferViewModel
     @State private var isFeedbackPresented = false
     @State private var cardLearningWindow: NSWindow?
-    @State private var showDownloadOptions = true
+    @State private var showDownloadOptions = false
     @State private var showDownloadFilters = false
+    @State private var showCameraDetails = false
+    @State private var showFileReview = false
     @State private var selectedProfileBrand: String?
     @State private var selectedCatalogModel: CameraModelChoice?
     @State private var reviewSortOrder: [KeyPathComparator<CopyPlanItem>] = [
@@ -169,7 +171,7 @@ struct ContentView: View {
                     Label(viewModel.isScanning ? "Scanning" : "Rescan Selected Card", systemImage: "waveform.path.ecg")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .disabled(viewModel.selectedSource == nil || viewModel.isScanning)
 
                 if !viewModel.hiddenSourceVolumeNames.isEmpty {
@@ -246,7 +248,10 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     sourceSection
+                    Divider()
                     destinationSection
+                    Divider()
+                    downloadOptionsSection
                     filtersSection
                     planSection
                     resultsSection
@@ -259,51 +264,57 @@ struct ContentView: View {
     }
 
     private var sourceSection: some View {
-        GroupBox(viewModel.importMode == .dashcamFootage ? "1. Pick Your Memory Card" : "1. Pick Your Video Folder") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.selectedSource?.displayPath ?? "No source selected")
-                            .font(.subheadline)
-                            .textSelection(.enabled)
-                            .lineLimit(2)
-                        Text(viewModel.importMode == .dashcamFootage
-                            ? "Choose the card from your dashcam. The app only reads from the card and never changes it."
-                            : "Choose a folder of regular camera footage. The app only reads from it and never changes it.")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(viewModel.importMode == .dashcamFootage ? "Memory card" : "Video folder",
+                          systemImage: viewModel.importMode == .dashcamFootage ? "externaldrive" : "folder")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.selectedSource?.name ?? "No source selected")
+                        .font(.title2.bold())
+                    if let source = viewModel.selectedSource {
+                        Text(source.displayPath)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button {
-                        viewModel.chooseSourceFolder()
-                    } label: {
-                        Label("Choose", systemImage: viewModel.importMode == .dashcamFootage ? "externaldrive" : "folder")
+                            .textSelection(.enabled)
+                            .help(source.displayPath)
                     }
                 }
+                Spacer()
+                Button {
+                    viewModel.chooseSourceFolder()
+                } label: {
+                    Label("Change…", systemImage: "folder")
+                }
+                .accessibilityLabel("Change source")
+            }
 
-                if viewModel.scanSummary.hasScan {
-                    Divider()
-                    HStack(spacing: 16) {
-                        Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
-                        Label("\(viewModel.scanSummary.copyableItems) downloadable", systemImage: "checkmark.circle")
-                        Label("\(viewModel.scanSummary.excludedItems) excluded", systemImage: "nosign")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Text("Original files stay on the source. The app only reads from it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                    if viewModel.isCheckingCardHealth || viewModel.cardHealthReport.didComplete {
-                        Divider()
-                        cardHealthSection
-                    }
+            if viewModel.scanSummary.hasScan {
+                Text(cameraDetectionTitle)
+                    .font(.headline)
+                FlowLayout(spacing: 16) {
+                    Label("\(viewModel.scanSummary.scannedFiles) scanned", systemImage: "doc")
+                    Label("\(viewModel.scanSummary.copyableItems) downloadable", systemImage: "checkmark.circle")
+                    Label("\(viewModel.scanSummary.excludedItems) excluded", systemImage: "nosign")
+                }
+                .font(.callout.monospacedDigit())
 
-                    Divider()
+                if viewModel.isCheckingCardHealth || viewModel.cardHealthReport.didComplete {
+                    cardHealthSection
+                }
+
+                DisclosureGroup("Camera details & profile", isExpanded: $showCameraDetails) {
                     detectionSection
-                    Divider()
-                    cardSelectionControls
+                        .padding(.top, 8)
                 }
             }
-            .padding(8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -362,10 +373,8 @@ struct ContentView: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Dashcam Offloader")
+                Text("Download your footage")
                     .font(.largeTitle.bold())
-                Text("Download dashcam footage from a memory card to a folder on your computer.")
-                    .foregroundStyle(.secondary)
                 Text(viewModel.statusMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -379,63 +388,60 @@ struct ContentView: View {
     }
 
     private var detectionSection: some View {
-        GroupBox("Camera") {
-            VStack(alignment: .leading, spacing: 12) {
-                if viewModel.profiles.isEmpty {
-                    Text("No profiles loaded")
+        VStack(alignment: .leading, spacing: 12) {
+            if viewModel.profiles.isEmpty {
+                Text("No profiles loaded")
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(cameraDetectionTitle)
+                        .font(.headline)
+                    Text(cameraDetectionDetail)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(cameraDetectionTitle)
-                            .font(.headline)
-                        Text(cameraDetectionDetail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                }
+
+                HStack(spacing: 8) {
+                    compactProfileMenu(
+                        title: activeProfileBrand ?? "Brand",
+                        placeholder: "Brand",
+                        options: viewModel.cameraModelsByBrand.map(\.brand)
+                    ) { brand in
+                        selectedProfileBrand = brand
+                        selectedCatalogModel = nil
                     }
 
-                    HStack(spacing: 8) {
-                        compactProfileMenu(
-                            title: activeProfileBrand ?? "Brand",
-                            placeholder: "Brand",
-                            options: viewModel.cameraModelsByBrand.map(\.brand)
-                        ) { brand in
-                            selectedProfileBrand = brand
-                            selectedCatalogModel = nil
+                    cameraModelMenu
+                    .disabled(activeProfileBrand == nil)
+                }
+                .fixedSize(horizontal: true, vertical: false)
+
+                if let activeCameraChoice,
+                   let technicalDetails = activeCameraChoice.knownModel {
+                    Divider()
+                    cameraTechnicalDetails(technicalDetails, choice: activeCameraChoice)
+                }
+
+                if shouldShowLearnCardPrompt {
+                    Divider()
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(learnCardPromptTitle)
+                                .font(.subheadline.bold())
+                            Text(learnCardPromptDetail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-
-                        cameraModelMenu
-                        .disabled(activeProfileBrand == nil)
-                    }
-                    .fixedSize(horizontal: true, vertical: false)
-
-                    if let activeCameraChoice,
-                       let technicalDetails = activeCameraChoice.knownModel {
-                        Divider()
-                        cameraTechnicalDetails(technicalDetails, choice: activeCameraChoice)
-                    }
-
-                    if shouldShowLearnCardPrompt {
-                        Divider()
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(learnCardPromptTitle)
-                                    .font(.subheadline.bold())
-                                Text(learnCardPromptDetail)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button {
-                                presentCardLearningWindow()
-                            } label: {
-                                Label("Review & Submit", systemImage: "graduationcap")
-                            }
-                            .disabled(viewModel.isScanning || !viewModel.scanSummary.hasScan)
+                        Spacer()
+                        Button {
+                            presentCardLearningWindow()
+                        } label: {
+                            Label("Review & Submit", systemImage: "graduationcap")
                         }
+                        .disabled(viewModel.isScanning || !viewModel.scanSummary.hasScan)
                     }
                 }
             }
-            .padding(8)
         }
     }
 
@@ -726,13 +732,16 @@ struct ContentView: View {
     }
 
     private var destinationSection: some View {
-        GroupBox("2. Choose Download Folder") {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Download folder", systemImage: "folder")
+                .font(.headline)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(viewModel.destinationURL?.path ?? "No download folder selected")
-                            .lineLimit(1)
-                        Text("Source cards are never modified. Copies go only to this folder.")
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Copies are saved here. Existing files are skipped.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -748,17 +757,25 @@ struct ContentView: View {
                         Button {
                             viewModel.chooseDestinationFolder()
                         } label: {
-                            Label("Choose Folder", systemImage: "folder")
+                            Label("Change…", systemImage: "folder")
                         }
+                        .accessibilityLabel("Change download folder")
                     }
                 }
 
                 if viewModel.destinationURL == nil {
-                    Label("Choose a download folder before downloading. The preview below will populate after the card scan, but copying stays disabled until a folder is selected.", systemImage: "exclamationmark.circle")
+                    Label("Choose a download folder to enable downloading.", systemImage: "exclamationmark.circle")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
 
+            }
+        }
+    }
+
+    private var downloadOptionsSection: some View {
+        DisclosureGroup("Download options", isExpanded: $showDownloadOptions) {
+            VStack(alignment: .leading, spacing: 12) {
                 Toggle("Open download folder when complete", isOn: $viewModel.openDestinationWhenComplete)
                     .disabled(viewModel.destinationURL == nil)
                 if viewModel.recognizesFourChannelFootage {
@@ -781,134 +798,97 @@ struct ContentView: View {
                     Button("Open Multicams in Final Cut") { viewModel.openMulticam() }
                 }
 
-                expandableSection("Download options", isExpanded: $showDownloadOptions) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            Text("Video filename suffix")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            TextField(
-                                "Optional text appended to the end of the file name",
-                                text: Binding(
-                                    get: { viewModel.outputNamingOptions.videoFilenameSuffix },
-                                    set: { viewModel.setVideoFilenameSuffix($0) }
-                                )
-                            )
-                            .textFieldStyle(.roundedBorder)
-                        }
-                        Toggle("Eject card when complete", isOn: $viewModel.ejectSourceWhenComplete)
-                            .disabled(viewModel.selectedSource == nil)
-                    }
-                    .font(.caption)
-                    .padding(.top, 6)
+                HStack(spacing: 8) {
+                    Text("Video filename suffix")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField(
+                        "Optional text appended to the end of the file name",
+                        text: Binding(
+                            get: { viewModel.outputNamingOptions.videoFilenameSuffix },
+                            set: { viewModel.setVideoFilenameSuffix($0) }
+                        )
+                    )
+                    .textFieldStyle(.roundedBorder)
                 }
+                Toggle("Eject card when complete", isOn: $viewModel.ejectSourceWhenComplete)
+                    .disabled(viewModel.selectedSource == nil)
             }
-            .padding(8)
+            .padding(.top, 8)
         }
     }
 
     private var filtersSection: some View {
-        GroupBox("More Download Options") {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Dates, folders, and extras.")
+        DisclosureGroup("Filters & extras", isExpanded: $showDownloadFilters) {
+            VStack(alignment: .leading, spacing: 14) {
+                if viewModel.scanSummary.hasScan {
+                    cardSelectionControls
+                    Divider()
+                }
+                Picker("Date range", selection: Binding(
+                    get: { viewModel.filters.datePreset },
+                    set: { viewModel.setDatePreset($0) }
+                )) {
+                    ForEach(DateFilterPreset.allCases) { preset in
+                        Text(preset.label).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                if viewModel.filters.datePreset == .custom {
+                    DatePicker("From", selection: Binding(
+                        get: { viewModel.filters.startDate },
+                        set: { viewModel.setCustomStartDate($0) }
+                    ), displayedComponents: .date)
+                    DatePicker("Through", selection: Binding(
+                        get: { viewModel.filters.endDate },
+                        set: { viewModel.setCustomEndDate($0) }
+                    ), displayedComponents: .date)
+                }
+
+                if viewModel.shouldShowGoProLoopGroupOption {
+                    Picker("Looping videos", selection: Binding(
+                        get: { viewModel.filters.goProLoopGroupOutput },
+                        set: { viewModel.setGoProLoopGroupOutput($0) }
+                    )) {
+                        ForEach(GoProLoopGroupOutput.allCases) { option in
+                            Text(option.label).tag(option)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    Text("GoPro records long looping videos as chained segments. The merged clip combines each chain into one video.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Divider()
+
+                Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                expandableSection("Filters and extras", isExpanded: $showDownloadFilters) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        Picker("Date range", selection: Binding(
-                            get: { viewModel.filters.datePreset },
-                            set: { viewModel.setDatePreset($0) }
-                        )) {
-                            ForEach(DateFilterPreset.allCases) { preset in
-                                Text(preset.label).tag(preset)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
-                        if viewModel.filters.datePreset == .custom {
-                            DatePicker("From", selection: Binding(
-                                get: { viewModel.filters.startDate },
-                                set: { viewModel.setCustomStartDate($0) }
-                            ), displayedComponents: .date)
-                            DatePicker("Through", selection: Binding(
-                                get: { viewModel.filters.endDate },
-                                set: { viewModel.setCustomEndDate($0) }
-                            ), displayedComponents: .date)
-                        }
-
-                        if viewModel.shouldShowGoProLoopGroupOption {
-                            Picker("Looping videos", selection: Binding(
-                                get: { viewModel.filters.goProLoopGroupOutput },
-                                set: { viewModel.setGoProLoopGroupOutput($0) }
-                            )) {
-                                ForEach(GoProLoopGroupOutput.allCases) { option in
-                                    Text(option.label).tag(option)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            Text("GoPro records long looping videos as chained segments. The merged clip combines each chain into one video.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Divider()
-
-                        Text("Separate GPS files are copied when the card exposes them. Cameras that embed GPS in video files keep that data with the clip.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Picker("Organize downloads", selection: Binding(
-                            get: { viewModel.filters.outputOrganizationMode },
-                            set: { viewModel.setOutputOrganizationMode($0) }
-                        )) {
-                            ForEach(OutputOrganizationMode.allCases) { mode in
-                                Text(mode.label).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        Text(viewModel.filters.outputOrganizationMode.helpText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Toggle("Copy camera settings and boot logs", isOn: Binding(
-                            get: { viewModel.filters.includeCameraSettings },
-                            set: { viewModel.filters.includeCameraSettings = $0; viewModel.rebuildPlan() }
-                        ))
-                        Text("Copies Config/Settings folders and boot logs into a separate Camera Settings folder for troubleshooting.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                Picker("Organize downloads", selection: Binding(
+                    get: { viewModel.filters.outputOrganizationMode },
+                    set: { viewModel.setOutputOrganizationMode($0) }
+                )) {
+                    ForEach(OutputOrganizationMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
                     }
-                    .padding(.top, 6)
                 }
-            }
-            .padding(8)
-        }
-    }
+                .pickerStyle(.menu)
+                Text(viewModel.filters.outputOrganizationMode.helpText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
-    private func expandableSection<Content: View>(
-        _ title: String,
-        isExpanded: Binding<Bool>,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button {
-                isExpanded.wrappedValue.toggle()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
-                    Text(title)
-                    Spacer()
-                }
-                .contentShape(Rectangle())
+                Toggle("Copy camera settings and boot logs", isOn: Binding(
+                    get: { viewModel.filters.includeCameraSettings },
+                    set: { viewModel.filters.includeCameraSettings = $0; viewModel.rebuildPlan() }
+                ))
+                Text("Copies Config/Settings folders and boot logs into a separate Camera Settings folder for troubleshooting.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
-
-            if isExpanded.wrappedValue {
-                content()
-            }
+            .padding(.top, 8)
         }
     }
 
@@ -947,55 +927,59 @@ struct ContentView: View {
     }
 
     private var planSection: some View {
-        GroupBox("Review and Download") {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files")
-                    Text(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")
-                        .foregroundStyle(.secondary)
-                    if !viewModel.selectedQueueItemIDs.isEmpty {
-                        Text("\(viewModel.selectedQueueItemIDs.count) selected")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files in queue")
+                Text(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.callout.monospacedDigit())
+            DisclosureGroup("File review", isExpanded: $showFileReview) {
+                VStack(alignment: .leading, spacing: 12) {
+                    FlowLayout(spacing: 10) {
+                        if !viewModel.selectedQueueItemIDs.isEmpty {
+                            Text("\(viewModel.selectedQueueItemIDs.count) selected")
+                                .foregroundStyle(.secondary)
+                        }
+                        Button {
+                            viewModel.removeSelectedQueueItems()
+                        } label: {
+                            Label("Remove Selected", systemImage: "minus.circle")
+                        }
+                        .disabled(viewModel.selectedQueueItemIDs.isEmpty || viewModel.copyProgress.isRunning)
+
+                        Button {
+                            viewModel.restoreQueuedFiles()
+                        } label: {
+                            Label("Reset Queue", systemImage: "arrow.counterclockwise")
+                        }
+                        .disabled(viewModel.copyProgress.isRunning)
+
+                        Button {
+                            viewModel.rebuildPlan()
+                        } label: {
+                            Label("Refresh Preview", systemImage: "doc.text.magnifyingglass")
+                        }
+                        .disabled(viewModel.selectedProfile == nil || viewModel.copyProgress.isRunning)
+                    }
+
+                    if viewModel.destinationURL == nil {
+                        Label("Download folder required before copying", systemImage: "folder.badge.questionmark")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    Spacer()
-                    Button {
-                        viewModel.removeSelectedQueueItems()
-                    } label: {
-                        Label("Remove Selected", systemImage: "minus.circle")
+
+                    if viewModel.queueAlreadyExistingCount > 0 {
+                        Label("\(viewModel.queueAlreadyExistingCount) of these files are already in the download folder and will be skipped", systemImage: "checkmark.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .disabled(viewModel.selectedQueueItemIDs.isEmpty || viewModel.copyProgress.isRunning)
 
-                    Button {
-                        viewModel.restoreQueuedFiles()
-                    } label: {
-                        Label("Reset Queue", systemImage: "arrow.counterclockwise")
-                    }
-                    .disabled(viewModel.copyProgress.isRunning)
-
-                    Button {
-                        viewModel.rebuildPlan()
-                    } label: {
-                        Label("Refresh Preview", systemImage: "doc.text.magnifyingglass")
-                    }
-                    .disabled(viewModel.selectedProfile == nil || viewModel.copyProgress.isRunning)
+                    reviewTable
+                        .frame(minHeight: 220)
                 }
-
-                if viewModel.destinationURL == nil {
-                    Label("Download folder required before copying", systemImage: "folder.badge.questionmark")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if viewModel.queueAlreadyExistingCount > 0 {
-                    Label("\(viewModel.queueAlreadyExistingCount) of these files are already in the download folder and will be skipped", systemImage: "checkmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                reviewTable
-                    .frame(minHeight: 220)
+                .padding(.top, 8)
             }
-            .padding(8)
         }
     }
 
@@ -1301,29 +1285,44 @@ struct ContentView: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
-            ProgressView(value: viewModel.copyProgress.fraction)
-                .progressViewStyle(.linear)
-                .transaction { transaction in
-                    transaction.animation = nil
-                }
+            if viewModel.copyProgress.isRunning || viewModel.copyProgress.totalFiles > 0 {
+                ProgressView(value: viewModel.copyProgress.fraction)
+                    .progressViewStyle(.linear)
+                    .transaction { transaction in
+                        transaction.animation = nil
+                    }
+            }
             HStack {
-                Text(viewModel.copyProgress.percentText)
-                    .font(.headline.monospacedDigit())
-                Text(viewModel.copyProgress.filesText)
-                    .foregroundStyle(.secondary)
-                if !viewModel.copyProgress.speedText.isEmpty {
-                    Text(viewModel.copyProgress.speedText)
-                        .font(.subheadline.monospacedDigit())
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(viewModel.copyPlan?.selectedFileCount ?? 0) files · \(viewModel.copyPlan?.selectedBytes.formattedBytes ?? "0 bytes")")
+                        .font(.headline.monospacedDigit())
+                    if !viewModel.selectedQueueItemIDs.isEmpty {
+                        Text("\(viewModel.selectedQueueItemIDs.count) selected for download")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if viewModel.copyProgress.isRunning || viewModel.copyProgress.totalFiles > 0 {
+                        FlowLayout(spacing: 8) {
+                            Text(viewModel.copyProgress.percentText)
+                                .monospacedDigit()
+                            Text(viewModel.copyProgress.filesText)
+                            if !viewModel.copyProgress.speedText.isEmpty {
+                                Text(viewModel.copyProgress.speedText)
+                                    .monospacedDigit()
+                            }
+                            if !viewModel.copyProgress.estimatedRemainingText.isEmpty {
+                                Text(viewModel.copyProgress.estimatedRemainingText)
+                                    .monospacedDigit()
+                            }
+                        }
+                        .font(.caption)
                         .foregroundStyle(.secondary)
+                        Text(viewModel.copyProgress.currentFile)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
-                if !viewModel.copyProgress.estimatedRemainingText.isEmpty {
-                    Text(viewModel.copyProgress.estimatedRemainingText)
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                Text(viewModel.copyProgress.currentFile)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
                 Spacer()
                 Button {
                     viewModel.openOutputDirectory()
@@ -1348,6 +1347,7 @@ struct ContentView: View {
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
                     .disabled(viewModel.isCreatingMulticam || viewModel.destinationURL == nil || (viewModel.copyPlan?.items.isEmpty ?? true))
                 }
             }
