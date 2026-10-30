@@ -1,5 +1,6 @@
-# Dashcam Offloader 0.1.36
+# Dashcam Offloader 0.1.37
 
-- Correct Vantrue E1 Pro S recognition without confusing it with the older E1 Pro.
-- Use short Vantrue model names such as E1, E1 Pro, E1 Pro S, S1, and S1 Pro, while retaining older names as compatibility aliases.
-- Keep shared or conflicting Vantrue evidence unconfirmed instead of selecting the wrong model. Source cards remain read-only.
+- Suggest learning-sheet channel counts from observed video roles, not a model's maximum camera capacity. Keep uncertain or multitrack setups marked Unknown.
+- Preserve your manually selected channel count when the learning sheet refreshes.
+- Recognize explicit VIOFO A329T video stamps without confusing A329TC or A329TW models, and include the verified front-only recording variant.
+- Retain the latest Vantrue recognition and model-name improvements.

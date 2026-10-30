@@ -5,6 +5,12 @@ status: experimental
 related_profiles:
   - viofo-a329s
 channel_variants:
+  - channels: 1
+    roles:
+      - front
+    validation: owner_confirmed_card_scan
+    firmware: V2.2_260815
+    notes: Front-only recording configuration, not a claim about physical accessory connections. Existing 2CH and 3CH capabilities remain separate.
   - channels: 2
     roles:
       - front
@@ -24,9 +30,16 @@ sampled_variant:
     - telephoto
   validation: app_submission_sampled
 source_notes:
+  - https://github.com/vortexopenclaw/dashcam-camera-profiles/blob/6ebff930a4ebf0dae0038c9c59d4cdbd19d38d26/docs/data/a329t-v2.2_260815-1ch-evidence.json
   - docs/card-profiles/viofo-a329t.md
   - docs/research/viofo-a329t.md
 detection:
+  high_confidence:
+    - method: osd_ocr
+      source: front_channel_video
+      strip: bottom_16pct
+      matches: "VIOFO A329T"
+      notes: Require an explicit A329T model stamp for native recognition of owner-labeled front-only cards. Shared F/PF filenames alone must not distinguish A329T from A329S or A229 siblings.
   supporting:
     - folder: DCIM/Movie
       validation: app_submission_sampled
