@@ -74,6 +74,8 @@ Not present for every clip — begin appearing once GPS receiver acquires satell
 | Frame rate | 30 fps | assumed |
 | Container | MOV | confirmed |
 
+The [historical PR #5 reconciliation](../research/card-spec-pr5-reconciliation.md#maxcam-measurements-pending-corroboration) preserves branch-reported 1440p measurements pending corroboration. Those reports do not upgrade the assumptions above or establish factory defaults.
+
 ---
 
 ## Features
@@ -87,4 +89,6 @@ Not present for every clip — begin appearing once GPS receiver acquires satell
 
 ## Detection Notes
 
-Primary signal: `Normal/MAXcam360c/` folder. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic — do not use. `DATA/serial_num.txt` and `DATA/gps_userdb.bin` provide supporting evidence.
+Primary signal: `Normal/MAXcam360c/` folder, with `Event/MAXcam360c/` as supporting structural evidence when present. The literal string "MAXcam360c" as a subfolder is unique among all profiled cameras. Volume label `NO NAME` is generic; do not use it for detection. Do not read or publish `DATA/serial_num.txt` or `DATA/gps_userdb.bin` contents for detection: they contain a device serial number and user GPS lockout data. Prefer model-named recording folders and clip patterns. This guidance does not change the YAML profile's presence-only supporting signals.
+
+PR #5 reports that `MasterVersionInfo_SW_v1.13_HW_v1.01.bin` was manually copied for a firmware update. Keep that [historical provenance warning](../research/card-spec-pr5-reconciliation.md#maxcam-measurements-pending-corroboration); a copied update file is not proof of recorder identity or installed firmware and must not become a normal-card requirement.

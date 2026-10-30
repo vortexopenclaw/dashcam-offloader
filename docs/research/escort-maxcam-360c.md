@@ -44,6 +44,8 @@
 
 ## Open Questions
 
+Historical draft PR #5 reports 1440p30 H.264 normal/event samples at about 28.4-28.6 Mbps and a manually copied firmware-update file. The [reconciliation record](card-spec-pr5-reconciliation.md#maxcam-measurements-pending-corroboration) preserves these unverified claims and their commit/comment provenance. The retained draft has no raw probe output to corroborate them, so the unconfirmed codec/resolution status above remains unchanged.
+
 1. `_gps.bin` binary format — ESCORT proprietary; not decoded
 2. Is GPS lock the only trigger for sidecars starting mid-session?
 3. Does Event/ share the per-day sequence counter with Normal/?
