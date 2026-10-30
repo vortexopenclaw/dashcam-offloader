@@ -32,6 +32,12 @@ test("retired Electron prefix never reads private archival objects", async () =>
       assert.equal(response.status, 410);
       assert.equal(response.headers.get("cache-control"), "no-store");
       assert.deepEqual(env.reads, []);
+      if (method === "HEAD") {
+        assert.equal(response.body, null);
+        assert.equal(await response.text(), "");
+      } else {
+        assert.deepEqual(await response.json(), { error: "retired_electron_distribution" });
+      }
     }
   }
 });

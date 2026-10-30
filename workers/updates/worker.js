@@ -98,8 +98,8 @@ function privacyPolicyResponse(method) {
   });
 }
 
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
+function jsonResponse(body, status = 200, method = "GET") {
+  return new Response(method === "HEAD" ? null : JSON.stringify(body, null, 2), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
@@ -176,7 +176,7 @@ export default {
 
     // Retired Electron distribution is unavailable; retain R2 bytes privately.
     if (path === "/dashcam-offloader/desktop" || path.startsWith(`/${DESKTOP_UPDATE_PREFIX}`)) {
-      return jsonResponse({ error: "retired_electron_distribution" }, 410);
+      return jsonResponse({ error: "retired_electron_distribution" }, 410, request.method);
     }
 
     if (path === "/dashcam-offloader/download/latest") {
