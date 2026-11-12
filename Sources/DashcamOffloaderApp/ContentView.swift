@@ -51,25 +51,24 @@ struct ContentView: View {
                 Label("Download Folder", systemImage: "folder")
             }
             .help("Choose where downloaded footage should be saved.")
-            Menu {
-                Button {
-                    viewModel.checkForUpdates(userInitiated: true)
-                } label: {
-                    Label("Check for Updates", systemImage: "arrow.down.circle")
-                }
-                .disabled(viewModel.isCheckingForUpdates)
-
-                Divider()
-
-                Button {
-                    isFeedbackPresented = true
-                } label: {
-                    Label("Feedback", systemImage: "bubble.left.and.bubble.right")
-                }
+            Button {
+                viewModel.checkForUpdates(userInitiated: true)
             } label: {
-                Label("More", systemImage: "ellipsis.circle")
+                Label("Check for Updates", systemImage: "arrow.down.circle")
             }
-            .help("Updates and feedback")
+            .labelStyle(.iconOnly)
+            .disabled(viewModel.isCheckingForUpdates)
+            .accessibilityLabel("Check for Updates")
+            .help("Check for Updates")
+
+            Button {
+                isFeedbackPresented = true
+            } label: {
+                Label("Feedback", systemImage: "bubble.left.and.bubble.right")
+            }
+            .labelStyle(.iconOnly)
+            .accessibilityLabel("Feedback")
+            .help("Send feedback or report a problem.")
         }
         .sheet(isPresented: $viewModel.isCardHealthDetailsPresented) {
             CardHealthDetailsView(report: viewModel.cardHealthReport)
