@@ -220,6 +220,18 @@ function validateFeedback(body) {
     if (Array.isArray(scan.settingSnapshots) && scan.settingSnapshots.length > MAX_SETTING_SNAPSHOTS) {
       return { ok: false, error: "too_many_setting_snapshots" };
     }
+    const sanitized = sanitizeScan(scan);
+    const bySource = new Map(), byPath = new Map();
+    for (const sample of [...sanitized.mediaFileSamples, ...sanitized.videoSpecSummaries.flatMap(summary => summary.storageRateSamples)]) {
+      if (!sample.sourceIdentifier) continue;
+      const path = JSON.stringify([sample.folder, sample.filename]);
+      if ((bySource.has(sample.sourceIdentifier) && bySource.get(sample.sourceIdentifier) !== path) ||
+          (byPath.has(path) && byPath.get(path) !== sample.sourceIdentifier)) {
+        return {ok:false, error:"conflicting_media_identity"};
+      }
+      bySource.set(sample.sourceIdentifier, path);
+      byPath.set(path, sample.sourceIdentifier);
+    }
   }
 
   return { ok: true };
@@ -250,7 +262,9 @@ function sanitizeTraining(training) {
 
 function safeMediaBasename(name) {
   return typeof name === "string" &&
-    /^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$/i.test(name);
+    name.length <= 180 && !name.includes("..") && !/[\x00-\x1f\x7f]/.test(name) &&
+    !/(?:wifi|password|credential|gps|serial)|\d{1,3}\.\d{3,}/i.test(name) &&
+    /^[A-Za-z0-9][A-Za-z0-9 _.-]*\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$/i.test(name);
 }
 
 function sampledFilenamePatterns(names) {
@@ -275,15 +289,23 @@ const CAMERA_DIRECTORIES = new Set([
   "inf", "pevent", "lapse", "lockedvideo", "secvideo", "safety_box", "bookmark",
   "originalfiles", "panophoto", "private", "avchd", "m4root", "360cardvr", "100",
   "back_emr", "back_norm", "front_emer", "rear_emer", "front_norm", "rear_norm",
-  "emr", "norm", "motion_timelapse_rec",
+  "emr", "norm", "motion_timelapse_rec", "inside",
 ]);
 
 function cameraFolder(path) {
   if (path === ".") return path;
-  if (typeof path !== "string" || path.length > 1024) return null;
+  if (typeof path !== "string" || path.length > 1024 || /[\x00-\x1f\x7f\\]/.test(path)) return null;
   const parts = path.split("/");
   return parts.length <= 12 && parts.every(part => CAMERA_DIRECTORIES.has(part.toLowerCase()) ||
     /^(?:\d{3}[A-Za-z]{3,8}|folder-[1-9]\d{0,3})$/.test(part)) ? path : null;
+}
+
+function privateIdentity(sample) {
+  const sourceIdentifier = typeof sample.sourceIdentifier === "string" && /^source-[1-9]\d{0,8}$/.test(sample.sourceIdentifier) && !/[\x00-\x1f\x7f]/.test(sample.sourceIdentifier)
+    ? sample.sourceIdentifier : null;
+  const folder = cameraFolder(sample.folder);
+  return sourceIdentifier && folder && safeMediaBasename(sample.filename)
+    ? {sourceIdentifier, filename: sample.filename, folder} : {};
 }
 
 function mediaFileSample(sample) {
@@ -294,7 +316,7 @@ function mediaFileSample(sample) {
     ? sample.permissionBits : null;
   const flag = value => typeof value === "boolean" ? value : null;
   const token = value => typeof value === "string" && /^[a-zA-Z0-9 _/-]{1,80}$/.test(value) ? value : null;
-  return {folder, filename: sample.filename, mode: token(sample.mode),
+  return {...privateIdentity(sample), folder, filename: sample.filename, mode: token(sample.mode),
     outputCategory: token(sample.outputCategory), channel: token(sample.channel),
     fileSizeBytes: nullableNumber(sample.fileSizeBytes), permissionBits: bits,
     filesystemReadOnly: bits === null ? null : (bits & 0o222) === 0,
@@ -306,7 +328,7 @@ function sanitizeScan(scan) {
   const filenameSamples = Array.isArray(scan.filenameSamples)
     ? scan.filenameSamples.slice(0, 100).filter(safeMediaBasename)
     : [];
-  return {
+  const result = {
     // Names and paths can be personal data on NAS and regular-video imports.
     identifiedCamera: sanitizeIdentifiedCamera(scan.identifiedCamera),
     selectedProfileID: optionalString(scan.selectedProfileID),
@@ -325,7 +347,7 @@ function sanitizeScan(scan) {
     timestampSourceCounts: countMap(scan.timestampSourceCounts),
     suspiciousTimestampItems: numberValue(scan.suspiciousTimestampItems),
     inferredParkingPatternCounts: countMap(scan.inferredParkingPatternCounts),
-    // Exact bounded camera-media basenames, never source paths or arbitrary names.
+    // Exact bounded reviewed media basenames, including unfamiliar camera grammars; never host paths.
     filenameSamples,
     filenamePatternSummaries: sampledFilenamePatterns(filenameSamples),
     directorySummaries: Array.isArray(scan.directorySummaries) ? scan.directorySummaries.slice(0, 160)
@@ -350,6 +372,19 @@ function sanitizeScan(scan) {
       ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
       : [],
   };
+  if (scan.evidenceCounts && typeof scan.evidenceCounts === "object") {
+    const count = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+    const pairs = result.videoSpecSummaries.flatMap(summary => summary.storageRateSamples);
+    const retainedIdentities = new Set([...result.mediaFileSamples, ...pairs]
+      .map(sample => sample.sourceIdentifier).filter(Boolean)).size;
+    const inventoriedMedia = count(scan.evidenceCounts.inventoriedMedia);
+    const inventoriedVideos = count(scan.evidenceCounts.inventoriedVideos);
+    result.evidenceCounts = {inventoriedMedia, inventoriedVideos,
+      measuredVideos: count(scan.evidenceCounts.measuredVideos), retainedIdentities,
+      omittedIdentities: Math.max(0, inventoriedMedia - retainedIdentities),
+      retainedMeasurements: pairs.length, omittedMeasurements: Math.max(0, inventoriedVideos - pairs.length)};
+  }
+  return result;
 }
 
 function sanitizeDirectorySummary(summary) {
@@ -510,7 +545,7 @@ function sanitizeVideoSpecSample(sample) {
   };
 }
 
-// Accept measurements only, never paths, times, GPS, or arbitrary nested fields.
+// Private linked identities are optional; legacy numerical evidence remains intact.
 function sanitizeStorageRateSample(sample) {
   if (!sample || typeof sample !== "object" || Array.isArray(sample)) return null;
   const size = sample.fileSizeBytes, duration = sample.durationSeconds;
@@ -518,6 +553,7 @@ function sanitizeStorageRateSample(sample) {
       !Number.isFinite(duration) || duration <= 0 || duration > 86400) return null;
   const positive = (value, max) => Number.isFinite(value) && value > 0 && value <= max ? value : null;
   return {
+    ...privateIdentity(sample),
     fileSizeBytes: size,
     durationSeconds: duration,
     width: positive(sample.width, 32768),

@@ -1,6 +1,10 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import json
+import subprocess
+import sys
+import tempfile
 spec = importlib.util.spec_from_file_location('rates', Path(__file__).with_name('scan-storage-rates.py'))
 rates = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rates)
@@ -37,6 +41,25 @@ class StorageRateTests(unittest.TestCase):
         result=rates.extract(dict(scan=dict(videoSpecSummaries=[group,dict(group,outputCategory='parking')])) )
         self.assertEqual([s['storageBytesPerSecond'] for s in result['completeFileSamples']],[4000000,2000000])
         self.assertIsNone(rates.measurement(dict(pair,durationSeconds=float('nan'))))
+    def test_anonymous_cli_digest_ignores_private_source_identity(self):
+        pair = dict(fileSizeBytes=120000000, durationSeconds=30, videoBitrate=16000000)
+        outputs = []
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for index in range(2):
+                inputs = root / str(index)
+                inputs.mkdir()
+                record = dict(scan=dict(videoSpecSummaries=[dict(mode='continuous', channel='front',
+                    storageRateSamples=[dict(pair, filename=f'private-name-{index}.MP4',
+                        folder=f'folder-{index+1}', sourceIdentifier=f'source-{index+1}')])]))
+                (inputs / 'record.json').write_text(json.dumps(record))
+                output = root / f'output-{index}.json'
+                subprocess.run([sys.executable, str(Path(__file__).with_name('scan-storage-rates.py')),
+                    str(inputs), str(output)], check=True, capture_output=True, text=True)
+                outputs.append(json.loads(output.read_text()))
+        self.assertEqual(outputs[0], outputs[1])
+        self.assertNotIn('private-name', json.dumps(outputs))
+        self.assertNotIn('sourceIdentifier', json.dumps(outputs))
 
 
 if __name__ == '__main__': unittest.main()

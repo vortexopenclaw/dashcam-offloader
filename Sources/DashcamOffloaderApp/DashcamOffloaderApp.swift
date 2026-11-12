@@ -24,6 +24,10 @@ struct DashcamOffloaderApp: App {
             }
             RunLoop.current.run()
         }
+        if CommandLine.arguments.contains("--verify-private-evidence") {
+            let result = PrivateEvidenceVerification.run(arguments: CommandLine.arguments)
+            Foundation.exit(result ? 0 : 1)
+        }
         if CommandLine.arguments.contains("--verify-update-manifest") {
             let result = UpdateManifestDiagnostic.run(arguments: CommandLine.arguments)
             Foundation.exit(result ? 0 : 1)

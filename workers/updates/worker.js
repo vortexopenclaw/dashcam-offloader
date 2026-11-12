@@ -49,11 +49,11 @@ const PRIVACY_POLICY_HTML = `<!doctype html>
       <li>Your feedback message and optional contact email or handle.</li>
       <li>The app version and submission timestamp.</li>
       <li>User-entered camera manufacturer, model, channel count, channel descriptions, and notes.</li>
-      <li>Only when you opt in, scan statistics, camera-relative folder structure, bounded camera-media filenames, recording-type/channel associations, existing file protection flags and aggregate media technical summaries. Camera filenames may contain recording times. Unrecognized folder names are anonymized while preserving their hierarchy.</li>
+      <li>Only when you opt in, scan statistics, camera-relative folder structure, bounded original video/photo filenames, recording-type/channel associations, existing file protection flags, aggregate media technical summaries and individual measurements linked directly to their source filename and relative camera folder. Filenames can contain recording dates/times or user-added text; review the exact private evidence before submitting. Inventoried, measured, retained and omitted counts disclose sampling. Unrecognized folder names are anonymized while preserving their hierarchy.</li>
     </ul>
 
     <h2>What we do not upload</h2>
-    <p>Feedback and learning submissions are designed not to upload videos, photos, GPS traces, route data, serial numbers, Wi-Fi details, cloud account fields, device IDs, full settings dumps, license plates, host filesystem paths, source names, personal folder names or arbitrary filenames. Existing file protection is inspected without modifying files or permissions. The app sanitizes submissions before upload, and the receiving Worker runs a second sanitization pass before storage.</p>
+    <p>Feedback and learning submissions are designed not to upload videos, photos, GPS traces, route data, serial numbers, Wi-Fi details, cloud account fields, device IDs, full settings dumps, license plates, host filesystem paths, source names, personal folder names or unsafe filenames. Safe unfamiliar media filenames are intentionally retained for camera research only in the reviewed private submission, not published anonymously. Existing file protection is inspected without modifying files or permissions. The app sanitizes submissions before upload, and the receiving Worker runs a second sanitization pass before storage.</p>
 
     <h2>Where submissions are stored</h2>
     <p>Feedback and learning submissions are received by a Cloudflare Worker and stored privately in Cloudflare storage controlled by Vortex Radar. Stored submissions are used to troubleshoot the app, improve camera detection, add or refine dashcam profiles, and respond to users who provide contact information.</p>

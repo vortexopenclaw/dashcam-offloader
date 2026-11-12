@@ -71,7 +71,7 @@ def main():
         if not isinstance(record, dict):
             continue
         candidate = extract(record)
-        candidate['sourceDigest'] = hashlib.sha256(file.read_bytes()).hexdigest()
+        candidate['sourceDigest'] = hashlib.sha256(json.dumps(candidate, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         records.append(candidate)
     args.output.write_text(json.dumps({'reviewRequired': True, 'records': records}, indent=2) + '\n')
     args.output.chmod(0o600)

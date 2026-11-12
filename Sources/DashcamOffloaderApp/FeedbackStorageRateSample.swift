@@ -1,8 +1,11 @@
 import Foundation
 
-/// Anonymous paired measurements. Unlike unrelated size/duration extrema, each
+/// Paired measurements with optional explicitly reviewed private source identity. Each
 /// pair establishes the complete-file rate, including audio, metadata and padding.
 struct FeedbackStorageRateSample: Codable, Hashable, Sendable {
+    var sourceIdentifier: String?
+    var filename: String?
+    var folder: String?
     var fileSizeBytes: Int64
     var durationSeconds: Double
     var width: Int?
@@ -17,6 +20,9 @@ struct FeedbackStorageRateSample: Codable, Hashable, Sendable {
         guard let size = fileSizeBytes, size > 0, size <= 1_000_000_000_000,
               let duration = durationSeconds, duration.isFinite,
               duration > 0, duration <= 86_400 else { return nil }
+        self.sourceIdentifier = nil
+        self.filename = nil
+        self.folder = nil
         self.fileSizeBytes = size
         self.durationSeconds = duration
         self.width = width

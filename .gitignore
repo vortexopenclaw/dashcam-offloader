@@ -4,6 +4,7 @@ tmp/
 dist/
 build/
 .build/
+.build-private/
 __pycache__/
 *.pyc
 backups/

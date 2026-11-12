@@ -64,6 +64,23 @@ class IngestTests(unittest.TestCase):
         self.assertNotIn("Camera/Private", json.dumps(result))
         self.assertNotIn("secret", json.dumps(result))
 
+    def test_private_identity_links_survive_and_unsafe_links_do_not_drop_pairs(self):
+        key = "feedback/2030-01-01/00000000-0000-0000-0000-000000000000.json"
+        pair = {"fileSizeBytes": 100, "durationSeconds": 1, "filename": "N_20300102123456_0001.MP4",
+                "sourceIdentifier": "source-1", "folder": "DCIM/inside/200video"}
+        other = dict(pair, sourceIdentifier="source-2", folder="DCIM/200video")
+        bad = dict(pair, filename="../secret.MP4")
+        result = ingest.derive(key, {"scan": {"filenameSamples": [pair["filename"]],
+            "videoSpecSummaries": [{"channel": "telephoto", "mode": "parking", "storageRateSamples": [pair, other, bad]}]}})
+        retained = result["videoSpecSummaries"][0]["storageRateSamples"]
+        self.assertEqual(result["filenameSamples"], [pair["filename"]])
+        for expected, actual in zip([pair, other], retained):
+            for field in ["filename", "folder", "sourceIdentifier", "fileSizeBytes", "durationSeconds"]:
+                self.assertEqual(actual[field], expected[field])
+        self.assertEqual(len(retained), 3)
+        self.assertNotIn("filename", retained[2])
+        self.assertEqual(retained[2]["fileSizeBytes"], 100)
+
 
 if __name__ == "__main__":
     unittest.main()

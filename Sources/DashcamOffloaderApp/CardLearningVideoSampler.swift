@@ -5,6 +5,7 @@ enum CardLearningVideoSampler {
 
     static func select(_ clips: [ClipItem]) -> [ClipItem] {
         let videos = clips.filter { $0.isVideo && $0.excludedReason == nil }
+        if videos.count <= maximumSamples { return videos.sorted(by: earlier) }
         let grouped = Dictionary(grouping: videos) { clip in
             let folder = clip.relativePath.split(separator: "/").dropLast().joined(separator: "/")
             return [clip.outputCategory, clip.displayMode, clip.channel,
@@ -48,6 +49,7 @@ enum CardLearningVideoSampler {
             if !ordered.isEmpty { append(ordered[ordered.count / 2]) }
             append(ordered.max { $0.size < $1.size })
             append(ordered.min { $0.size < $1.size })
+            for clip in ordered { append(clip) }
             return result
         }
 

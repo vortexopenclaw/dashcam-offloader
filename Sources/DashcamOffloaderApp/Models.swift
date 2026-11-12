@@ -944,6 +944,17 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var candidates: [FeedbackCandidateSnapshot]
     var scanDiagnostics: [ScanDiagnosticEntry]
     var mediaFileSamples: [FeedbackMediaFileSample] = []
+    var evidenceCounts: FeedbackEvidenceCounts? = nil
+}
+
+struct FeedbackEvidenceCounts: Codable, Hashable, Sendable {
+    var inventoriedMedia: Int
+    var inventoriedVideos: Int
+    var measuredVideos: Int
+    var retainedIdentities: Int
+    var omittedIdentities: Int
+    var retainedMeasurements: Int
+    var omittedMeasurements: Int
 }
 
 struct FeedbackDirectorySummary: Codable, Hashable, Sendable {

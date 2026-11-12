@@ -1409,16 +1409,11 @@ final class TransferViewModel: ObservableObject {
         let submittedScan: FeedbackScanSnapshot?
         if kind == .training || includeScan {
             guard !isScanning, scanSummary.hasScan,
-                  scanRevisionAtPreview == nil || scanRevisionAtPreview == scanRevision,
+                  let scanSnapshot, scanRevisionAtPreview == scanRevision,
                   let currentScan = makeFeedbackScanSnapshot(),
                   currentScan.scannedFiles > 0, currentScan.copyableItems > 0,
-                  scanSnapshot == nil || scanSnapshot == currentScan else {
+                  scanSnapshot == currentScan else {
                 feedbackMessage = "Card scan is incomplete or has changed. Finish scanning and reopen the submission window."
-                return
-            }
-            if kind == .training && eligibleClips.contains(where: \.isVideo) &&
-                !currentScan.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) {
-                feedbackMessage = "No video bitrate could be measured. Check the card and rescan before submitting."
                 return
             }
             submittedScan = currentScan
@@ -1519,7 +1514,11 @@ final class TransferViewModel: ObservableObject {
             safe.path = path
             return safe
         }
-        let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips, sourceRoot: sourceRoot, paths: &learningPaths)
+        // Assign payload-local keys from ordered raw relative identities, before aliasing.
+        let orderedIdentities = Set(safeEligibleClips.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }).sorted()
+        let identifiers = Dictionary(uniqueKeysWithValues: orderedIdentities.enumerated().map { ($0.element, "source-\($0.offset + 1)") })
+        let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips, sourceRoot: sourceRoot,
+            paths: &learningPaths, sourceIdentifiers: identifiers)
         observedMultitrackRevision = nil
         let videoSpecSamples = makeVideoSpecSamples(
             from: representativeVideoClips(safeEligibleClips),
@@ -1532,6 +1531,18 @@ final class TransferViewModel: ObservableObject {
         ).map { summary in
             var safe = summary
             safe.folder = learningPaths.folder(summary.folder) ?? "."
+            safe.storageRateSamples = summary.storageRateSamples?.map { sample in
+                var linked = sample
+                if let raw = sample.filename, let identifier = identifiers[raw] {
+                    linked.sourceIdentifier = identifier
+                    linked.filename = raw.split(separator: "/").last.map(String.init)
+                    linked.folder = safe.folder
+                    if !CardLearningStructure.safeMediaBasename(linked.filename ?? "") {
+                        linked.sourceIdentifier = nil; linked.filename = nil; linked.folder = nil
+                    }
+                } else { linked.filename = nil }
+                return linked
+            }
             return safe.forSubmission()
         }
         let settingSnapshots = safeFiles
@@ -1570,16 +1581,8 @@ final class TransferViewModel: ObservableObject {
             )
         }
 
-        // Only camera-shaped media basenames, never directories or arbitrary names.
-        let mediaNamePattern = try! NSRegularExpression(
-            pattern: #"^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$"#,
-            options: [.caseInsensitive]
-        )
-        let feedbackFilenames = Array(Set(safeEligibleClips.map(\.sourceURL.lastPathComponent).filter { name in
-            let range = NSRange(name.startIndex..<name.endIndex, in: name)
-            return mediaNamePattern.firstMatch(in: name, range: range)?.range == range
-        })).sorted().prefix(100)
-        return FeedbackScanSnapshot(
+        let feedbackFilenames = Array(Set(safeEligibleClips.map(\.sourceURL.lastPathComponent).filter(CardLearningStructure.safeMediaBasename))).sorted().prefix(100)
+        var snapshot = FeedbackScanSnapshot(
             // Host paths/source names stay private; only sanitized relative structure is sent.
             volumeName: "",
             requestedSourceName: nil,
@@ -1620,6 +1623,13 @@ final class TransferViewModel: ObservableObject {
             scanDiagnostics: Array(feedbackDiagnostics),
             mediaFileSamples: mediaFileSamples
         )
+        let inventoriedMedia = safeFiles.filter {
+            ClipItem.videoExtensions.contains($0.pathExtension.lowercased()) || ClipItem.photoExtensions.contains($0.pathExtension.lowercased())
+        }
+        snapshot.finishPrivateEvidence(inventoriedMedia: inventoriedMedia.count,
+            inventoriedVideos: inventoriedMedia.filter { ClipItem.videoExtensions.contains($0.pathExtension.lowercased()) }.count,
+            measuredVideos: videoSpecSamples.count)
+        return snapshot
     }
 
     private func sanitizedRelativePath(for clip: ClipItem, sourceRoot: URL?) -> String {
@@ -2126,7 +2136,12 @@ final class TransferViewModel: ObservableObject {
                     sampleBitrateMax: bitrates.max(),
                     sampleDurationMin: durations.min(),
                     sampleDurationMax: durations.max(),
-                    storageRateSamples: bucketSamples.compactMap(FeedbackStorageRateSample.init)
+                    storageRateSamples: bucketSamples.compactMap { sample in
+                        guard var pair = FeedbackStorageRateSample(sample) else { return nil }
+                        // Temporary raw reference used only above to attach the exact private identity.
+                        pair.filename = sample.relativePath
+                        return pair
+                    }
                 )
             }
     }

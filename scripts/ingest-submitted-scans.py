@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Pull opt-in sanitized feedback scans into private, derived local records.
 
-No card is read or uploaded. No feedback message, contact, path, or raw submission
-is persisted. Run repeatedly: each KV submission key produces at most one record.
+No card is read or uploaded. Reviewed safe media basenames, relative camera folders
+and exact measurement links are private evidence. No feedback message, contact, host
+path, or raw submission is persisted. Run repeatedly: each KV submission key produces at most one record.
 """
 from __future__ import annotations
 
@@ -20,7 +21,30 @@ from pathlib import Path
 NAMESPACE = "39129dc4017b48c6bd8b8f4848b25c76"
 KEY = re.compile(r"^feedback/\d{4}-\d{2}-\d{2}/([0-9a-fA-F-]{36})\.json$")
 SAFE_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._+/-]{0,79}$")
-SAFE_MEDIA = re.compile(r"^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$", re.I)
+SAFE_MEDIA = re.compile(r"[A-Za-z0-9][A-Za-z0-9 _.-]*\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)", re.I)
+CAMERA_DIRECTORIES = set("dcim movie movies photo photos parking park ro normal event events emergency manual protected record recordings video videos front rear interior cabin telephoto side continuous motion impact timelapse sos cont_rec evt_rec manual_rec parking_rec motion_rec sos_rec incabin_rec normal_rec event_rec park_rec inf_rec photo_rec blackvue teslacam recentclips savedclips sentryclips roadscout escort_m1 maxcam360c rec clip inf pevent lapse lockedvideo secvideo safety_box bookmark originalfiles panophoto private avchd m4root 360cardvr 100 back_emr back_norm front_emer rear_emer front_norm rear_norm emr norm motion_timelapse_rec inside".split())
+
+
+def safe_media(value):
+    return (isinstance(value, str) and len(value) <= 180 and SAFE_MEDIA.fullmatch(value)
+            and ".." not in value and not re.search(r"(?:wifi|password|credential|gps|serial)|\d{1,3}\.\d{3,}", value, re.I))
+
+
+def safe_folder(value):
+    if value == ".":
+        return value
+    if not isinstance(value, str) or len(value) > 1024:
+        return None
+    parts = value.split("/")
+    return value if len(parts) <= 12 and all(part.lower() in CAMERA_DIRECTORIES or
+        re.fullmatch(r"(?:\d{3}[A-Za-z]{3,8}|folder-[1-9]\d{0,3})", part) for part in parts) else None
+
+
+def private_identity(sample):
+    key, name, folder = (sample.get(field) for field in ("sourceIdentifier", "filename", "folder"))
+    return {"sourceIdentifier": key, "filename": name, "folder": folder} if (
+        isinstance(key, str) and re.fullmatch(r"source-[1-9]\d{0,8}", key) and
+        safe_media(name) and safe_folder(folder)) else {}
 DEFAULT_OUTPUT = Path.home() / ".hermes/profiles/dashcam-offloader/submitted-scans"
 
 
@@ -63,6 +87,7 @@ def derive(key, record):
                     and 0 < duration <= 86_400):
                 continue
             paired.append({
+                **private_identity(sample),
                 "fileSizeBytes": size, "durationSeconds": duration,
                 "width": measurement(sample.get("width")),
                 "height": measurement(sample.get("height")),
@@ -70,6 +95,7 @@ def derive(key, record):
                 "videoBitrate": measurement(sample.get("videoBitrate")),
             })
         specs.append({
+            "folder": safe_folder(item.get("folder")),
             "mode": safe_label(item.get("mode")), "channel": safe_label(item.get("channel")),
             "fileCount": measurement(item.get("fileCount")),
             "resolutions": [v for v in (item.get("sampleResolutions") or [])[:6] if isinstance(v, str) and re.fullmatch(r"\d{2,5}x\d{2,5}", v)],
@@ -79,7 +105,7 @@ def derive(key, record):
             "codecs": [v for v in (item.get("sampleCodecs") or [])[:6] if safe_label(v)],
             "storageRateSamples": paired,
         })
-    names = [name for name in (scan.get("filenameSamples") or [])[:100] if isinstance(name, str) and SAFE_MEDIA.fullmatch(name)]
+    names = [name for name in (scan.get("filenameSamples") or [])[:100] if safe_media(name)]
     patterns = []
     for item in (scan.get("filenamePatternSummaries") or [])[:32]:
         if not isinstance(item, dict):
@@ -96,6 +122,19 @@ def derive(key, record):
         flags.append("parking subtype is app-inferred; bitrate does not confirm camera setting")
     if not safe_label(training.get("model")):
         flags.append("model not owner-confirmed in training fields")
+    media = []
+    for sample in (scan.get("mediaFileSamples") or [])[:120]:
+        if not isinstance(sample, dict) or not safe_media(sample.get("filename")) or not safe_folder(sample.get("folder")):
+            continue
+        media.append({**private_identity(sample), "filename": sample["filename"], "folder": sample["folder"],
+            "channel": safe_label(sample.get("channel")), "mode": safe_label(sample.get("mode")),
+            "fileSizeBytes": measurement(sample.get("fileSizeBytes")),
+            **{field: sample[field] for field in ("filesystemReadOnly", "userImmutable", "systemImmutable", "volumeReadOnly")
+               if isinstance(sample.get(field), bool)}})
+    raw_counts = scan.get("evidenceCounts") if isinstance(scan.get("evidenceCounts"), dict) else {}
+    evidence_counts = {field: value for field in ("inventoriedMedia", "inventoriedVideos", "measuredVideos",
+        "retainedIdentities", "omittedIdentities", "retainedMeasurements", "omittedMeasurements")
+        if isinstance(value := raw_counts.get(field), int) and not isinstance(value, bool) and value >= 0}
     return {
         "schemaVersion": 1, "source": "submitted sanitized feedback KV", "submissionKey": key,
         "receivedAt": record.get("receivedAt") if isinstance(record.get("receivedAt"), str) and re.fullmatch(r"\d{4}-\d\d-\d\dT[0-9:.]+Z", record["receivedAt"]) else None,
@@ -104,6 +143,7 @@ def derive(key, record):
         "counts": {k: counts(scan.get(k)) for k in ("channelCounts", "mediaExtensionCounts", "displayModeCounts", "modeCounts")},
         "scannedFiles": measurement(scan.get("scannedFiles")), "videoSpecSummaries": specs,
         "filenameSamples": names, "filenamePatternSummaries": patterns, "reviewFlags": flags,
+        "mediaFileSamples": media, "evidenceCounts": evidence_counts,
     }
 
 

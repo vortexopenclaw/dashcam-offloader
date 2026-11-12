@@ -14,13 +14,14 @@ struct CardLearningPaths {
         "escort_m1", "maxcam360c", "rec", "clip", "inf", "pevent", "lapse", "lockedvideo",
         "secvideo", "safety_box", "bookmark", "originalfiles", "panophoto", "private",
         "avchd", "m4root", "360cardvr", "100", "back_emr", "back_norm", "front_emer",
-        "rear_emer", "front_norm", "rear_norm", "emr", "norm", "motion_timelapse_rec"
+        "rear_emer", "front_norm", "rear_norm", "emr", "norm", "motion_timelapse_rec", "inside"
     ]
     private var aliases: [String: String] = [:]
 
     mutating func folder(_ path: String) -> String? {
         if path == "." { return path }
-        guard !path.isEmpty, !path.hasPrefix("/"), !path.contains("\\"), path.count <= 1024 else { return nil }
+        guard !path.isEmpty, !path.hasPrefix("/"), !path.contains("\\"), path.count <= 1024,
+              !path.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { return nil }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
         guard parts.count <= 12, !parts.contains(where: { $0.isEmpty || $0 == "." || $0 == ".." }) else { return nil }
         var prefix = ""
@@ -36,6 +37,7 @@ struct CardLearningPaths {
 
     static func acceptedFolder(_ path: String) -> String? {
         if path == "." { return path }
+        guard path.count <= 1024, !path.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { return nil }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         guard parts.count <= 12, !parts.isEmpty, parts.allSatisfy({ part in
             cameraDirectories.contains(part.lowercased()) ||
@@ -46,6 +48,7 @@ struct CardLearningPaths {
 }
 
 struct FeedbackMediaFileSample: Codable, Hashable, Sendable {
+    var sourceIdentifier: String? = nil
     var folder: String
     var filename: String
     var mode: String
@@ -60,13 +63,16 @@ struct FeedbackMediaFileSample: Codable, Hashable, Sendable {
 }
 
 enum CardLearningStructure {
-    static func mediaSamples(clips: [ClipItem], sourceRoot: URL?, paths: inout CardLearningPaths) -> [FeedbackMediaFileSample] {
-        let pattern = try! NSRegularExpression(pattern: #"^(?:\d{4}_\d{4}_\d{6}_\d{1,9}(?:PF|PR|PI|PT|F|R|I|T)|[A-Z]{1,4}\d{6,12}[A-Z0-9]{0,3})\.(?:MP4|MOV|JPG|JPEG)$"#, options: [.caseInsensitive])
-        let safe = clips.filter {
-            let name = $0.sourceURL.lastPathComponent
-            let range = NSRange(name.startIndex..<name.endIndex, in: name)
-            return pattern.firstMatch(in: name, range: range)?.range == range
-        }
+    // Structural safety, not a whitelist of cameras we already recognize.
+    static func safeMediaBasename(_ name: String) -> Bool {
+        name.utf8.count <= 180 && name.range(of: #"^[A-Za-z0-9][A-Za-z0-9 _.-]*\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$"#, options: [.regularExpression, .caseInsensitive]) != nil &&
+        !name.contains("..") &&
+        name.range(of: #"(?:wifi|password|credential|gps|serial)|\d{1,3}\.\d{3,}"#, options: [.regularExpression, .caseInsensitive]) == nil &&
+        !name.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
+    }
+
+    static func mediaSamples(clips: [ClipItem], sourceRoot: URL?, paths: inout CardLearningPaths, sourceIdentifiers: [String: String] = [:]) -> [FeedbackMediaFileSample] {
+        let safe = clips.filter { safeMediaBasename($0.sourceURL.lastPathComponent) }
         let groups = Dictionary(grouping: safe) { clip in
             [clip.sourceURL.deletingLastPathComponent().path, clip.mode, clip.outputCategory, clip.channel].joined(separator: "|")
         }
@@ -87,7 +93,7 @@ enum CardLearningStructure {
             let attributes = try? FileManager.default.attributesOfItem(atPath: clip.sourceURL.path)
             let bits = (attributes?[.posixPermissions] as? NSNumber)?.intValue
             let values = try? clip.sourceURL.resourceValues(forKeys: [.isUserImmutableKey, .isSystemImmutableKey, .volumeIsReadOnlyKey])
-            return FeedbackMediaFileSample(folder: folder, filename: clip.sourceURL.lastPathComponent,
+            return FeedbackMediaFileSample(sourceIdentifier: sourceIdentifiers[relative], folder: folder, filename: clip.sourceURL.lastPathComponent,
                 mode: clip.mode, outputCategory: clip.outputCategory, channel: clip.channel,
                 fileSizeBytes: clip.size, permissionBits: bits.map { $0 & 0o777 },
                 filesystemReadOnly: bits.map { $0 & 0o222 == 0 }, userImmutable: values?.isUserImmutable,

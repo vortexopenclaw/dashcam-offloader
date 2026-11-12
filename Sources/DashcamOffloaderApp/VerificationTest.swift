@@ -2681,12 +2681,8 @@ enum VerificationTest {
                                      training: CardTrainingDetails(manufacturer: "VIOFO", model: "T340", channelSetup: "4CH", notes: ""))
                 guard model.feedbackMessage.contains("incomplete"), !model.isSubmittingFeedback else { return nil }
                 model.isScanning = false
-                // Video-shaped placeholders still cannot be submitted as a
-                // bitrate test if AVFoundation cannot read any video tracks.
-                model.submitFeedback(kind: .training, message: "Test", contact: "", includeScan: true,
-                                     scanSnapshot: completed, scanRevisionAtPreview: model.scanRevision,
-                                     training: CardTrainingDetails(manufacturer: "VIOFO", model: "T340", channelSetup: "4CH", notes: ""))
-                guard model.feedbackMessage.contains("No video bitrate"), !model.isSubmittingFeedback else { return nil }
+                // Completed structural evidence remains useful without fabricated measurements.
+                guard completed?.evidenceCounts?.retainedMeasurements == 0 else { return nil }
                 return completed
             }
             guard let t340Learning,

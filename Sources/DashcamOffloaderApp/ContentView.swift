@@ -1411,6 +1411,8 @@ struct FeedbackSheet: View {
     @State private var message = ""
     @State private var contact = ""
     @State private var includeScan = false
+    @State private var scanPreview: FeedbackScanSnapshot?
+    @State private var previewScanRevision = -1
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1444,10 +1446,15 @@ struct FeedbackSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Toggle("Include anonymous scan statistics", isOn: $includeScan)
+            Toggle("Include private card-scan evidence", isOn: $includeScan)
                 .disabled(!viewModel.scanSummary.hasScan)
+                .onChange(of: includeScan) { _, included in
+                    scanPreview = included ? viewModel.makeFeedbackScanSnapshot() : nil
+                    previewScanRevision = viewModel.scanRevision
+                }
+            if includeScan, let scanPreview { PrivateEvidenceReview(snapshot: scanPreview) }
 
-            Text("Optional scan evidence includes camera-relative folders, camera filenames and file protection flags. Source names and personal paths are excluded.")
+            Text("Optional private scan evidence includes original video/photo filenames (which can contain recording dates), relative camera folders, linked measurements and file protection flags. Review before submitting. Source names and personal paths are excluded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -1480,7 +1487,9 @@ struct FeedbackSheet: View {
                         kind: kind,
                         message: message,
                         contact: contact,
-                        includeScan: includeScan && viewModel.scanSummary.hasScan
+                        includeScan: includeScan,
+                        scanSnapshot: scanPreview,
+                        scanRevisionAtPreview: previewScanRevision
                     )
                 } label: {
                     Label(viewModel.isSubmittingFeedback ? "Submitting" : "Submit", systemImage: "paperplane")
@@ -1517,8 +1526,6 @@ struct CardLearningSheet: View {
     private var canSubmit: Bool {
         !viewModel.isScanning && viewModel.scanSummary.hasScan &&
             scanPreview != nil && previewScanRevision == viewModel.scanRevision &&
-            (!viewModel.eligibleClips.contains(where: \.isVideo) ||
-                scanPreview?.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) == true) &&
             !manufacturer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             !viewModel.isSubmittingFeedback
@@ -1629,14 +1636,14 @@ struct CardLearningSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Text("This sends only a sanitized description of the card structure so we can add support for your camera. It does not upload your videos, photos, GPS traces, serial numbers, Wi-Fi details, device IDs, or other personally identifying information.")
+            Text("Submitting approves this private learning package: original video/photo filenames (including any recording dates), relative camera folders, linked per-file measurements and protection flags. Review below before submitting. No media, host paths, GPS traces, serial numbers, Wi-Fi details or device IDs are uploaded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             if let scanPreview {
                 if viewModel.eligibleClips.contains(where: \.isVideo) &&
                     !scanPreview.videoSpecSummaries.contains(where: { $0.sampleBitrateMin != nil }) {
-                    Label("No video bitrate was measured. Check that the card is readable and rescan before submitting.", systemImage: "exclamationmark.triangle")
+                    Label("No video bitrate was measured. This package contains structural evidence only, not measured bitrate evidence.", systemImage: "exclamationmark.triangle")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -1658,7 +1665,11 @@ struct CardLearningSheet: View {
                         if !scanPreview.settingSnapshots.isEmpty {
                             Text("\(scanPreview.settingSnapshots.count) allowlisted model/settings summary item(s)")
                         }
+                        if let counts = scanPreview.evidenceCounts {
+                            Text("Media inventoried: \(counts.inventoriedMedia); identities retained: \(counts.retainedIdentities), omitted: \(counts.omittedIdentities). Videos inventoried: \(counts.inventoriedVideos), measured: \(counts.measuredVideos); pairs retained: \(counts.retainedMeasurements), omitted/unmeasured: \(counts.omittedMeasurements).")
+                        }
                         CardLearningStructurePreview(directories: scanPreview.directorySummaries, files: scanPreview.mediaFileSamples)
+                        PrivateEvidenceReview(snapshot: scanPreview)
                     }
                     .font(.caption)
                     .padding(.top, 6)

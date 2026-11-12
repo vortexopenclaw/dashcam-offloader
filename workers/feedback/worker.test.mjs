@@ -159,10 +159,10 @@ test("clientFingerprint is stable and salt-dependent", async () => {
 });
 
 
-test("only bounded camera media basenames survive; paths and personal names do not", () => {
+test("bounded unfamiliar media basenames survive reviewed private intake; unsafe paths do not", () => {
   const valid = "2026_0930_121758_000266T.MP4";
   const scan = sanitizeScan({filenameSamples: [valid, "2026_1001_005952_000001F.MP4",
-    "Family Trip/" + valid, "Jane_Doe_2026.mp4", "wifi_password.MP4",
+    "Family Trip/" + valid, "person@example.com.mp4", "wifi_password.MP4",
     "2026_0930_121758_000266T.mp4.exe", "47.61234_-122.12345.mp4",
     ...Array(150).fill(valid)]});
   assert.deepEqual(scan.filenameSamples.slice(0, 2), [valid, "2026_1001_005952_000001F.MP4"]);
@@ -183,7 +183,7 @@ test("camera structure and per-file protection survive the final storage sanitiz
     {path:"Family Trip"}, {path:"../DCIM"}, {path:"/DCIM"}, {path:"DCIM//Movie"}],
     folderSummaries:[{path:"DCIM/Movie/Parking",fileCount:8},{path:"Family Trip"}],
     videoSpecSummaries:[{folder:"DCIM/Movie/Parking"}],
-    mediaFileSamples:[sample, {...sample,folder:"Family Trip"}, {...sample,filename:"secret.mp4"},
+    mediaFileSamples:[sample, {...sample,folder:"Family Trip"}, {...sample,filename:"../secret.mp4"},
       {...sample,folder:"folder-1/Movie",permissionBits:0o644},
       {...sample,permissionBits:null, userImmutable:"yes"}]});
   assert.equal(scan.directorySummaries.length,1);
