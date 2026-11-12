@@ -9,9 +9,22 @@ channel_variants:
       - front
       - telephoto
     validation: owner_confirmed
+  - channels: 3
+    roles:
+      - front
+      - telephoto
+      - rear
+    validation: owner_confirmed
+detection:
+  high_confidence:
+    - method: osd_ocr
+      matches: DDPAI Z100 Master
+      strip: bottom_16pct
 source_notes:
   - docs/card-profiles/ddpai-z100-master-main.md
-  - "Manual selection confirms model AND main-unit card; shared DDPAI folders do not establish exact identity"
+  - "Only exact DDPAI Z100 Master OSD in main-card front videos can automatically activate this profile; shared folders and volume labels cannot"
+  - "Manual selection must confirm model AND main-unit card; separate cabin/accessory cards are excluded"
+  - "Optional rear footage is counted only when actually observed; a separately recording cabin is never inferred"
   - "Owner confirms built-in front/telephoto; inside stores telephoto on the main card"
   - "Owner confirms front S_ videos are time-lapse parking; do not apply to inside or accessory cards"
 folders:
@@ -25,3 +38,4 @@ folders:
 channels:
   front: front
   inside: telephoto
+  rear: rear

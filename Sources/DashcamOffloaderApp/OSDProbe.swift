@@ -79,6 +79,13 @@ struct OSDProbe {
                    observed.range(of: #"(?i)(?<![a-z0-9])VIOFO\s*A329T(?![a-z0-9])"#, options: .regularExpression) == nil {
                     continue
                 }
+                // Z100 Pro and MasterX (including OCR-separated "Master X")
+                // must never acquire the main unit's exceptional inside mapping.
+                // The verified aperture logo can OCR as "O" before the 4K badge.
+                if candidateCompact == "ddpaiz100master",
+                   observed.range(of: #"(?i)(?<![a-z0-9])DDPAI\s+Z100\s+Master(?![a-z0-9]|\s+(?!O\s+4K\b)[a-z])"#, options: .regularExpression) == nil {
+                    continue
+                }
                 guard observedLower.contains(candidateLower) || observedCompact.contains(candidateCompact) else {
                     continue
                 }

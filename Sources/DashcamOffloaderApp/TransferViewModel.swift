@@ -12,6 +12,7 @@ final class TransferViewModel: ObservableObject {
     @Published var detectionCandidates: [DetectionCandidate] = []
     @Published var identifiedCamera: IdentifiedCamera?
     @Published var selectedProfile: DashcamProfile?
+    @Published private(set) var selectedProfileWasManuallyChosen = false
     @Published var clips: [ClipItem] = []
     @Published var filters = FilterState()
     @Published var copyPlan: CopyPlan?
@@ -791,6 +792,7 @@ final class TransferViewModel: ObservableObject {
         detectionCandidates = []
         identifiedCamera = nil
         selectedProfile = nil
+        selectedProfileWasManuallyChosen = false
         clips = []
         cardHealthReport = CardHealthReport()
         isCardHealthDetailsPresented = false
@@ -866,6 +868,7 @@ final class TransferViewModel: ObservableObject {
                 self.detectionCandidates = scanResult.candidates
                 self.identifiedCamera = scanResult.identifiedCamera
                 self.selectedProfile = manuallySelectedProfile
+                self.selectedProfileWasManuallyChosen = self.profileSelectionRevision != profileRevisionAtStart
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
                 self.lastEffectiveScanSourceURL = scanResult.sourceURL
@@ -978,6 +981,7 @@ final class TransferViewModel: ObservableObject {
         detectionCandidates = scanResult.candidates
         identifiedCamera = scanResult.identifiedCamera
         selectedProfile = scanResult.selectedProfile
+        selectedProfileWasManuallyChosen = false
         lastScannedFiles = scanResult.allFiles
         lastScanDiagnostics = scanResult.diagnostics
         lastEffectiveScanSourceURL = scanResult.sourceURL
@@ -997,6 +1001,7 @@ final class TransferViewModel: ObservableObject {
     }
 
     func selectProfile(_ profile: DashcamProfile) {
+        selectedProfileWasManuallyChosen = true
         profileSelectionRevision += 1
         selectedProfile = profile
         guard let selectedSource else { return }

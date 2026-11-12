@@ -8,8 +8,8 @@ enum DDPAIZ100Verification {
         defer { try? fm.removeItem(at: root) }
         do {
             guard let profile = profiles.first(where: { $0.id == "ddpai-z100-master-main" }),
-                  profile.status == "manual_only", profile.maxChannels == 2,
-                  profile.displayManufacturer == "DDPAI", profile.osdSpec == nil else { return false }
+                  profile.status == "manual_only", profile.maxChannels == 3,
+                  profile.displayManufacturer == "DDPAI", profile.osdSpec?.matchStrings == ["DDPAI Z100 Master"] else { return false }
             let names = [
                 "DCIM/200video/front/20300101120000.mp4",
                 "DCIM/200video/front/S_20300101120100.mp4",

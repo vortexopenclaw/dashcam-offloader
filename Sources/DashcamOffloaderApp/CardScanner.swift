@@ -713,6 +713,13 @@ struct CardScanner {
         )
         let scanSourceURL = result.sourceURL
 
+        // This unit-specific profile is deliberately excluded from shared-folder
+        // scoring. Its front stamp is stronger evidence than channel counts or
+        // candidate competition, so run the narrow gate before either early exit.
+        if recognizeZ100MasterMainCard(&result, sourceURL: scanSourceURL, profiles: profiles) {
+            return result
+        }
+
         guard let top = result.candidates.first else {
             result.diagnostics.append(ScanDiagnosticEntry(
                 stage: "osd_ocr_gate",
@@ -919,6 +926,34 @@ struct CardScanner {
 
         augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: scanSourceURL)
         return result
+    }
+
+    /// Exact front-folder evidence only: never fall back to inside/accessory media.
+    private func recognizeZ100MasterMainCard(
+        _ result: inout ScanResult, sourceURL: URL, profiles: [DashcamProfile]
+    ) -> Bool {
+        guard let profile = profiles.first(where: { $0.id == "ddpai-z100-master-main" }),
+              let spec = profile.osdSpec, spec.containsModelName else { return false }
+        let frontVideos = result.allFiles.filter {
+            ["mp4", "mov"].contains($0.pathExtension.lowercased()) &&
+                $0.relativePath(from: sourceURL).lowercased().split(separator: "/").dropLast().joined(separator: "/") == "dcim/200video/front"
+        }.sorted { $0.path < $1.path }
+        guard !frontVideos.isEmpty else { return false }
+        let probe = OSDProbe()
+        for video in frontVideos.prefix(3) {
+            guard let matched = probe.probe(videoURL: video, spec: spec) else { continue }
+            let evidence = ["OSD OCR match \"\(matched)\" from main-card front video"]
+            result.candidates.insert(DetectionCandidate(profile: profile, score: 100, confidence: .high, evidence: evidence), at: 0)
+            result.selectedProfile = profile
+            result.identifiedCamera = IdentifiedCamera(manufacturer: profile.manufacturer, model: "Z100 Master", evidence: evidence, isSupported: true)
+            let classified = classifyWithParkingPatterns(files: result.allFiles, sourceURL: sourceURL, profile: profile)
+            result.clips = classified.clips
+            result.diagnostics.append(contentsOf: classified.diagnostics)
+            result.diagnostics.append(ScanDiagnosticEntry(stage: "z100_main_front_osd", profileID: profile.id, profileName: profile.displayName, outcome: "matched", detail: "Exact front stamp; observed/configured channel count is not identity evidence"))
+            return true
+        }
+        result.diagnostics.append(ScanDiagnosticEntry(stage: "z100_main_front_osd", profileID: profile.id, profileName: profile.displayName, outcome: "no_match", detail: "No exact Z100 Master front stamp; shared layout cannot activate main-unit mapping"))
+        return false
     }
 
     /// Generic/untrained cards can still burn exact model text into the video
