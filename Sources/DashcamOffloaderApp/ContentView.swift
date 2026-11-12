@@ -460,7 +460,9 @@ struct ContentView: View {
             return "Unrecognized dashcam, generic download ready"
         }
         if let profile = viewModel.selectedProfile {
-            return "Detected \(profile.displayName)"
+            return profile.status == "manual_only"
+                ? "Manually selected \(profile.displayName)"
+                : "Detected \(profile.displayName)"
         }
         return "No camera profile selected"
     }
@@ -474,6 +476,9 @@ struct ContentView: View {
         }
         if viewModel.selectedProfile?.id == DashcamProfile.genericNewDashcam.id {
             return "Generic download is ready. Submitting the scan is optional."
+        }
+        if viewModel.selectedProfile?.id == "ddpai-z100-master-main" {
+            return "Main-unit card only: inside is telephoto; front S_ videos are time-lapse parking. Model selected manually, not automatically identified. Do not use for a separate accessory card."
         }
         if viewModel.selectedProfile != nil {
             return "Detected profile ready. Submit this card only if it has new modes or settings."

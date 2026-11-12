@@ -1,6 +1,8 @@
-# Dashcam Offloader 0.1.37
+# Dashcam Offloader 0.1.38
 
-- Suggest learning-sheet channel counts from observed video roles, not a model's maximum camera capacity. Keep uncertain or multitrack setups marked Unknown.
-- Preserve your manually selected channel count when the learning sheet refreshes.
-- Recognize explicit VIOFO A329T video stamps without confusing A329TC or A329TW models, and include the verified front-only recording variant.
-- Retain the latest Vantrue recognition and model-name improvements.
+- Add a manually selectable DDPAI Z100 Master main-unit profile for the owner-confirmed front/telephoto setup. The `inside` folder maps to telephoto, and front `S_` videos are classified as time-lapse parking.
+- Show DDPAI family hints without guessing an exact model from shared folder layouts. Select DDPAI → Z100 Master (Main Unit) for this card; do not use that profile for a separately recording accessory camera.
+- Keep empty optional folders from inflating the observed channel count, and exclude thumbnail folders from downloads.
+- Retain the reviewed transfer-first layout and transfer shortcut improvements.
+
+Exact-model identification remains manual for this DDPAI layout. The native frame-OCR helper remains disabled.
