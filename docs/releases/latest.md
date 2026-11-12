@@ -5,4 +5,4 @@
 - Keep empty optional folders from inflating the observed channel count, and exclude thumbnail folders from downloads.
 - Retain the reviewed transfer-first layout and transfer shortcut improvements.
 
-Exact-model identification remains manual for this DDPAI layout. The native frame-OCR helper remains disabled.
+Exact-model identification remains manual for this DDPAI layout. This update does not add DDPAI frame-OCR recognition.
