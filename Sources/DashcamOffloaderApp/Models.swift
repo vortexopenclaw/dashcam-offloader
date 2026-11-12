@@ -29,6 +29,8 @@ enum ManufacturerDisplayFormatter {
             return "Blackvue"
         case "dji":
             return "DJI"
+        case "ddpai":
+            return "DDPAI"
         case "gopro":
             return "GoPro"
         case "thinkware":

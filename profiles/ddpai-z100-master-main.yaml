@@ -1,0 +1,27 @@
+id: ddpai-z100-master-main
+manufacturer: DDPAI
+model: Z100 Master (Main Unit)
+status: manual_only
+confidence: low
+channel_variants:
+  - channels: 2
+    roles:
+      - front
+      - telephoto
+    validation: owner_confirmed
+source_notes:
+  - docs/card-profiles/ddpai-z100-master-main.md
+  - "Manual selection confirms model AND main-unit card; shared DDPAI folders do not establish exact identity"
+  - "Owner confirms built-in front/telephoto; inside stores telephoto on the main card"
+  - "Owner confirms front S_ videos are time-lapse parking; do not apply to inside or accessory cards"
+folders:
+  - path: DCIM/200video
+    mode: continuous
+  - path: DCIM/201photo
+    mode: still_image
+  - path: DCIM/202thumb
+    mode: still_image
+    import: false
+channels:
+  front: front
+  inside: telephoto

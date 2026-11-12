@@ -574,6 +574,7 @@ enum VerificationTest {
                 return viewModel.cameraModelsByBrand.first { $0.brand == "Vantrue" }?.models.map(\.model) ?? []
             }
             guard ObservedChannelVerification.run(profiles: profiles),
+                  DDPAIZ100Verification.run(profiles: profiles),
                   VantrueNamingVerification.run(vantruePickerModels: vantruePickerModels),
                   VantrueIdentityVerification.run(profiles: profiles) else { return false }
             guard let s1QHDModel = KnownDashcamCatalog.models.first(where: {

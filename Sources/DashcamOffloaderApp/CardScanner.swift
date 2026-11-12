@@ -484,6 +484,10 @@ struct CardScanner {
             hints.append(hint("Rove", "Rove Video root layout", "low", ["Video", "Rove-style numeric timestamp filenames"]))
         }
 
+        if folderExists("DCIM/200video") && folderExists("DCIM/201photo") {
+            hints.append(hint("DDPAI", "DDPAI numbered DCIM layout", "medium", ["DCIM/200video", "DCIM/201photo"]))
+        }
+
         return hints
     }
 
@@ -1309,6 +1313,20 @@ struct CardScanner {
                 channel = genericChannel(relativePath: relativePath, filename: filename)
             }
 
+            // Explicit selection of this profile confirms BOTH model and main
+            // recording unit. Shared DDPAI layouts alone never select it.
+            if profile.id == "ddpai-z100-master-main" {
+                let parent = fileURL.deletingLastPathComponent().relativePath(from: sourceURL).lowercased()
+                if ["dcim/200video/inside", "dcim/201photo/inside"].contains(parent) {
+                    channel = "telephoto"
+                }
+                if parent == "dcim/200video/front", ClipItem.videoExtensions.contains(ext),
+                   filename.hasPrefix("S_") {
+                    mode = ParkingPattern.timelapse.modeValue
+                }
+                timestamp = parseGenericTimestamp(filename: filename)
+            }
+
             if ext == "dat" || relativePath.hasPrefix("GPS/") {
                 mode = "gps"
                 channel = "gps"
@@ -1431,6 +1449,9 @@ struct CardScanner {
         let observedChannelTokens = observedTrailingChannelTokens(from: sampleNames)
 
         return profiles.compactMap { profile in
+            // Manual-only profiles encode owner-confirmed unit-specific
+            // semantics, not an automatically identifying card fingerprint.
+            guard profile.status != "manual_only" else { return nil }
             var score = 0
             var evidence: [String] = []
 
