@@ -459,11 +459,18 @@ struct ContentView: View {
             return "Unrecognized dashcam, generic download ready"
         }
         if let profile = viewModel.selectedProfile {
-            return profile.status == "manual_only"
+            return profile.status == "manual_only" && !isAutomaticallyIdentifiedZ100Main
                 ? "Manually selected \(profile.displayName)"
                 : "Detected \(profile.displayName)"
         }
         return "No camera profile selected"
+    }
+
+    private var isAutomaticallyIdentifiedZ100Main: Bool {
+        viewModel.selectedProfile?.id == "ddpai-z100-master-main"
+            && !viewModel.selectedProfileWasManuallyChosen
+            && viewModel.identifiedCamera?.isSupported == true
+            && viewModel.identifiedCamera?.model == "Z100 Master"
     }
 
     private var cameraDetectionDetail: String {
@@ -477,7 +484,9 @@ struct ContentView: View {
             return "Generic download is ready. Submitting the scan is optional."
         }
         if viewModel.selectedProfile?.id == "ddpai-z100-master-main" {
-            return "Main-unit card only: inside is telephoto; front S_ videos are time-lapse parking. Model selected manually, not automatically identified. Do not use for a separate accessory card."
+            return isAutomaticallyIdentifiedZ100Main
+                ? "Exact front model stamp identified this main-unit card. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile."
+                : "Manually selected main-unit card: inside is telephoto; front S_ videos are time-lapse parking. Confirm the model and main-unit card. Do not use for a separate cabin/accessory card."
         }
         if viewModel.selectedProfile != nil {
             return "Detected profile ready. Submit this card only if it has new modes or settings."
