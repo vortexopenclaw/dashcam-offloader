@@ -42,10 +42,13 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
     subprocess.run([ffmpeg, "-v", "error", "-i", str(video), "-frames:v", "1", str(photo)], check=True)
     before = {path: (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns)
               for path in fixture.rglob("*") if path.is_file()}
-    subprocess.run(["/usr/bin/swift", "run", "--build-system", "native", "--sdk",
-                    "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk", "--scratch-path",
-                    ".build-private", "DashcamOffloader", "--verify-private-evidence",
-                    str(fixture), str(output)], cwd=repo, check=True)
+    swift = ["/usr/bin/swift", "run", "--build-system",
+             os.environ.get("DASHCAM_SWIFT_BUILD_SYSTEM", "swiftbuild")]
+    if os.environ.get("DASHCAM_SWIFT_SDK"):
+        swift += ["--sdk", os.environ["DASHCAM_SWIFT_SDK"]]
+    subprocess.run(swift + ["--scratch-path", ".build-private", "DashcamOffloader",
+                           "--verify-private-evidence", str(fixture), str(output)],
+                   cwd=repo, check=True)
     environment = dict(os.environ, DASHCAM_NATIVE_EVIDENCE_OUTPUT=str(output))
     subprocess.run([node, "--test", "workers/feedback/private-evidence.test.mjs"],
                    cwd=repo, env=environment, check=True)

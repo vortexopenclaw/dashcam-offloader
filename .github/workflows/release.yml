@@ -27,6 +27,11 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_scan_storage_rates.py'
           python3 -m unittest discover -s scripts -p 'test_ingest_submitted_scans.py'
 
+      - name: Verify native private-evidence storage roundtrip
+        run: |
+          if ! command -v ffmpeg >/dev/null; then brew install ffmpeg; fi
+          python3 scripts/test-private-evidence-roundtrip.py
+
       - name: Build app
         id: buildapp
         run: bash scripts/build-macos-app.sh

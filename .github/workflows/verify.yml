@@ -39,6 +39,11 @@ jobs:
         run: |
           "build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --verify
 
+      - name: Verify native private-evidence storage roundtrip
+        run: |
+          if ! command -v ffmpeg >/dev/null; then brew install ffmpeg; fi
+          python3 scripts/test-private-evidence-roundtrip.py
+
       - name: Check feedback worker syntax
         run: node --check workers/feedback/worker.js
 
