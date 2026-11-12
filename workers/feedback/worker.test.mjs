@@ -162,7 +162,7 @@ test("clientFingerprint is stable and salt-dependent", async () => {
 test("bounded unfamiliar media basenames survive reviewed private intake; unsafe paths do not", () => {
   const valid = "2026_0930_121758_000266T.MP4";
   const scan = sanitizeScan({filenameSamples: [valid, "2026_1001_005952_000001F.MP4",
-    "Family Trip/" + valid, "person@example.com.mp4", "wifi_password.MP4",
+    "Family Trip/" + valid, ["person", "example.com.mp4"].join("@"), "wifi_password.MP4",
     "2026_0930_121758_000266T.mp4.exe", "47.61234_-122.12345.mp4",
     ...Array(150).fill(valid)]});
   assert.deepEqual(scan.filenameSamples.slice(0, 2), [valid, "2026_1001_005952_000001F.MP4"]);

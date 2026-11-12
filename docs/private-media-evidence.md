@@ -5,7 +5,7 @@ This contract covers voluntarily reviewed private Offloader submissions, not a p
 Run from an external-scratch worktree on the configured Mac:
 
 ```sh
-/usr/bin/python3 /Users/openclaw/.hermes/profiles/dashcam-offloader/projects/tools/check-scratch-budget.py --reserve-gib 8 --run /usr/bin/python3 scripts/test-private-evidence-roundtrip.py
+/usr/bin/python3 "${DASHCAM_SCRATCH_GUARD:?Set to the configured profile scratch guard}" --reserve-gib 8 --run /usr/bin/python3 scripts/test-private-evidence-roundtrip.py
 ```
 
 The gate serializes with other heavy jobs. If it reports another job, wait and retry; do not bypass it. The runner uses the native Swift build with SDK 26.5 and generates tiny synthetic H.264 recordings and a photo with developer-only ffmpeg. It exercises the actual CardScanner inventory, AVFoundation metadata probe, TransferViewModel snapshot, Codable payload, Worker HTTP validator/sanitizer and mock KV storage. The receipt ID selects the exact stored KV key for readback. No requests are made to production.

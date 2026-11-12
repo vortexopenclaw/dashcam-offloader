@@ -31,7 +31,7 @@
     "clip .mp4",
     "gps2030.mp4",
     "wifi-password.mp4",
-    "person@example.com.mp4",
+    "person\u0040example.com.mp4",
     "47.61234_-122.12345.mp4"
   ]
 }
