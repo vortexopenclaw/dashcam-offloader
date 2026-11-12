@@ -15,19 +15,23 @@ import sys
 import tempfile
 import urllib.parse
 import urllib.request
+import unicodedata
 from pathlib import Path
 
 
 NAMESPACE = "39129dc4017b48c6bd8b8f4848b25c76"
 KEY = re.compile(r"^feedback/\d{4}-\d{2}-\d{2}/([0-9a-fA-F-]{36})\.json$")
 SAFE_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._+/-]{0,79}$")
-SAFE_MEDIA = re.compile(r"[A-Za-z0-9][A-Za-z0-9 _.-]*\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)", re.I)
+SAFE_MEDIA = re.compile(r".+\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)", re.I)
 CAMERA_DIRECTORIES = set("dcim movie movies photo photos parking park ro normal event events emergency manual protected record recordings video videos front rear interior cabin telephoto side continuous motion impact timelapse sos cont_rec evt_rec manual_rec parking_rec motion_rec sos_rec incabin_rec normal_rec event_rec park_rec inf_rec photo_rec blackvue teslacam recentclips savedclips sentryclips roadscout escort_m1 maxcam360c rec clip inf pevent lapse lockedvideo secvideo safety_box bookmark originalfiles panophoto private avchd m4root 360cardvr 100 back_emr back_norm front_emer rear_emer front_norm rear_norm emr norm motion_timelapse_rec inside".split())
 
 
 def safe_media(value):
-    return (isinstance(value, str) and len(value) <= 180 and SAFE_MEDIA.fullmatch(value)
-            and ".." not in value and not re.search(r"(?:wifi|password|credential|gps|serial)|\d{1,3}\.\d{3,}", value, re.I))
+    return (isinstance(value, str) and not value.startswith(".")
+            and not any(unicodedata.category(char) in {"Cc", "Cf", "Cs", "Zl", "Zp"} for char in value)
+            and len(value.encode("utf-8")) <= 180 and SAFE_MEDIA.fullmatch(value)
+            and "/" not in value and "\\" not in value and ".." not in value
+            and not re.search(r"(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}", value, re.I))
 
 
 def safe_folder(value):

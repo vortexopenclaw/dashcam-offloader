@@ -11,9 +11,24 @@ const numeric = pair => Object.fromEntries(["fileSizeBytes", "durationSeconds", 
 test("unfamiliar private identities survive together; unsafe identities never destroy legacy pairs", () => {
   const measurement = {fileSizeBytes:12345,durationSeconds:1.5,videoBitrate:60000};
   const valid = {sourceIdentifier:"source-1",filename:"N_20300102123456_0001.MP4",folder:"DCIM/inside/200video"};
-  const unsafe = ["../a.mp4", "/a.mp4", "a\\b.mp4", "a\n.mp4", "._a.mp4", "a..mp4", "a.ini", "a".repeat(181)+".mp4"];
-  for (const filename of unsafe) {
-    const scan = sanitizeScan({filenameSamples:[filename], mediaFileSamples:[{...valid,filename}],
+  const cases = JSON.parse(readFileSync(new URL("./media-basename-cases.json", import.meta.url), "utf8"));
+  for (const filename of cases.accepted) {
+    const input = {filenameSamples:[filename], mediaFileSamples:[{...measurement,...valid,filename}],
+      videoSpecSummaries:[{storageRateSamples:[{...measurement,...valid,filename}]}],
+      evidenceCounts:{inventoriedMedia:1,inventoriedVideos:1,measuredVideos:1}};
+    const scan = sanitizeScan(input);
+    assert.deepEqual(scan.filenameSamples,[filename]);
+    for (const sample of [scan.mediaFileSamples[0], scan.videoSpecSummaries[0].storageRateSamples[0]]) {
+      assert.equal(sample.filename,filename);
+      assert.equal(sample.sourceIdentifier,valid.sourceIdentifier);
+      assert.equal(sample.folder,valid.folder);
+      assert.equal(sample.fileSizeBytes,measurement.fileSizeBytes);
+    }
+    assert.deepEqual(scan.evidenceCounts,{...input.evidenceCounts,retainedIdentities:1,
+      omittedIdentities:0,retainedMeasurements:1,omittedMeasurements:0});
+  }
+  for (const filename of cases.rejected) {
+    const scan = sanitizeScan({filenameSamples:[filename], mediaFileSamples:[{...measurement,...valid,filename}],
       videoSpecSummaries:[{storageRateSamples:[{...measurement,...valid,filename}]}]});
     assert.deepEqual(scan.filenameSamples,[]);
     assert.deepEqual(scan.mediaFileSamples,[]);
@@ -85,16 +100,21 @@ test("actual native snapshot -> HTTP validator/sanitizer -> exact mock KV readba
     assert.equal(after.length,label === "small" ? 4 : label === "large" ? 64 : 0);
     assert.deepEqual(after,before);
     assert.deepEqual(record.scan.evidenceCounts, submitted.scan.evidenceCounts);
+    assert.deepEqual(record.scan.filenameSamples, submitted.scan.filenameSamples);
+    assert.deepEqual(record.scan.mediaFileSamples, submitted.scan.mediaFileSamples);
     for (const pair of after) {
       const file = record.scan.mediaFileSamples.find(file => file.sourceIdentifier === pair.sourceIdentifier);
       if (file) for (const field of ["filename","folder","channel","mode"]) assert.equal(file[field],pair[field]);
     }
     assert.equal(new Set(after.map(pair => pair.sourceIdentifier)).size,after.length);
     if (label === "small") {
-      const photo = record.scan.mediaFileSamples.find(sample => sample.filename === "IMG_20300102_new.JPG");
+      const photo = record.scan.mediaFileSamples.find(sample => sample.filename === "照片2030.jpg");
       assert.ok(photo?.sourceIdentifier);
       assert.equal(photo.folder,"DCIM/201photo");
       assert.equal(record.scan.evidenceCounts.inventoriedMedia,5);
+      for (const name of ["camera+token2030.MP4", "new(1).MP4"]) {
+        assert.ok(after.some(pair => pair.filename === name && pair.sourceIdentifier));
+      }
       const duplicates = after.filter(pair => pair.filename === "N_20300102123456_0001.MP4");
       assert.equal(duplicates.length,2);
       assert.notEqual(duplicates[0].sourceIdentifier,duplicates[1].sourceIdentifier);

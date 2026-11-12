@@ -261,10 +261,12 @@ function sanitizeTraining(training) {
 }
 
 function safeMediaBasename(name) {
+  // Match the producer's UTF-8 byte budget and Unicode safety; keep accepted names verbatim.
   return typeof name === "string" &&
-    name.length <= 180 && !name.includes("..") && !/[\x00-\x1f\x7f]/.test(name) &&
-    !/(?:wifi|password|credential|gps|serial)|\d{1,3}\.\d{3,}/i.test(name) &&
-    /^[A-Za-z0-9][A-Za-z0-9 _.-]*\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$/i.test(name);
+    new TextEncoder().encode(name).length <= 180 && !name.startsWith(".") &&
+    !name.includes("..") && !/[/\\\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(name) &&
+    !/(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}/i.test(name) &&
+    /.+\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$/i.test(name);
 }
 
 function sampledFilenamePatterns(names) {

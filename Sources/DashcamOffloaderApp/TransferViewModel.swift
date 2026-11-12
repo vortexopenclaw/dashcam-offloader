@@ -1663,7 +1663,12 @@ final class TransferViewModel: ObservableObject {
         if lowerPath.contains("device.uid") { return false }
         if lowerPath.contains("thumbnail") { return false }
         if lowerPath.contains("/gps/") || lowerPath.hasPrefix("gps/") { return false }
-        if containsSensitiveTrainingPath(lowerPath) { return false }
+        // Reviewed media basenames use structural safety, not support/config token heuristics.
+        // Keep those heuristics on parent directories and all non-media support files.
+        let privacyPath = CardLearningStructure.safeMediaBasename(filename)
+            ? relativePath.split(separator: "/").dropLast().joined(separator: "/").lowercased()
+            : lowerPath
+        if containsSensitiveTrainingPath(privacyPath) { return false }
         if ["gpx", "nmea"].contains(fileURL.pathExtension.lowercased()) { return false }
         return true
     }

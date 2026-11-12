@@ -1,0 +1,37 @@
+{
+  "accepted": [
+    "N_20300102123456_0001.MP4",
+    "novel-camera 42.M4V",
+    "IMG_new.JPG",
+    "camera+token2030.MP4",
+    "new(1).MP4",
+    "照片2030.jpg",
+    "café.MOV",
+    "🎥2030.mp4",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.mp4",
+    "照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照aa.mp4"
+  ],
+  "rejected": [
+    "../clip.mp4",
+    "/clip.mp4",
+    "a\\b.MP4",
+    "a\n.MP4",
+    "._clip.MP4",
+    ".clip.MP4",
+    "file.ini",
+    "clip..MP4",
+    ".mp4",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.mp4",
+    "照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照.mp4",
+    "clip.mp4",
+    "clip‮.mp4",
+    "clip⁦.mp4",
+    "clip​.mp4",
+    "clip .mp4",
+    "clip .mp4",
+    "gps2030.mp4",
+    "wifi-password.mp4",
+    "person@example.com.mp4",
+    "47.61234_-122.12345.mp4"
+  ]
+}

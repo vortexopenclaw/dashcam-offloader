@@ -20,6 +20,7 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
     output = root / "output"
     output.mkdir()
     (fixture / "synthetic-fixture.txt").write_text("synthetic private evidence fixture\n")
+    shutil.copyfile(repo / "workers/feedback/media-basename-cases.json", fixture / "media-basename-cases.json")
     video = root / "generated.mp4"
     subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i",
                     "testsrc2=size=320x180:rate=30", "-t", "1", "-c:v", "libx264",
@@ -28,13 +29,15 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
         for index in range(count):
             folder = "DCIM/inside/200video" if index % 2 else "DCIM/200video"
             name = f"N_20300102123456_{index // 2 + 1:04d}.MP4"
+            if label == "small" and index >= 2:
+                name = ["camera+token2030.MP4", "new(1).MP4"][index - 2]
             target = fixture / label / folder / name
             target.parent.mkdir(parents=True, exist_ok=True)
             if label == "structural":
                 target.write_bytes(b"not a playable video")
             else:
                 shutil.copyfile(video, target)
-    photo = fixture / "small/DCIM/201photo/IMG_20300102_new.JPG"
+    photo = fixture / "small/DCIM/201photo/照片2030.jpg"
     photo.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run([ffmpeg, "-v", "error", "-i", str(video), "-frames:v", "1", str(photo)], check=True)
     before = {path: (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns)
@@ -55,6 +58,11 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
         spec.loader.exec_module(module)
         return module
     ingest = load("ingest-submitted-scans")
+    cases = json.loads((fixture / "media-basename-cases.json").read_text())
+    for name in cases["accepted"]:
+        assert ingest.safe_media(name), repr(name)
+    for name in cases["rejected"]:
+        assert not ingest.safe_media(name), repr(name)
     rates = load("scan-storage-rates")
     for label in ["small", "large", "structural"]:
         stored = json.loads((output / (label + "-stored.json")).read_text())

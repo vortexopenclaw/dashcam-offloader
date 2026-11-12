@@ -8,12 +8,16 @@ enum PrivateEvidenceVerification {
         do {
             // Developer-created fixture marker; never discover/read an owner's mounted card.
             guard try String(contentsOf: root.appendingPathComponent("synthetic-fixture.txt"), encoding: .utf8) == "synthetic private evidence fixture\n" else { return false }
-            for unsafe in ["../clip.mp4", "/clip.mp4", "a\\b.MP4", "a\n.MP4", "._clip.MP4", "file.ini", "clip..MP4", String(repeating: "a", count: 181) + ".mp4"] {
-                guard !CardLearningStructure.safeMediaBasename(unsafe) else { return false }
+            let cases = try JSONDecoder().decode([String: [String]].self, from:
+                Data(contentsOf: root.appendingPathComponent("media-basename-cases.json")))
+            guard let rejected = cases["rejected"], let accepted = cases["accepted"] else { return false }
+            for unsafe in rejected {
+                guard !CardLearningStructure.safeMediaBasename(unsafe) else { print("Unexpected accepted basename: \(unsafe.debugDescription)"); return false }
             }
-            for name in ["N_20300102123456_0001.MP4", "novel-camera 42.M4V", "IMG_new.JPG"] {
-                guard CardLearningStructure.safeMediaBasename(name) else { return false }
+            for name in accepted {
+                guard CardLearningStructure.safeMediaBasename(name) else { print("Unexpected rejected basename: \(name.debugDescription)"); return false }
             }
+            print("PRIVATE BASENAME SAFETY PASS")
             guard let profilesDirectory = ProfileStore.defaultProfilesDirectory() else { return false }
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             var paths = CardLearningPaths()
@@ -44,7 +48,7 @@ enum PrivateEvidenceVerification {
                 }
                 if label == "small" {
                     guard counts.inventoriedMedia == 5, counts.retainedIdentities == 5,
-                          snapshot.mediaFileSamples.contains(where: { $0.filename == "IMG_20300102_new.JPG" && $0.folder == "DCIM/201photo" && $0.sourceIdentifier != nil }) else { return false }
+                          snapshot.mediaFileSamples.contains(where: { $0.filename == "照片2030.jpg" && $0.folder == "DCIM/201photo" && $0.sourceIdentifier != nil }) else { return false }
                     let duplicate = pairs.filter { $0.filename == "N_20300102123456_0001.MP4" }
                     guard duplicate.count == 2, Set(duplicate.compactMap(\.sourceIdentifier)).count == 2,
                           Set(duplicate.compactMap(\.folder)) == ["DCIM/200video", "DCIM/inside/200video"] else { return false }
