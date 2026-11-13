@@ -220,6 +220,14 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contextMenu {
             Button {
+                viewModel.showSourceInFinder(source)
+            } label: {
+                Label("Show in Finder", systemImage: "folder")
+            }
+
+            Divider()
+
+            Button {
                 viewModel.renameSource(source)
             } label: {
                 Label("Rename", systemImage: "pencil")

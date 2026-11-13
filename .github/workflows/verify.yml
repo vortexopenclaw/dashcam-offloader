@@ -32,6 +32,9 @@ jobs:
       - name: Run verification
         run: swift run DashcamOffloader --verify
 
+      - name: Verify source context menu wiring
+        run: python3 -m unittest discover -s scripts -p 'test_source_context_menu.py'
+
       - name: Build app bundle
         run: bash scripts/build-macos-app.sh
 

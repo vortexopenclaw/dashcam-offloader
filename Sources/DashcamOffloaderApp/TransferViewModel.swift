@@ -684,6 +684,24 @@ final class TransferViewModel: ObservableObject {
         return renamedSource
     }
 
+    // Use the context-clicked row, not the selected card or download destination.
+    // Keep this read-only action available while scanning or copying.
+    func showSourceInFinder(_ source: MountedSource, open: (URL) -> Bool = { NSWorkspace.shared.open($0) }) {
+        let url = source.url
+        var isDirectory: ObjCBool = false
+        guard url.isFileURL, url.path.hasPrefix("/"), url.path != "/",
+              FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            statusMessage = "Cannot show \(source.name) in Finder: source is no longer available"
+            return
+        }
+        guard open(url) else {
+            statusMessage = "Could not open \(source.name) in Finder"
+            return
+        }
+        statusMessage = "Showing \(source.name) in Finder"
+    }
+
     func renameSource(_ source: MountedSource) {
         let alert = NSAlert()
         alert.messageText = "Rename Source"

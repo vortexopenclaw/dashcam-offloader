@@ -45,6 +45,7 @@ struct DashcamOffloaderApp: App {
                 Foundation.exit(1)
             }
             Task {
+                guard SourceFinderVerification.run() else { Foundation.exit(1) }
                 let result = await CopyExecutorVerification.run()
                 Foundation.exit(result ? 0 : 1)
             }

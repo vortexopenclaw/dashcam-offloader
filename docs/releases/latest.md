@@ -1,9 +1,7 @@
-# Dashcam Offloader 0.1.40
+# Dashcam Offloader 0.1.41
 
-- Discover technical model, manufacturer, firmware/build and supported setting declarations in unfamiliar support-file locations, independently of known camera profiles.
-- Inspect bounded JSON, INI/key-value, BOM-marked UTF-16 and supported framed logs; preserve source/record context and disclose unsupported, oversized and budget-limited evidence rather than silently dropping it.
-- Preserve unknown technical declarations in explicitly reviewed private submissions without overriding owner labels or inventing exact camera identity.
-- Filter identifiers and unsafe values, retain model ambiguity after sampling, and strip private discovery from anonymous exports. Raw logs and support-file paths are not uploaded.
-- Keep rare late support files from being crowded out by ordinary recordings or image slots.
+- Right-click a source card and choose Show in Finder to open that card's folder, even when another source is selected.
+- Keep Rename, Eject, and Hide from Sources in the same menu. Show in Finder remains available while scanning or downloading.
+- Report a missing or ejected source, or a Finder open failure, without opening the selected card or download destination instead.
 
-This is bounded discovery, not a universal proprietary-format decoder. XML and binary payload decoding remain unsupported; conservative value rules can reject legitimate names. Existing video measurements, DDPAI component evidence and main-card front S_/rear Q_ time-lapse handling remain intact.
+This is a navigation action. Offloader does not rename, format, or write source files. Finder may maintain its normal folder-view metadata.
