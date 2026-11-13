@@ -45,6 +45,15 @@ enum GenericDiscoveryVerification {
         try require(structured.observations.count == 2 && structured.observations[0].key == "model_name" && structured.observations[0].line == 4 && structured.observations[1].line == 5 && structured.observations[0].record != structured.observations[1].record, "nested lexical line/record and canonical keys")
         let lineJSON = try single(Data("{\"model\":\"Line A1\"}\n{\"model\":\"Line B2\"}\n".utf8))
         try require(lineJSON.observations.count == 2 && lineJSON.observations[1].line == 2 && lineJSON.observations[1].record == 1, "line JSON separated records")
+        let repeatedINI = try single(Data("[camera]\nmodel=Alpha A1\nfw=1.2\nmodel=FutureCam X9\nfw=2.3\nnotice {\"model\":\"Mixed M3\"}\nmodel=Tail T4\nfw=3.4\n".utf8))
+        try require(repeatedINI.observations.map(\.record) == [0,0,1,1,2,3,3], "repeated INI declarations and mixed JSON use distinct records")
+        for (key, value) in [("model", "Call Alice at home"), ("manufacturer", "John Smith"), ("model", "AB12CD34EF56"), ("model", "AA-BB-CC-DD-EE-FF"), ("model", "A1-B2-C3-D4-E5-F6"), ("model", "A123456789"), ("firmware", "127.0.0.1"), ("firmware", "169.254.1.2"), ("firmware", "10.1.2.3"), ("width", "0"), ("height", "16385"), ("fps", "241"), ("bitrate", "1000000001")] {
+            let rejected = try single(Data("\(key)=\(value)".utf8))
+            try require(rejected.observations.isEmpty && rejected.coverage.reasons["unsafe_value"] == 1, "P1 typed rejection: \(key)=\(value)")
+        }
+        for (key, value) in [("model", "Alpha A1"), ("model", "FutureCam X9"), ("model", "DDPAIDZ2602 Master"), ("manufacturer", "FutureCam"), ("firmware", "8.0.0.23"), ("firmware", "9.0.1.10"), ("codec", "av1"), ("parking_mode", "on"), ("parking_mode", "off"), ("width", "16384"), ("fps", "240"), ("fps", "+30"), ("fps", "1e2"), ("bitrate", "1000000000")] {
+            try require(try single(Data("\(key)=\(value)".utf8)).observations.count == 1, "valid typed declaration: \(key)=\(value)")
+        }
         let controls = try single(Data("\u{1b}[32mnotice {\"model\":\"Bad\u{1b}[0mModel\"}\u{1b}[0m".utf8))
         try require(controls.observations.isEmpty && controls.coverage.reasons["malformed"] != nil, "ANSI inside payload never cleaned")
         let controlsEscaped = try single(Data(#"notice {"model":"Bad\u001bModel"}"#.utf8))
@@ -100,8 +109,22 @@ enum GenericDiscoveryVerification {
         let full = try put("full-budget", Data(repeating: 32, count: 65536))
         let bytes = GenericCardDiscovery.read(source: card, files: Array(repeating: full, count: 66))
         try require(bytes.coverage.bytesRead == 4194304 && bytes.coverage.inspectedFiles == 64 && bytes.coverage.reasons["byte_limit"] == 2, "aggregate byte cap")
+        var largeVideos: [URL] = []
+        for index in 0..<256 { largeVideos.append(try put(String(format: "starvation/%03d.mp4", index), Data(repeating: 0, count: 65537))) }
+        let lateConfig = try put("starvation/zzz/version.txt", Data("model=Late L9\nfw=9.0.1.10\n".utf8))
+        let late = GenericCardDiscovery.read(source: card, files: largeVideos + [lateConfig])
+        try require(late.coverage.inspectedFiles == 1 && late.coverage.reasons["oversize"] == 256 && late.observations.count == 2, "256 oversized videos cannot starve late version.txt")
+        // Same-priority unknown extensions exercise reclaim, not just sorting.
+        var pictures: [URL] = []
+        for index in 0..<128 { pictures.append(try put(String(format: "starvation-jpeg/%03d.odd", index), Data([0xff,0xd8,0xff,0x00]))) }
+        let lateUnknown = try put("starvation-jpeg/zzz.unknown", Data("model=Later L8\nfw=8.0.0.23\n".utf8))
+        let reclaimed = GenericCardDiscovery.read(source: card, files: pictures + [lateUnknown])
+        try require(reclaimed.coverage.inspectedFiles == 129 && reclaimed.sources.count == 128 && reclaimed.observations.count == 2 && reclaimed.coverage.limited && reclaimed.observations.allSatisfy { observation in reclaimed.sources.contains { $0.id == observation.sourceId } }, "128 structural-only sources cannot block late unknown-extension facts")
+        let mediaConfig = try put("starvation/zzz/support.mp4", Data("model=Fallback F7\n".utf8))
+        let fallback = GenericCardDiscovery.read(source: card, files: largeVideos + [mediaConfig])
+        try require(fallback.observations.first?.value == "Fallback F7" && fallback.coverage.inspectedFiles == 1 && fallback.coverage.reasons["oversize"] == 256 && fallback.observations.first?.sourceId == "support-257" && fallback.coverage.uninspectedFiles == 256, "oversize files do not consume inspections even within media priority")
         // Keep the roundtrip fixture narrowly synthetic and restore only its original five files.
-        for name in ["probe","linked","linked-dir","mutation","budget","full-budget"] { try fm.removeItem(at: card.appendingPathComponent(name)) }
+        for name in ["starvation", "starvation-jpeg", "probe","linked","linked-dir","mutation","budget","full-budget"] { try fm.removeItem(at: card.appendingPathComponent(name)) }
         print("GENERIC DISCOVERY NATIVE PASS: unknown paths, nested/duplicate JSON, INI, UTF16, framing, privacy, bounds, symlinks, mutation, cancellation")
         return result
     }

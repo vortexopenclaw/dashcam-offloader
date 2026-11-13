@@ -47,21 +47,35 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
     }
     static func field(_ key: String) -> String? { groups.first { $0.value.contains(key) }?.key }
     static func safeValue(_ value: String, key: String) -> Bool {
-        guard !value.isEmpty, value.count <= 80, value.utf8.count <= 160,
+        func matches(_ pattern: String) -> Bool { value.range(of: pattern, options: .regularExpression) != nil }
+        guard !value.isEmpty, value.count <= 80,
               value == value.trimmingCharacters(in: .whitespacesAndNewlines),
-              value.range(of: #"^[A-Za-z0-9][A-Za-z0-9 _().+\-]*$"#, options: .regularExpression) != nil,
-              value.range(of: #"(?i)(password|passwd|secret|token|ssid|wifi|serial|latitude|longitude|address|credential|canary|https?|email|\bGPS\b)"#, options: .regularExpression) == nil,
-              value.range(of: #"\b(?:192\.168|10\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}\b"#, options: .regularExpression) == nil else { return false }
-        switch field(key) {
+              !matches(#"[^\x20-\x7e]"#),
+              !matches(#"(?i)(password|passwd|secret|token|@|http|www\.|wifi|ssid|gps|serial|latitude|longitude|address|credential|canary|email)"#),
+              !matches(#"^(?:10\.|127\.|169\.254\.|192\.168\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)[0-9.]+$"#) else { return false }
+        let kind = field(key)
+        if (kind == "model" || kind == "manufacturer") && matches(#"(?:[0-9]{7,}|[A-Fa-f0-9]{12,}|(?:[A-Fa-f0-9]{2}[-:]){5}[A-Fa-f0-9]{2}|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"#) { return false }
+        // Deliberately conservative: all-letter retail names and unknown multiword
+        // manufacturers can be false negatives. This is not a privacy oracle;
+        // declarations remain unbound and require explicit private review.
+        switch kind {
         case "firmware", "build":
-            return value.range(of: #"^[vV]?[0-9]{1,4}(?:\.[0-9]{1,6}){1,5}(?:[_+\-][A-Za-z0-9.\-]{1,24})?$"#, options: .regularExpression) != nil
-        case "model", "manufacturer":
-            return value.count <= 64 && value.split(separator: " ").count <= 6 && value.range(of: #"[A-Za-z]"#, options: .regularExpression) != nil && value.range(of: #"[0-9]{9,}"#, options: .regularExpression) == nil
+            return matches(#"^[vV]?[0-9]{1,4}(?:\.[0-9]{1,6}){1,5}(?:[_+\-][A-Za-z0-9.\-]{1,32})?$"#)
+        case "manufacturer":
+            return matches(#"^[A-Za-z][A-Za-z0-9_\-]{1,31}$"#)
+        case "model":
+            return matches(#"^[A-Za-z0-9][A-Za-z0-9._()+\-]{0,31}(?: [A-Za-z0-9][A-Za-z0-9._()+\-]{0,23}){0,3}$"#) && value.split(separator: " ").contains { token in
+                token.range(of: "[A-Za-z]", options: .regularExpression) != nil && token.range(of: "[0-9]", options: .regularExpression) != nil
+            }
         case "setting":
-            let enums: [String: [String]] = ["codec": ["h264", "h265", "hevc", "avc", "mjpeg"], "quality": ["low", "medium", "high", "fine", "normal", "superfine"], "hdr": ["on", "off", "auto", "0", "1"], "parking_mode": ["on", "off", "auto", "low_bitrate", "time_lapse", "motion", "collision"], "time_lapse": ["on", "off", "0", "1"]]
+            let enums: [String: [String]] = ["codec": ["h264", "h265", "hevc", "av1", "mjpeg", "mpeg4"], "quality": ["low", "normal", "medium", "high", "maximum", "extreme"], "hdr": ["on", "off", "auto", "0", "1"], "parking_mode": ["on", "off", "buffered", "time-lapse", "low-bitrate", "motion", "impact", "radar"]]
             if let allowed = enums[key] { return allowed.contains(value.lowercased()) }
-            let pattern = key == "resolution" ? #"^[1-9][0-9]{1,4}[xX][1-9][0-9]{1,4}$"# : #"^[0-9]{1,9}(?:\.[0-9]{1,3})?$"#
-            return value.range(of: pattern, options: .regularExpression) != nil
+            if key == "resolution" { return matches(#"^[1-9][0-9]{1,4}[xX][1-9][0-9]{1,4}$"#) }
+            guard matches(#"^\+?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+\-]?[0-9]+)?$"#), let number = Double(value), number > 0 else { return false }
+            if ["width", "height", "bitrate"].contains(key) {
+                return matches(#"^\+?[0-9]+$"#) && number <= (key == "bitrate" ? 1_000_000_000 : 16384)
+            }
+            return ["fps", "frame_rate", "time_lapse"].contains(key) && number <= 240
         default: return false
         }
     }
@@ -81,12 +95,15 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
             let path = file.standardizedFileURL.path
             guard path.hasPrefix(root + "/") else { return nil }
             return String(path.dropFirst(root.count + 1))
-        }.sorted()
+        }.sorted {
+            let left = inspectionPriority($0), right = inspectionPriority($1)
+            return left == right ? $0 < $1 : left < right
+        }
         result.coverage.inventoriedCandidates = candidates.count
         var models = Set<String>()
         for (index, relative) in candidates.enumerated() {
             if cancelled() { result.reason("file_limit", candidates.count - index); break }
-            if index >= 256 { result.reason("file_limit", candidates.count - index); break }
+            if result.coverage.inspectedFiles >= 256 { result.reason("file_limit", candidates.count - index); break }
             if result.coverage.bytesRead >= 4 * 1024 * 1024 { result.reason("byte_limit", candidates.count - index); break }
             let fd = openFile(root: source, relative: relative)
             guard fd >= 0 else { result.reason("read_error"); continue }
@@ -119,6 +136,12 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
             let id = "support-\(index + 1)"
             var sourceInfo = Source(id: id, format: "unknown", encoding: "unknown", sizeBytes: data.count)
             let parsed = result.parse(data, source: &sourceInfo)
+            // Structural-only evidence cannot displace later declarations.
+            if !parsed.isEmpty && result.sources.count == 128,
+               let reclaim = result.sources.firstIndex(where: { candidate in !result.observations.contains { $0.sourceId == candidate.id } }) {
+                result.sources.remove(at: reclaim)
+                result.reason("file_limit")
+            }
             let retainedSource = result.sources.count < 128
             if retainedSource { result.sources.append(sourceInfo) } else { result.reason("file_limit") }
             for observation in parsed {
@@ -131,6 +154,13 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
         result.coverage.retainedObservations = result.observations.count
         result.coverage.uninspectedFiles = candidates.count - result.coverage.inspectedFiles
         return result
+    }
+    private static func inspectionPriority(_ path: String) -> Int {
+        let url = URL(fileURLWithPath: path.lowercased())
+        let ext = url.pathExtension
+        if ["json", "ini", "cfg", "conf", "txt", "log", "xml"].contains(ext) || ["version.bin", "version"].contains(url.lastPathComponent) { return 0 }
+        if ["mp4", "mov", "avi", "mkv", "jpg", "jpeg", "png", "heic", "ts"].contains(ext) { return 2 }
+        return 1 // Unfamiliar extensions remain eligible, before media.
     }
     /// Descriptor-relative inventory includes hidden and unfamiliar support files.
     /// Symlinks are inventoried as unreadable candidates, never traversed.
@@ -233,24 +263,28 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
             if !trimmed.components(separatedBy: .newlines).filter({ !$0.trimmingCharacters(in: .whitespaces).isEmpty }).allSatisfy({ Self.framedJSON($0) != nil && Self.json(Self.framedJSON($0)!) != nil }) { reason("malformed"); return [] }
         }
         var section: Int?
+        var sectionKeys = Set<String>()
         var foundJSON = false
         var foundKV = false
         for (offset, raw) in text.components(separatedBy: .newlines).enumerated() {
             let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             if line.isEmpty || line.hasPrefix(";") || line.hasPrefix("#") { continue }
             if let framed = Self.framedJSON(line) {
-                section = nil
+                section = nil; sectionKeys.removeAll()
                 foundJSON = true; source.format = "framed_json"
                 if Self.json(framed) != nil { walkJSON(framed, line: offset + 1) } else { reason("malformed") }
                 continue
             }
             if line.contains("{") || line.hasPrefix("[") && !line.hasSuffix("]") { reason("malformed"); continue }
-            if line.hasPrefix("["), line.hasSuffix("]") { section = record; record += 1; source.format = "ini"; continue }
+            if line.hasPrefix("["), line.hasSuffix("]") { section = record; record += 1; sectionKeys.removeAll(); source.format = "ini"; continue }
             guard let separator = line.firstIndex(where: { $0 == "=" || $0 == ":" }) else { continue }
             let key = Self.canonicalKey(line[..<separator].trimmingCharacters(in: .whitespaces))
             if key.range(of: #"^[a-z][a-z0-9_]{0,47}$"#, options: .regularExpression) != nil { foundKV = true }
             guard Self.field(key) != nil else { continue }
-            if section == nil { section = record; record += 1 }
+            if section == nil || sectionKeys.contains(key) {
+                section = record; record += 1; sectionKeys.removeAll()
+            }
+            sectionKeys.insert(key)
             let value = line[line.index(after: separator)...].trimmingCharacters(in: .whitespaces)
             if let entry = observation(key, value, line: offset + 1, record: section!) { output.append(entry) }
             else { reason("unsafe_value") }
