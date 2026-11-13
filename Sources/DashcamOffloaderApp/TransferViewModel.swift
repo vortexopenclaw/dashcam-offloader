@@ -58,6 +58,7 @@ final class TransferViewModel: ObservableObject {
     private var canRunAutomaticSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
+    @Published private(set) var discovery: GenericCardDiscovery? = nil
     @Published private(set) var componentMetadata = DDPAIComponentMetadata()
     private var lastEffectiveScanSourceURL: URL?
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
@@ -800,6 +801,7 @@ final class TransferViewModel: ObservableObject {
         isCheckingCardHealth = false
         lastScannedFiles = []
         lastScanDiagnostics = []
+        discovery = nil
         componentMetadata = DDPAIComponentMetadata()
         lastEffectiveScanSourceURL = nil
         excludedQueueClipIDs = []
@@ -873,6 +875,7 @@ final class TransferViewModel: ObservableObject {
                 self.selectedProfileWasManuallyChosen = self.profileSelectionRevision != profileRevisionAtStart
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
+                self.discovery = scanResult.discovery
                 self.componentMetadata = scanResult.componentMetadata
                 self.lastEffectiveScanSourceURL = scanResult.sourceURL
                 if self.profileSelectionRevision != profileRevisionAtStart,
@@ -987,6 +990,7 @@ final class TransferViewModel: ObservableObject {
         selectedProfileWasManuallyChosen = false
         lastScannedFiles = scanResult.allFiles
         lastScanDiagnostics = scanResult.diagnostics
+        discovery = scanResult.discovery
         componentMetadata = scanResult.componentMetadata
         lastEffectiveScanSourceURL = scanResult.sourceURL
         clips = scanResult.clips
@@ -1554,13 +1558,12 @@ final class TransferViewModel: ObservableObject {
             }
             return safe.forSubmission()
         }
-        let settingSnapshots = safeFiles
-            .filter { isPotentialSettingsFile($0, sourceRoot: sourceRoot) }
-            .prefix(20)
-            .compactMap { makeSettingSnapshot(for: $0, sourceRoot: sourceRoot) }
-            .map { snapshot in
-                FeedbackSettingSnapshot(relativePath: "", keys: snapshot.keys, safeValues: snapshot.safeValues)
-            }
+        // Private upload authority is the bounded typed extractor, never the
+        // legacy printable-fragment/redaction helpers (which also reread files).
+        // Keep only a small compatibility projection of already validated settings.
+        let settingSnapshots = (discovery?.observations ?? []).filter { $0.field == "setting" }.prefix(20).map {
+            FeedbackSettingSnapshot(relativePath: "", keys: [$0.key], safeValues: [$0.key: $0.value])
+        }
 
         let candidates = detectionCandidates.prefix(8).map { candidate in
             FeedbackCandidateSnapshot(
@@ -1632,6 +1635,7 @@ final class TransferViewModel: ObservableObject {
             scanDiagnostics: Array(feedbackDiagnostics),
             mediaFileSamples: mediaFileSamples
         )
+        snapshot.discovery = discovery
         if componentMetadata.coverage.inspectedFiles > 0 || componentMetadata.coverage.limited {
             snapshot.componentMetadata = componentMetadata.entries
             snapshot.componentMetadataCoverage = componentMetadata.coverage

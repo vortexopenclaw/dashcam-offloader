@@ -21,6 +21,37 @@ enum PrivateEvidenceVerification {
             guard let profilesDirectory = ProfileStore.defaultProfilesDirectory() else { return false }
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             guard try DDPAIMetadataVerification.run(root: root, output: output, profiles: profiles) else { return false }
+            let generic = try GenericDiscoveryVerification.run(root: root)
+            let genericCard = root.appendingPathComponent("generic-discovery")
+            let genericScan = try CardScanner().scan(sourceURL: genericCard, profiles: profiles, allowNestedCardRootDiscovery: false)
+            guard genericScan.discovery == generic, genericScan.identifiedCamera == nil else { return false }
+            let genericModel = TransferViewModel()
+            genericModel.loadScanResultForVerification(source: MountedSource(url: genericCard, name: "Synthetic unknown"), scanResult: genericScan)
+            guard let genericSnapshot = genericModel.makeFeedbackScanSnapshot(), genericSnapshot.discovery == generic,
+                  genericSnapshot.forPublicExport().discovery == nil else { return false }
+            let disclosure = PrivateEvidenceReview.discoveryDisclosure(generic).joined(separator: "\n")
+            guard disclosure.contains("NovaCam QX7"), disclosure.contains("framed_json"),
+                  disclosure.contains("Multiple model declarations"), disclosure.contains("no model recognition inferred") else { return false }
+            let genericSubmission = FeedbackSubmission(kind: .bug, message: "Synthetic generic discovery regression", contact: "", appVersion: "synthetic-test", createdAt: "2030-01-01T00:00:00Z", training: nil, scan: genericSnapshot)
+            let genericBytes = try JSONEncoder().encode(genericSubmission)
+            let genericText = String(decoding: genericBytes, as: UTF8.self)
+            guard !genericText.contains("CANARY"), !genericText.contains("private_parent"), !genericText.contains("settings.weird"),
+                  genericSnapshot.settingSnapshots.allSatisfy({ $0.keys.allSatisfy { GenericCardDiscovery.field($0) == "setting" } }) else { return false }
+            try genericBytes.write(to: output.appendingPathComponent("generic-private.json"), options: .withoutOverwriting)
+            try JSONEncoder().encode(genericSnapshot.forPublicExport()).write(to: output.appendingPathComponent("generic-public.json"), options: .withoutOverwriting)
+            let coverageCard = root.appendingPathComponent("generic-coverage")
+            try FileManager.default.createDirectory(at: coverageCard, withIntermediateDirectories: true)
+            try Data("<synthetic/>".utf8).write(to: coverageCard.appendingPathComponent("unknown"))
+            let coverageScan = try CardScanner().scan(sourceURL: coverageCard, profiles: profiles, allowNestedCardRootDiscovery: false)
+            genericModel.loadScanResultForVerification(source: MountedSource(url: coverageCard, name: "Synthetic coverage"), scanResult: coverageScan)
+            guard let coverageSnapshot = genericModel.makeFeedbackScanSnapshot(),
+                  coverageSnapshot.discovery?.observations.isEmpty == true,
+                  coverageSnapshot.discovery?.coverage.reasons["unsupported_format"] == 1 else { return false }
+            let coverageDisclosure = PrivateEvidenceReview.discoveryDisclosure(coverageSnapshot.discovery!).joined(separator: "\n")
+            guard coverageDisclosure.contains("0 declarations retained"), coverageDisclosure.contains("unsupported_format: 1"),
+                  coverageDisclosure.contains("xml"), coverageDisclosure.contains("Coverage limited") else { return false }
+            let coverageSubmission = FeedbackSubmission(kind: .bug, message: "Synthetic coverage-only discovery", contact: "", appVersion: "synthetic-test", createdAt: "2030-01-01T00:00:00Z", training: nil, scan: coverageSnapshot)
+            try JSONEncoder().encode(coverageSubmission).write(to: output.appendingPathComponent("generic-coverage-private.json"), options: .withoutOverwriting)
             var paths = CardLearningPaths()
             guard paths.folder("Family Trip/inside/200video") == "folder-1/inside/200video",
                   paths.folder("Family Trip/201photo") == "folder-1/201photo",

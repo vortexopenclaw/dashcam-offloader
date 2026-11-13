@@ -1,3 +1,4 @@
+import { validDiscovery, projectDiscovery } from "./discovery.js";
 import { recognizedDDPAIModel } from "./ddpai-models.js";
 
 const MAX_MESSAGE_LENGTH = 12000;
@@ -216,6 +217,7 @@ function validateFeedback(body) {
     if (typeof scan !== "object" || Array.isArray(scan)) {
       return { ok: false, error: "invalid_scan" };
     }
+    if (!validDiscovery(scan.discovery)) return {ok:false,error:"invalid_discovery"};
     if (!validComponentMetadata(scan)) {
       return {ok: false, error: "invalid_component_metadata"};
     }
@@ -416,6 +418,7 @@ function sanitizeScan(scan) {
       ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
       : [],
   };
+  if (scan.discovery !== undefined && validDiscovery(scan.discovery)) result.discovery = projectDiscovery(scan.discovery);
   if (validComponentMetadata(scan) && Array.isArray(scan.componentMetadata)) {
     result.componentMetadata = scan.componentMetadata.map(componentEntry);
     const coverage = scan.componentMetadataCoverage;

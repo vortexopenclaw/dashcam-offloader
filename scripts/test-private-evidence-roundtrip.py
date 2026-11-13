@@ -51,7 +51,7 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
                            "--verify-private-evidence", str(fixture), str(output)],
                    cwd=repo, check=True)
     environment = dict(os.environ, DASHCAM_NATIVE_EVIDENCE_OUTPUT=str(output), DASHCAM_DDPAI_METADATA_OUTPUT=str(output))
-    subprocess.run([node, "--test", "workers/feedback/private-evidence.test.mjs", "workers/feedback/ddpai-metadata.test.mjs"],
+    subprocess.run([node, "--test", "workers/feedback/private-evidence.test.mjs", "workers/feedback/ddpai-metadata.test.mjs", "workers/feedback/discovery.test.mjs"],
                    cwd=repo, env=environment, check=True)
     for path, evidence in before.items():
         assert (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns) == evidence

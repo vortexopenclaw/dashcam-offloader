@@ -163,6 +163,7 @@ struct CardScanner {
             clips: clips,
             diagnostics: diagnostics
         )
+        result.discovery = GenericCardDiscovery.read(source: sourceURL)
         result.componentMetadata = DDPAIComponentMetadata.read(source: sourceURL)
         applyStructuredLogIdentity(&result, profiles: profiles)
         return result
@@ -2423,6 +2424,7 @@ struct ScanResult {
     var selectedProfile: DashcamProfile?
     var clips: [ClipItem]
     var diagnostics: [ScanDiagnosticEntry]
+    var discovery: GenericCardDiscovery? = nil
     var componentMetadata = DDPAIComponentMetadata()
 }
 
