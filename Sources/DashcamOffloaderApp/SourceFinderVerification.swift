@@ -4,7 +4,9 @@ import Foundation
 enum SourceFinderVerification {
     static func run() -> Bool {
         let manager = FileManager.default
-        let root = manager.temporaryDirectory.appendingPathComponent("source-finder-\(UUID().uuidString)", isDirectory: true)
+        // Foundation can ignore TMPDIR on macOS; honor the caller's owned scratch path explicitly.
+        let temporaryRoot = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? manager.temporaryDirectory.path, isDirectory: true)
+        let root = temporaryRoot.appendingPathComponent("source-finder-\(UUID().uuidString)", isDirectory: true)
         defer { try? manager.removeItem(at: root) }
         do {
             let card = root.appendingPathComponent("NO NAME #100% 'quoted'", isDirectory: true)
@@ -42,7 +44,7 @@ enum SourceFinderVerification {
             // Normal verification never opens Finder or touches a mounted camera.
             if let fixturePath = ProcessInfo.processInfo.environment["DASHCAM_FINDER_VERIFICATION_ROOT"] {
                 let fixture = URL(fileURLWithPath: fixturePath, isDirectory: true)
-                let scratch = manager.temporaryDirectory.resolvingSymlinksInPath().path + "/"
+                let scratch = temporaryRoot.resolvingSymlinksInPath().path + "/"
                 guard fixture.resolvingSymlinksInPath().path.hasPrefix(scratch) else {
                     return fail("native acceptance requires a scratch fixture")
                 }
