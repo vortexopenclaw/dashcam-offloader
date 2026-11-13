@@ -1,7 +1,7 @@
-# Dashcam Offloader 0.1.42
+# Dashcam Offloader 0.1.43
 
-- Preserve measured video codecs alongside individual file measurements in reviewed card-scan reports. Fix the feedback receiver dropping the native HEVC label.
-- Read bounded DDPAI product-info logs as well as UI logs, retaining only reported model and historical firmware observations. Unknown hardware identities remain unknown; no channel role or retail revision is inferred from a shared layout.
-- Keep the source-card Show in Finder menu and existing update behavior unchanged.
+- Recognize the owner-confirmed DDPAI MINI3X product SKU from bounded product-info records. Keep the retail revision and physical camera role unknown; ordinary clips remain Recording, not inferred Driving or parking events.
+- Refresh the official model reference and anonymous MINI3X evidence from the committed reviewed camera database. Preserve all 23 individual size, duration, playback FPS, video bitrate and HEVC measurements.
+- Preserve Show in Finder, bounded log capture, private per-file codec retention, signing and existing update behavior.
 
-Card-log reads are read-only. Private source evidence remains excluded from public exports. These changes do not infer parking events, capture cadence, or current settings from ordinary filenames or playback metadata.
+Firmware observations remain scoped to the reporting component. Missing track logs and recording gaps do not establish impacts or events. Audio details are not added in this release; unknown metadata stays unknown.

@@ -29,7 +29,11 @@ enum DDPAIMini3XVerification {
                   scan.identifiedCamera?.model == "MINI3X",
                   scan.componentMetadata.entries.first?.firmwareVersion == "v9.0.1.10",
                   scan.clips.filter({ $0.isVideo }).allSatisfy({ $0.channel == "unknown" && $0.mode == "recording" && $0.outputCategory != "Driving" }) else { print("MINI3X FAIL at line \(#line)"); return false }
-            for sku in ["DDPAI DM003_Overseas_V3", "DDPAI MINI3X", "DDPAI Synthetic", "DDPAI Z100 Pro"] {
+            for sku in ["dm003_overseas_v2", "ddpai dm003_overseas_v2", "DDPAI DM003_Overseas_V2"] {
+                try Data(record(sku).utf8).write(to: log)
+                guard try scanner.scan(sourceURL: root, profiles: profiles, allowNestedCardRootDiscovery: false).selectedProfile?.id == profile.id else { print("MINI3X case normalization FAIL"); return false }
+            }
+            for sku in ["DDPAI DM003_Overseas_V3", "DDPAI MINI3X", "DDPAI Synthetic", "DDPAI Z100 Pro", "DDPAI DM003_Overseas_V2 suffix", "DDPAI DM003_Overseas_V20"] {
                 try Data(record(sku).utf8).write(to: log)
                 let unknown = try scanner.scan(sourceURL: root, profiles: profiles, allowNestedCardRootDiscovery: false)
                 guard unknown.selectedProfile?.id != profile.id,

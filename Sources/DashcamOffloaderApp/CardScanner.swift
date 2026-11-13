@@ -173,7 +173,7 @@ struct CardScanner {
         guard let model = result.componentMetadata.exactLoggingModel else { return }
         let evidence = ["Exact structured logging-device model; historical firmware observations are separate"]
         if model == "MINI3X",
-           result.componentMetadata.entries.contains(where: { $0.component == "logging_device" && $0.sourceKind == "ddpai_product_info" && $0.reportedModel == "DDPAI DM003_Overseas_V2" }),
+           result.componentMetadata.entries.contains(where: { $0.component == "logging_device" && $0.sourceKind == "ddpai_product_info" && $0.reportedModel.map({ DDPAIOfficialModels.recognized($0) == "MINI3X" }) == true }),
            let profile = profiles.first(where: { $0.id == "ddpai-mini3x" }),
            DDPAIComponentMetadata.hasSafeVideo(source: result.sourceURL, files: result.allFiles, folder: "DCIM/200video") {
             result.candidates.insert(DetectionCandidate(profile: profile, score: 100, confidence: .high, evidence: evidence), at: 0)

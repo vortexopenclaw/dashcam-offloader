@@ -27,7 +27,7 @@ async function roundtrip(scan) {
 }
 
 test('MINI3X exact SKU retains generic model and logging firmware through production receiver', async()=>{
-  assert.equal(recognizedDDPAIModel('DDPAI DM003_Overseas_V2'),'MINI3X');
+  for (const sku of ['dm003_overseas_v2', 'ddpai dm003_overseas_v2', 'DDPAI DM003_Overseas_V2']) assert.equal(recognizedDDPAIModel(sku),'MINI3X');
   for (const sku of ['DDPAI DM003_Overseas_V3','DDPAI MINI3X','DDPAI DM003_Overseas_V2 suffix']) {
     assert.equal(recognizedDDPAIModel(sku),null);
   }
@@ -47,7 +47,7 @@ test('optional authorized native card snapshot preserves every paired occurrence
   assert.equal(scan.selectedProfileID,'ddpai-mini3x');
   assert.ok(scan.componentMetadata.every(e=>e.model==='MINI3X' && e.firmwareVersion==='v9.0.1.10'));
   const pairs=scan.videoSpecSummaries.flatMap(g=>g.storageRateSamples || []);
-  assert.ok(pairs.length>0);
+  assert.equal(pairs.length,23);
   assert.ok(pairs.every(p=>p.codec==='H.265 / HEVC'));
   const stored=await roundtrip(scan);
   assert.equal(stored.scan.selectedProfileID,'ddpai-mini3x');

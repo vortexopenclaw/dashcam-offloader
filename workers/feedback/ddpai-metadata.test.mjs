@@ -51,7 +51,8 @@ test('exact official labels and demonstrated wrapper only; siblings and regional
   for (const label of ['Z100 Master Dual','Z100 Master Pro','DZ9999_GLOBAL_Z100 Master','Z100 Master suffix','MINI3X','N5Pro']) {
     assert.equal(recognizedDDPAIModel('DDPAI '+label),null,label);
   }
-  assert.equal(recognizedDDPAIModel('DDPAI MINI3X (V3)'),'MINI3X (V3)');
+  assert.equal(recognizedDDPAIModel('DDPAI MINI3X (V3)'),null); // canonical generic identity does not establish V3
+  assert.equal(recognizedDDPAIModel('DDPAI DM003_Overseas_V2'),'MINI3X');
 });
 
 test('structured metadata validation rejects unsafe paths, versions, bounds, ambiguous aliases and fabricated identity',()=>{

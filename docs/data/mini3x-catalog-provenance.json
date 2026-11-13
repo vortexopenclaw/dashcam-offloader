@@ -1,0 +1,10 @@
+{
+  "canonicalCommit": "32137d9edc95902a63aac82b287f3793b0d6e486",
+  "nativeProfileCommit": "6673d592bb41f775e0c4aae6ae55f140bf67b265",
+  "sha256": {
+    "docs/data/ddpai-model-reference.json": "b3ad2e129c0e26064fce7f644b4af4ca30a433591a23801530488694a37cb660",
+    "docs/data/ddpai-mini3x-evidence.json": "2e648e2bc0f771a86573145bea09b3a626b1fead175d136a72a49890cd3ba94f",
+    "profiles/ddpai-mini3x.yaml": "84df3eb0b7f0dc894d438f75a0cdc1ebb4e62f5d40498937d08e6913246c04d8"
+  },
+  "scope": "Committed reference/evidence and executable profile inputs; release commit records runtime source."
+}
