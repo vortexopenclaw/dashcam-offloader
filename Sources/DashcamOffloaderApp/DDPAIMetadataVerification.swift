@@ -71,6 +71,48 @@ enum DDPAIMetadataVerification {
         try write("[" + encode(object) + "]\n")
         let arrayRoot = DDPAIComponentMetadata.read(source: card)
         guard arrayRoot.entries.isEmpty, arrayRoot.exactLoggingModel == nil else { return false }
+        // Real logger framing shape, with wholly synthetic dates, source names
+        // and secrets. Two SGR sequences surround the logger level, not JSON.
+        var ansiObject = object
+        ansiObject["soft_version"] = "8.0.0.23"
+        for component in ["rear", "inside"] {
+            ansiObject[component + "_model"] = "DDPAI DR4004"
+            ansiObject[component + "_version"] = "v9.0.0.17"
+        }
+        let ansiJSON = try encode(ansiObject)
+        let framing = "[01-01 12:00:00:000 \u{1B}[1;32mI\u{1B}[m-device]:1[device.cpp]:response:"
+        try write(framing + ansiJSON + "\n" + framing + ansiJSON + "\n")
+        let ansi = DDPAIComponentMetadata.read(source: card)
+        guard !ansi.coverage.limited, ansi.coverage.retainedEntries == 6,
+              ansi.exactLoggingModel == "Z100 Master",
+              ansi.entries.filter({ $0.component == "logging_device" }).allSatisfy({ $0.firmwareVersion == "8.0.0.23" }),
+              ansi.entries.filter({ $0.component != "logging_device" }).allSatisfy({
+                  $0.reportedModel == "DDPAI DR4004" && $0.model == nil && !$0.identityEstablished && $0.firmwareVersion == "v9.0.0.17"
+              }), !String(decoding: try JSONEncoder().encode(ansi.entries), as: UTF8.self).contains("canary") else { return false }
+        let ansiScan = try scanner.scanWithOSD(sourceURL: card, profiles: profiles, allowNestedCardRootDiscovery: false)
+        guard ansiScan.selectedProfile?.id == "ddpai-z100-master-main",
+              ansiScan.diagnostics.contains(where: { $0.stage == "ddpai_ui_device_info" && $0.outcome == "matched" }),
+              ansiScan.componentMetadata.entries == ansi.entries else { return false }
+        model.loadScanResultForVerification(source: MountedSource(url: card, name: "Synthetic"), scanResult: ansiScan)
+        guard let ansiSnapshot = model.makeFeedbackScanSnapshot(),
+              ansiSnapshot.componentMetadata?.count == 6,
+              ansiSnapshot.componentMetadataCoverage?.limited == false,
+              !String(decoding: try JSONEncoder().encode(ansiSnapshot), as: UTF8.self).contains("canary"),
+              ansiSnapshot.forPublicExport().componentMetadata == nil else { return false }
+        // Decoration is not a license to salvage arrays, nested objects,
+        // duplicate keys, non-SGR escapes, or literal controls inside JSON.
+        for invalid in [
+            framing + "[" + ansiJSON + "]",
+            framing + "{\"wrapped\":" + ansiJSON + "}",
+            framing + ansiJSON.replacingOccurrences(of: "\"msgHdr\":", with: "\"model\":\"DDPAI Z100 Pro\",\"msgHdr\":"),
+            framing + ansiJSON.replacingOccurrences(of: "DR4004", with: "DR\u{1B}[m4004"),
+            framing + ansiJSON.replacingOccurrences(of: "DR4004", with: "DR\t4004"),
+            "\u{1B}[2J" + framing + ansiJSON
+        ] {
+            try write(invalid + "\n")
+            let rejected = DDPAIComponentMetadata.read(source: card)
+            guard rejected.entries.isEmpty, rejected.exactLoggingModel == nil else { return false }
+        }
         try write(encode(object) + "\n")
         // Directories and leaf logs must not follow links.
         let savedLog = log.appendingPathExtension("saved")

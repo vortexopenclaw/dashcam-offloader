@@ -17,7 +17,14 @@ enum DDPAIZ100Verification {
                 "DCIM/200video/inside/S_20300101120100.mp4",
                 "DCIM/201photo/inside/S_20300101120100.jpg",
                 "DCIM/202thumb/front/S_20300101120100.jpg",
-                "Other/inside/S_20300101120100.mp4"
+                "Other/inside/S_20300101120100.mp4",
+                "DCIM/200video/rear/Q_20300101120100.mp4",
+                "DCIM/200video/rear/20300101120000_A.mp4",
+                "DCIM/200video/front/Q_20300101120100.mp4",
+                "DCIM/200video/rear/S_20300101120100.mp4",
+                "DCIM/200video/inside/Q_20300101120100.mp4",
+                "Other/rear/Q_20300101120100.mp4",
+                "DCIM/201photo/rear/Q_20300101120100.jpg"
             ]
             for path in names {
                 let url = root.appendingPathComponent(path)
@@ -49,12 +56,19 @@ enum DDPAIZ100Verification {
                       clips[names[3]]?.channel == "telephoto", clips[names[3]]?.inferredParkingPattern == nil,
                       clips[names[4]]?.channel == "telephoto", clips[names[4]]?.isPhoto == true,
                       clips[names[5]]?.excludedReason != nil,
-                      clips[names[6]]?.channel != "telephoto", clips[names[6]]?.inferredParkingPattern == nil else {
+                      clips[names[6]]?.channel != "telephoto", clips[names[6]]?.inferredParkingPattern == nil,
+                      clips[names[7]]?.channel == "rear", clips[names[7]]?.inferredParkingPattern == .timelapse,
+                      clips[names[7]]?.outputCategory == "Parking", clips[names[7]]?.displayMode == "Parking Timelapse",
+                      clips[names[8]]?.channel == "rear", clips[names[8]]?.mode == "continuous",
+                      names[9...].allSatisfy({ clips[$0]?.inferredParkingPattern == nil }) else {
                     print("DDPAI VERIFY FAIL: main-unit mapping / scoped parking / photos")
                     return false
                 }
-                // Only the two real recording views, never empty rear/photo/thumb roles.
-                model.clips.removeAll { $0.relativePath == names[6] }
+                model.clips.removeAll { $0.relativePath.hasPrefix("Other/") }
+                guard model.inferredLearningChannelSetup.count == 3,
+                      model.makeFeedbackScanSnapshot()?.channelCounts["rear"] != nil else { return false }
+                // Remove added rear/negative cases to retain the earlier empty-rear regression.
+                model.clips.removeAll { names[6...].contains($0.relativePath) }
                 guard model.inferredLearningChannelSetup.count == 2,
                       model.inferredLearningChannelSetup.description == "Front / Telephoto",
                       model.makeFeedbackScanSnapshot()?.channelCounts["telephoto"] != nil else { return false }
@@ -65,7 +79,7 @@ enum DDPAIZ100Verification {
                 return model.clips.allSatisfy { $0.channel != "telephoto" }
             }
             guard valid else { print("DDPAI VERIFY FAIL: UI/manual selection/observed channel suggestions"); return false }
-            // A sibling profile must retain generic inside and S_ behavior.
+            // A sibling profile must retain generic inside and S_/Q_ behavior.
             var sibling = profile
             sibling.id = "synthetic-ddpai-sibling"
             let siblingClips = scanner.classifyWithParkingPatterns(files: scan.allFiles, sourceURL: root, profile: sibling).clips
@@ -74,10 +88,12 @@ enum DDPAIZ100Verification {
             let accessory = root.appendingPathComponent("Z100 Master")
             try fm.createDirectory(at: accessory.appendingPathComponent("DCIM/200video/inside"), withIntermediateDirectories: true)
             try Data([0]).write(to: accessory.appendingPathComponent("DCIM/200video/inside/S_20300101120100.mp4"))
+            try fm.createDirectory(at: accessory.appendingPathComponent("DCIM/200video/rear"), withIntermediateDirectories: true)
+            try Data([0]).write(to: accessory.appendingPathComponent("DCIM/200video/rear/Q_20300101120100.mp4"))
             let accessoryScan = try scanner.scan(sourceURL: accessory, profiles: profiles, allowNestedCardRootDiscovery: false)
             guard accessoryScan.selectedProfile?.id != profile.id,
                   accessoryScan.clips.allSatisfy({ $0.channel != "telephoto" && $0.inferredParkingPattern != .timelapse }) else { return false }
-            print("DDPAI Z100 VERIFY PASS: manual main-unit mapping, front-only S_ parking, generic/sibling/accessory negatives, empty rear, incomplete coverage, UI suggestions and feedback")
+            print("DDPAI Z100 VERIFY PASS: manual main-unit mapping, front S_/rear Q_ parking, wrong-folder/prefix/inside/photo/generic/sibling/accessory negatives, observed 3CH and empty rear, UI suggestions and feedback")
             return true
         } catch {
             print("DDPAI VERIFY FAIL: \(error.localizedDescription)")

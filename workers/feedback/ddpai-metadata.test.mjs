@@ -89,6 +89,33 @@ test('bounded partial and mixed evidence are retained as observations, not rewri
   assert.deepEqual(record.training,body.training);
 });
 
+test('synthetic ANSI-framed 3CH observations retain reported protocol roles without hardware inference', async()=>{
+  const framing = JSON.parse(readFileSync(new URL('./ddpai-ansi-framing.fixture.json', import.meta.url), 'utf8'));
+  assert.equal(framing.lines.length,2);
+  const observations = framing.lines.flatMap((line,index)=>{
+    assert.equal((line.match(/\x1b\[[0-9;]*m/g) || []).length,2);
+    const object=JSON.parse(line.slice(line.indexOf('{"')));
+    return ['logging_device','rear','inside'].map(component=>({
+      manufacturer:'DDPAI',component,reportedModel:component==='logging_device'?object.model:object[`${component}_model`],
+      model:component==='logging_device'?'Z100 Master':null,
+      firmwareVersion:component==='logging_device'?object.soft_version:object[`${component}_version`],
+      sourceKind:'ddpai_ui_device_info',sourceFile:framing.sourceFile,sourceLine:index+1,
+      identityEstablished:component==='logging_device'
+    }));
+  });
+  const body=payload();
+  body.scan.componentMetadata=observations;
+  body.scan.componentMetadataCoverage.retainedEntries=6;
+  const record=await store(body);
+  assert.deepEqual(record.scan.componentMetadata,observations);
+  assert.equal(JSON.stringify(record).includes('canary'),false);
+  for(const entry of record.scan.componentMetadata.filter(e=>e.component!=='logging_device')) {
+    assert.equal(entry.reportedModel,'DDPAI DR4004');
+    assert.equal(entry.model,null); assert.equal(entry.identityEstablished,false);
+    assert.equal(entry.firmwareVersion,'v9.0.0.17');
+  }
+});
+
 const nativeRoot=process.env.DASHCAM_DDPAI_METADATA_OUTPUT;
 test('actual native scan -> frozen private snapshot -> receiver -> exact stored readback; anonymous strips metadata', {skip:!nativeRoot}, async()=>{
   const body=JSON.parse(readFileSync(`${nativeRoot}/ddpai-private.json`,'utf8'));

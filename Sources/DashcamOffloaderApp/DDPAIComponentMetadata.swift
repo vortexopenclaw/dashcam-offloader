@@ -171,7 +171,13 @@ struct DDPAIComponentMetadata {
         guard let opening = line.range(of: #"\{\s*\""#, options: .regularExpression) else { return nil }
         let start = opening.lowerBound
         var enclosingArrays = 0
-        for c in line[..<start] {
+        // Only known logger SGR decoration outside the JSON may be ignored.
+        // In particular, its '[' is not an enclosing JSON array. Never clean
+        // the payload: literal controls there must remain invalid JSON.
+        let prefix = String(line[..<start]).replacingOccurrences(
+            of: #"\x1B\[[0-9;]*m"#, with: "", options: .regularExpression)
+        guard !prefix.contains("\u{1B}") else { return nil }
+        for c in prefix {
             if c == "[" { enclosingArrays += 1 }
             else if c == "]" { enclosingArrays = max(0, enclosingArrays - 1) }
         }
@@ -180,6 +186,7 @@ struct DDPAIComponentMetadata {
         for index in line[start...].indices {
             let c = line[index]
             if quoted {
+                guard c.unicodeScalars.allSatisfy({ $0.value >= 0x20 }) else { return nil }
                 if escaped { escaped = false }
                 else if c == "\\" { escaped = true }
                 else if c == "\"" { quoted = false }

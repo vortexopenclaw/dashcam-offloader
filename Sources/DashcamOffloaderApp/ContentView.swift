@@ -488,7 +488,7 @@ struct ContentView: View {
                 ? (viewModel.componentMetadata.exactLoggingModel == "Z100 Master"
                     ? "Structured device-info log identified this main-unit card, with front-video layout evidence. Log firmware observations may be historical. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile."
                     : "Exact front model stamp identified this main-unit card. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile.")
-                : "Manually selected main-unit card: inside is telephoto; front S_ videos are time-lapse parking. Confirm the model and main-unit card. Do not use for a separate cabin/accessory card."
+                : "Manually selected main-unit card: inside is telephoto; front S_ and rear Q_ videos are time-lapse parking. Confirm the model and main-unit card. Do not use for a separate cabin/accessory card."
         }
         if viewModel.selectedProfile != nil {
             return "Detected profile ready. Submit this card only if it has new modes or settings."

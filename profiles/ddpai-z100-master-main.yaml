@@ -22,11 +22,11 @@ detection:
       strip: bottom_16pct
 source_notes:
   - docs/card-profiles/ddpai-z100-master-main.md
-  - "Only exact DDPAI Z100 Master OSD in main-card front videos can automatically activate this profile; shared folders and volume labels cannot"
+  - "Exact DDPAI Z100 Master front OSD or bounded allowlisted UI device-info with exact logging identity and safe main-front video can activate this profile; shared folders and volume labels cannot"
   - "Manual selection must confirm model AND main-unit card; separate cabin/accessory cards are excluded"
   - "Optional rear footage is counted only when actually observed; a separately recording cabin is never inferred"
   - "Owner confirms built-in front/telephoto; inside stores telephoto on the main card"
-  - "Owner confirms front S_ videos are time-lapse parking; do not apply to inside or accessory cards"
+  - "Owner confirms front S_ and rear Q_ videos in their respective main-card video folders are time-lapse parking; do not apply to inside, wrong folders/prefixes, sibling models or accessory cards"
 folders:
   - path: DCIM/200video
     mode: continuous

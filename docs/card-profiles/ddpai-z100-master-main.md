@@ -10,8 +10,9 @@ It does not depend on configured or observed channel counts.
 
 Shared numbered DDPAI folders and model-looking volume labels are not exact
 identity evidence. The profile retains `manual_only` status to exclude it from
-ordinary folder/filename scoring; only the dedicated exact-front-stamp gate can
-automatically activate it. With absent, unreadable, blank or wrong stamps, the
+ordinary folder/filename scoring. The exact-front-stamp gate or bounded UI
+device-info gate (exact logging identity plus safely opened main-front video)
+can activate it. With absent, unreadable, blank or wrong stamps, the
 card remains generic unless other independently supported identity evidence
 exists. Z100 Pro, MasterX and other DDPAI layouts are not claimed by this gate.
 
@@ -38,9 +39,13 @@ disabled native helper or its automatic-support claims.
   remain 2CH observed even for an owner-configured 4CH system with rear failure.
   Actual rear files make this 3CH observed; front-only coverage remains 1CH,
   without implying the built-in telephoto lens is disabled.
-- `S_`-prefixed **front videos in `DCIM/200video/front`** are parking time lapse,
-  according to the owner's earlier selected setting. This rule does not apply
-  to inside, rear, unrelated folders, photos, sibling models or accessory cards.
+- `S_`-prefixed **front videos in `DCIM/200video/front`** and `Q_`-prefixed
+  **rear videos in `DCIM/200video/rear`** are owner-confirmed parking time lapse.
+  The completed 3CH card probe covered all 72 files: 13 front normal, 15 front
+  `S_`, 13 telephoto normal, 13 rear normal `_A`, and 18 rear `Q_`. This adds a
+  scoped rear rule, not a reinterpretation of older numeric samples. Neither
+  prefix applies in inside, unrelated folders, photos, sibling models or
+  accessory cards; front `Q_` and rear `S_` are not covered.
 - A later owner-labeled wake/record/sleep collision test uses ordinary names.
   Its configured parking setting does not label every file as parking or prove
   the trigger of each clip. Ordinary-name clips retain their existing mode
@@ -55,8 +60,19 @@ receipts, contacts, original media and private reference frames stay outside Git
 ## Verification
 
 `DDPAIZ100Verification` retains the synthetic manual picker/reclassification,
-front-only S_ parking, photo/thumbnail, generic/sibling/accessory, empty-rear,
+front S_/rear Q_ parking, wrong-folder/prefix/inside, photo/thumbnail,
+generic/sibling/accessory, observed 3CH and empty-rear,
 incomplete-coverage, observed-channel suggestion and feedback regressions.
+
+`DDPAIMetadataVerification` covers two synthetic actual-structure logger lines
+with SGR colors around the logger level. Only prefix SGR framing is ignored;
+JSON arrays, nested salvage, duplicate keys, non-SGR escapes and literal JSON
+controls remain rejected. File-opening and resource limits are unchanged.
+The corresponding JSON fixture uses synthetic dates, paths and secret canaries.
+Observed device-info reports `DDPAI DZ2602_GLOBAL_Z100 Master` / `8.0.0.23`,
+with both `rear` and `inside` reporting `DDPAI DR4004` / `v9.0.0.17`. These
+are protocol-component observations, not proof of two physical units, telephoto
+identity, or Mini3X identity. Historical firmware/numeric evidence is preserved.
 
 `Z100StampVerification` runs inside ordinary source and packaged `--verify`.
 It generates its own seven-second font-marker videos with AVFoundation and

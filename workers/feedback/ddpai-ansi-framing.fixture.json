@@ -1,0 +1,7 @@
+{
+  "sourceFile": "DCIM/207log/ui/ui_20300101120000_000.log",
+  "lines": [
+    "[01-01 12:00:00:000 \u001b[1;32mI\u001b[m-device]:1[device.cpp]:response:{\"msgHdr\":{},\"model\":\"DDPAI DZ2602_GLOBAL_Z100 Master\",\"soft_version\":\"8.0.0.23\",\"rear_model\":\"DDPAI DR4004\",\"rear_version\":\"v9.0.0.17\",\"inside_model\":\"DDPAI DR4004\",\"inside_version\":\"v9.0.0.17\",\"wifi_pwd\":\"synthetic-password-canary\",\"sn_code\":\"synthetic-serial-canary\"}",
+    "[01-01 12:00:01:000 \u001b[1;32mI\u001b[m-device]:1[device.cpp]:response:{\"msgHdr\":{},\"model\":\"DDPAI DZ2602_GLOBAL_Z100 Master\",\"soft_version\":\"8.0.0.23\",\"rear_model\":\"DDPAI DR4004\",\"rear_version\":\"v9.0.0.17\",\"inside_model\":\"DDPAI DR4004\",\"inside_version\":\"v9.0.0.17\",\"wifi_pwd\":\"synthetic-password-canary\",\"sn_code\":\"synthetic-serial-canary\"}"
+  ]
+}

@@ -1386,8 +1386,9 @@ struct CardScanner {
                 if ["dcim/200video/inside", "dcim/201photo/inside"].contains(parent) {
                     channel = "telephoto"
                 }
-                if parent == "dcim/200video/front", ClipItem.videoExtensions.contains(ext),
-                   filename.hasPrefix("S_") {
+                if ClipItem.videoExtensions.contains(ext),
+                   (parent == "dcim/200video/front" && filename.hasPrefix("S_")) ||
+                   (parent == "dcim/200video/rear" && filename.hasPrefix("Q_")) {
                     mode = ParkingPattern.timelapse.modeValue
                 }
                 timestamp = parseGenericTimestamp(filename: filename)
