@@ -64,11 +64,25 @@ struct DDPAIComponentMetadata {
     }
 
     static func read(source: URL) -> Self {
+        var result = read(source: source, parts: ["DCIM", "207log", "ui"], productLog: false)
+        let product = read(source: source, parts: ["DCIM", "207log"], productLog: true)
+        result.coverage.inspectedFiles += product.coverage.inspectedFiles
+        result.coverage.limited = result.coverage.limited || product.coverage.limited
+        result.coverage.omittedEntries += product.coverage.omittedEntries
+        for entry in product.entries {
+            if result.entries.count < 32 { result.entries.append(entry) }
+            else { result.coverage.omittedEntries += 1; result.coverage.limited = true }
+        }
+        result.coverage.retainedEntries = result.entries.count
+        return result
+    }
+
+    private static func read(source: URL, parts: [String], productLog: Bool) -> Self {
         var result = Self()
         var directory = openDirectory(source)
         guard directory >= 0 else { result.coverage.limited = true; return result }
         defer { close(directory) }
-        for part in ["DCIM", "207log", "ui"] {
+        for part in parts {
             let next = openat(directory, part, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
             guard next >= 0 else {
                 if errno != ENOENT { result.coverage.limited = true }
@@ -87,7 +101,8 @@ struct DDPAIComponentMetadata {
             let name = withUnsafePointer(to: item.pointee.d_name) {
                 $0.withMemoryRebound(to: CChar.self, capacity: Int(item.pointee.d_namlen) + 1) { String(cString: $0) }
             }
-            if name.range(of: #"^ui_[0-9]{14}_[0-9]{3}\.log\z"#, options: .regularExpression) != nil { names.append(name) }
+            let pattern = productLog ? #"^[0-9]{14}_[0-9]{3}\.log\z"# : #"^ui_[0-9]{14}_[0-9]{3}\.log\z"#
+            if name.range(of: pattern, options: .regularExpression) != nil { names.append(name) }
             errno = 0
         }
         if errno != 0 { result.coverage.limited = true }
@@ -119,12 +134,16 @@ struct DDPAIComponentMetadata {
             budget -= data.count
             let truncated = before.st_size > data.count
             if truncated { result.coverage.limited = true }
-            let lines = data.split(separator: 10, omittingEmptySubsequences: false)
+            // Product logs are fixed-size, NUL-padded. Padding is not log content.
+            let content = productLog ? data.prefix((data.lastIndex(where: { $0 != 0 }) ?? -1) + 1) : data[...]
+            let lines = content.split(separator: 10, omittingEmptySubsequences: false)
             for (index, bytes) in lines.enumerated() {
                 if truncated && index == lines.count - 1 { break }
                 guard bytes.count <= 16384 else { result.coverage.limited = true; continue }
                 guard let line = String(data: Data(bytes), encoding: .utf8) else { result.coverage.limited = true; continue }
-                result.consume(line: line, sourceFile: "DCIM/207log/ui/" + name, sourceLine: index + 1)
+                let sourceFile = parts.joined(separator: "/") + "/" + name
+                if productLog { result.consumeProduct(line: line, sourceFile: sourceFile, sourceLine: index + 1) }
+                else { result.consume(line: line, sourceFile: sourceFile, sourceLine: index + 1) }
             }
         }
         result.coverage.retainedEntries = result.entries.count
@@ -198,6 +217,22 @@ struct DDPAIComponentMetadata {
             }
         }
         return nil
+    }
+
+    mutating func consumeProduct(line: String, sourceFile: String, sourceLine: Int) {
+        guard line.contains("WEBGetProductInfo"), line.contains("pJsonData="),
+              let json = Self.payload(in: line), !hasDuplicateKeys(json),
+              let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let rawModel = object["model"] as? String, let rawVersion = object["version"] as? String,
+              let reported = Self.safeModel(rawModel), let version = Self.safeFirmware(rawVersion) else { return }
+        // Retain the reported SKU, not an inferred retail revision or accessory identity.
+        let model = DDPAIOfficialModels.recognized(reported)
+        let entry = ComponentMetadata(component: "logging_device", reportedModel: reported, model: model,
+            firmwareVersion: version, sourceKind: "ddpai_product_info", sourceFile: sourceFile,
+            sourceLine: sourceLine, identityEstablished: model != nil)
+        if entries.count < 32 { entries.append(entry) }
+        else { coverage.omittedEntries += 1; coverage.limited = true }
     }
 
     mutating func consume(line: String, sourceFile: String, sourceLine: Int) {

@@ -125,7 +125,31 @@ enum DDPAIMetadataVerification {
         try fm.moveItem(at: front, to: sidecar)
         guard !DDPAIComponentMetadata.hasSafeMainFrontVideo(source: card, files: [sidecar]) else { return false }
         try fm.moveItem(at: sidecar, to: front)
-        print("DDPAI METADATA NATIVE PASS: structured scan -> exact main identity -> UI -> frozen private snapshot; source/privacy/sibling/conflict/duplicate/sidecar guards")
+        let productCard = root.appendingPathComponent("ddpai-product-synthetic")
+        let productLog = productCard.appendingPathComponent("DCIM/207log/20300101120000_000.log")
+        try fm.createDirectory(at: productLog.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let productJSON = #"{"model":"DDPAI Synthetic Unit","version":"v1.2.3","password":"synthetic-canary","sn":"synthetic-canary"}"#
+        let productLine = "[m-IPS]WEBGetProductInfo[449]:pJsonData=" + productJSON + "\n"
+        try (Data(productLine.utf8) + Data(repeating: 0, count: 500000)).write(to: productLog)
+        let productScan = try scanner.scan(sourceURL: productCard, profiles: profiles, allowNestedCardRootDiscovery: false)
+        guard productScan.componentMetadata.entries.count == 1,
+              productScan.componentMetadata.entries[0].reportedModel == "DDPAI Synthetic Unit",
+              productScan.componentMetadata.entries[0].firmwareVersion == "v1.2.3",
+              productScan.componentMetadata.exactLoggingModel == nil,
+              productScan.identifiedCamera == nil else { return false }
+        model.loadScanResultForVerification(source: MountedSource(url: productCard, name: "Synthetic"), scanResult: productScan)
+        guard let productSnapshot = model.makeFeedbackScanSnapshot(), productSnapshot.componentMetadata?.count == 1 else { return false }
+        let productSubmission = FeedbackSubmission(kind: .bug, message: "Synthetic product metadata regression", contact: "", appVersion: "synthetic-test", createdAt: "2030-01-01T00:00:00Z", training: nil, scan: productSnapshot)
+        let productBytes = try JSONEncoder().encode(productSubmission)
+        guard !String(decoding: productBytes, as: UTF8.self).contains("canary"), productSnapshot.forPublicExport().componentMetadata == nil else { return false }
+        try productBytes.write(to: output.appendingPathComponent("ddpai-product-private.json"), options: .withoutOverwriting)
+        for invalid in [productLine.replacingOccurrences(of: "WEBGetProductInfo", with: "OtherFunction"),
+                        productLine.replacingOccurrences(of: productJSON, with: "[" + productJSON + "]"),
+                        productLine.replacingOccurrences(of: "\"version\":", with: "\"model\":\"Other\",\"version\":")] {
+            try Data(invalid.utf8).write(to: productLog)
+            guard DDPAIComponentMetadata.read(source: productCard).entries.isEmpty else { return false }
+        }
+        print("DDPAI METADATA NATIVE PASS: UI and NUL-padded product logs -> scan -> frozen private snapshot; privacy, ambiguous identity and framing guards")
         return true
     }
 }

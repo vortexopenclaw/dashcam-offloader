@@ -26,6 +26,10 @@ SAFE_MEDIA = re.compile(r".+\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)", re.
 CAMERA_DIRECTORIES = set("dcim movie movies photo photos parking park ro normal event events emergency manual protected record recordings video videos front rear interior cabin telephoto side continuous motion impact timelapse sos cont_rec evt_rec manual_rec parking_rec motion_rec sos_rec incabin_rec normal_rec event_rec park_rec inf_rec photo_rec blackvue teslacam recentclips savedclips sentryclips roadscout escort_m1 maxcam360c rec clip inf pevent lapse lockedvideo secvideo safety_box bookmark originalfiles panophoto private avchd m4root 360cardvr 100 back_emr back_norm front_emer rear_emer front_norm rear_norm emr norm motion_timelapse_rec inside".split())
 
 
+def safe_codec(value):
+    return value if isinstance(value, str) and (value in ("H.264", "H.265 / HEVC") or re.fullmatch(r"[A-Za-z0-9]{4}", value)) else None
+
+
 def safe_media(value):
     return (isinstance(value, str) and not value.startswith(".")
             and not any(unicodedata.category(char) in {"Cc", "Cf", "Cs", "Zl", "Zp"} for char in value)
@@ -97,6 +101,7 @@ def derive(key, record):
                 "height": measurement(sample.get("height")),
                 "nominalFrameRate": measurement(sample.get("nominalFrameRate")),
                 "videoBitrate": measurement(sample.get("videoBitrate")),
+                "codec": safe_codec(sample.get("codec")),
             })
         specs.append({
             "folder": safe_folder(item.get("folder")),
@@ -106,7 +111,7 @@ def derive(key, record):
             "frameRates": [measurement(v) for v in (item.get("sampleFrameRates") or [])[:6] if measurement(v) is not None],
             "bitrateMin": measurement(item.get("sampleBitrateMin")),
             "bitrateMax": measurement(item.get("sampleBitrateMax")),
-            "codecs": [v for v in (item.get("sampleCodecs") or [])[:6] if safe_label(v)],
+            "codecs": [v for v in (item.get("sampleCodecs") or [])[:6] if safe_codec(v)],
             "storageRateSamples": paired,
         })
     names = [name for name in (scan.get("filenameSamples") or [])[:100] if safe_media(name)]

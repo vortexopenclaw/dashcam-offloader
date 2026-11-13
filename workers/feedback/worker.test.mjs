@@ -236,7 +236,7 @@ test("storage samples retain paired complete-file measurements without private f
   assert.deepEqual(pairs.map(s=>s.fileSizeBytes/s.durationSeconds),[4000000,2000000]);
   assert.equal(pairs[0].videoBitrate,16000000);
   assert.deepEqual(Object.keys(pairs[0]).sort(),[
-    "fileSizeBytes","durationSeconds","width","height","nominalFrameRate","videoBitrate"
+    "fileSizeBytes","durationSeconds","width","height","nominalFrameRate","videoBitrate","codec"
   ].sort());
   assert.deepEqual(sanitizeScan({videoSpecSummaries:[{}]}).videoSpecSummaries[0].storageRateSamples,[]);
   assert.equal(sanitizeScan({videoSpecSummaries:[{storageRateSamples:Array(100).fill(short)}]})

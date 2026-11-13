@@ -77,6 +77,14 @@ test("receiver retains its 1 MiB declared and streamed request caps", async () =
 });
 
 const nativeRoot = process.env.DASHCAM_NATIVE_EVIDENCE_OUTPUT;
+test("codec labels preserve HEVC without admitting paths or inferring unknown samples", () => {
+  for (const codec of ["H.264", "H.265 / HEVC", null, "", "/private/fixture", "private/token", "CANARY"]) {
+    const scan = sanitizeScan({videoSpecSummaries:[{sampleCodecs:[codec],storageRateSamples:[{fileSizeBytes:100,durationSeconds:1,codec}]}]});
+    const expected = ["H.264", "H.265 / HEVC"].includes(codec) ? codec : null;
+    assert.equal(scan.videoSpecSummaries[0].storageRateSamples[0].codec,expected);
+    assert.deepEqual(scan.videoSpecSummaries[0].sampleCodecs,expected ? [expected] : []);
+  }
+});
 test("actual native snapshot -> HTTP validator/sanitizer -> exact mock KV readback", {skip:!nativeRoot}, async () => {
   for (const label of ["small","large","structural"]) {
     const originalBytes = readFileSync(`${nativeRoot}/${label}.json`,"utf8");
@@ -99,6 +107,10 @@ test("actual native snapshot -> HTTP validator/sanitizer -> exact mock KV readba
     const before = pairs(submitted.scan), after = pairs(record.scan);
     assert.equal(after.length,label === "small" ? 4 : label === "large" ? 64 : 0);
     assert.deepEqual(after,before);
+    if (label === "small") {
+      assert.deepEqual(new Set(after.map(p => p.codec)),new Set(["H.264", "H.265 / HEVC"]));
+      assert.deepEqual(record.scan.videoSpecSummaries.map(s => s.sampleCodecs),submitted.scan.videoSpecSummaries.map(s => s.sampleCodecs));
+    }
     assert.deepEqual(record.scan.evidenceCounts, submitted.scan.evidenceCounts);
     assert.deepEqual(record.scan.filenameSamples, submitted.scan.filenameSamples);
     assert.deepEqual(record.scan.mediaFileSamples, submitted.scan.mediaFileSamples);

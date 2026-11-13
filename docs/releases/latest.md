@@ -1,7 +1,7 @@
-# Dashcam Offloader 0.1.41
+# Dashcam Offloader 0.1.42
 
-- Right-click a source card and choose Show in Finder to open that card's folder, even when another source is selected.
-- Keep Rename, Eject, and Hide from Sources in the same menu. Show in Finder remains available while scanning or downloading.
-- Report a missing or ejected source, or a Finder open failure, without opening the selected card or download destination instead.
+- Preserve measured video codecs alongside individual file measurements in reviewed card-scan reports. Fix the feedback receiver dropping the native HEVC label.
+- Read bounded DDPAI product-info logs as well as UI logs, retaining only reported model and historical firmware observations. Unknown hardware identities remain unknown; no channel role or retail revision is inferred from a shared layout.
+- Keep the source-card Show in Finder menu and existing update behavior unchanged.
 
-This is a navigation action. Offloader does not rename, format, or write source files. Finder may maintain its normal folder-view metadata.
+Card-log reads are read-only. Private source evidence remains excluded from public exports. These changes do not infer parking events, capture cadence, or current settings from ordinary filenames or playback metadata.

@@ -344,17 +344,19 @@ const componentFirmware = value => value === null || (typeof value === "string" 
 function componentEntry(entry) {
   if (!entry || typeof entry !== "object" || Array.isArray(entry) ||
       entry.manufacturer !== "DDPAI" || !["logging_device", "rear", "inside"].includes(entry.component) ||
-      entry.sourceKind !== "ddpai_ui_device_info" ||
+      !["ddpai_ui_device_info", "ddpai_product_info"].includes(entry.sourceKind) ||
       typeof entry.sourceFile !== "string" ||
       /[\x00-\x1f\x7f]/.test(entry.sourceFile) ||
-      !/^DCIM\/207log\/ui\/ui_[0-9]{14}_[0-9]{3}\.log$/.test(entry.sourceFile) ||
+      !(entry.sourceKind === "ddpai_ui_device_info"
+        ? /^DCIM\/207log\/ui\/ui_[0-9]{14}_[0-9]{3}\.log$/.test(entry.sourceFile)
+        : entry.component === "logging_device" && /^DCIM\/207log\/[0-9]{14}_[0-9]{3}\.log$/.test(entry.sourceFile)) ||
       !Number.isSafeInteger(entry.sourceLine) || entry.sourceLine < 1 ||
       !componentModel(entry.reportedModel) || !componentModel(entry.model) || !componentFirmware(entry.firmwareVersion) ||
       (entry.reportedModel === null && entry.firmwareVersion === null) ||
       entry.model !== recognizedDDPAIModel(entry.reportedModel) ||
       entry.identityEstablished !== (entry.model !== null)) return null;
   return {manufacturer: "DDPAI", component: entry.component, reportedModel: entry.reportedModel,
-    model: entry.model, firmwareVersion: entry.firmwareVersion, sourceKind: "ddpai_ui_device_info",
+    model: entry.model, firmwareVersion: entry.firmwareVersion, sourceKind: entry.sourceKind,
     sourceFile: entry.sourceFile, sourceLine: entry.sourceLine, identityEstablished: entry.identityEstablished};
 }
 
@@ -616,7 +618,15 @@ function sanitizeStorageRateSample(sample) {
     height: positive(sample.height, 32768),
     nominalFrameRate: positive(sample.nominalFrameRate, 1000),
     videoBitrate: positive(sample.videoBitrate, 1e10),
+    codec: sanitizeCodec(sample.codec),
   };
+}
+
+function sanitizeCodec(value) {
+  // Codec labels are not paths. The native HEVC label intentionally contains '/'.
+  // Keep this separate from aggregateKey's privacy-sensitive path rejection.
+  return ["H.264", "H.265 / HEVC"].includes(value) ||
+    (typeof value === "string" && /^[A-Za-z0-9]{4}$/.test(value)) ? value : null;
 }
 
 function sanitizeVideoSpecSummary(summary) {
@@ -640,7 +650,7 @@ function sanitizeVideoSpecSummary(summary) {
     lastTimestamp: null,
     timestampSourceCounts: countMap(summary.timestampSourceCounts),
     sampleRelativePaths: [],
-    sampleCodecs: stringList(summary.sampleCodecs, 6),
+    sampleCodecs: Array.isArray(summary.sampleCodecs) ? summary.sampleCodecs.slice(0, 6).map(sanitizeCodec).filter(Boolean) : [],
     sampleResolutions: stringList(summary.sampleResolutions, 6),
     sampleFrameRates: numberList(summary.sampleFrameRates, 6),
     sampleBitrateMin: nullableNumber(summary.sampleBitrateMin),

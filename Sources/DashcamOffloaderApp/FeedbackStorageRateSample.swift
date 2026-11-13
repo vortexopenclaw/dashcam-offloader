@@ -12,6 +12,7 @@ struct FeedbackStorageRateSample: Codable, Hashable, Sendable {
     var height: Int?
     var nominalFrameRate: Double?
     var videoBitrate: Int?
+    var codec: String? = nil
 
     var storageBytesPerSecond: Double { Double(fileSizeBytes) / durationSeconds }
 
@@ -35,5 +36,6 @@ struct FeedbackStorageRateSample: Codable, Hashable, Sendable {
         self.init(fileSizeBytes: sample.fileSizeBytes, durationSeconds: sample.durationSeconds,
                   width: sample.width, height: sample.height,
                   nominalFrameRate: sample.nominalFrameRate, videoBitrate: sample.estimatedBitrate)
+        self.codec = sample.codec
     }
 }

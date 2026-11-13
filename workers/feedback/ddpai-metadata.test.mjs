@@ -117,6 +117,24 @@ test('synthetic ANSI-framed 3CH observations retain reported protocol roles with
 });
 
 const nativeRoot=process.env.DASHCAM_DDPAI_METADATA_OUTPUT;
+test('actual native NUL-padded product log -> private receipt -> exact stored readback', {skip:!nativeRoot}, async()=>{
+  const body=JSON.parse(readFileSync(`${nativeRoot}/ddpai-product-private.json`,'utf8'));
+  assert.equal(validateFeedback(body).ok,true);
+  const record=await store(body);
+  assert.deepEqual(record.scan.componentMetadata,body.scan.componentMetadata);
+  assert.deepEqual(record.scan.componentMetadataCoverage,body.scan.componentMetadataCoverage);
+  const [entry]=record.scan.componentMetadata;
+  assert.equal(entry.reportedModel,'DDPAI Synthetic Unit');
+  assert.equal(entry.firmwareVersion,'v1.2.3');
+  assert.equal(entry.sourceKind,'ddpai_product_info');
+  assert.equal(entry.identityEstablished,false);
+  assert.equal(JSON.stringify(record).includes('canary'),false);
+  for (const changes of [{component:'rear'}, {sourceFile:'DCIM/207log/tmp/20300101120000_000.log'},
+                         {sourceFile:'DCIM/207log/20300101120000_000.log\n'}, {sourceKind:'ddpai_ui_device_info'}]) {
+    const invalid=structuredClone(body);Object.assign(invalid.scan.componentMetadata[0],changes);
+    assert.equal(validateFeedback(invalid).error,'invalid_component_metadata');
+  }
+});
 test('actual native scan -> frozen private snapshot -> receiver -> exact stored readback; anonymous strips metadata', {skip:!nativeRoot}, async()=>{
   const body=JSON.parse(readFileSync(`${nativeRoot}/ddpai-private.json`,'utf8'));
   assert.equal(validateFeedback(body).ok,true);

@@ -60,7 +60,7 @@ class IngestTests(unittest.TestCase):
         pair = result["videoSpecSummaries"][0]["storageRateSamples"]
         self.assertEqual(pair, [{"fileSizeBytes": 405000000, "durationSeconds": 60,
                                  "width": 3840, "height": 2160,
-                                 "nominalFrameRate": None, "videoBitrate": 53200000}])
+                                 "nominalFrameRate": None, "videoBitrate": 53200000, "codec": None}])
         self.assertNotIn("Camera/Private", json.dumps(result))
         self.assertNotIn("secret", json.dumps(result))
 

@@ -26,6 +26,9 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
     subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i",
                     "testsrc2=size=320x180:rate=30", "-t", "1", "-c:v", "libx264",
                     "-pix_fmt", "yuv420p", str(video)], check=True)
+    hevc = root / "generated-hevc.mp4"
+    subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=30",
+                    "-t", "1", "-c:v", "libx265", "-x265-params", "pools=1:log-level=error", "-tag:v", "hvc1", str(hevc)], check=True)
     for label, count in [("small", 4), ("large", 140), ("structural", 1)]:
         for index in range(count):
             folder = "DCIM/inside/200video" if index % 2 else "DCIM/200video"
@@ -37,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
             if label == "structural":
                 target.write_bytes(b"not a playable video")
             else:
-                shutil.copyfile(video, target)
+                shutil.copyfile(hevc if label == "small" and index == 3 else video, target)
     photo = fixture / "small/DCIM/201photo/照片2030.jpg"
     photo.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run([ffmpeg, "-v", "error", "-i", str(video), "-frames:v", "1", str(photo)], check=True)
