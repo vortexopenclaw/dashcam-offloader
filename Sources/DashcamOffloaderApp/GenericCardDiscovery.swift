@@ -384,9 +384,16 @@ struct GenericCardDiscovery: Codable, Hashable, Sendable {
         return try? JSONSerialization.jsonObject(with: data)
     }
     static func framedJSON(_ line: String) -> String? {
-        guard let start = line.firstIndex(of: "{") else { return nil }
+        guard let opening = line.range(of: #"\{\s*\""#, options: .regularExpression) else { return nil }
+        let start = opening.lowerBound
         let prefix = String(line[..<start]).replacingOccurrences(of: #"\x1B\[[0-9;]*m"#, with: "", options: .regularExpression)
-        guard !prefix.contains("\u{1b}"), !prefix.contains("["), !prefix.contains("]") else { return nil }
+        guard !prefix.contains("\u{1b}") else { return nil }
+        var enclosingArrays = 0
+        for c in prefix {
+            if c == "[" { enclosingArrays += 1 }
+            else if c == "]" { enclosingArrays = max(0, enclosingArrays - 1) }
+        }
+        guard enclosingArrays == 0 else { return nil }
         var depth = 0; var quoted = false; var escaped = false
         for index in line[start...].indices {
             let c = line[index]

@@ -41,6 +41,10 @@ enum GenericDiscoveryVerification {
             let file = try put("probe", data)
             return GenericCardDiscovery.read(source: card, files: [file])
         }
+        let framedLog = try single(Data("\u{1b}[32m[logger] {source.cpp:14} {\"model\":\"Unknown-Log9\",\"soft_version\":\"5.6.7\"}\u{1b}[0m\n".utf8))
+        try require(framedLog.observations.count == 2 && framedLog.observations.contains { $0.value == "Unknown-Log9" }, "balanced logger framing and ANSI retain both declarations")
+        let enclosedFrame = try single(Data("logger [ {\"model\":\"False F1\"} ]\n".utf8))
+        try require(enclosedFrame.observations.isEmpty, "framed extraction does not salvage an enclosing array")
         let structured = try single(Data([0xef,0xbb,0xbf]) + Data("\n{\n  \"records\": [\n    {\"Model-Name\":\"Alpha A1\"},\n    {\"model\":\"Beta B2\",\"fps\":true}\n  ]\n}".utf8))
         try require(structured.observations.count == 2 && structured.observations[0].key == "model_name" && structured.observations[0].line == 4 && structured.observations[1].line == 5 && structured.observations[0].record != structured.observations[1].record, "nested lexical line/record and canonical keys")
         let lineJSON = try single(Data("{\"model\":\"Line A1\"}\n{\"model\":\"Line B2\"}\n".utf8))

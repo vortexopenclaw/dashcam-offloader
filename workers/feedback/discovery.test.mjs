@@ -45,7 +45,7 @@ test('explicit schema rejects paths, arbitrary keys, extra raw text, unsafe valu
     d=>d.sources[0].sizeBytes=65537,d=>d.sources.push({...d.sources[0]}),d=>d.sources=Array(129).fill(d.sources[0]),
     d=>d.observations[0].sourceId='support-2',d=>d.observations[0].key='wifi_pwd',d=>d.observations[0].scope='main',
     d=>d.observations[0].field='identity',d=>d.observations[0].value='https://private.invalid',d=>d.observations[0].value='NEVER-UPLOAD-CANARY',
-    d=>d.observations[0].line=0,d=>d.observations[0].record=-1,d=>d.observations[0].rawLine='canary',
+    d=>{d.sources[0].format='ini';d.observations[0].line=0;},d=>d.observations[0].record=-1,d=>d.observations[0].rawLine='canary',
     d=>d.observations[1].field='build',d=>d.observations=Array(129).fill(d.observations[0]),
     d=>d.coverage.reasons={privatePath:1},d=>d.coverage.reasons={unsafe_value:1},d=>d.coverage.retainedObservations=1,
     d=>d.coverage.bytesRead=4194305,d=>d.coverage.inspectedFiles=257,d=>d.coverage.uninspectedFiles=2,
@@ -55,7 +55,7 @@ test('explicit schema rejects paths, arbitrary keys, extra raw text, unsafe valu
   for(const d of [null,[],{},'canary'])assert.equal(validDiscovery(d),false);
 });
 test('technical validators are field-specific rather than printable-fragment redaction',()=>{
-  for(const [key,value] of [['model','OtherCamera RX9'],['firmware','v9.0.0.17'],['version','1.2'],['resolution','3840x2160'],['fps','29.97'],['codec','HEVC'],['parking_mode','time_lapse']])assert.equal(safeDiscoveryValue(value,key),true,`${key}=${value}`);
+  for(const [key,value] of [['model','OtherCamera RX9'],['firmware','v9.0.0.17'],['version','1.2'],['resolution','3840x2160'],['fps','29.97'],['codec','HEVC'],['parking_mode','time-lapse']])assert.equal(safeDiscoveryValue(value,key),true,`${key}=${value}`);
   for(const [key,value] of [['model','person@example.org'],['model','192.168.1.1'],['model','123456789012'],['firmware','Owner said update'],['codec','arbitrary words'],['hdr','download'],['unknown','QX7'],['fps','29.97 location'],['model','AX1\n']])assert.equal(safeDiscoveryValue(value,key),false,`${key}=${value}`);
 });
 test('multiple models cannot be hidden by inconsistent flags; sticky conflict survives truncation',()=>{
