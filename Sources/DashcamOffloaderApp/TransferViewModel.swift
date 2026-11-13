@@ -58,6 +58,7 @@ final class TransferViewModel: ObservableObject {
     private var canRunAutomaticSourceDiscovery = false
     private var lastScannedFiles: [URL] = []
     private var lastScanDiagnostics: [ScanDiagnosticEntry] = []
+    @Published private(set) var componentMetadata = DDPAIComponentMetadata()
     private var lastEffectiveScanSourceURL: URL?
     private var excludedQueueClipIDs: Set<ClipItem.ID> = []
     private var copyTask: Task<Void, Never>?
@@ -799,6 +800,7 @@ final class TransferViewModel: ObservableObject {
         isCheckingCardHealth = false
         lastScannedFiles = []
         lastScanDiagnostics = []
+        componentMetadata = DDPAIComponentMetadata()
         lastEffectiveScanSourceURL = nil
         excludedQueueClipIDs = []
         selectedQueueItemIDs = []
@@ -871,6 +873,7 @@ final class TransferViewModel: ObservableObject {
                 self.selectedProfileWasManuallyChosen = self.profileSelectionRevision != profileRevisionAtStart
                 self.lastScannedFiles = scanResult.allFiles
                 self.lastScanDiagnostics = scanResult.diagnostics
+                self.componentMetadata = scanResult.componentMetadata
                 self.lastEffectiveScanSourceURL = scanResult.sourceURL
                 if self.profileSelectionRevision != profileRevisionAtStart,
                    let manuallySelectedProfile {
@@ -984,6 +987,7 @@ final class TransferViewModel: ObservableObject {
         selectedProfileWasManuallyChosen = false
         lastScannedFiles = scanResult.allFiles
         lastScanDiagnostics = scanResult.diagnostics
+        componentMetadata = scanResult.componentMetadata
         lastEffectiveScanSourceURL = scanResult.sourceURL
         clips = scanResult.clips
         resetFiltersForCurrentClips()
@@ -1628,6 +1632,11 @@ final class TransferViewModel: ObservableObject {
             scanDiagnostics: Array(feedbackDiagnostics),
             mediaFileSamples: mediaFileSamples
         )
+        if componentMetadata.coverage.inspectedFiles > 0 || componentMetadata.coverage.limited {
+            snapshot.componentMetadata = componentMetadata.entries
+            snapshot.componentMetadataCoverage = componentMetadata.coverage
+        }
+        snapshot.selectedProfileWasManuallyChosen = selectedProfileWasManuallyChosen
         let inventoriedMedia = safeFiles.filter {
             ClipItem.videoExtensions.contains($0.pathExtension.lowercased()) || ClipItem.photoExtensions.contains($0.pathExtension.lowercased())
         }

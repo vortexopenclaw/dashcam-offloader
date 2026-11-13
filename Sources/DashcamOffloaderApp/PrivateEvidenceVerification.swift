@@ -20,6 +20,7 @@ enum PrivateEvidenceVerification {
             print("PRIVATE BASENAME SAFETY PASS")
             guard let profilesDirectory = ProfileStore.defaultProfilesDirectory() else { return false }
             let profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
+            guard try DDPAIMetadataVerification.run(root: root, output: output, profiles: profiles) else { return false }
             var paths = CardLearningPaths()
             guard paths.folder("Family Trip/inside/200video") == "folder-1/inside/200video",
                   paths.folder("Family Trip/201photo") == "folder-1/201photo",

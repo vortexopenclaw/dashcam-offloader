@@ -154,7 +154,7 @@ struct CardScanner {
         }
         diagnostics.append(contentsOf: parkingPatternResult.diagnostics)
 
-        return ScanResult(
+        var result = ScanResult(
             sourceURL: sourceURL,
             allFiles: allFiles,
             candidates: candidates,
@@ -163,6 +163,28 @@ struct CardScanner {
             clips: clips,
             diagnostics: diagnostics
         )
+        result.componentMetadata = DDPAIComponentMetadata.read(source: sourceURL)
+        applyStructuredLogIdentity(&result, profiles: profiles)
+        return result
+    }
+
+    private func applyStructuredLogIdentity(_ result: inout ScanResult, profiles: [DashcamProfile]) {
+        guard let model = result.componentMetadata.exactLoggingModel else { return }
+        let evidence = ["Exact structured UI-log logging-device model; historical firmware observations are separate"]
+        if model == "Z100 Master",
+           let profile = profiles.first(where: { $0.id == "ddpai-z100-master-main" }),
+           DDPAIComponentMetadata.hasSafeMainFrontVideo(source: result.sourceURL, files: result.allFiles) {
+            result.candidates.insert(DetectionCandidate(profile: profile, score: 100, confidence: .high, evidence: evidence), at: 0)
+            result.selectedProfile = profile
+            result.identifiedCamera = IdentifiedCamera(manufacturer: "DDPAI", model: model, evidence: evidence, isSupported: true)
+            let classified = classifyWithParkingPatterns(files: result.allFiles, sourceURL: result.sourceURL, profile: profile)
+            result.clips = classified.clips
+            result.diagnostics.append(contentsOf: classified.diagnostics)
+            result.diagnostics.append(ScanDiagnosticEntry(stage: "ddpai_ui_device_info", profileID: profile.id, profileName: profile.displayName, outcome: "matched", detail: evidence[0]))
+        } else if result.identifiedCamera == nil {
+            // An exact retail identity is useful even without a trained channel profile.
+            result.identifiedCamera = IdentifiedCamera(manufacturer: "DDPAI", model: model, evidence: evidence, isSupported: false)
+        }
     }
 
     private func effectiveScanSourceURL(
@@ -712,6 +734,15 @@ struct CardScanner {
             allowNestedCardRootDiscovery: allowNestedCardRootDiscovery
         )
         let scanSourceURL = result.sourceURL
+        if result.identifiedCamera?.evidence.contains(where: { $0.hasPrefix("Exact structured UI-log") }) == true {
+            return result
+        }
+        // Conflicting/unknown observed device records veto single-stamp promotion.
+        // An unavailable log reader alone is absence of evidence, not a reason to
+        // disable the pre-existing OSD route for unrelated cards/imports.
+        if result.componentMetadata.entries.contains(where: { $0.component == "logging_device" }) {
+            return result
+        }
 
         // This unit-specific profile is deliberately excluded from shared-folder
         // scoring. Its front stamp is stronger evidence than channel counts or
@@ -2391,6 +2422,7 @@ struct ScanResult {
     var selectedProfile: DashcamProfile?
     var clips: [ClipItem]
     var diagnostics: [ScanDiagnosticEntry]
+    var componentMetadata = DDPAIComponentMetadata()
 }
 
 extension URL {

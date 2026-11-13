@@ -21,6 +21,7 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
     output.mkdir()
     (fixture / "synthetic-fixture.txt").write_text("synthetic private evidence fixture\n")
     shutil.copyfile(repo / "workers/feedback/media-basename-cases.json", fixture / "media-basename-cases.json")
+    shutil.copyfile(repo / "workers/feedback/ddpai-device-info.fixture.json", fixture / "ddpai-device-info.fixture.json")
     video = root / "generated.mp4"
     subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i",
                     "testsrc2=size=320x180:rate=30", "-t", "1", "-c:v", "libx264",
@@ -49,8 +50,8 @@ with tempfile.TemporaryDirectory(prefix="private-evidence-", dir=repo) as tempor
     subprocess.run(swift + ["--scratch-path", ".build-private", "DashcamOffloader",
                            "--verify-private-evidence", str(fixture), str(output)],
                    cwd=repo, check=True)
-    environment = dict(os.environ, DASHCAM_NATIVE_EVIDENCE_OUTPUT=str(output))
-    subprocess.run([node, "--test", "workers/feedback/private-evidence.test.mjs"],
+    environment = dict(os.environ, DASHCAM_NATIVE_EVIDENCE_OUTPUT=str(output), DASHCAM_DDPAI_METADATA_OUTPUT=str(output))
+    subprocess.run([node, "--test", "workers/feedback/private-evidence.test.mjs", "workers/feedback/ddpai-metadata.test.mjs"],
                    cwd=repo, env=environment, check=True)
     for path, evidence in before.items():
         assert (hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns) == evidence

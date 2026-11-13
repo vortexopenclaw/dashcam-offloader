@@ -1,3 +1,5 @@
+import { recognizedDDPAIModel } from "./ddpai-models.js";
+
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_CONTACT_LENGTH = 240;
 const MAX_SAMPLE_PATHS = 80;
@@ -214,6 +216,9 @@ function validateFeedback(body) {
     if (typeof scan !== "object" || Array.isArray(scan)) {
       return { ok: false, error: "invalid_scan" };
     }
+    if (!validComponentMetadata(scan)) {
+      return {ok: false, error: "invalid_component_metadata"};
+    }
     if (Array.isArray(scan.sampleRelativePaths) && scan.sampleRelativePaths.length > MAX_SAMPLE_PATHS) {
       return { ok: false, error: "too_many_sample_paths" };
     }
@@ -326,6 +331,43 @@ function mediaFileSample(sample) {
     volumeReadOnly: flag(sample.volumeReadOnly)};
 }
 
+const componentCount = value => Number.isSafeInteger(value) && value >= 0;
+const componentModel = value => value === null || (typeof value === "string" &&
+  value.trim() === value && [...value].length > 0 && [...value].length <= 80 && new TextEncoder().encode(value).length <= 240 &&
+  /^[\p{L}\p{Nd} _().+\-]+$/u.test(value));
+const componentFirmware = value => value === null || (typeof value === "string" && value.length <= 64 &&
+  !/[^\x20-\x7e]/.test(value) &&
+  /^[vV]?[0-9]{1,4}(?:\.[0-9]{1,6}){1,5}(?:[_+\-][A-Za-z0-9.-]{1,32})?$/.test(value));
+
+function componentEntry(entry) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry) ||
+      entry.manufacturer !== "DDPAI" || !["logging_device", "rear", "inside"].includes(entry.component) ||
+      entry.sourceKind !== "ddpai_ui_device_info" ||
+      typeof entry.sourceFile !== "string" ||
+      /[\x00-\x1f\x7f]/.test(entry.sourceFile) ||
+      !/^DCIM\/207log\/ui\/ui_[0-9]{14}_[0-9]{3}\.log$/.test(entry.sourceFile) ||
+      !Number.isSafeInteger(entry.sourceLine) || entry.sourceLine < 1 ||
+      !componentModel(entry.reportedModel) || !componentModel(entry.model) || !componentFirmware(entry.firmwareVersion) ||
+      (entry.reportedModel === null && entry.firmwareVersion === null) ||
+      entry.model !== recognizedDDPAIModel(entry.reportedModel) ||
+      entry.identityEstablished !== (entry.model !== null)) return null;
+  return {manufacturer: "DDPAI", component: entry.component, reportedModel: entry.reportedModel,
+    model: entry.model, firmwareVersion: entry.firmwareVersion, sourceKind: "ddpai_ui_device_info",
+    sourceFile: entry.sourceFile, sourceLine: entry.sourceLine, identityEstablished: entry.identityEstablished};
+}
+
+function validComponentMetadata(scan) {
+  const entries = scan.componentMetadata, coverage = scan.componentMetadataCoverage;
+  if (entries === undefined && coverage === undefined) return true;
+  // Swift optional fields are omitted, not null. Existing reports need neither field.
+  if (!Array.isArray(entries) || entries.length > 32 || entries.some(entry => !componentEntry(entry)) ||
+      !coverage || typeof coverage !== "object" || Array.isArray(coverage)) return false;
+  return [coverage.inspectedFiles, coverage.retainedEntries, coverage.omittedEntries].every(componentCount) &&
+    typeof coverage.limited === "boolean" && coverage.retainedEntries === entries.length &&
+    (coverage.omittedEntries === 0 || coverage.limited) &&
+    (entries.length === 0 || coverage.inspectedFiles > 0);
+}
+
 function sanitizeScan(scan) {
   const filenameSamples = Array.isArray(scan.filenameSamples)
     ? scan.filenameSamples.slice(0, 100).filter(safeMediaBasename)
@@ -374,6 +416,15 @@ function sanitizeScan(scan) {
       ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
       : [],
   };
+  if (validComponentMetadata(scan) && Array.isArray(scan.componentMetadata)) {
+    result.componentMetadata = scan.componentMetadata.map(componentEntry);
+    const coverage = scan.componentMetadataCoverage;
+    result.componentMetadataCoverage = {inspectedFiles: coverage.inspectedFiles,
+      retainedEntries: result.componentMetadata.length, omittedEntries: coverage.omittedEntries, limited: coverage.limited};
+  }
+  if (typeof scan.selectedProfileWasManuallyChosen === "boolean") {
+    result.selectedProfileWasManuallyChosen = scan.selectedProfileWasManuallyChosen;
+  }
   if (scan.evidenceCounts && typeof scan.evidenceCounts === "object") {
     const count = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
     const pairs = result.videoSpecSummaries.flatMap(summary => summary.storageRateSamples);

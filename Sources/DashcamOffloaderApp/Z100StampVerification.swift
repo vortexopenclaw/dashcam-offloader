@@ -7,7 +7,7 @@ import Foundation
 enum Z100StampVerification {
     static func run(profiles: [DashcamProfile]) -> Bool {
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent("z100-stamps-\(UUID().uuidString)")
+        let root = fm.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent("z100-stamps-\(UUID().uuidString)")
         defer { try? fm.removeItem(at: root) }
         let originalProfiles = profiles
         do {

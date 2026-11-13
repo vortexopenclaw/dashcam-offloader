@@ -485,7 +485,9 @@ struct ContentView: View {
         }
         if viewModel.selectedProfile?.id == "ddpai-z100-master-main" {
             return isAutomaticallyIdentifiedZ100Main
-                ? "Exact front model stamp identified this main-unit card. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile."
+                ? (viewModel.componentMetadata.exactLoggingModel == "Z100 Master"
+                    ? "Structured device-info log identified this main-unit card, with front-video layout evidence. Log firmware observations may be historical. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile."
+                    : "Exact front model stamp identified this main-unit card. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile.")
                 : "Manually selected main-unit card: inside is telephoto; front S_ videos are time-lapse parking. Confirm the model and main-unit card. Do not use for a separate cabin/accessory card."
         }
         if viewModel.selectedProfile != nil {
@@ -1462,7 +1464,7 @@ struct FeedbackSheet: View {
                 }
             if includeScan, let scanPreview { PrivateEvidenceReview(snapshot: scanPreview) }
 
-            Text("Optional private scan evidence includes original video/photo filenames (which can contain recording dates), relative camera folders, linked measurements and file protection flags. Review before submitting. Source names and personal paths are excluded.")
+            Text("Optional private scan evidence includes original video/photo filenames (which can contain recording dates), relative camera folders, linked measurements, file protection flags, and extracted camera/component model and firmware observations with source/line coverage. Log observations may be historical; raw logs are not sent. Review before submitting. Source names and personal paths are excluded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -1644,7 +1646,7 @@ struct CardLearningSheet: View {
             TextField("Contact email or handle (optional)", text: $contact)
                 .textFieldStyle(.roundedBorder)
 
-            Text("Submitting approves this private learning package: original video/photo filenames (including any recording dates), relative camera folders, linked per-file measurements and protection flags. Review below before submitting. No media, host paths, GPS traces, serial numbers, Wi-Fi details or device IDs are uploaded.")
+            Text("Submitting approves this private learning package: original video/photo filenames (including any recording dates), relative camera folders, linked per-file measurements, protection flags, and extracted camera/component model and firmware observations with source/line coverage. These may be historical and do not replace owner firmware settings. Review below before submitting. No raw logs, media, host paths, GPS traces, serial numbers, Wi-Fi details or device IDs are uploaded.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

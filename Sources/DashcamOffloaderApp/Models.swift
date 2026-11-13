@@ -945,6 +945,9 @@ struct FeedbackScanSnapshot: Codable, Hashable, Sendable {
     var scanDiagnostics: [ScanDiagnosticEntry]
     var mediaFileSamples: [FeedbackMediaFileSample] = []
     var evidenceCounts: FeedbackEvidenceCounts? = nil
+    var componentMetadata: [ComponentMetadata]? = nil
+    var componentMetadataCoverage: ComponentMetadataCoverage? = nil
+    var selectedProfileWasManuallyChosen: Bool? = nil
 }
 
 struct FeedbackEvidenceCounts: Codable, Hashable, Sendable {

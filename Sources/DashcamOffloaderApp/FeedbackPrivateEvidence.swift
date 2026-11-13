@@ -47,6 +47,8 @@ extension FeedbackScanSnapshot {
             return anonymous
         }
         result.scanDiagnostics = []
+        result.componentMetadata = nil
+        result.componentMetadataCoverage = nil
         result.filenameSamples = []
         result.mediaFileSamples = []
         result.directorySummaries = []
