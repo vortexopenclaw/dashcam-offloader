@@ -171,7 +171,20 @@ struct CardScanner {
 
     private func applyStructuredLogIdentity(_ result: inout ScanResult, profiles: [DashcamProfile]) {
         guard let model = result.componentMetadata.exactLoggingModel else { return }
-        let evidence = ["Exact structured UI-log logging-device model; historical firmware observations are separate"]
+        let evidence = ["Exact structured logging-device model; historical firmware observations are separate"]
+        if model == "MINI3X",
+           result.componentMetadata.entries.contains(where: { $0.component == "logging_device" && $0.sourceKind == "ddpai_product_info" && $0.reportedModel == "DDPAI DM003_Overseas_V2" }),
+           let profile = profiles.first(where: { $0.id == "ddpai-mini3x" }),
+           DDPAIComponentMetadata.hasSafeVideo(source: result.sourceURL, files: result.allFiles, folder: "DCIM/200video") {
+            result.candidates.insert(DetectionCandidate(profile: profile, score: 100, confidence: .high, evidence: evidence), at: 0)
+            result.selectedProfile = profile
+            result.identifiedCamera = IdentifiedCamera(manufacturer: "DDPAI", model: model, evidence: evidence, isSupported: true)
+            let classified = classifyWithParkingPatterns(files: result.allFiles, sourceURL: result.sourceURL, profile: profile)
+            result.clips = classified.clips
+            result.diagnostics.append(contentsOf: classified.diagnostics)
+            result.diagnostics.append(ScanDiagnosticEntry(stage: "ddpai_product_info", profileID: profile.id, profileName: profile.displayName, outcome: "matched", detail: evidence[0]))
+            return
+        }
         if model == "Z100 Master",
            let profile = profiles.first(where: { $0.id == "ddpai-z100-master-main" }),
            DDPAIComponentMetadata.hasSafeMainFrontVideo(source: result.sourceURL, files: result.allFiles) {
@@ -1378,6 +1391,14 @@ struct CardScanner {
 
             if channel == "unknown" {
                 channel = genericChannel(relativePath: relativePath, filename: filename)
+            }
+
+            if profile.id == "ddpai-mini3x" {
+                // A separately recording unit can be mounted front, rear or cabin.
+                // Numeric filenames and normal encoding do not establish driving.
+                channel = "unknown"
+                timestamp = parseGenericTimestamp(filename: filename)
+                if ClipItem.videoExtensions.contains(ext) { mode = "recording" }
             }
 
             // Explicit selection of this profile confirms BOTH model and main

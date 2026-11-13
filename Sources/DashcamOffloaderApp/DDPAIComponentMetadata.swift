@@ -139,6 +139,9 @@ struct DDPAIComponentMetadata {
             let lines = content.split(separator: 10, omittingEmptySubsequences: false)
             for (index, bytes) in lines.enumerated() {
                 if truncated && index == lines.count - 1 { break }
+                // Other product-log records are outside this reader's contract.
+                // Do not decode binary diagnostics or treat them as identity data.
+                if productLog && bytes.range(of: Data("WEBGetProductInfo".utf8)) == nil { continue }
                 guard bytes.count <= 16384 else { result.coverage.limited = true; continue }
                 guard let line = String(data: Data(bytes), encoding: .utf8) else { result.coverage.limited = true; continue }
                 let sourceFile = parts.joined(separator: "/") + "/" + name
@@ -165,12 +168,16 @@ struct DDPAIComponentMetadata {
     }
 
     static func hasSafeMainFrontVideo(source: URL, files: [URL]) -> Bool {
+        hasSafeVideo(source: source, files: files, folder: "DCIM/200video/front")
+    }
+
+    static func hasSafeVideo(source: URL, files: [URL], folder: String) -> Bool {
         let candidates = files.filter {
             !$0.lastPathComponent.hasPrefix("._") && ["mp4", "mov"].contains($0.pathExtension.lowercased()) &&
-                $0.relativePath(from: source).split(separator: "/").dropLast().joined(separator: "/") == "DCIM/200video/front"
+                $0.relativePath(from: source).split(separator: "/").dropLast().joined(separator: "/") == folder
         }
         guard !candidates.isEmpty else { return false }
-        let directory = openDirectory(source.appendingPathComponent("DCIM/200video/front", isDirectory: true))
+        let directory = openDirectory(source.appendingPathComponent(folder, isDirectory: true))
         guard directory >= 0 else { return false }
         defer { close(directory) }
         for candidate in candidates.prefix(32) {
@@ -220,12 +227,14 @@ struct DDPAIComponentMetadata {
     }
 
     mutating func consumeProduct(line: String, sourceFile: String, sourceLine: Int) {
-        guard line.contains("WEBGetProductInfo"), line.contains("pJsonData="),
-              let json = Self.payload(in: line), !hasDuplicateKeys(json),
+        guard line.contains("WEBGetProductInfo"), line.contains("pJsonData=") else { return }
+        guard let json = Self.payload(in: line), !hasDuplicateKeys(json),
               let data = json.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let rawModel = object["model"] as? String, let rawVersion = object["version"] as? String,
-              let reported = Self.safeModel(rawModel), let version = Self.safeFirmware(rawVersion) else { return }
+              let reported = Self.safeModel(rawModel), let version = Self.safeFirmware(rawVersion) else {
+            coverage.limited = true; return
+        }
         // Retain the reported SKU, not an inferred retail revision or accessory identity.
         let model = DDPAIOfficialModels.recognized(reported)
         let entry = ComponentMetadata(component: "logging_device", reportedModel: reported, model: model,

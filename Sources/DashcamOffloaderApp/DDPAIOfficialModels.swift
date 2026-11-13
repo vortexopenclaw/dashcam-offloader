@@ -13,6 +13,9 @@ enum DDPAIOfficialModels {
   rows.filter { row in row.recognitionEligible && ([row.model]+row.aliases).contains { token($0)==token(reported) } }
  }
  static func recognized(_ reported: String) -> String? {
+  // Owner-confirmed logging-device SKU. This establishes the generic model,
+  // never the ambiguous regional V3 revision in the official reference.
+  if reported == "DDPAI DM003_Overseas_V2" { return "MINI3X" }
   let candidates=matches(reported)
   guard candidates.count==1, let row=candidates.first else { return nil }
   // Preserve the demonstrated retail spelling; bare names do not establish revision suffixes.

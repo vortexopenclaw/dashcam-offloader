@@ -1,0 +1,23 @@
+id: ddpai-mini3x
+manufacturer: DDPAI
+model: MINI3X
+status: manual_only
+confidence: low
+source_notes:
+  - docs/card-profiles/ddpai-mini3x.md
+  - "Native activation requires exact structured product SKU DDPAI DM003_Overseas_V2 and safe root video; shared folders, resolution and volume names cannot identify this model"
+  - "Owner-confirmed generic MINI3X identity; no regional or V3 revision inferred"
+  - "Physical installation role and recording context remain unknown unless explicitly supplied by the owner"
+folders:
+  - path: DCIM/200video
+    mode: recording
+  - path: DCIM/201photo
+    mode: still_image
+  - path: DCIM/202thumb
+    mode: still_image
+    import: false
+  - path: DCIM/207log
+    mode: support
+    import: false
+channels:
+  recording: unknown

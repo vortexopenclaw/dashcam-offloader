@@ -7,6 +7,8 @@ export function ddpaiCandidates(reported) {
  return ddpaiModels.filter(r=>r.recognitionEligible && [r.model,...r.aliases].some(n=>n.replace(/^DDPAI /i,'').toLowerCase()===value.toLowerCase()));
 }
 export function recognizedDDPAIModel(reported) {
+ // Exact owner-confirmed product SKU establishes generic MINI3X, not V3.
+ if (reported === 'DDPAI DM003_Overseas_V2') return 'MINI3X';
  const rows=ddpaiCandidates(reported);if(rows.length!==1)return null;
  let value=reported.replace(/^DDPAI /i,'');if(value.toLowerCase()==='dz2602_global_z100 master')value='Z100 Master';
  return [rows[0].model,...rows[0].aliases].find(n=>n.replace(/^DDPAI /i,'').toLowerCase()===value.toLowerCase()).replace(/^DDPAI /i,'');
