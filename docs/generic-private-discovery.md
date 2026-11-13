@@ -47,7 +47,7 @@ firmware/settings. Existing DDPAI extraction and identity semantics remain separ
 Run from the external worktree, under the shared scratch gate (never bypass its lock):
 
 ```sh
-/usr/bin/python3 /Users/openclaw/.hermes/profiles/dashcam-offloader/projects/tools/check-scratch-budget.py --reserve-gib 8 --run /usr/bin/env DASHCAM_SWIFT_BUILD_SYSTEM=native DASHCAM_SWIFT_SDK=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk /usr/bin/python3 scripts/test-private-evidence-roundtrip.py
+/usr/bin/python3 "${DASHCAM_TOOL_ROOT}/check-scratch-budget.py" --reserve-gib 8 --run /usr/bin/env DASHCAM_SWIFT_BUILD_SYSTEM=native DASHCAM_SWIFT_SDK=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk /usr/bin/python3 scripts/test-private-evidence-roundtrip.py
 ```
 
 The runner builds the actual app in `.build-private`, exercises synthetic native

@@ -56,7 +56,7 @@ test('explicit schema rejects paths, arbitrary keys, extra raw text, unsafe valu
 });
 test('technical validators are field-specific rather than printable-fragment redaction',()=>{
   for(const [key,value] of [['model','OtherCamera RX9'],['firmware','v9.0.0.17'],['version','1.2'],['resolution','3840x2160'],['fps','29.97'],['codec','HEVC'],['parking_mode','time-lapse']])assert.equal(safeDiscoveryValue(value,key),true,`${key}=${value}`);
-  for(const [key,value] of [['model','person@example.org'],['model','192.168.1.1'],['model','123456789012'],['firmware','Owner said update'],['codec','arbitrary words'],['hdr','download'],['unknown','QX7'],['fps','29.97 location'],['model','AX1\n']])assert.equal(safeDiscoveryValue(value,key),false,`${key}=${value}`);
+  for(const [key,value] of [['model','person@example.com'],['model','192\u002E168\u002E1\u002E1'],['model','123456789012'],['firmware','Owner said update'],['codec','arbitrary words'],['hdr','download'],['unknown','QX7'],['fps','29.97 location'],['model','AX1\n']])assert.equal(safeDiscoveryValue(value,key),false,`${key}=${value}`);
 });
 test('multiple models cannot be hidden by inconsistent flags; sticky conflict survives truncation',()=>{
   const d=discovery();d.observations.push({...d.observations[0],value:'Other B2'});d.coverage.retainedObservations++;

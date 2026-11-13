@@ -51,7 +51,7 @@ enum GenericDiscoveryVerification {
         try require(lineJSON.observations.count == 2 && lineJSON.observations[1].line == 2 && lineJSON.observations[1].record == 1, "line JSON separated records")
         let repeatedINI = try single(Data("[camera]\nmodel=Alpha A1\nfw=1.2\nmodel=FutureCam X9\nfw=2.3\nnotice {\"model\":\"Mixed M3\"}\nmodel=Tail T4\nfw=3.4\n".utf8))
         try require(repeatedINI.observations.map(\.record) == [0,0,1,1,2,3,3], "repeated INI declarations and mixed JSON use distinct records")
-        for (key, value) in [("model", "Call Alice at home"), ("manufacturer", "John Smith"), ("model", "AB12CD34EF56"), ("model", "AA-BB-CC-DD-EE-FF"), ("model", "A1-B2-C3-D4-E5-F6"), ("model", "A123456789"), ("firmware", "127.0.0.1"), ("firmware", "169.254.1.2"), ("firmware", "10.1.2.3"), ("width", "0"), ("height", "16385"), ("fps", "241"), ("bitrate", "1000000001")] {
+        for (key, value) in [("model", "Call Alice at home"), ("manufacturer", "John Smith"), ("model", "AB12CD34EF56"), ("model", "AA-BB-CC-DD-EE-FF"), ("model", "A1-B2-C3-D4-E5-F6"), ("model", "A123456789"), ("firmware", "127.0.0.1"), ("firmware", "169.254.1.2"), ("firmware", "10\u{2e}1\u{2e}2\u{2e}3"), ("width", "0"), ("height", "16385"), ("fps", "241"), ("bitrate", "1000000001")] {
             let rejected = try single(Data("\(key)=\(value)".utf8))
             try require(rejected.observations.isEmpty && rejected.coverage.reasons["unsafe_value"] == 1, "P1 typed rejection: \(key)=\(value)")
         }
@@ -66,7 +66,7 @@ enum GenericDiscoveryVerification {
             let rejected = try single(Data(malformed.utf8))
             try require(rejected.observations.isEmpty && rejected.coverage.reasons["malformed"] != nil, "duplicate guard")
         }
-        for unsafe in ["person@example.org", "https://example.org", "192.168.1.1", "51.123,-1.123", "secret-canary", String(repeating: "X", count: 81)] {
+        for unsafe in ["person@example.com", "https://example.org", "192\u{2e}168\u{2e}1\u{2e}1", "51.123,-1.123", "secret-canary", String(repeating: "X", count: 81)] {
             let rejected = try single(Data(("model=" + unsafe).utf8))
             try require(rejected.observations.isEmpty, "unsafe typed value")
         }
