@@ -467,18 +467,28 @@ struct ContentView: View {
             return "Unrecognized dashcam, generic download ready"
         }
         if let profile = viewModel.selectedProfile {
-            return profile.status == "manual_only" && !isAutomaticallyIdentifiedZ100Main
+            return viewModel.selectedProfileWasManuallyChosen
+                || (profile.status == "manual_only" && !isAutomaticallyIdentifiedProfile)
                 ? "Manually selected \(profile.displayName)"
                 : "Detected \(profile.displayName)"
         }
         return "No camera profile selected"
     }
 
+    private var isAutomaticallyIdentifiedProfile: Bool {
+        guard let profile = viewModel.selectedProfile,
+              !viewModel.selectedProfileWasManuallyChosen,
+              let camera = viewModel.identifiedCamera,
+              camera.isSupported,
+              camera.manufacturer == profile.manufacturer else { return false }
+        // The main-unit profile intentionally has a narrower label than the camera.
+        let model = profile.id == "ddpai-z100-master-main" ? "Z100 Master" : profile.model
+        return camera.model == model
+    }
+
     private var isAutomaticallyIdentifiedZ100Main: Bool {
         viewModel.selectedProfile?.id == "ddpai-z100-master-main"
-            && !viewModel.selectedProfileWasManuallyChosen
-            && viewModel.identifiedCamera?.isSupported == true
-            && viewModel.identifiedCamera?.model == "Z100 Master"
+            && isAutomaticallyIdentifiedProfile
     }
 
     private var cameraDetectionDetail: String {
@@ -498,8 +508,11 @@ struct ContentView: View {
                     : "Exact front model stamp identified this main-unit card. Inside is telephoto; optional rear is counted only when recorded. Separate cabin cards are not mapped by this profile.")
                 : "Manually selected main-unit card: inside is telephoto; front S_ and rear Q_ videos are time-lapse parking. Confirm the model and main-unit card. Do not use for a separate cabin/accessory card."
         }
-        if viewModel.selectedProfile != nil {
-            return "Detected profile ready. Submit this card only if it has new modes or settings."
+        if let profile = viewModel.selectedProfile {
+            return viewModel.selectedProfileWasManuallyChosen
+                || (profile.status == "manual_only" && !isAutomaticallyIdentifiedProfile)
+                ? "Manually selected profile ready. Submit this card only if it has new modes or settings."
+                : "Detected profile ready. Submit this card only if it has new modes or settings."
         }
         return "Choose a camera, or download with generic detection."
     }
