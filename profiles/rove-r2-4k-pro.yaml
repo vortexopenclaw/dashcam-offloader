@@ -19,7 +19,7 @@ sampled_variant:
 detection:
   high_confidence:
     - filename_pattern:
-        regex: '^\\d{4}_\\d{4}_\\d{6}_\\d+\\.MP4$'
+        regex: '^\d{4}_\d{4}_\d{6}_\d+\.MP4$'
         note: "Submitted R2-4K Pro card had 25 matching MP4 files in Video/."
     - folders:
         required_all:
@@ -38,7 +38,7 @@ folders:
     note: "Submitted card contained 25 downloadable MP4 clips here. Parking/event/photo folders were not present in this submitted scan."
 
 filename_patterns:
-  - pattern: '^(\\d{4})_(\\d{4})_(\\d{6})_(\\d+)\\.(MP4)$'
+  - pattern: '^(\d{4})_(\d{4})_(\d{6})_(\d+)\.(MP4)$'
     timestamp:
       date_group: 1
       month_day_group: 2
@@ -62,7 +62,7 @@ sampled_recording_settings:
     note: "NAS archive measurement for Rove R2-4K Pro; not used for model identification."
 
 exclude:
-  - '^\\._'
+  - '^\._'
   - .Spotlight-V100/**
   - .fseventsd/**
   - 'unique_device_ids'

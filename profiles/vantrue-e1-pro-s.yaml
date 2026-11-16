@@ -22,7 +22,7 @@ detection:
       exists: true
       note: "Whole model token must match the catalog, be a regular file, and have no conflicting model markers. No settings values are read."
     - filename_pattern:
-        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        regex: '^\d{8}_\d{6}_\d{5}_[NPET]_A\.(MP4|JPG)$'
         note: "Shared Vantrue single-front-channel media grammar, not distinguishing model evidence."
     - folders:
         required_all:
@@ -33,7 +33,7 @@ detection:
         note: "Event also existed but was empty. Model-specific marker is required for automatic selection."
   medium_confidence:
     - filename_pattern:
-        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        regex: '^\d{8}_\d{6}_\d{5}_[NPET]_A\.(MP4|JPG)$'
         note: "Family-only evidence; cannot select E1 Pro S or E1 Pro without explicit model evidence."
   not_reliable:
     - firmware:
@@ -67,7 +67,7 @@ folders:
     note: "Only the safe model-coded basename is used. Private settings values and GPS trails are not identity evidence."
 
 filename_patterns:
-  - pattern: '^(\\d{8})_(\\d{6})_(\\d{5})_([NPET])_([A])\\.(MP4|JPG)$'
+  - pattern: '^(\d{8})_(\d{6})_(\d{5})_([NPET])_([A])\.(MP4|JPG)$'
     timestamp:
       date_group: 1
       time_group: 2
@@ -94,7 +94,7 @@ evidence_limits:
   - "Parking event and timelapse tokens are recording labels, not an assertion of uniform parking capture behavior."
 
 exclude:
-  - '^\\._'
+  - '^\._'
   - .Spotlight-V100/**
   - .fseventsd/**
   - '*.bin'

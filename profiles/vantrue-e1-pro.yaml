@@ -22,7 +22,7 @@ detection:
       exists: true
       note: "Exact regular-file settings basename identifies E1 Pro only, not E1 Pro S. Conflicting or unknown model markers fail closed; settings values are never read."
     - filename_pattern:
-        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        regex: '^\d{8}_\d{6}_\d{5}_[NPET]_A\.(MP4|JPG)$'
         note: "Vantrue sequence filename with single front channel A."
     - folders:
         required_all:
@@ -33,7 +33,7 @@ detection:
         note: "Observed card contained Normal, Parking, Event, Photo, and GPS folders. Event is not required because sampled event clips were stored under Parking/Photo instead."
   medium_confidence:
     - filename_pattern:
-        regex: '^\\d{8}_\\d{6}_\\d{5}_[NPET]_A\\.(MP4|JPG)$'
+        regex: '^\d{8}_\d{6}_\d{5}_[NPET]_A\.(MP4|JPG)$'
         note: "Shared Vantrue family grammar only. Exact model evidence is required; folders/media alone cannot select E1 Pro or E1 Pro S."
   not_reliable:
     - volume_label:
@@ -68,7 +68,7 @@ folders:
     note: "Contains E1PRO_Settings.ini on sampled card; do not publish real GPS trail data."
 
 filename_patterns:
-  - pattern: '^(\\d{8})_(\\d{6})_(\\d{5})_([NPET])_([A])\\.(MP4|JPG)$'
+  - pattern: '^(\d{8})_(\d{6})_(\d{5})_([NPET])_([A])\.(MP4|JPG)$'
     timestamp:
       date_group: 1
       time_group: 2
@@ -99,7 +99,7 @@ sampled_recording_settings:
   parking_segment_duration_seconds: 45
 
 exclude:
-  - '^\\._'
+  - '^\._'
   - .Spotlight-V100/**
   - .fseventsd/**
   - '*.bin'
