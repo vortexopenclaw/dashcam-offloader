@@ -35,6 +35,9 @@ jobs:
       - name: Verify source context menu wiring
         run: python3 -m unittest discover -s scripts -p 'test_source_context_menu.py'
 
+      - name: Verify camera detection presentation provenance
+        run: python3 scripts/test_camera_detection_presentation.py
+
       - name: Build app bundle
         run: bash scripts/build-macos-app.sh
 

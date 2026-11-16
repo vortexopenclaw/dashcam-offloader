@@ -1,7 +1,8 @@
-# Dashcam Offloader 0.1.43
+# Dashcam Offloader 0.1.44
 
-- Recognize the owner-confirmed DDPAI MINI3X product SKU from bounded product-info records. Keep the retail revision and physical camera role unknown; ordinary clips remain Recording, not inferred Driving or parking events.
-- Refresh the official model reference and anonymous MINI3X evidence from the committed reviewed camera database. Preserve all 23 individual size, duration, playback FPS, video bitrate and HEVC measurements.
-- Preserve Show in Finder, bounded log capture, private per-file codec retention, signing and existing update behavior.
+- Show automatically recognized MINI3X and other supported exact identities as detected, while preserving explicit manual selections as manual—even for validated profiles.
+- Preserve Z100 main-unit identity caveats and keep unsupported, generic, and unscanned cards clearly distinguished from verified detection. Recognition does not establish a retail revision or recording event.
+- Correct executable filename patterns for ROVE R2-4K PRO and VANTRUE E1 Pro/E1 Pro S profiles so generated catalogs preserve their intended matching behavior.
+- Add production-property regression checks for detection and selection wording to both source verification and release checks.
 
-Firmware observations remain scoped to the reporting component. Missing track logs and recording gaps do not establish impacts or events. Audio details are not added in this release; unknown metadata stays unknown.
+Existing signed in-app updates and private submission behavior are unchanged. This macOS build is ad-hoc signed, not notarized; a first installation may require normal macOS Open Anyway approval.
