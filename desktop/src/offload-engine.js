@@ -26,7 +26,8 @@ function safeFilename(sourcePath) {
 }
 
 function safeRelativePath(relativePath) {
-  const components = relativePath.split(path.sep);
+  // Windows accepts both separators, so "../x" must count as traversal there too.
+  const components = relativePath.split(path.sep === "\\" ? /[\\/]/ : path.sep);
   if (!components.length || components.some((component) => component === "" || component === "." || component === "..")) {
     throw new Error("A source path cannot be used safely.");
   }

@@ -154,7 +154,7 @@ test("hostile names cannot leave the destination", async (t) => {
     "new\nline\u0007.mp4",
     "-rf.mp4",
     "$(touch pwned).mp4"
-  ];
+  ].filter((name) => process.platform !== "win32" || !/[<>:"|?*\u0000-\u001f\\]/.test(name)); // Windows can't create these names
   for (const name of hostile) await fs.writeFile(path.join(source, "Record", name), name);
   const media = await scanSource(source);
   const plan = planCopy(source, destination, media);
