@@ -686,7 +686,7 @@ final class TransferViewModel: ObservableObject {
 
     // Use the context-clicked row, not the selected card or download destination.
     // Keep this read-only action available while scanning or copying.
-    func showSourceInFinder(_ source: MountedSource, open: (URL) -> Bool = { NSWorkspace.shared.open($0) }) {
+    func showSourceInFinder(_ source: MountedSource, open: (URL) -> Bool = { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: $0.path) }) {
         let url = source.url
         var isDirectory: ObjCBool = false
         guard url.isFileURL, url.path.hasPrefix("/"), url.path != "/",
@@ -1181,6 +1181,11 @@ final class TransferViewModel: ObservableObject {
             return
         }
         guard !copyProgress.isRunning && !isCreatingMulticam else { return }
+        // The source stays read-only: never download into the card or folder being read.
+        guard !CopyExecutor.isDestination(runPlan.destinationRoot, insideSource: runPlan.sourceRoot) else {
+            statusMessage = "Choose a download folder outside the source card or folder"
+            return
+        }
 
         if retryingItemIDs != nil {
             statusMessage = "Retrying \(runPlan.items.count) failed files..."
@@ -1293,7 +1298,7 @@ final class TransferViewModel: ObservableObject {
     var lastRunSummaryLine: String {
         let copied = copyResults.filter { $0.status == .copied }
         let copiedSupport = supportFileResults.filter { $0.status == .copied }
-        let copiedBytes = copied.reduce(Int64(0)) { $0 + $1.totalSize } + copiedSupport.reduce(Int64(0)) { $0 + $1.size }
+        let copiedBytes = copied.reduce(Int64(0)) { $0.addingSaturating($1.totalSize) }.addingSaturating(copiedSupport.reduce(Int64(0)) { $0.addingSaturating($1.size) })
         let skippedCount = copyResults.filter { $0.status == .skipped }.count +
             supportFileResults.filter { $0.status == .skipped }.count
         var parts = ["Copied \(copied.count + copiedSupport.count) (\(copiedBytes.formattedBytes))"]
@@ -1490,20 +1495,17 @@ final class TransferViewModel: ObservableObject {
         let safeFiles = lastScannedFiles.filter { isSafeTrainingSample($0, sourceRoot: sourceRoot) }
 
         let extensionCounts = Dictionary(grouping: safeFiles) { url in
-            let ext = url.pathExtension.lowercased()
-            return ext.isEmpty ? "[none]" : ext
+            FeedbackExtensionKey.key(for: url)
         }
             .mapValues(\.count)
         let mediaExtensionCounts = Dictionary(grouping: safeFiles.filter(isMediaLikeFile)) { url in
-            let ext = url.pathExtension.lowercased()
-            return ext.isEmpty ? "[none]" : ext
+            FeedbackExtensionKey.key(for: url)
         }
             .mapValues(\.count)
         let unrecognizedExtensionCounts = Dictionary(grouping: safeFiles.filter { fileURL in
             !isMediaLikeFile(fileURL) && !isPotentialSettingsFile(fileURL, sourceRoot: sourceRoot)
         }) { url in
-            let ext = url.pathExtension.lowercased()
-            return ext.isEmpty ? "[none]" : ext
+            FeedbackExtensionKey.key(for: url)
         }
             .mapValues(\.count)
         let timestampSourceCounts = Dictionary(grouping: eligibleClips) { clip in
@@ -1816,8 +1818,7 @@ final class TransferViewModel: ObservableObject {
                 let mediaFiles = folderFiles.filter(isMediaLikeFile)
                 let sizes = folderFiles.compactMap(fileSizeBytes)
                 let extensionCounts = Dictionary(grouping: folderFiles) { fileURL in
-                    let ext = fileURL.pathExtension.lowercased()
-                    return ext.isEmpty ? "[none]" : ext
+                    FeedbackExtensionKey.key(for: fileURL)
                 }
                 .mapValues(\.count)
 
@@ -1881,8 +1882,7 @@ final class TransferViewModel: ObservableObject {
                 let mediaFiles = files.filter(isMediaLikeFile)
                 let sizes = files.compactMap(fileSizeBytes)
                 let extensionCounts = Dictionary(grouping: files) { fileURL in
-                    let ext = fileURL.pathExtension.lowercased()
-                    return ext.isEmpty ? "[none]" : ext
+                    FeedbackExtensionKey.key(for: fileURL)
                 }
                 .mapValues(\.count)
                 let sampleFilenames = files

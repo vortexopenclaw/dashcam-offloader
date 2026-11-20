@@ -90,3 +90,8 @@ A replacement desktop release must not be published until all of these pass:
    production code signing and update-chain verification are complete for that
    platform. The native macOS updater uses the separately documented signed
    manifest and strict ad-hoc bundle-integrity model.
+
+> **Update, 2026-11-19:** the "filenames" removal above applies to ordinary
+> feedback. Opt-in private evidence (added later) keeps bounded media basenames
+> after structural checks, disclosed in the review step. See
+> `workers/feedback/README.md` and the 2026-11-19 security review fixes.

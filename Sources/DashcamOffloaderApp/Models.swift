@@ -517,7 +517,7 @@ struct CopyPlan: Hashable, Sendable {
     var supportItems: [SupportFileItem] = []
 
     var selectedBytes: Int64 {
-        items.reduce(0) { $0 + $1.totalSize } + supportItems.reduce(0) { $0 + $1.size }
+        items.reduce(Int64(0)) { $0.addingSaturating($1.totalSize) }.addingSaturating(supportItems.reduce(Int64(0)) { $0.addingSaturating($1.size) })
     }
 
     var selectedFileCount: Int {
@@ -561,7 +561,7 @@ struct CopyPlanItem: Identifiable, Hashable, Sendable {
     }
 
     var totalSize: Int64 {
-        orderedSourceClips.reduce(Int64(0)) { $0 + $1.size }
+        orderedSourceClips.reduce(Int64(0)) { $0.addingSaturating($1.size) }
     }
 
     var displayFilename: String {
@@ -1112,5 +1112,13 @@ extension Sequence where Element: Hashable {
 extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension Int64 {
+    /// File sizes come from the card. A forged size near Int64.max must not trap when summed.
+    func addingSaturating(_ other: Int64) -> Int64 {
+        let (sum, overflow) = addingReportingOverflow(other)
+        return overflow ? (other < 0 ? .min : .max) : sum
     }
 }

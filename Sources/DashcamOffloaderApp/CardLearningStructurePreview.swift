@@ -20,7 +20,7 @@ struct CardLearningStructurePreview: View {
                 Text("\(files.count) sampled camera files with recording type, channel and protection flags").fontWeight(.semibold)
                 ForEach(Array(files.enumerated()), id: \.offset) { _, file in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(file.folder)/\(file.filename)").textSelection(.enabled)
+                        Text(verbatim: "\(file.folder)/\(file.filename)").textSelection(.enabled)
                         Text("\(file.outputCategory) · \(file.channel) · \(file.fileSizeBytes) bytes")
                         Text("Read-only bits: \(flag(file.filesystemReadOnly)); user/system lock: \(flag(file.userImmutable))/\(flag(file.systemImmutable)); read-only volume: \(flag(file.volumeReadOnly))")
                             .foregroundStyle(.secondary)

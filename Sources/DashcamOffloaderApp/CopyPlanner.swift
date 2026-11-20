@@ -176,7 +176,7 @@ struct CopyPlanner {
         let lastSequence = goProSequenceNumber(for: last.filename) ?? firstSequence
         let outputName = String(format: "%@%04d-%04d.%@", groupKey, firstSequence, lastSequence, ext.isEmpty ? "MP4" : ext)
         first.filename = outputName
-        first.size = clips.reduce(Int64(0)) { $0 + $1.size }
+        first.size = clips.reduce(Int64(0)) { $0.addingSaturating($1.size) }
         first.sourceURL = clips[0].sourceURL
         first.relativePath = clips[0].relativePath
         return first
@@ -290,7 +290,13 @@ struct CopyPlanner {
                 continue
             }
 
-            let size = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+            // Only regular files: a symbolic link, folder, pipe or device named like a
+            // settings file must never be opened or copied.
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]),
+                  values.isRegularFile == true, values.isSymbolicLink != true else {
+                continue
+            }
+            let size = Int64(values.fileSize ?? 0)
             let destinationURL = destinationRoot
                 .appendingPathComponent("Camera Settings", isDirectory: true)
                 .appendingPathComponent(volumeFolder.isEmpty ? "source" : volumeFolder, isDirectory: true)

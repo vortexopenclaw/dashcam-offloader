@@ -2,7 +2,15 @@ import Foundation
 
 struct FeedbackService {
     var endpointURL: URL
-    var session: URLSession = .shared
+    var session: URLSession = FeedbackService.makeSession()
+
+    static func makeSession() -> URLSession {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpCookieStorage = nil
+        configuration.httpShouldSetCookies = false
+        configuration.urlCache = nil
+        return URLSession(configuration: configuration, delegate: RefuseRedirects(), delegateQueue: nil)
+    }
 
     static let production = FeedbackService(
         endpointURL: URL(string: "https://dashcam-offloader-feedback.vortexradar.workers.dev/feedback")!
@@ -30,6 +38,13 @@ struct FeedbackService {
         }
 
         return "submitted"
+    }
+}
+
+final class RefuseRedirects: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest? {
+        nil
     }
 }
 

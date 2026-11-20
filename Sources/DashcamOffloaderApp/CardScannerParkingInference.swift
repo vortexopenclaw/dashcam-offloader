@@ -139,11 +139,8 @@ extension CardScanner {
         }
 
         let configURL = sourceURL.appendingPathComponent("BlackVue/Config/config.ini")
-        guard let values = try? configURL.resourceValues(forKeys: [.fileSizeKey]),
-              let fileSize = values.fileSize,
-              fileSize > 0,
-              fileSize <= 512 * 1024,
-              let data = try? Data(contentsOf: configURL),
+        guard let data = SafeFileRead.data(at: configURL, maxBytes: 512 * 1024),
+              !data.isEmpty,
               let text = String(data: data, encoding: .utf8) else {
             return nil
         }
@@ -433,7 +430,7 @@ extension CardScanner {
         for item in sortedClips {
             if var current = moments.last,
                item.timestamp.timeIntervalSince(current.timestamp) <= 3 {
-                current.totalBytes += item.clip.size
+                current.totalBytes = current.totalBytes.addingSaturating(item.clip.size)
                 current.relativePaths.append(item.clip.relativePath)
                 current.timestamp = min(current.timestamp, item.timestamp)
                 moments[moments.count - 1] = current
@@ -648,7 +645,7 @@ extension CardScanner {
         }
         return grouped.compactMap { key, clips -> (key: Int, timestamp: Date, totalBytes: Int64)? in
             guard let timestamp = clips.compactMap(\.timestamp).min() else { return nil }
-            return (key, timestamp, clips.reduce(Int64(0)) { $0 + $1.size })
+            return (key, timestamp, clips.reduce(Int64(0)) { $0.addingSaturating($1.size) })
         }
         .sorted { $0.timestamp < $1.timestamp }
     }

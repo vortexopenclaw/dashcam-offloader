@@ -46,7 +46,11 @@ extension CardScanner {
     }
 
 
-    func enumerateFiles(sourceURL: URL) throws -> [URL] {
+    /// Matches the Electron engine's cap. A real dashcam card holds a few thousand
+    /// entries; a hostile or mistaken source with millions must not exhaust memory.
+    static let maxEnumeratedEntries = 500_000
+
+    func enumerateFiles(sourceURL: URL, entryLimit: Int = CardScanner.maxEnumeratedEntries) throws -> [URL] {
         guard let enumerator = fileManager.enumerator(
             at: sourceURL,
             includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
@@ -57,7 +61,10 @@ extension CardScanner {
         }
 
         var files: [URL] = []
+        var visited = 0
         for case let fileURL as URL in enumerator {
+            visited += 1
+            if visited > entryLimit { break }
             let relativePath = fileURL.relativePath(from: sourceURL)
             if shouldSkipTraversal(relativePath: relativePath) {
                 enumerator.skipDescendants()

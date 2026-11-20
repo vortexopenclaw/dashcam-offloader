@@ -163,7 +163,7 @@ struct CardHealthDetailsView: View {
 
     private func fileRow(_ file: CardHealthFileEvidence) -> some View {
         HStack(alignment: .top) {
-            Text("\(file.channel): \(file.relativePath)").font(.system(.caption, design: .monospaced))
+            Text(verbatim: "\(file.channel): \(file.relativePath)").font(.system(.caption, design: .monospaced))
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button("Reveal") {
                 guard let url = report.revealableURL(for: file) else {

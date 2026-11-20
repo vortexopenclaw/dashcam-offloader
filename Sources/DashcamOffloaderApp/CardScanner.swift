@@ -2031,10 +2031,8 @@ struct CardScanner {
     }
 
     func evidenceText(at url: URL) -> String? {
-        guard let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
-              let fileSize = values.fileSize,
-              fileSize <= 1_000_000,
-              let data = try? Data(contentsOf: url) else {
+        // The path's size is not the size of what a symbolic link points at.
+        guard let data = SafeFileRead.data(at: url, maxBytes: 1_000_000) else {
             return nil
         }
 
@@ -2391,7 +2389,7 @@ struct CardScanner {
         return nil
     }
 
-    private func parseTimestamp(groups: [String], format: TimestampFormat) -> Date? {
+    func parseTimestamp(groups: [String], format: TimestampFormat) -> Date? {
         switch format {
         case .yyyymmddHhmmss:
             // Some patterns have a mode-prefix group before the date
@@ -2408,8 +2406,20 @@ struct CardScanner {
             guard groups.count >= 3 else { return nil }
             return parseDate(groups[0] + groups[1] + groups[2], format: "yyyyMMddHHmmss")
         case .yyyymmddDashHhmmss:
-            guard groups.count >= 6 else { return nil }
-            return parseDate(groups[1] + groups[2] + groups[3] + groups[4] + groups[5] + groups[6], format: "yyyyMMddHHmmss")
+            // 70mai profiles capture the date/time either as "YYYYMMDD" + "HHMMSS" or as six
+            // separate fields. Join consecutive all-digit groups that add up to exactly 14 digits.
+            // (Previously read groups[1...6] behind a count >= 6 guard: never matched the 8+6
+            // form and skipped the year in the six-field form.)
+            for start in groups.indices {
+                var digits = ""
+                for group in groups[start...] {
+                    guard !group.isEmpty, group.allSatisfy({ $0.isASCII && $0.isNumber }) else { break }
+                    digits += group
+                    if digits.count >= 14 { break }
+                }
+                if digits.count == 14 { return parseDate(digits, format: "yyyyMMddHHmmss") }
+            }
+            return nil
         case .unknown:
             return parseTimestampHeuristically(groups: groups)
         }
