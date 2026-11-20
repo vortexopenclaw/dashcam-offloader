@@ -1,8 +1,14 @@
-# Dashcam Offloader 0.1.44
+# Dashcam Offloader 0.1.45
 
-- Show automatically recognized MINI3X and other supported exact identities as detected, while preserving explicit manual selections as manual—even for validated profiles.
-- Preserve Z100 main-unit identity caveats and keep unsupported, generic, and unscanned cards clearly distinguished from verified detection. Recognition does not establish a retail revision or recording event.
-- Correct executable filename patterns for ROVE R2-4K PRO and VANTRUE E1 Pro/E1 Pro S profiles so generated catalogs preserve their intended matching behavior.
-- Add production-property regression checks for detection and selection wording to both source verification and release checks.
+Security and reliability hardening from an independent review:
 
-Existing signed in-app updates and private submission behavior are unchanged. This macOS build is ad-hoc signed, not notarized; a first installation may require normal macOS Open Anyway approval.
+- A card that fails or is removed mid-copy no longer crashes the app or leaves a truncated clip under its final name.
+- Copies never follow links planted on a card or in the download folder, never write onto the source card, and refuse a download folder inside the card.
+- "Preserve camera settings" copies regular files only; small camera metadata files are read with size limits and without following links.
+- Merged GoPro exports appear under their final name only when complete.
+- Copies are flushed to disk before they are verified.
+- Very large or malformed cards can no longer exhaust memory or crash the app.
+- 70mai filename timestamps are now recognized.
+- Feedback uploads use no cookies and refuse redirects; private evidence no longer keeps coordinate-like file names.
+
+Existing signed in-app updates are unchanged. This macOS build is ad-hoc signed, not notarized; a first installation may require normal macOS Open Anyway approval.
