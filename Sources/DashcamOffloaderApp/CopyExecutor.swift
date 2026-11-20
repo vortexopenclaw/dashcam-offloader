@@ -1,6 +1,7 @@
 @preconcurrency import AVFoundation
 import Foundation
 import CryptoKit
+import Darwin
 
 struct CopyExecutor: Sendable {
     private static let copyBufferSize = 8 * 1024 * 1024
@@ -59,8 +60,8 @@ struct CopyExecutor: Sendable {
                         pending = nil
                         await finish(previous, progress: &progress, results: &results, delivery: delivery)
                     }
-                    let exported = try await concatenateVideoItem(item, destinationURL: item.destinationURL) { copiedChunk in
-                        progress.copiedBytes += copiedChunk
+                    let exported = try await concatenateVideoItem(item, destinationURL: item.destinationURL, destinationRoot: plan.destinationRoot) { copiedChunk in
+                        progress.copiedBytes = progress.copiedBytes.addingSaturating(copiedChunk)
                         await update(progress, delivery: delivery)
                     }
                     progress.completedFiles += 1
@@ -70,7 +71,7 @@ struct CopyExecutor: Sendable {
                     } else {
                         result.status = .skipped
                         result.message = "Already in destination"
-                        progress.copiedBytes += item.totalSize
+                        progress.copiedBytes = progress.copiedBytes.addingSaturating(item.totalSize)
                     }
                 } else {
                     // A repeated destination must not be treated as an existing verified file.
@@ -81,6 +82,7 @@ struct CopyExecutor: Sendable {
                     let verification = try await copyOne(
                         sourceURL: item.clip.sourceURL,
                         destinationURL: item.destinationURL,
+                        destinationRoot: plan.destinationRoot,
                         expectedSize: item.clip.size,
                         modificationDate: reliableRecordingDate(for: item.clip),
                         beforeCompletion: {
@@ -90,7 +92,7 @@ struct CopyExecutor: Sendable {
                             }
                         }
                     ) { copiedChunk, waitForUI in
-                        progress.copiedBytes += copiedChunk
+                        progress.copiedBytes = progress.copiedBytes.addingSaturating(copiedChunk)
                         await update(progress, delivery: delivery, waitForUI: waitForUI)
                     }
                     if let verification {
@@ -103,7 +105,7 @@ struct CopyExecutor: Sendable {
                         progress.completedFiles += 1
                         result.status = .skipped
                         result.message = "Already in destination"
-                        progress.copiedBytes += item.clip.size
+                        progress.copiedBytes = progress.copiedBytes.addingSaturating(item.clip.size)
                     }
                 }
             } catch is CancellationError {
@@ -144,11 +146,12 @@ struct CopyExecutor: Sendable {
                 let verification = try await copyOne(
                     sourceURL: item.sourceURL,
                     destinationURL: item.destinationURL,
+                    destinationRoot: plan.destinationRoot,
                     expectedSize: item.size,
                     modificationDate: nil,
                     beforeCompletion: {}
                 ) { copiedChunk, waitForUI in
-                    progress.copiedBytes += copiedChunk
+                    progress.copiedBytes = progress.copiedBytes.addingSaturating(copiedChunk)
                     await update(progress, delivery: delivery, waitForUI: waitForUI)
                 }
                 if let verification {
@@ -165,7 +168,7 @@ struct CopyExecutor: Sendable {
                 } else {
                     result.status = .skipped
                     result.message = "Already in destination"
-                    progress.copiedBytes += item.size
+                    progress.copiedBytes = progress.copiedBytes.addingSaturating(item.size)
                 }
             } catch is CancellationError {
                 result.status = .cancelled
@@ -192,8 +195,8 @@ struct CopyExecutor: Sendable {
             let copiedCount = results.filter { $0.status == .copied }.count + supportResults.filter { $0.status == .copied }.count
             let skippedCount = results.filter { $0.status == .skipped }.count + supportResults.filter { $0.status == .skipped }.count
             let failedCount = results.filter { $0.status == .failed }.count + supportResults.filter { $0.status == .failed }.count
-            let copiedBytes = results.filter { $0.status == .copied }.reduce(Int64(0)) { $0 + $1.totalSize } +
-                supportResults.filter { $0.status == .copied }.reduce(Int64(0)) { $0 + $1.size }
+            let copiedBytes = results.filter { $0.status == .copied }.reduce(Int64(0)) { $0.addingSaturating($1.totalSize) }
+                .addingSaturating(supportResults.filter { $0.status == .copied }.reduce(Int64(0)) { $0.addingSaturating($1.size) })
             if copiedCount == 0 && failedCount == 0 && skippedCount > 0 {
                 progress.summary = "All \(skippedCount) files were already in the destination"
             } else {
@@ -252,6 +255,7 @@ struct CopyExecutor: Sendable {
     private func copyOne(
         sourceURL: URL,
         destinationURL: URL,
+        destinationRoot: URL,
         expectedSize: Int64,
         modificationDate: Date?,
         beforeCompletion: () async -> Void,
@@ -261,24 +265,28 @@ struct CopyExecutor: Sendable {
         let destination = destinationURL
         let destinationDirectory = destination.deletingLastPathComponent()
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
+        try Self.requireContainedDestination(directory: destinationDirectory, destinationRoot: destinationRoot)
 
-        if fileManager.fileExists(atPath: destination.path) {
+        // lstat semantics: a dangling symbolic link is an existing entry, not a free name.
+        if Self.entryExists(atPath: destination.path) {
             guard try filesHaveMatchingSHA256(sourceURL, destination) else {
                 throw CopyError.destinationConflict
             }
             return nil
         }
 
-        let input = try FileHandle(forReadingFrom: sourceURL)
+        // Never follow a link or open a pipe/device/directory that replaced the scanned file.
+        let input = try Self.openRegularFileForReading(sourceURL)
         defer { try? input.close() }
-        fileManager.createFile(atPath: destination.path, contents: nil)
+        // O_EXCL: this call owns the file it removes on failure and can never
+        // truncate, replace or delete an entry that appeared after the check above.
+        let output = try Self.createExclusiveFileForWriting(destination)
         var didFinishWriting = false
         defer {
             if !didFinishWriting {
                 try? fileManager.removeItem(at: destination)
             }
         }
-        let output = try FileHandle(forWritingTo: destination)
         var outputIsClosed = false
         defer {
             if !outputIsClosed {
@@ -295,10 +303,13 @@ struct CopyExecutor: Sendable {
                 throw CancellationError()
             }
             try beforeChunkHook?(writtenBytes)
-            let data = input.readData(ofLength: Self.copyBufferSize)
+            // Throwing variants: the legacy readData/write calls raise Objective-C
+            // exceptions on I/O errors (card removed, disk full), which Swift cannot
+            // catch; the process would abort and leave a partial file behind.
+            let data = try input.read(upToCount: Self.copyBufferSize) ?? Data()
             guard !data.isEmpty else { break }
             sourceHasher.update(data: data)
-            output.write(data)
+            try output.write(contentsOf: data)
             unreportedBytes += Int64(data.count)
             writtenBytes += Int64(data.count)
             let now = progressClock()
@@ -314,6 +325,8 @@ struct CopyExecutor: Sendable {
         if unreportedBytes > 0 { await progress(unreportedBytes, true) }
         await beforeCompletion()
         if Task.isCancelled { throw CancellationError() }
+        // Push the bytes to the device before the copy is verified and reported as done.
+        try output.synchronize()
         try output.close()
         outputIsClosed = true
 
@@ -356,41 +369,111 @@ struct CopyExecutor: Sendable {
         return clip.timestamp
     }
 
-    private func filesHaveMatchingSHA256(_ firstURL: URL, _ secondURL: URL) throws -> Bool {
-        try Array(Self.sha256Digest(for: firstURL)) == Array(Self.sha256Digest(for: secondURL))
+    private func filesHaveMatchingSHA256(_ sourceURL: URL, _ destinationURL: URL) throws -> Bool {
+        try Array(Self.sha256Digest(for: sourceURL, isSource: true)) == Array(Self.sha256Digest(for: destinationURL))
     }
 
-    private static func sha256Digest(for url: URL) throws -> SHA256.Digest {
-        let input = try FileHandle(forReadingFrom: url)
+    private static func sha256Digest(for url: URL, isSource: Bool = false) throws -> SHA256.Digest {
+        let input = try isSource ? openRegularFileForReading(url) : FileHandle(forReadingFrom: url)
         defer { try? input.close() }
+        if !isSource {
+            // Best effort: read the copy back from the device rather than the page cache.
+            _ = fcntl(input.fileDescriptor, F_NOCACHE, 1)
+        }
         var hasher = SHA256()
         while true {
             if Task.isCancelled { throw CancellationError() }
-            let data = input.readData(ofLength: Self.copyBufferSize)
+            let data = try input.read(upToCount: Self.copyBufferSize) ?? Data()
             guard !data.isEmpty else { break }
             hasher.update(data: data)
         }
         return hasher.finalize()
     }
 
+    /// Opens a source without following a final symbolic link and refuses anything
+    /// that is not a regular file. O_NONBLOCK keeps a named pipe from blocking open.
+    static func openRegularFileForReading(_ url: URL) throws -> FileHandle {
+        let descriptor = open(url.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
+        guard descriptor >= 0 else {
+            let code = errno
+            if code == ELOOP { throw CopyError.sourceNotRegularFile }
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(code))
+        }
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG else {
+            close(descriptor)
+            throw CopyError.sourceNotRegularFile
+        }
+        return FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    }
+
+    /// Creates the destination only if no entry of any kind has that name.
+    /// Give a finished temporary file its final name. link(2) fails with EEXIST instead of
+    /// replacing whatever appeared at the final name meanwhile.
+    static func publishWithoutOverwriting(_ temporaryURL: URL, as finalURL: URL) throws {
+        guard link(temporaryURL.path, finalURL.path) == 0 else {
+            let code = errno
+            if code == EEXIST { throw CopyError.destinationConflict }
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(code))
+        }
+        unlink(temporaryURL.path)
+    }
+
+    static func createExclusiveFileForWriting(_ url: URL) throws -> FileHandle {
+        let descriptor = open(url.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0o644)
+        guard descriptor >= 0 else {
+            let code = errno
+            if code == EEXIST { throw CopyError.destinationConflict }
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(code))
+        }
+        return FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    }
+
+    static func entryExists(atPath path: String) -> Bool {
+        var info = stat()
+        return lstat(path, &info) == 0
+    }
+
+    static func isPath(_ path: String, within root: String) -> Bool {
+        path == root || path.hasPrefix(root.hasSuffix("/") ? root : root + "/")
+    }
+
+    /// Symbolic links already present below the destination must not redirect a
+    /// copy outside the folder the user chose (or back onto a source card).
+    static func requireContainedDestination(directory: URL, destinationRoot: URL) throws {
+        let resolvedDirectory = directory.resolvingSymlinksInPath().standardizedFileURL.path
+        let resolvedRoot = destinationRoot.resolvingSymlinksInPath().standardizedFileURL.path
+        guard isPath(resolvedDirectory, within: resolvedRoot) else {
+            throw CopyError.destinationOutsideChosenFolder
+        }
+    }
+
+    /// True when copying would write onto the source itself.
+    static func isDestination(_ destinationRoot: URL, insideSource sourceRoot: URL) -> Bool {
+        isPath(
+            destinationRoot.resolvingSymlinksInPath().standardizedFileURL.path,
+            within: sourceRoot.resolvingSymlinksInPath().standardizedFileURL.path
+        )
+    }
+
     private func concatenateVideoItem(
         _ item: CopyPlanItem,
         destinationURL: URL,
+        destinationRoot: URL,
         progress: (Int64) async -> Void
     ) async throws -> Bool {
         let fileManager = FileManager.default
         let destinationDirectory = destinationURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
+        try Self.requireContainedDestination(directory: destinationDirectory, destinationRoot: destinationRoot)
 
-        if fileManager.fileExists(atPath: destinationURL.path) {
+        if Self.entryExists(atPath: destinationURL.path) {
             return false
         }
-        var didFinishExport = false
-        defer {
-            if !didFinishExport {
-                try? fileManager.removeItem(at: destinationURL)
-            }
-        }
+        // Export to a hidden temporary name and publish it only when complete, so an
+        // interrupted export can never sit under the final name looking like a finished file.
+        let partialURL = destinationDirectory.appendingPathComponent(".partial-\(UUID().uuidString).mp4")
+        defer { try? fileManager.removeItem(at: partialURL) }
 
         let composition = AVMutableComposition()
         guard let videoTrack = composition.addMutableTrack(
@@ -445,7 +528,7 @@ struct CopyExecutor: Sendable {
         ) else {
             throw CopyError.videoConcatenationFailed("Could not create export session")
         }
-        exportSession.outputURL = destinationURL
+        exportSession.outputURL = partialURL
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = false
 
@@ -458,9 +541,9 @@ struct CopyExecutor: Sendable {
         switch exportSession.status {
         case .completed:
             if let modificationDate = reliableRecordingDate(for: item.clip) {
-                try fileManager.setAttributes([.modificationDate: modificationDate], ofItemAtPath: destinationURL.path)
+                try fileManager.setAttributes([.modificationDate: modificationDate], ofItemAtPath: partialURL.path)
             }
-            didFinishExport = true
+            try Self.publishWithoutOverwriting(partialURL, as: destinationURL)
             await progress(item.totalSize)
             return true
         case .cancelled:
@@ -524,6 +607,8 @@ enum CopyError: LocalizedError {
     case sizeVerificationFailed
     case checksumVerificationFailed
     case destinationConflict
+    case sourceNotRegularFile
+    case destinationOutsideChosenFolder
     case videoConcatenationFailed(String)
 
     var errorDescription: String? {
@@ -534,6 +619,10 @@ enum CopyError: LocalizedError {
             return "Copied file contents did not match source"
         case .destinationConflict:
             return "A different file with this name already exists in the destination"
+        case .sourceNotRegularFile:
+            return "The source is no longer a regular file and was not copied"
+        case .destinationOutsideChosenFolder:
+            return "The destination folder leads outside the chosen download folder; nothing was written"
         case .videoConcatenationFailed(let message):
             return "Could not combine video clips: \(message)"
         }

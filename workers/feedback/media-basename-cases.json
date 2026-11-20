@@ -9,7 +9,11 @@
     "café.MOV",
     "🎥2030.mp4",
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.mp4",
-    "照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照aa.mp4"
+    "照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照照aa.mp4",
+    "20300101_120000_NF.mp4",
+    "REC_2030_0101_1200_N.MP4",
+    "v2.1-front.MP4",
+    "FILE2030.1N.mp4"
   ],
   "rejected": [
     "../clip.mp4",
@@ -32,6 +36,10 @@
     "gps2030.mp4",
     "wifi-password.mp4",
     "person\u0040example.com.mp4",
-    "47.61234_-122.12345.mp4"
+    "47.61234_-122.12345.mp4",
+    "40.71N_74.00W.mp4",
+    "N40.71_W74.00.MP4",
+    "clip 47.6 N 122.3 W.mov",
+    "12.5°N.jpg"
   ]
 }

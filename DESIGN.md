@@ -487,8 +487,9 @@ must pass strict integrity verification and the app's bundle identifier,
 version, and build commit must exactly match the signed manifest. Eject actions
 are limited to local removable volumes, never network shares or a manually
 chosen subdirectory. Feedback is size-limited while streaming, rate-limited by
-a Durable Object, opt-in for ordinary feedback, and excludes user-controlled
-filenames, paths, and volume names. Copying computes SHA-256 for each regular
+a Durable Object, opt-in for ordinary feedback, and excludes paths and volume
+names. Ordinary feedback excludes filenames; the separately reviewed, opt-in
+private evidence keeps bounded media basenames (see workers/feedback/README.md). Copying computes SHA-256 for each regular
 file after copy and before skipping an existing destination file; a same-size
 mismatch is left untouched and reported as a conflict.
 

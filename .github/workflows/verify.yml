@@ -54,7 +54,10 @@ jobs:
         run: node --check workers/feedback/worker.js
 
       - name: Test feedback worker sanitizer
-        run: node --test workers/feedback/worker.test.mjs
+        run: node --test workers/feedback/*.test.mjs
+
+      - name: Test updates worker
+        run: node --check workers/updates/worker.js && node --test workers/updates/*.test.mjs
 
       - name: Test scan storage evidence extraction
         run: python3 -m unittest discover -s scripts -p 'test_ingest_submitted_scans.py' && python3 -m unittest discover -s scripts -p 'test_scan_storage_rates.py'

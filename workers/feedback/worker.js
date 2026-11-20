@@ -54,6 +54,12 @@ export default {
       return json({ error: "method_not_allowed" }, 405, request, env);
     }
 
+    // The Mac app sends no Origin. A browser always does, so refuse browser-originated
+    // posts (cross-site spam from visitors' browsers) unless the origin is allowlisted.
+    if (!originPermitted(request, env)) {
+      return json({ error: "forbidden_origin" }, 403, request, env);
+    }
+
     const rateLimit = await checkRateLimit(request, env);
     if (!rateLimit.ok) {
       return json(
@@ -164,7 +170,25 @@ async function readJSONBody(request) {
 
 async function hashedClientID(request, env) {
   const rawClient = request.headers.get("CF-Connecting-IP") || "unknown";
-  return clientFingerprint(rawClient, String(env.RATE_LIMIT_SALT || ""));
+  return clientFingerprint(rateLimitClientKey(rawClient), String(env.RATE_LIMIT_SALT || ""));
+}
+
+// One subscriber usually controls a whole IPv6 /64, so per-address counters let a
+// single client rotate through addresses without limit. Count IPv6 by /64 prefix.
+function rateLimitClientKey(rawClient) {
+  const address = String(rawClient).trim().toLowerCase();
+  if (!address.includes(":") || !/^[0-9a-f:.]+$/.test(address)) return address;
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(address);
+  if (mapped) return mapped[1];
+  const halves = address.split("::");
+  if (halves.length > 2) return address;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  if (halves.length === 1 && head.length !== 8) return address;
+  const missing = 8 - head.length - tail.length;
+  if (missing < 0 || [...head, ...tail].some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return address;
+  const groups = [...head, ...Array(missing).fill("0"), ...tail];
+  return `${groups.slice(0, 4).map((group) => group.replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
 async function clientFingerprint(rawClient, salt) {
@@ -245,17 +269,52 @@ function validateFeedback(body) {
 }
 
 function sanitizeFeedback(body) {
-  const scan = body.scan ? sanitizeScan(body.scan) : null;
+  const scan = body.scan && typeof body.scan === "object" && !Array.isArray(body.scan) ? sanitizeScan(body.scan) : null;
 
   return {
     kind: body.kind,
     message: body.message.trim(),
     contact: String(body.contact || "").trim(),
-    appVersion: String(body.appVersion || ""),
-    createdAt: String(body.createdAt || ""),
-    training: body.training ? sanitizeTraining(body.training) : null,
+    appVersion: appVersionValue(body.appVersion),
+    createdAt: timestampValue(body.createdAt),
+    training: body.training && typeof body.training === "object" && !Array.isArray(body.training)
+      ? sanitizeTraining(body.training) : null,
     scan,
   };
+}
+
+// Client-supplied but not user-typed: keep only the shapes the app produces.
+function appVersionValue(value) {
+  return typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9 ._+()-]{0,63}$/.test(value) ? value : "";
+}
+
+function timestampValue(value) {
+  return typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : "";
+}
+
+// A file extension is the tail of a user-controlled name: keep short ASCII tokens only.
+function extensionKey(value) {
+  const key = stringValue(value).trim().toLowerCase();
+  return /^[a-z0-9]{1,10}$/.test(key) ? key : "";
+}
+
+function extensionCountMap(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result = {};
+  for (const [key, count] of Object.entries(value)) {
+    const safeKey = extensionKey(key);
+    if (safeKey) result[safeKey] = (result[safeKey] || 0) + numberValue(count);
+  }
+  return result;
+}
+
+// Camera make/model labels: catalog-style names, never paths, addresses or coordinates.
+function cameraLabel(value) {
+  const label = stringValue(value).trim();
+  const word = "[\\p{L}\\p{N}][\\p{L}\\p{N} ._+()\\[\\]&'-]*";
+  return label.length <= 80 && new RegExp(`^${word}(?: / ${word})*$`, "u").test(label) &&
+    !isSensitiveSettingPair(label, "") ? label : "";
 }
 
 function sanitizeTraining(training) {
@@ -272,7 +331,7 @@ function safeMediaBasename(name) {
   return typeof name === "string" &&
     new TextEncoder().encode(name).length <= 180 && !name.startsWith(".") &&
     !name.includes("..") && !/[/\\\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}]/u.test(name) &&
-    !/(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}/i.test(name) &&
+    !/(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}|(?<![\d.])\d{1,3}\.\d+\s*°?\s*[NSEW](?![a-z])|(?<![a-z])[NSEW]\s*\d{1,3}\.\d+/i.test(name) &&
     /.+\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$/i.test(name);
 }
 
@@ -389,9 +448,9 @@ function sanitizeScan(scan) {
     displayModeCounts: countMap(scan.displayModeCounts),
     outputCategoryCounts: countMap(scan.outputCategoryCounts),
     channelCounts: countMap(scan.channelCounts),
-    extensionCounts: countMap(scan.extensionCounts),
-    mediaExtensionCounts: countMap(scan.mediaExtensionCounts),
-    unrecognizedExtensionCounts: countMap(scan.unrecognizedExtensionCounts),
+    extensionCounts: extensionCountMap(scan.extensionCounts),
+    mediaExtensionCounts: extensionCountMap(scan.mediaExtensionCounts),
+    unrecognizedExtensionCounts: extensionCountMap(scan.unrecognizedExtensionCounts),
     timestampSourceCounts: countMap(scan.timestampSourceCounts),
     suspiciousTimestampItems: numberValue(scan.suspiciousTimestampItems),
     inferredParkingPatternCounts: countMap(scan.inferredParkingPatternCounts),
@@ -414,10 +473,10 @@ function sanitizeScan(scan) {
       ? scan.settingSnapshots.slice(0, MAX_SETTING_SNAPSHOTS).map(sanitizeSettingSnapshot).filter(Boolean)
       : [],
     candidates: Array.isArray(scan.candidates)
-      ? scan.candidates.slice(0, 12).map(sanitizeCandidate)
+      ? scan.candidates.slice(0, 12).map(sanitizeCandidate).filter(Boolean)
       : [],
     scanDiagnostics: Array.isArray(scan.scanDiagnostics)
-      ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic)
+      ? scan.scanDiagnostics.slice(0, 40).map(sanitizeScanDiagnostic).filter(Boolean)
       : [],
   };
   if (scan.discovery !== undefined && validDiscovery(scan.discovery)) result.discovery = projectDiscovery(scan.discovery);
@@ -465,7 +524,7 @@ function sanitizeDirectorySummary(summary) {
     directHiddenFileCount: numberValue(summary.directHiddenFileCount),
     directPlaceholderFileCount: numberValue(summary.directPlaceholderFileCount),
     directTotalFileSizeBytes: numberValue(summary.directTotalFileSizeBytes),
-    extensionCounts: countMap(summary.extensionCounts),
+    extensionCounts: extensionCountMap(summary.extensionCounts),
     sampleFilenames: safePathList(summary.sampleFilenames, 8),
   };
 }
@@ -475,8 +534,8 @@ function sanitizeIdentifiedCamera(camera) {
     return null;
   }
 
-  const manufacturer = stringValue(camera.manufacturer).trim();
-  const model = stringValue(camera.model).trim();
+  const manufacturer = cameraLabel(camera.manufacturer);
+  const model = cameraLabel(camera.model);
   if (!manufacturer || !model) {
     return null;
   }
@@ -507,7 +566,7 @@ function sanitizeFolderSummary(summary) {
     totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
     minFileSizeBytes: nullableNumber(summary.minFileSizeBytes),
     maxFileSizeBytes: nullableNumber(summary.maxFileSizeBytes),
-    extensionCounts: countMap(summary.extensionCounts),
+    extensionCounts: extensionCountMap(summary.extensionCounts),
   };
 }
 
@@ -524,7 +583,7 @@ function sanitizeFilenamePatternSummary(summary) {
 
   return {
     folder,
-    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    extensionLowercased: extensionKey(summary.extensionLowercased),
     redactedPattern,
     fileCount: numberValue(summary.fileCount),
     totalFileSizeBytes: numberValue(summary.totalFileSizeBytes),
@@ -546,7 +605,7 @@ function sanitizeFilenameSequenceSummary(summary) {
   return {
     folder,
     prefix,
-    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    extensionLowercased: extensionKey(summary.extensionLowercased),
     fileCount: numberValue(summary.fileCount),
     firstSequence: nullableNumber(summary.firstSequence),
     lastSequence: nullableNumber(summary.lastSequence),
@@ -562,7 +621,7 @@ function sanitizeClipGroupSummary(summary) {
 
   return {
     folder: ".",
-    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    extensionLowercased: extensionKey(summary.extensionLowercased),
     mode: optionalString(summary.mode),
     displayMode: optionalString(summary.displayMode),
     outputCategory: optionalString(summary.outputCategory),
@@ -587,7 +646,7 @@ function sanitizeVideoSpecSample(sample) {
 
   return {
     relativePath: "",
-    extensionLowercased: stringValue(sample.extensionLowercased).toLowerCase(),
+    extensionLowercased: extensionKey(sample.extensionLowercased),
     fileSizeBytes: nullableNumber(sample.fileSizeBytes),
     mode: optionalString(sample.mode),
     displayMode: optionalString(sample.displayMode),
@@ -636,7 +695,7 @@ function sanitizeVideoSpecSummary(summary) {
 
   return {
     folder: cameraFolder(summary.folder) || ".",
-    extensionLowercased: stringValue(summary.extensionLowercased).toLowerCase(),
+    extensionLowercased: extensionKey(summary.extensionLowercased),
     mode: optionalString(summary.mode),
     displayMode: optionalString(summary.displayMode),
     outputCategory: optionalString(summary.outputCategory),
@@ -698,16 +757,18 @@ function sanitizeSettingSnapshot(snapshot) {
 }
 
 function sanitizeCandidate(candidate) {
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
   return {
     profileID: aggregateKey(candidate.profileID),
     profileName: aggregateKey(candidate.profileName),
     score: numberValue(candidate.score),
-    confidence: stringValue(candidate.confidence),
+    confidence: aggregateKey(candidate.confidence),
     evidence: [],
   };
 }
 
 function sanitizeScanDiagnostic(diagnostic) {
+  if (!diagnostic || typeof diagnostic !== "object" || Array.isArray(diagnostic)) return null;
   return {
     stage: aggregateKey(diagnostic.stage),
     profileID: optionalString(diagnostic.profileID),
@@ -917,6 +978,15 @@ function responseHeaders(request, env) {
   };
 }
 
+function configuredOrigins(env) {
+  return String(env.ALLOWED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean);
+}
+
+function originPermitted(request, env) {
+  const origin = request?.headers?.get("Origin");
+  return origin === null || origin === undefined || configuredOrigins(env).includes(origin);
+}
+
 function allowedOrigin(request, env) {
   const origin = request?.headers?.get("Origin") || "";
   const configured = String(env.ALLOWED_ORIGINS || "")
@@ -932,6 +1002,7 @@ function allowedOrigin(request, env) {
 }
 
 export {
+  originPermitted,
   validateFeedback,
   sanitizeFeedback,
   sanitizeScan,
@@ -940,4 +1011,5 @@ export {
   isSensitiveSettingPair,
   isSafeSettingPair,
   clientFingerprint,
+  rateLimitClientKey,
 };

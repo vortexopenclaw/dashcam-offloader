@@ -68,7 +68,7 @@ enum CardLearningStructure {
         name.utf8.count <= 180 && !name.hasPrefix(".") &&
         !name.contains("/") && !name.contains("\\") && !name.contains("..") &&
         name.range(of: #".+\.(?:mp4|mov|m4v|avi|ts|mts|m2ts|jpg|jpeg|png)$"#, options: [.regularExpression, .caseInsensitive]) != nil &&
-        name.range(of: #"(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}"#, options: [.regularExpression, .caseInsensitive]) == nil &&
+        name.range(of: #"(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}|(?<![\d.])\d{1,3}\.\d+\s*°?\s*[NSEW](?![a-z])|(?<![a-z])[NSEW]\s*\d{1,3}\.\d+"#, options: [.regularExpression, .caseInsensitive]) == nil &&
         !name.unicodeScalars.contains {
             switch $0.properties.generalCategory {
             case .control, .format, .lineSeparator, .paragraphSeparator, .surrogate: return true

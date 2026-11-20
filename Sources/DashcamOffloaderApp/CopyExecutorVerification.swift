@@ -55,6 +55,10 @@ enum CopyExecutorVerification {
             return false
         }
 
+        guard await HostileCardVerification.run() else {
+            return false
+        }
+
         return await CopyThroughputVerification.run()
     }
 

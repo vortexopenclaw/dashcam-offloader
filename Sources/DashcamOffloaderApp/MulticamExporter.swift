@@ -211,11 +211,11 @@ enum MulticamExporter {
            let description = try await audio.load(.formatDescriptions).first,
            let format = CMAudioFormatDescriptionGetStreamBasicDescription(description) {
             audioChannels = Int(format.pointee.mChannelsPerFrame)
-            audioRate = Int(format.pointee.mSampleRate)
+            audioRate = clampedInt(Double(format.pointee.mSampleRate))
         }
         try Task.checkCancellation()
-        return Video(input: input, duration: duration, width: Int(abs(oriented.width)),
-            height: Int(abs(oriented.height)), frameDuration: frameDuration,
+        return Video(input: input, duration: duration, width: clampedInt(Double(abs(oriented.width))),
+            height: clampedInt(Double(abs(oriented.height))), frameDuration: frameDuration,
             audioChannels: audioChannels, audioRate: audioRate)
     }
 
@@ -228,7 +228,22 @@ enum MulticamExporter {
     }
 
     static func time(frames: Int64, frameDuration: CMTime) -> String {
-        "\(frames * frameDuration.value)/\(frameDuration.timescale)s"
+        let (value, overflow) = frames.multipliedReportingOverflow(by: frameDuration.value)
+        return "\(overflow ? Int64.max : value)/\(frameDuration.timescale)s"
+    }
+
+    /// Media durations, frame durations and capture dates come from untrusted files.
+    /// Non-finite or absurd values clamp instead of trapping in Int64(_:). 10^12 frames is
+    /// decades of video at any real frame rate, and leaves room to add offsets safely.
+    static func frameCount(_ seconds: Double, _ frameDuration: CMTime) -> Int64 {
+        let frames = (seconds / frameDuration.seconds).rounded()
+        guard frames.isFinite else { return 0 }
+        return Int64(max(-1e12, min(1e12, frames)))
+    }
+
+    static func clampedInt(_ value: Double) -> Int {
+        guard value.isFinite else { return 0 }
+        return Int(max(0, min(1e9, value)))
     }
 
     struct Segment {
@@ -241,7 +256,7 @@ enum MulticamExporter {
     // Latest-starting clip wins an overlap, but the underlying clip resumes afterwards.
     static func segments(_ videos: [Video], starts: [String: Int64], fd: CMTime) throws -> [Segment] {
         let offsets = videos.map { starts[$0.input.identity.stamp]! }
-        let ends = zip(videos, offsets).map { $0.1 + Int64(($0.0.duration / fd.seconds).rounded()) }
+        let ends = zip(videos, offsets).map { $0.1 + frameCount($0.0.duration, fd) }
         guard Set(offsets).count == offsets.count else {
             throw Failure.message("Camera timestamps are too close to align at this frame rate.")
         }
@@ -293,8 +308,8 @@ enum MulticamExporter {
             var starts: [String: Int64] = [:]
             var total: Int64 = 0
             for group in groups {
-                let start = Int64((group.value[0].input.identity.date.timeIntervalSince(base) / fd.seconds).rounded())
-                let durations = group.value.map { Int64(($0.duration / fd.seconds).rounded()) }
+                let start = frameCount(group.value[0].input.identity.date.timeIntervalSince(base), fd)
+                let durations = group.value.map { frameCount($0.duration, fd) }
                 guard let shortest = durations.min(), let longest = durations.max(), shortest > 0 else {
                     throw Failure.message("Invalid camera duration at \(group.key). Check the recording files.")
                 }
@@ -317,7 +332,7 @@ enum MulticamExporter {
                         sectionStarts.insert(video.input.url)
                     }
                     previousNote = note
-                    previousEnd = start + Int64((video.duration / fd.seconds).rounded())
+                    previousEnd = start + frameCount(video.duration, fd)
                 }
             }
             let sectionMarkers = marker("Folder: \(folderLabel)", start: 0) + groups.map { group in
@@ -352,7 +367,7 @@ enum MulticamExporter {
                         assetIDs[video.input.url] = (sourceFormat, asset)
                         resources.append("<format id=\"\(sourceFormat)\" frameDuration=\"\(time(frames: 1, frameDuration: fd))\" width=\"\(video.width)\" height=\"\(video.height)\" colorSpace=\"1-1-1 (Rec. 709)\"/>")
                         let audio = video.audioChannels > 0 ? " hasAudio=\"1\" audioSources=\"1\" audioChannels=\"\(video.audioChannels)\" audioRate=\"\(video.audioRate)\"" : ""
-                        resources.append("<asset id=\"\(asset)\" name=\"\(escape(video.input.url.deletingPathExtension().lastPathComponent))\" start=\"0s\" duration=\"\(time(frames: Int64((video.duration / fd.seconds).rounded()), frameDuration: fd))\" hasVideo=\"1\" format=\"\(sourceFormat)\"\(audio)><media-rep kind=\"original-media\" src=\"\(escape(video.input.url.absoluteString))\"/></asset>")
+                        resources.append("<asset id=\"\(asset)\" name=\"\(escape(video.input.url.deletingPathExtension().lastPathComponent))\" start=\"0s\" duration=\"\(time(frames: frameCount(video.duration, fd), frameDuration: fd))\" hasVideo=\"1\" format=\"\(sourceFormat)\"\(audio)><media-rep kind=\"original-media\" src=\"\(escape(video.input.url.absoluteString))\"/></asset>")
                     }
                     let note = video.input.identity.annotation
                     let annotation = segment.sourceStart == 0 && sectionStarts.contains(video.input.url) ? marker(note, start: 0) : ""

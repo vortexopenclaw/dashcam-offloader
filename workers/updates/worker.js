@@ -197,7 +197,12 @@ export default {
 
     const downloadPrefix = "/dashcam-offloader/download/";
     if (path.startsWith(downloadPrefix)) {
-      const assetName = decodeURIComponent(path.slice(downloadPrefix.length));
+      let assetName;
+      try {
+        assetName = decodeURIComponent(path.slice(downloadPrefix.length));
+      } catch {
+        return notFound();
+      }
       if (!assetName || assetName.includes("/") || assetName.includes("\\")) {
         return notFound();
       }
