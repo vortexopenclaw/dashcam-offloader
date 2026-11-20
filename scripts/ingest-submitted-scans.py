@@ -35,7 +35,7 @@ def safe_media(value):
             and not any(unicodedata.category(char) in {"Cc", "Cf", "Cs", "Zl", "Zp"} for char in value)
             and len(value.encode("utf-8")) <= 180 and SAFE_MEDIA.fullmatch(value)
             and "/" not in value and "\\" not in value and ".." not in value
-            and not re.search(r"(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}", value, re.I))
+            and not re.search(r"(?:wifi|password|credential|gps|serial)|[^\s@]+@[^\s@]+\.[^\s@]+|\d{1,3}\.\d{3,}|(?<![\d.])\d{1,3}\.\d+\s*°?\s*[NSEW](?![a-z])|(?<![a-z])[NSEW]\s*\d{1,3}\.\d+", value, re.I))
 
 
 def safe_folder(value):
