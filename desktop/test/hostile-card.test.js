@@ -160,7 +160,8 @@ test("hostile names cannot leave the destination", async (t) => {
   const plan = planCopy(source, destination, media);
   for (const item of plan) assert.equal(isPathWithin(item.destinationPath, destination), true);
   const result = await executeCopy(plan);
-  assert.equal(media.length, hostile.length); // the dot-prefixed traversal name is hidden and never planned
+  // front.mp4 from the fixture plus every hostile name except dot-prefixed ones, which are hidden and never planned.
+  assert.equal(media.length, 1 + hostile.filter((name) => !name.startsWith(".")).length);
   assert.equal(result.copied + result.conflicts.length, media.length);
   for (const name of await listTree(root)) {
     assert.equal(name.startsWith("card") || name.startsWith("destination") || name.startsWith("outside"), true, name);
