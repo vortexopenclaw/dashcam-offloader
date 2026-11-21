@@ -288,13 +288,20 @@ struct ClipItem: Identifiable, Hashable, Sendable {
     var extensionLowercased: String
     var excludedReason: String?
     var inferredParkingPattern: ParkingPattern?
+    /// Set only for photo-extension files checked by `ReservedMediaSlot`.
+    var reservedSlotCheck: ReservedSlotCheck? = nil
+
+    /// A validated empty preallocation slot: structural evidence, not media.
+    var isReservedSlot: Bool {
+        reservedSlotCheck == .reserved
+    }
 
     var isVideo: Bool {
         Self.videoExtensions.contains(extensionLowercased)
     }
 
     var isPhoto: Bool {
-        Self.photoExtensions.contains(extensionLowercased)
+        !isReservedSlot && Self.photoExtensions.contains(extensionLowercased)
     }
 
     var isGPS: Bool {
@@ -314,6 +321,7 @@ struct ClipItem: Identifiable, Hashable, Sendable {
     }
 
     var outputCategory: String {
+        if isReservedSlot { return ReservedMediaSlot.outputCategory }
         if isGPS { return "GPS Logs" }
         if isPhoto { return "Photos" }
 
@@ -433,6 +441,8 @@ struct ClipItem: Identifiable, Hashable, Sendable {
             return "JPEG"
         case "photo", "photos":
             return "Photo"
+        case "reserved_slot":
+            return "Empty Reserved Slot"
         case "driving_event":
             return "Driving Event"
         case "parking_continuous_low_bitrate":
