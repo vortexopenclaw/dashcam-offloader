@@ -166,6 +166,7 @@ struct CardScanner {
         result.discovery = GenericCardDiscovery.read(source: sourceURL)
         result.componentMetadata = DDPAIComponentMetadata.read(source: sourceURL)
         applyStructuredLogIdentity(&result, profiles: profiles)
+        refreshReservedSlotDiagnostic(&result)
         return result
     }
 
@@ -969,6 +970,7 @@ struct CardScanner {
             }
         }
 
+        refreshReservedSlotDiagnostic(&result)
         augmentWithGenericCatalogOSDIfNeeded(&result, sourceURL: scanSourceURL)
         return result
     }
@@ -995,6 +997,7 @@ struct CardScanner {
             result.clips = classified.clips
             result.diagnostics.append(contentsOf: classified.diagnostics)
             result.diagnostics.append(ScanDiagnosticEntry(stage: "z100_main_front_osd", profileID: profile.id, profileName: profile.displayName, outcome: "matched", detail: "Exact front stamp; observed/configured channel count is not identity evidence"))
+            refreshReservedSlotDiagnostic(&result)
             return true
         }
         result.diagnostics.append(ScanDiagnosticEntry(stage: "z100_main_front_osd", profileID: profile.id, profileName: profile.displayName, outcome: "no_match", detail: "No exact Z100 Master front stamp; shared layout cannot activate main-unit mapping"))
@@ -1450,25 +1453,38 @@ struct CardScanner {
             return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
         }
 
+        var checked = classified
+        ReservedMediaSlot.mark(&checked)
         guard profile.manufacturer.caseInsensitiveCompare("GoPro") == .orderedSame else {
-            return classified
+            return checked
         }
-        return classifyGoProRecordingTypes(in: classified)
+        return classifyGoProRecordingTypes(in: checked)
     }
 
     func classifyWithParkingPatterns(files: [URL], sourceURL: URL, profile: DashcamProfile) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
-        inferParkingPatterns(
+        let result = inferParkingPatterns(
             in: classify(files: files, sourceURL: sourceURL, profile: profile),
             profileID: profile.id,
             sourceURL: sourceURL
         )
+        return (result.clips, result.diagnostics + [ReservedMediaSlot.diagnostic(for: result.clips, profile: profile)].compactMap { $0 })
     }
 
     func classifyGenericallyWithParkingPatterns(files: [URL], sourceURL: URL) -> (clips: [ClipItem], diagnostics: [ScanDiagnosticEntry]) {
-        inferParkingPatterns(
+        let result = inferParkingPatterns(
             in: classifyGenerically(files: files, sourceURL: sourceURL),
             sourceURL: sourceURL
         )
+        return (result.clips, result.diagnostics + [ReservedMediaSlot.diagnostic(for: result.clips, profile: .genericNewDashcam)].compactMap { $0 })
+    }
+
+    /// Reclassification replaces the clip list, so its slot coverage replaces
+    /// the earlier pass's entry instead of reporting two coverages.
+    func refreshReservedSlotDiagnostic(_ result: inout ScanResult) {
+        result.diagnostics.removeAll { $0.stage == ReservedMediaSlot.diagnosticStage }
+        if let entry = ReservedMediaSlot.diagnostic(for: result.clips, profile: result.selectedProfile) {
+            result.diagnostics.append(entry)
+        }
     }
 
     func classifyGenerically(files: [URL], sourceURL: URL) -> [ClipItem] {
@@ -1519,12 +1535,14 @@ struct CardScanner {
             return lhs.relativePath.localizedStandardCompare(rhs.relativePath) == .orderedAscending
         }
 
-        guard classified.contains(where: { clip in
+        var checked = classified
+        ReservedMediaSlot.mark(&checked)
+        guard checked.contains(where: { clip in
             clip.isVideo && parseGoProVideoFilename(clip.filename) != nil
         }) else {
-            return classified
+            return checked
         }
-        return classifyGoProRecordingTypes(in: classified)
+        return classifyGoProRecordingTypes(in: checked)
     }
 
     private func detectProfiles(sourceURL: URL, allFiles: [URL], profiles: [DashcamProfile]) -> [DetectionCandidate] {

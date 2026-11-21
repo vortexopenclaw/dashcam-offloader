@@ -1,5 +1,40 @@
 # Design
 
+## 2026-11-20 Validated empty reserved photo slots (#35)
+
+Objective: an authorized Z100 main-card audit found preallocated slots holding
+exactly 128 bytes of 0x0A followed only by zeros. They are not images, but the
+scanner listed them as Photos and copy candidates. Keep them in the structural
+inventory and learning structure, but exclude them from Photos and the copy
+plan with the plain label "Empty reserved slot (no image)".
+
+Design: `ReservedMediaSlot` checks every non-excluded photo-extension
+candidate. It opens without following a final symbolic link, requires a
+regular file on the open descriptor, reads the 128-byte header first (so a
+real photo costs one small read), then reads the complete tail up to one byte
+past the recorded size. Device, inode, size and modification time must be
+identical on the descriptor and path before and after the read, and EOF must
+land exactly at the recorded size. Folder names such as `tmp` and fixed sizes
+are never evidence; a populated slot fails the content check and stays media.
+Any open/type/read/stability failure, a file over the 32 MiB per-file bound,
+or a file beyond the per-pass budget (512 MiB read, 20,000 files) stays a
+normal photo. The `reserved_slot_verification` diagnostic states coverage:
+verified slots, verified other content, and unverified counts by reason.
+
+Scope: the rule is generic, not limited to DDPAI profiles. The exact signature
+cannot be a decodable JPEG, PNG, HEIC, BMP or TIFF-based RAW file because each
+needs a non-0x0A magic number, so a match on any card carries no image. It
+applies only to photo extensions; video candidates are never read or hidden
+by it. Learning snapshots count slots under `Reserved Slots` and keep them in
+media-file samples; extension, folder and directory inventories are unchanged.
+
+Success checks: synthetic-only `--verify` coverage for a positive slot, a
+genuine JPEG of identical size in a `tmp` folder, a changed final byte, a short
+header, header-only, symbolic link, directory, missing file, video untouched,
+DDPAI profile parity, UI/copy plan/learning counts, byte and file budgets and
+the size bound. No card data is used. Rollback: revert the marking calls; files
+return to ordinary photos and the source card is never written either way.
+
 ## 2026-10-23 Retired Electron distribution withdrawal
 
 User-authorized reversible withdrawal only: return no-store HTTP 410 for the

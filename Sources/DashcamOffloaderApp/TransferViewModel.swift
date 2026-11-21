@@ -1516,7 +1516,10 @@ final class TransferViewModel: ObservableObject {
             clip.displayMode
         }
             .mapValues(\.count)
-        let outputCategoryCounts = Dictionary(grouping: eligibleClips) { clip in
+        // Validated reserved slots are excluded from download but remain
+        // card structure, so learning counts them under their own category.
+        let reservedSlotClips = clips.filter(\.isReservedSlot)
+        let outputCategoryCounts = Dictionary(grouping: eligibleClips + reservedSlotClips) { clip in
             clip.outputCategory
         }
             .mapValues(\.count)
@@ -1550,7 +1553,10 @@ final class TransferViewModel: ObservableObject {
         // Assign payload-local keys from ordered raw relative identities, before aliasing.
         let orderedIdentities = Set(safeEligibleClips.map { sanitizedRelativePath(for: $0, sourceRoot: sourceRoot) }).sorted()
         let identifiers = Dictionary(uniqueKeysWithValues: orderedIdentities.enumerated().map { ($0.element, "source-\($0.offset + 1)") })
-        let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips, sourceRoot: sourceRoot,
+        let safeReservedSlotClips = reservedSlotClips.filter { clip in
+            safeClipSourcePaths.contains(clip.sourceURL.standardizedFileURL.path)
+        }
+        let mediaFileSamples = CardLearningStructure.mediaSamples(clips: safeEligibleClips + safeReservedSlotClips, sourceRoot: sourceRoot,
             paths: &learningPaths, sourceIdentifiers: identifiers)
         observedMultitrackRevision = nil
         let videoSpecSamples = makeVideoSpecSamples(

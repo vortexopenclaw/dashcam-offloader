@@ -576,6 +576,7 @@ enum VerificationTest {
             guard ObservedChannelVerification.run(profiles: profiles),
                   DDPAIZ100Verification.run(profiles: profiles),
                   DDPAIMini3XVerification.run(profiles: profiles),
+                  ReservedSlotVerification.run(profiles: profiles),
                   SeventyMaiTimestampVerification.run(),
                   SizeSumVerification.run(),
                   Z100StampVerification.run(profiles: profiles),
