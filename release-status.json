@@ -1,17 +1,18 @@
 {
-  "sha": "4fd9c555250f85106d2132e53b61c090d44090be",
-  "runId": "44880919239",
+  "sha": "a981739fbc2f93abcd88cd8c8e2333ccd6498ce8",
+  "runId": "45199702027",
   "attempt": "1",
   "jobStatus": "success",
   "steps": {
     "build": "success",
     "repoVerify": "success",
     "appVerify": "success",
+    "sentryDsyms": "success",
     "zip": "success",
     "manifest": "success",
     "cloudflareStage": "success",
     "githubRelease": "success",
     "cloudflare": "success"
   },
-  "recordedAt": "2026-11-21T07:53:06Z"
+  "recordedAt": "2026-11-23T15:16:25Z"
 }
