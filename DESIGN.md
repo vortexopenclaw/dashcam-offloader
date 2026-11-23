@@ -1,5 +1,42 @@
 # Design
 
+## 2026-11-22 Sentry crash and error reporting
+
+Objective: see crashes, hangs and failed scans/copies from the native macOS app
+without collecting card contents or personal data.
+
+Design: `CrashReporting.start()` runs first in `DashcamOffloaderApp.init` and
+starts sentry-cocoa (SwiftPM, static `Sentry` product, pinned) with the crash
+handler, uncaught NSException reporting, 2 s app-hang tracking, structured
+logs and 20% tracing. Profiling, screenshots, view hierarchy, file-I/O and
+Core Data spans, failed-request capture and MetricKit are off;
+`sendDefaultPii` is false and the project stores no IP addresses. Reporting is
+on by default for GUI launches and off for CI, `DASHCAM_SENTRY_DISABLED=1` and
+the command-line diagnostic modes. Existing user-visible error paths in
+`TransferViewModel` (update, profile load, scan, eject, multicam, feedback)
+call `CrashReporting.report`, which captures the error and an error log;
+copy runs with failed items emit a warning log with only a count. Sentry calls
+cannot throw, and an unset DSN leaves the SDK off.
+
+Privacy boundary: `SentryScrubber` rewrites every event (message, exception
+values, mechanism data, tags, extra, contexts, breadcrumbs, frame packages and
+file names, debug-image paths, user reduced to the random installation id),
+log body/attributes, breadcrumb and span description. It removes home paths,
+local user and host names, NAS/share URLs and `.local`-style hosts, IP
+addresses, emails, GPS (decimal pairs, DMS, NMEA, key/value), serial-like
+tokens, and hashes media filenames to `<file-xxxxxxxx>.<ext>`. Card volume
+names are kept. `SentryScrubberVerification` (part of `--verify`) asserts this
+against synthetic private-looking input.
+
+Symbols: the app build writes a dSYM with debug paths mapped to `/src/...`, so
+symbolicated frames show function and `file:line` without the builder's home
+directory. `scripts/upload-sentry-dsyms.sh` uploads it with an organization
+token read from 1Password at upload time.
+
+Verification: hidden `--sentry-test error|crash|exception|flush` triggers on a
+packaged build produced a scrubbed handled error and a symbolicated
+`SentryTestFailures.triggerTestCrash` crash in Sentry.
+
 ## 2026-11-20 Validated empty reserved photo slots (#35)
 
 Objective: an authorized Z100 main-card audit found preallocated slots holding

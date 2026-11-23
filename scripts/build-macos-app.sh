@@ -20,12 +20,21 @@ fi
 if [[ -n "${DASHCAM_SWIFT_SCRATCH_PATH:-}" ]]; then
   SWIFT_BUILD_OPTIONS+=(--scratch-path "$DASHCAM_SWIFT_SCRATCH_PATH")
 fi
+# Debug info refers to /src/<checkout>/... instead of the builder's home directory,
+# so symbolicated Sentry frames never carry a personal path. The build engine uses
+# the checkout's parent as the DWARF compilation directory, so map that parent.
+SWIFT_BUILD_OPTIONS+=(-Xswiftc -file-prefix-map -Xswiftc "$(dirname "$ROOT_DIR")=/src")
+DSYM_PATH="$ROOT_DIR/build/$PRODUCT_NAME.dSYM"
 
 cd "$ROOT_DIR"
 
 swift build "${SWIFT_BUILD_OPTIONS[@]}" -c "$CONFIGURATION" --product "$PRODUCT_NAME"
 
 BIN_PATH="$(swift build "${SWIFT_BUILD_OPTIONS[@]}" -c "$CONFIGURATION" --show-bin-path)/$PRODUCT_NAME"
+
+# Debug symbols for crash symbolication (uploaded by scripts/upload-sentry-dsyms.sh).
+rm -rf "$DSYM_PATH"
+xcrun dsymutil "$BIN_PATH" -o "$DSYM_PATH"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
@@ -72,5 +81,8 @@ if [[ -n "$SIGNING_IDENTITY" ]]; then
 else
   # The signed update manifest authenticates origin; ad-hoc signing checks bundle integrity.
   codesign --force --deep --sign - "$APP_DIR"
+fi
+if [[ "${DASHCAM_UPLOAD_DSYMS:-0}" == "1" ]]; then
+  bash "$ROOT_DIR/scripts/upload-sentry-dsyms.sh" "$DSYM_PATH" >&2
 fi
 echo "$APP_DIR"
