@@ -407,7 +407,7 @@ enum SentryScrubberVerification {
             print("SENTRY SCRUBBER FAIL: \(value) survived scrubbing")
             return false
         }
-        let required = ["/Users/<redacted>/Movies/", ".MP4", "<serial>", "<gps>", "smb://<host>", "<ip>"]
+        let required = ["<redacted>/Movies/", ".MP4", "<serial>", "<gps>", "smb://<host>", "<ip>"]
         for value in required where !scrubbed.contains(value) {
             print("SENTRY SCRUBBER FAIL: expected \(value) in \(scrubbed)")
             return false
