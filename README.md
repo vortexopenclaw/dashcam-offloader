@@ -284,7 +284,10 @@ serials, GPS data, NAS/share hosts, IPs and emails are replaced.
   with source paths mapped to `/src/...`. Upload with
   `bash scripts/upload-sentry-dsyms.sh` or build with `DASHCAM_UPLOAD_DSYMS=1`.
   The organization token comes from `SENTRY_AUTH_TOKEN` or is read from
-  1Password at upload time; it is never stored in the repository.
+  1Password at upload time; it is never stored in the repository. The release
+  workflow uploads the dSYM after building the app using the
+  `SENTRY_AUTH_TOKEN` repository secret; an upload failure is reported as a
+  workflow warning and does not block the release.
 
 ## Feedback And Card Learning Endpoint
 
