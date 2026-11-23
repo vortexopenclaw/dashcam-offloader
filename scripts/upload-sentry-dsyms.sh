@@ -4,7 +4,8 @@
 # Usage: scripts/upload-sentry-dsyms.sh [path/to/DashcamOffloader.dSYM]
 #        DASHCAM_UPLOAD_DSYMS=1 scripts/build-macos-app.sh   (build, then upload)
 #
-# Auth: SENTRY_AUTH_TOKEN from the environment, otherwise the Sentry organization
+# Auth: SENTRY_AUTH_TOKEN from the environment when present (CI uses the repository
+# secret), otherwise the Sentry organization
 # token is read from 1Password at upload time (never written to disk or the repo):
 #   op://${SENTRY_OP_VAULT:-Openclaw}/${SENTRY_OP_ITEM:-Sentry}/Organization Token
 # 1Password service-account auth is taken from OP_SERVICE_ACCOUNT_TOKEN, or from
