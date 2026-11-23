@@ -435,6 +435,7 @@ final class TransferViewModel: ObservableObject {
                 }
             } catch {
                 await MainActor.run {
+                    CrashReporting.report(error, operation: "update-check")
                     if userInitiated {
                         self?.updateStatusMessage = "Update check failed: \(error.localizedDescription)"
                         self?.presentUpdateCheckFailure(error)
@@ -532,6 +533,7 @@ final class TransferViewModel: ObservableObject {
             } catch {
                 await MainActor.run {
                     self?.isCheckingForUpdates = false
+                    CrashReporting.report(error, operation: "update-install")
                     self?.updateStatusMessage = "Update failed: \(error.localizedDescription)"
                 }
             }
@@ -621,6 +623,7 @@ final class TransferViewModel: ObservableObject {
             profiles = try ProfileStore(profilesDirectory: profilesDirectory).loadProfiles()
             statusMessage = "Loaded \(profiles.count) profiles"
         } catch {
+            CrashReporting.report(error, operation: "profile-load")
             statusMessage = "Profile load failed: \(error.localizedDescription)"
         }
     }
@@ -768,6 +771,7 @@ final class TransferViewModel: ObservableObject {
                     }
                 } catch {
                     await MainActor.run {
+                        CrashReporting.report(error, operation: "eject")
                         self?.statusMessage = "Eject failed: \(error.localizedDescription)"
                     }
                 }
@@ -928,6 +932,7 @@ final class TransferViewModel: ObservableObject {
                 )
             } catch {
                 guard generation == self.scanGeneration else { return }
+                CrashReporting.report(error, operation: "scan")
                 self.statusMessage = "Scan failed: \(error.localizedDescription)"
             }
             if generation == self.scanGeneration {
@@ -1222,6 +1227,9 @@ final class TransferViewModel: ObservableObject {
                     finalMessage = "\(baseMessage). \(ejectMessage)"
                 }
             }
+            if result.failedCount > 0 {
+                CrashReporting.warn("Download finished with failed items", attributes: ["failed.count": result.failedCount])
+            }
             statusMessage = finalMessage
             copyTask = nil
             rebuildPlan()
@@ -1258,6 +1266,7 @@ final class TransferViewModel: ObservableObject {
                 let result = try await MulticamExporter.create(inputs: inputs, output: output)
                 recordMulticamResult(result)
             } catch {
+                CrashReporting.report(error, operation: "multicam-export")
                 multicamMessage = "Multicam not created: \(error.localizedDescription)"
             }
         }
@@ -1277,6 +1286,7 @@ final class TransferViewModel: ObservableObject {
             let result = try await MulticamExporter.create(inputs: inputs, output: output)
             recordMulticamResult(result)
         } catch {
+            CrashReporting.report(error, operation: "multicam-export-after-download")
             multicamMessage = "Download kept; multicam not created: \(error.localizedDescription)"
         }
     }
@@ -1360,6 +1370,7 @@ final class TransferViewModel: ObservableObject {
             try NSWorkspace.shared.unmountAndEjectDevice(at: volumeURL)
             return "Ejected \(volumeURL.lastPathComponent)"
         } catch {
+            CrashReporting.report(error, operation: "auto-eject")
             return "Auto-eject failed: \(error.localizedDescription)"
         }
     }
@@ -1479,6 +1490,7 @@ final class TransferViewModel: ObservableObject {
                 self?.statusMessage = successMessage
                 onSuccess?()
             } catch {
+                CrashReporting.report(error, operation: "feedback-submit")
                 self?.feedbackMessage = "Feedback failed: \(error.localizedDescription)"
             }
             self?.isSubmittingFeedback = false

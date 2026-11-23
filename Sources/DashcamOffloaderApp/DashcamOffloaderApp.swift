@@ -4,6 +4,8 @@ import SwiftUI
 @main
 struct DashcamOffloaderApp: App {
     init() {
+        CrashReporting.start()
+        CrashReporting.runTestTriggerIfRequested()
         if let index = CommandLine.arguments.firstIndex(of: "--create-multicam") {
             guard CommandLine.arguments.count > index + 2 else {
                 print("Usage: --create-multicam <footage-folder> <new-output.fcpxml>")
@@ -41,7 +43,8 @@ struct DashcamOffloaderApp: App {
             Foundation.exit(result ? 0 : 1)
         }
         if CommandLine.arguments.contains("--verify") || CommandLine.arguments.contains("--smoke-test") {
-            guard VerificationTest.run() && UpdateChecksumVerification.run() && MulticamVerification.run() else {
+            guard VerificationTest.run() && UpdateChecksumVerification.run() && MulticamVerification.run()
+                && SentryScrubberVerification.run() else {
                 Foundation.exit(1)
             }
             Task {

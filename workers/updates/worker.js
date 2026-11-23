@@ -41,7 +41,10 @@ const PRIVACY_POLICY_HTML = `<!doctype html>
     <p>Dashcam Offloader is a desktop app that helps copy dashcam and camera footage from a memory card to a folder you choose. The app is designed to keep your footage local and to collect as little data as practical.</p>
 
     <h2>Local card scanning</h2>
-    <p>When you scan a card, Dashcam Offloader reads folder names, filenames, file sizes, timestamps, selected safe camera metadata, and selected media technical details so it can identify the camera and plan downloads. This scanning happens locally on your device. Videos, photos, GPS traces, and other card contents are not uploaded during normal scanning or downloading. The app has no automatic analytics or telemetry.</p>
+    <p>When you scan a card, Dashcam Offloader reads folder names, filenames, file sizes, timestamps, selected safe camera metadata, and selected media technical details so it can identify the camera and plan downloads. This scanning happens locally on your device. Videos, photos, GPS traces, and other card contents are not uploaded during normal scanning or downloading. The app has no usage analytics.</p>
+
+    <h2>Crash and error reports</h2>
+    <p>Dashcam Offloader sends crash reports, app-hang reports, and error reports to Sentry so failures can be diagnosed and fixed. A report contains the app version, macOS version, Mac model, a random installation identifier, the stack trace, and a short error description. Before a report leaves your Mac, the app removes home-folder paths and usernames, replaces video and photo filenames with a one-way hash (keeping only the extension), and strips camera serial numbers, GPS coordinates, network share and NAS host names, and IP addresses. Videos, photos and card contents are never included. IP addresses are not stored with reports.</p>
 
     <h2>Feedback and learning submissions</h2>
     <p>If you choose to send feedback or help add support for a dashcam, the app may send a sanitized submission to Vortex Radar's Cloudflare Worker endpoint. Submissions may include:</p>

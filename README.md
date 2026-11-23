@@ -258,6 +258,34 @@ safe model evidence, so the app does not auto-identify them yet.
 - `scripts/review-feedback-submissions.py` - private Cloudflare submission review helper
 - `workers/feedback/` - Cloudflare Worker endpoint for feedback submissions
 
+## Crash And Error Reporting
+
+The macOS app reports crashes, uncaught exceptions, app hangs (2 s), handled
+errors from scan/copy/eject/update/feedback paths, and structured error logs
+to Sentry (`vortex-openclaw/dashcam-offloader`, US region). Release is
+`dashcam-offloader@<CFBundleShortVersionString>+<CFBundleVersion>`; environment
+is `production` for bundled release builds and `development` otherwise.
+Tracing samples 20%; profiling, screenshots, view hierarchy and file-I/O spans
+are off and `sendDefaultPii` is false.
+
+`SentryScrubber` (in `CrashReporting.swift`) rewrites every event, log,
+breadcrumb and span before upload: home paths and the local user/host names
+become `<redacted>`, media filenames become `<file-<sha256 prefix>>.<ext>`, and
+serials, GPS data, NAS/share hosts, IPs and emails are replaced.
+`swift run DashcamOffloader --verify` checks the scrubber.
+
+- Disable: `DASHCAM_SENTRY_DISABLED=1`. CI (`CI=true`) and the command-line
+  diagnostic modes (`--verify`, `--scan-source`, ...) never report.
+- Hidden test triggers (packaged app):
+  `"build/Dashcam Offloader.app/Contents/MacOS/DashcamOffloader" --sentry-test error|crash|exception`,
+  then `--sentry-test flush` to send the stored crash report.
+  `DASHCAM_SENTRY_TEST=<mode>` works the same way.
+- Debug symbols: `scripts/build-macos-app.sh` writes `build/DashcamOffloader.dSYM`
+  with source paths mapped to `/src/...`. Upload with
+  `bash scripts/upload-sentry-dsyms.sh` or build with `DASHCAM_UPLOAD_DSYMS=1`.
+  The organization token comes from `SENTRY_AUTH_TOKEN` or is read from
+  1Password at upload time; it is never stored in the repository.
+
 ## Feedback And Card Learning Endpoint
 
 The app includes Feedback and Learn Card buttons in the toolbar. Users can submit bug reports, feature requests, or other feedback. When a source has already been scanned, they can choose to include a sanitized scan summary.
